@@ -1,0 +1,170 @@
+{% load static %}
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Tienda Online</title>
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    <link rel="stylesheet" href="{% static 'css/detail.css' %}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+</head>
+<body>
+    <header>
+        {% include 'navbarr.html' %}
+    </header>
+    <main>
+        <div class="container-product-all mt-5">
+            <div class="container_product">
+                <!-- Carrito flotante -->
+                <div class="car-buy">
+                    <a href="/cart" type="button" class="btn position-relative">
+                        <i class="bi bi-cart-plus-fill fs-1"></i>
+                        <span class="position-absolute top-45 start-80 translate-middle badge rounded-pill bg-danger">
+                            {{ cart_count }}
+                            <span class="visually-hidden">unread messages</span>
+                        </span>
+                    </a>
+                </div>
+                <div class="product-Galery">
+                    <!-- Imagen principal y galería -->
+                    <div class="product-image">
+                        <h1>{{ product.name }}</h1>
+                        <div class="image-slider" style="position: relative; display: flex; align-items: center;  width: 100%; height: 400px; overflow: hidden;">
+                            <button id="prev-img" class="slider-arrow" style="position: absolute; left: 0; z-index: 2; background: none; border: none; font-size: 2rem; cursor: pointer;">&#8592;</button>
+                            <img id="main-product-image"
+                                 src="{% if Galeria_images %}{{ Galeria_images.0.galeria.url }}{% else %}{{ product.imagen.url }}{% endif %}"
+                                 alt="{{ product.name }}"
+                                 style="max-width: 100%; max-height: 400px; margin: 0 auto; display: block;">
+                            <button id="next-img" class="slider-arrow" style="position: absolute; right: 0; z-index: 2; background: none; border: none; font-size: 2rem; cursor: pointer;">&#8594;</button>
+                        </div>
+                        <div class="Gallery mt-3">
+                            {% for imagen in Galeria_images %}
+                                <img src="{{ imagen.galeria.url }}" alt="Thumbnail" class="thumbnail">
+                            {% endfor %}
+                        </div>
+                        <!-- Características del producto -->
+                        <div class="product-details">
+                            <div class="cart-left">
+                                <h2>Características del Producto</h2>
+                                Producto: <span class="text-success">{{ product.name }}</span><br>
+                                description: <span class="text-success">{{ product.description }}</span><br>
+                                Marca: <span class="text-success">{{ product.marca }}</span><br>
+                                Modelo: <span class="text-success">{{ product.modelo }}</span><br>
+                                Stock Disponible: <span class="text-success">{{ product.stock }}</span><br>
+                                SKU: <span class="text-success">{{ product.sku }}</span><br>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Información y acciones de compra -->
+                    <div class="product-info">
+                        <div class="description-section">
+                            <h1>Descripción del producto</h1>
+                            <p class="description">{{ product.description|truncatechars:100|safe }}</p>
+                        </div>
+                        <div class="price">
+                            <span class="amount">${{ product.price|intcomma }} COP</span>
+                            <span class="price-discount">Antes: ${{ product.price|add:"30000"|intcomma }} COP</span>
+                        </div>
+                        <div class="car">
+                            <span class="ui-pdp-buybox__quantity__selected">Disponibles {{ product.stock }}</span>
+                            <form class="btn" method="post" action="{% url 'add_to_cart_detail' product.id %}">
+                                {% csrf_token %}
+                                <input type="number" name="quantity" min="1" value="1" class="quantity-input">
+                                <button type="submit" class="btn2">🛒</button>
+                            </form>
+                        </div>
+                        <a href="{% url 'add_to_cart' product.id %}" class="btn1">COMPRAR AHORA</a>
+                        <a href="{% url 'add_to_cart' product.id %}" class="btn3">CONSULTAR</a>
+                        <div class="cart-right-polices">
+                            <h2>Políticas de Compra</h2>
+                            <ul>
+                                <li><strong>Envío:</strong> Envío gratuito en compras superiores a $200,000 COP. Tiempo de entrega estimado: 3-5 días hábiles.</li>
+                                <li><strong>Devoluciones:</strong> Aceptamos devoluciones dentro de los 30 días posteriores a la compra. El producto debe estar en su estado original.</li>
+                                <li><strong>Garantía:</strong> Todos nuestros productos cuentan con una garantía de 3 meses contra defectos de fabricación.</li>
+                                <li><strong>Soporte:</strong> Nuestro equipo de soporte está disponible para ayudarte con cualquier consulta o problema relacionado con tu compra.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <!-- Reseñas de clientes -->
+                <div class="product-reviews">
+                    <h2>Reseñas de Clientes</h2>
+                    <div class="review">
+                        <p><strong>Juan Pérez</strong> - ★★★★★</p>
+                        <p>Excelente producto, muy satisfecho con la compra.</p>
+                    </div>
+                    <div class="review">
+                        <p><strong>María Gómez</strong> - ★★★★☆</p>
+                        <p>Buena calidad, pero el envío tardó un poco más de lo esperado.</p>
+                    </div>
+                    <div class="review">
+                        <p><strong>Carlos Rodríguez</strong> - ★★★☆☆</p>
+                        <p>El producto es aceptable, pero esperaba más por el precio.</p>
+                    </div>
+                </div>
+            </div>
+            <!-- Publicidad o imágenes adicionales -->
+            <div class="cart-right-product">
+                <div>
+                    <img src="{{ product.imagen.url }}" alt="Publicidad" style="width:70%; height:100%;">
+                </div>
+                {% for imagen in Galeria_images %}
+                    <div>
+                        <img src="{{ imagen.galeria.url }}" alt="Publicidad" style="width:70%; height:100%; margin-bottom:50px;">
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </main>
+    <footer>
+        {% include 'footer.html' %}
+    </footer>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static 'js/detail_product.js' %}"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Recoge todas las URLs de las imágenes de la galería
+        const galleryImages = [
+            {% for imagen in Galeria_images %}
+                "{{ imagen.galeria.url }}",
+            {% endfor %}
+        ];
+        // Si no hay galería, usa la imagen principal del producto
+        {% if not Galeria_images %}
+            galleryImages.push("{{ product.imagen.url }}");
+        {% endif %}
+
+        let currentIndex = 0;
+        const mainImg = document.getElementById('main-product-image');
+        const prevBtn = document.getElementById('prev-img');
+        const nextBtn = document.getElementById('next-img');
+
+        function showImage(index) {
+            if (galleryImages.length === 0) return;
+            mainImg.src = galleryImages[index];
+        }
+
+        prevBtn.addEventListener('click', function() {
+            currentIndex = (currentIndex - 1 + galleryImages.length) % galleryImages.length;
+            showImage(currentIndex);
+        });
+
+        nextBtn.addEventListener('click', function() {
+            currentIndex = (currentIndex + 1) % galleryImages.length;
+            showImage(currentIndex);
+        });
+
+        // Cambia la imagen principal al hacer clic en una miniatura
+        document.querySelectorAll('.thumbnail').forEach(function(thumb, idx) {
+            thumb.addEventListener('click', function() {
+                currentIndex = idx;
+                showImage(currentIndex);
+            });
+        });
+    });
+    </script>
+</body>
+</html>

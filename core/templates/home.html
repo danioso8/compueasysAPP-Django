@@ -1,0 +1,291 @@
+ {% load static %}
+ 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Home - AppCompueasys</title>    
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="path/to/font-awesome/css/font-awesome.min.css">
+
+    
+</head>
+<body>
+    {% include "navbarr.html" %}
+    <div class="container">
+        <div class="content">
+            <h1>Software contable</h1>
+            <p>Comience a llevar un registro de sus transacciones financieras, a tener control de sus gastos e ingresos</p>
+            <a class="btn" type="button" href="{% url 'login' %}">Iniciar Sesion</a>
+            <a class="btn1" type="button" href="{% url 'register' %}">Registrarse</a>
+        </div>
+    </div>
+    <div class="portafolios-container">
+         <section class="profile-section">
+            <img src="{% static 'img/factura.png' %}" alt="Juan Pérez" class="profile-img">
+            <h2>Facturas</h2>
+            <p>Cree una factura fácil y rápido que puede compartir a través de WhatsApp, Las facturas son importantes tanto para el vendedor como para el comprador, ya que permiten mantener un registro preciso de las transacciones comerciales realizadas, así como de los pagos recibidos o pendientes de recibir.</p>
+        </section>
+         <section class="profile-section">
+            <img src="{% static 'img/servicios.png' %}" alt="Juan Pérez" class="profile-img">
+            <h2>Productos y Servicios</h2>
+            <p>La gestión del inventario de productos es importante para las empresas que venden productos, ya que les permite tener una visión clara y precisa de su stock disponible, así como de las entradas y salidas de los mismos. Esto es fundamental para poder satisfacer la demanda de los clientes y evitar quedarse sin stock en momentos críticos.</p>
+        </section>
+         <section class="profile-section">
+            <img src="{% static 'img/clientes.png' %}" alt="Juan Pérez" class="profile-img">
+            <h2>Clientes</h2>
+            <p>La gestión de clientes es fundamental para garantizar la satisfacción del cliente y la lealtad, así como para maximizar la rentabilidad de la empresa.</p>
+        </section>
+    
+    </div>
+
+
+    <div class="text-center mb-5">
+         <h1 class="fw-bolder">Planes y Precios</h1>
+         <p class="lead text-muted mb-0">Elija el plan que mejor se adapte a sus necesidades y comience a disfrutar de todas las ventajas que ofrecemos.</p>
+        </div>
+ <div class="plan-pago-cart">
+       
+     <!-- Pricing card free-->
+     <div class="">
+         <div class="card mb-5 mb-xl-0">
+             <div class="card-body p-5">
+                 <div class="small text-uppercase fw-bold text-muted">GRATIS</div>
+                 <div class="mb-3">
+                     <span class="display-4 fw-bold text-dark">$0</span>
+                     <span class="text-dark">/ mo.</span>
+                 </div>
+                 <ul class="list-unstyled mb-4 text-dark">
+                     <li class="mb-2">
+                         <i class="bi bi-check text-primary"></i>
+                         <strong>1 usuarios</strong>
+                     </li>
+
+                     <li class="mb-2">
+                         <i class="bi bi-check text-primary"></i>
+                         <strong>Guardar clientes</strong>
+                     </li>
+                     <li class="mb-2">
+                         <i class="bi bi-check text-primary"></i>
+                         <strong>Guardar productos</strong>
+                     </li>
+                     <li class="mb-2 ">
+                         <i class="bi bi-check text-primary"></i>
+                         <strong>Generar facturas</strong>
+                     </li>
+                     <li class="mb-2 ">
+                         <i class="bi bi-check text-primary"></i>
+                         <strong>Reporte de ventas mes actual </strong>
+                     </li>
+                     <li class="mb-2 ">
+                         <i class="bi bi-check text-primary"></i>
+                         <strong> Reporte de ventas mes anterior </strong>
+                     </li>
+                     <li class="mb-2 ">
+                         <i class="bi bi-check text-primary"></i>
+                         <strong> Ver facturas y filtrar por fechas </strong>
+                     </li>
+
+                     
+                 </ul>
+                 <div class="d-grid"><a class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#exampleModal" @*href="@Url.Action("Registro")"*@>Elegir Plan</a></div>
+             </div>
+         </div>
+     </div>
+     <!-- Pricing card pro-->
+     <div class="">
+         <div class="card mb-5 mb-xl-0">
+             <div class="card-body p-5">
+                 <div class="small text-uppercase fw-bold">
+                     <i class="bi bi-star-fill text-warning"></i>
+                     Pro
+                 </div>
+                 <div class="mb-3">
+                     <span class="display-4 fw-bold text-success">$3</span>
+                     <span class="text-muted">/ mo.</span>
+                 </div>
+                 <ul class="list-unstyled mb-4 text-dark">
+                     <li class="mb-2">
+                         <i class="bi bi-check text-primary"></i>
+                         <strong>1 usuarios</strong>
+                     </li>
+
+                     <li class="mb-2">
+                         <i class="bi bi-check text-primary"></i>
+                         <strong>Guardar clientes</strong>
+                     </li>
+                     <li class="mb-2">
+                         <i class="bi bi-check text-primary"></i>
+                         <strong>Guardar productos</strong>
+                     </li>
+                     <li class="mb-2 ">
+                         <i class="bi bi-check text-primary"></i>
+                         <strong>Generar facturas</strong>
+                     </li>
+                     <li class="mb-2 ">
+                         <i class="bi bi-check text-primary"></i>
+                         <strong>Reporte de ventas mes actual </strong>
+                     </li>
+                     <li class="mb-2 ">
+                         <i class="bi bi-check text-primary"></i>
+                         <strong> Reporte de ventas mes anterior </strong>
+                     </li>
+                     <li class="mb-2 ">
+                         <i class="bi bi-check text-primary"></i>
+                         <strong> Ver facturas y filtrar por fechas </strong>
+                     </li>
+
+                     <li class="mb-2 ">
+                         <i class="bi bi-check text-primary"></i>
+                         <strong> Reporte de ventas y otros </strong>
+                     </li>
+                     <li class="mb-2 ">
+                         <i class="bi bi-check text-primary"></i>
+                         <strong> Ingreso de empleados </strong>
+                     </li>
+                     <li class="mb-2 ">
+                         <i class="bi bi-check text-primary"></i>
+                         <strong> Nomina </strong>
+                     </li>
+                     <li class="mb-2 ">
+                         <i class="bi bi-check text-primary"></i>
+                         <strong> Pedidos </strong>
+                     </li>
+                     <li class="mb-2 ">
+                         <i class="bi bi-check text-primary"></i>
+                         <strong> Inventarios </strong>
+                     </li>
+                     
+                     
+                 </ul>
+                 <div class="d-grid"><a class="btn btn-outline-primary"   href="@Url.Action("RegistroUsuario")">Elegir Plan</a></div>
+             </div>
+         </div>
+     </div>
+     <!-- Pricing card enterprise-->
+     <div class="">
+         <div class="card">
+             <div class="card-body p-5">
+                 <div class="small text-uppercase fw-bold text-muted">Enterprise</div>
+                 <div class="mb-3">
+                     <span class="display-4 fw-bold text-success">$6</span>
+                     <span class="text-muted">/ mo.</span>
+                 </div>
+                 <ul class="list-unstyled mb-4 text-dark">
+                     <li class="mb-2">
+                         <i class="bi bi-check text-primary"></i>
+                         <strong>1 usuarios</strong>
+                     </li>
+
+                     <li class="mb-2">
+                         <i class="bi bi-check text-primary"></i>
+                         <strong>Guardar clientes</strong>
+                     </li>
+                     <li class="mb-2">
+                         <i class="bi bi-check text-primary"></i>
+                         <strong>Guardar productos</strong>
+                     </li>
+                     <li class="mb-2 ">
+                         <i class="bi bi-check text-primary"></i>
+                         <strong>Generar facturas</strong>
+                     </li>
+                     <li class="mb-2 ">
+                         <i class="bi bi-check text-primary"></i>
+                         <strong>Reporte de ventas mes actual </strong>
+                     </li>
+                     <li class="mb-2 ">
+                         <i class="bi bi-check text-primary"></i>
+                         <strong> Reporte de ventas mes anterior </strong>
+                     </li>
+                     <li class="mb-2 ">
+                         <i class="bi bi-check text-primary"></i>
+                         <strong> Ver facturas y filtrar por fechas </strong>
+                     </li>
+
+                     <li class="mb-2 ">
+                         <i class="bi bi-check text-primary"></i>
+                         <strong> Reporte de ventas y otros </strong>
+                     </li>
+                     <li class="mb-2 ">
+                         <i class="bi bi-check text-primary"></i>
+                         <strong> Ingreso de empleados </strong>
+                     </li>
+                     <li class="mb-2 ">
+                         <i class="bi bi-check text-primary"></i>
+                         <strong> Nomina y liquidaciones </strong>
+                     </li>
+                     <li class="mb-2 ">
+                         <i class="bi bi-check text-primary"></i>
+                         <strong> Pedidos </strong>
+                     </li>
+                     <li class="mb-2 ">
+                         <i class="bi bi-check text-primary"></i>
+                         <strong> Inventarios </strong>
+                     </li>
+                     <li class="mb-2 t">
+                         <i class="bi bi-check text-primary"></i>
+                         <strong> Cotizaciones </strong>
+                     </li>
+                     <li class="mb-2 ">
+                         <i class="bi bi-check text-primary"></i>
+                         <strong>  Ingreso de gastos </strong>
+                     </li>
+                     <li class="mb-2 ">
+                         <i class="bi bi-check text-primary"></i>
+                         <strong>  Balance de la empresa </strong>
+                     </li>
+                     <li class="mb-2 ">
+                         <i class="bi bi-check text-primary"></i>
+                         <strong> Conciliaciones </strong>
+                     </li>
+                     
+                     <li class="mb-2 ">
+                         <i class="bi bi-check text-primary"></i>
+                         <strong> Cuentas por pagar </strong>
+                     </li>
+                     <li class="mb-2 ">
+                         <i class="bi bi-check text-primary"></i>
+                         <strong> Cuentas por cobrar </strong>
+                     </li>
+                     <li class="mb-2 ">
+                         <i class="bi bi-check text-primary"></i>
+                         <strong> Activos fijos </strong>
+                     </li>
+                 </ul>
+                 <div class="d-grid"><a class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#exampleModal" @*href="@Url.Action("Registro")"*@>Elegir Plan</a></div>
+             </div>
+         </div>
+     </div>
+    </div>
+
+   <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+       <div class="modal-dialog">
+           <div class="modal-content">
+               <div class="modal-header">
+                   <h5 class="modal-title" id="exampleModalLabel">Elegir Plan</h5>
+                   <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+               </div>
+               <div class="modal-body">
+                   <p>¿Estás seguro de que deseas elegir este plan?</p>
+               </div>
+               <div class="modal-footer">
+                   <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                   <button type="button" class="btn btn-primary">Confirmar</button>
+               </div>
+           </div>
+       </div>
+   </div>
+  
+
+    <footer>
+        {% include "footer.html" %}
+
+    </footer>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+   <body>
+
+
+</html>

@@ -1,0 +1,18 @@
+    <form method="POST">
+         {% csrf_token %}
+         {{ form.as_p }}
+         <div class="form_as_p">
+             
+             <input type="text" name="name" placeholder="Nombre del producto">
+             <input type="text" name="description" placeholder="Descripción">
+             <input type="number" name="price" placeholder="Precio">
+             <input type="number" name="iva" placeholder="IVA">
+             <input type="number" name="descuento" placeholder="Descuento">
+             <input type="number" name="stock" placeholder="Stock">
+             <input type="text" name="category" placeholder="Categoría">
+                <input type="file" name="imagen" placeholder="Imagen">
+                <input type="file" name="galeria" placeholder="Galería" multiple>
+                
+            </div>
+         <button type="submit">Create Product</button>
+    </form>
