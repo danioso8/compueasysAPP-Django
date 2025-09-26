@@ -3,7 +3,7 @@ from django.http import HttpResponse
 from .models import Category, Type, Galeria,  ProductStore as Product
 from django.db.models import Q
 from django.http import JsonResponse
-
+from django.views.decorators.csrf import csrf_exempt
 
 
 
@@ -48,7 +48,29 @@ def product_detail(request, product_id):
         return HttpResponse("Product not found", status=404)
 
 def checkout(request):
-    return render(request, 'checkout.html')
+    cart = request.session.get('cart', {})
+    cart_items = []
+    cart_total = 0
+    for prod_id, quantity in cart.items():
+        try:
+            product = Product.objects.get(id=prod_id)
+            subtotal = product.price * quantity
+            cart_items.append({'product': product, 'quantity': quantity, 'subtotal': subtotal})
+        except Product.DoesNotExist:
+            continue
+    context = {'cart_items': cart_items, 'cart_count': sum(cart.values())}
+    return render(request, 'checkout.html', context)
+
+@csrf_exempt
+def procesar_pago(request):
+    if request.method == 'POST':
+        # Aquí iría la lógica para procesar el pago
+        # Por ahora, simplemente vaciamos el carrito y redirigimos a una página de confirmación
+        if 'cart' in request.session:
+            del request.session['cart']
+            request.session.modified = True
+        return redirect('payment_success')
+    return HttpResponse("Invalid request", status=400)
 
 def auctions(request):
     return render(request, 'auctions.html')
@@ -97,6 +119,7 @@ def update_cart(request, product_id):
 def add_to_cart(request, product_id):
     product = Product.objects.get(id=product_id)
     cart = request.session.get('cart', {})
+   
     if request.method == 'POST':
         quantity = int(request.POST.get('quantity', 1))
         

@@ -1,0 +1,41 @@
+{% load humanize %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Checkout</title>
+    <link rel="stylesheet" href="{% static 'css/checkout.css' %}">
+    
+</head>
+<body>
+    <h1>Resumen de tu compra</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Producto</th>
+                <th>Cantidad</th>
+                <th>Precio unitario</th>
+                <th>Subtotal</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in cart_items %}
+            <tr>
+                <td>{{ item.product.name }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>${{ item.product.price|intcomma }}</td>
+                <td>${{ item.subtotal|intcomma }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <h3>Total a pagar: ${{ cart_total|intcomma }}</h3>
+    <form method="post" action="{% url 'procesar_pago' %}">
+        {% csrf_token %}
+        <!-- Aquí puedes pedir datos de envío, pago, etc. -->
+        <button type="submit">Confirmar y pagar</button>
+    </form>
+    <a href="{% url 'cart' %}">Volver al carrito</a>
+</body>
+</html>
