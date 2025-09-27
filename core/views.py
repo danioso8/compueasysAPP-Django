@@ -56,9 +56,10 @@ def checkout(request):
             product = Product.objects.get(id=prod_id)
             subtotal = product.price * quantity
             cart_items.append({'product': product, 'quantity': quantity, 'subtotal': subtotal})
+            cart_total += subtotal
         except Product.DoesNotExist:
             continue
-    context = {'cart_items': cart_items, 'cart_count': sum(cart.values())}
+    context = {'cart_items': cart_items, 'cart_total': cart_total, 'cart_count': sum(cart.values())}
     return render(request, 'checkout.html', context)
 
 @csrf_exempt

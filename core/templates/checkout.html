@@ -1,41 +1,107 @@
-{% load humanize %}
-{% load static %}
+{% load humanize %} {% load static %}
 <!DOCTYPE html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <title>Checkout</title>
-    <link rel="stylesheet" href="{% static 'css/checkout.css' %}">
-    
-</head>
-<body>
-    <h1>Resumen de tu compra</h1>
-    <table>
-        <thead>
-            <tr>
-                <th>Producto</th>
-                <th>Cantidad</th>
-                <th>Precio unitario</th>
-                <th>Subtotal</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for item in cart_items %}
-            <tr>
-                <td>{{ item.product.name }}</td>
-                <td>{{ item.quantity }}</td>
-                <td>${{ item.product.price|intcomma }}</td>
-                <td>${{ item.subtotal|intcomma }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    <h3>Total a pagar: ${{ cart_total|intcomma }}</h3>
-    <form method="post" action="{% url 'procesar_pago' %}">
-        {% csrf_token %}
-        <!-- Aquí puedes pedir datos de envío, pago, etc. -->
-        <button type="submit">Confirmar y pagar</button>
-    </form>
-    <a href="{% url 'cart' %}">Volver al carrito</a>
-</body>
+    <link rel="stylesheet" href="{% static 'css/checkout.css' %}" />
+  </head>
+  <body>
+      <div class="header">
+         <h1>COMPUEASYS</h1>
+        </div>
+    <div class="container-checkout">
+         <h2>Informacion de la compra</h2>
+        <form class="form-payment" method="post" action="{% url 'procesar_pago' %}">
+            {% csrf_token %}
+            
+            
+            
+            <div class="form-group1">
+                <h4>ENTREGA:</h4>
+               <input type="email" id="email" name="email" required placeholder="Correo electrónico" /> 
+               <div class="form-check-entrega">
+                   <div class="form-check-direccion">
+                      <input type="radio" id="entrega_direccion" name="entrega_opcion" checked/>
+                     <label for="entrega_direccion">Entregar en esta dirección</label>
+                   </div>
+                   <div class="form-check-pickup">
+                       <input type="radio" id="recoger_tienda" name="entrega_opcion"/>
+                       <label for="recoger_tienda">Recoger en tienda</label>
+                  </div>   
+                      <input type="text" id="nombre" name="nombre" required placeholder="Nombre completo" />
+                      <input type="text" id="cedula" name="cedula" required placeholder="Cédula" />
+                      <input type="text" id="direccion" name="direccion" required placeholder="Dirección de envío" />
+                    <div class="form-group-destination">
+                             <select type="text" id="departament" name="departament" required placeholder="Departamento" />
+                                  <option value="">Departamento</option>
+                                  <option value="departamento1">Departamento 1</option>
+                                  <option value="departamento2">Departamento 2</option>
+                             </select>
+
+                             <select id="ciudad" name="ciudad" required>
+                                  <option value="">Ciudad</option>
+                                  <option value="ciudad1">Ciudad 1</option>
+                                  <option value="ciudad2">Ciudad 2</option>
+                                  <option value="ciudad3">Ciudad 3</option>
+                              </select>
+                              <input type="text" id="codigo_postal" name="codigo_postal" required placeholder="Código postal" />
+                      </div>
+                       <input type="tel" id="telefono" name="telefono" required placeholder="Teléfono" />
+                       <div class="form-check-save">
+                          <input type="checkbox" id="save_info" name="save_info" />
+                           <label for="save_info">Guardar esta información para la próxima vez</label> 
+            
+                       </div>
+                         <div class="form-group-entrega">
+                      <h4>PAGO:</h4>
+                        <div class="form-check-entrega">
+                            <div class="form-check-direccion">
+                               <input type="radio" id="entrega_direccion" name="entrega_opcion" checked />  
+                               <label for="entrega_direccion">Pago contra entrega</label>
+                             </div>
+                        </div>
+
+                        <div class="form-check-pickup">
+                               <input type="radio" id="recoger_tienda" name="entrega_opcion" />
+                               <label for="recoger_tienda">Recoger en tienda</label>
+                       </div>
+                      </div>
+               </div>
+
+                
+            </div>
+             
+            <div class="divider">
+                  <div class="form-group2">
+                    <h2>Detalles del pago</h2>
+                      <table>          
+                         <tbody>
+                            {% for item in cart_items %}
+                                <tr>
+                                   <td><img src="{{ item.product.imagen.url }}"  width="50" /></td>
+                                     <td>{{ item.product.name }}</td>
+                                     <td>{{ item.quantity }}</td>                                     
+                                     <td>${{ item.subtotal|intcomma }}</td>
+                                </tr>
+                            {% endfor %}
+                         </tbody>
+                      </table>                      
+                  </div>
+                  <div class="total-amount">
+                     <div class="form-group-codigo-descuento">
+                     
+                        <input type="text" id="discount_code" name="discount_code" placeholder="Código de descuento" />
+                        <button type="button">Aplicar</button>
+                     </div>
+                     <h3>Total a pagar: ${{ cart_total|intcomma }}</h3>              
+                      <!-- Aquí puedes pedir datos de envío, pago, etc. -->
+                     <button type="submit">Confirmar y pagar</button>
+                     <a href="{% url 'cart' %}">Volver al carrito</a>
+                  </div>          
+            </div>
+            
+        </form>
+    </div>
+  </body>
 </html>
