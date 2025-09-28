@@ -22,26 +22,48 @@
 
 .cart-actions {
     display: flex;
-    justify-content: flex-start;
+    align-items: center;
+    justify-content: space-between;
     margin-bottom: 18px;
     gap: 10px;
 }
 .btn-pagar {
-    position: relative;
-    margin-left: 1030px;
-    margin-top: 27.5%;
     padding: 10px ;
     border-radius: 15px;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    font-size: 1.5rem;
+    font-size: 20px;
     font-weight: bold;
     color: #b52a37;
     text-decoration: none;
-    margin-right: auto;
+   
 }
+.btn-pagar2 {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+    text-align: center;
+    background-color: #e9a616;
+    border-radius: 15px;
+}
+.btn-pagar2 a {
+    padding: 10px 20px;
+    width: 100%;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    font-size: 20px;
+    font-weight: bold;
+    color: #f5f0f1;
+    text-decoration: none;
+   
+}   
 .btn-pagar:hover {
    
     color: #0f4405;
+    transition: background 0.2s, color 0.2s;
+}
+.btn-pagar2 a:hover {
+    background-color: #b3750f;
+    color: #fff;
+     border-radius: 15px;
     transition: background 0.2s, color 0.2s;
 }
 .btn-remove {
@@ -156,16 +178,26 @@
 }
 
 .cart-summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     margin-top: 24px;
     margin-bottom: 100px;
     font-size: 1.1rem;
-    text-align: right;
+    text-align: left;
    
 
 }
-.cart-count, .cart-total {
+.cart-count {
     font-weight: bold;
-    color: #405cdb;
+    color: #b52a37;
+    font-size: 20px;
+}
+.cart-total {
+    font-weight: bold;
+    font-size: 35px;
+    font-family: 'Times New Roman', Times, serif;
+    color: #4e4d4d;
 }
 
 .cart-empty {

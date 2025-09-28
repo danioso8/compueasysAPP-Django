@@ -1,0 +1,6 @@
+<form method="post" action="{% url 'login_user' %}">
+    {% csrf_token %}
+    <input type="text" name="username" placeholder="Correo electrónico" required>
+    <input type="password" name="password" placeholder="Contraseña" required>
+    <button type="submit">Iniciar sesión</button>
+</form>

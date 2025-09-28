@@ -1,5 +1,5 @@
 from django.db import models
-
+from django.contrib.auth.models import User
 
 # Create your models here.
 
@@ -44,3 +44,24 @@ class Galeria(models.Model):
     
     def __str__(self):
         return f"Imagen {self.id}"    
+
+class SimpleUser(models.Model):
+    email = models.EmailField(unique=True)
+    telefono = models.CharField(max_length=20)
+
+    def __str__(self):
+        return self.email
+
+class Pedido(models.Model):
+     user = models.ForeignKey(SimpleUser, on_delete=models.CASCADE)
+     nombre = models.CharField(max_length=100)
+     direccion = models.CharField(max_length=255)
+     ciudad = models.CharField(max_length=100)
+     departamento = models.CharField(max_length=100)
+     codigo_postal = models.CharField(max_length=20)
+     total = models.DecimalField(max_digits=10, decimal_places=2)
+     fecha = models.DateTimeField(auto_now_add=True)
+     detalles = models.TextField()  # Puedes guardar el resumen del carrito aquí
+
+     def __str__(self):
+        return f"Pedido {self.id} de {self.user.email}"

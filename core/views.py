@@ -1,16 +1,28 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
-from .models import Category, Type, Galeria,  ProductStore as Product
+from .models import Category, Type, Galeria, SimpleUser, Pedido, ProductStore as Product
 from django.db.models import Q
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-
-
+from django.core.mail import send_mail  
+from django.contrib.auth.models import User
+from django.contrib.auth import authenticate, login
 
 # Create your views here.
 def home(request):
     return render(request, 'home.html')
 
+def login_user(request):
+    if request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            return redirect('mis_pedidos')
+        else:
+            return render(request, 'login.html', {'error': 'Credenciales incorrectas'})
+    return render(request, 'login_user.html')
 
 def store(request):
     query = request.GET.get('q', '')
@@ -62,15 +74,91 @@ def checkout(request):
     context = {'cart_items': cart_items, 'cart_total': cart_total, 'cart_count': sum(cart.values())}
     return render(request, 'checkout.html', context)
 
-@csrf_exempt
-def procesar_pago(request):
+
+def pago_exitoso(request):
     if request.method == 'POST':
-        # Aquí iría la lógica para procesar el pago
-        # Por ahora, simplemente vaciamos el carrito y redirigimos a una página de confirmación
+        email = request.POST.get('email')
+        telefono = request.POST.get('telefono')
+        nombre = request.POST.get('nombre')
+        direccion = request.POST.get('direccion')
+        ciudad = request.POST.get('ciudad')
+        departamento = request.POST.get('departament')
+        codigo_postal = request.POST.get('codigo_postal')
+
+        # Crear o actualizar SimpleUser
+        user, created = SimpleUser.objects.get_or_create(email=email, defaults={'telefono': telefono})
+        if not created:
+            user.telefono = telefono
+            user.save()
+
+        # Crear usuario Django si no existe
+        if not User.objects.filter(username=email).exists():
+            user_django = User.objects.create_user(
+                username=email,
+                email=email,
+                password=telefono,  # El celular como contraseña temporal
+                first_name=nombre
+            )
+        else:
+            user_django = User.objects.get(username=email)
+
+        # Obtener carrito y calcular total
+        cart = request.session.get('cart', {})
+        cart_items = []
+        cart_total = 0
+        detalles = ""
+        for prod_id, quantity in cart.items():
+            try:
+                product = Product.objects.get(id=prod_id)
+                subtotal = product.price * quantity
+                cart_items.append({'product': product, 'quantity': quantity, 'subtotal': subtotal})
+                cart_total += subtotal
+                detalles += f"{product.name} x{quantity} - ${subtotal}\n"
+            except Product.DoesNotExist:
+                continue
+
+        # Guardar pedido
+        pedido = Pedido.objects.create(
+            user=user,  # Usa SimpleUser, porque tu modelo Pedido espera SimpleUser
+            nombre=nombre,
+            direccion=direccion,
+            ciudad=ciudad,
+            departamento=departamento,
+            codigo_postal=codigo_postal,
+            total=cart_total,
+            detalles=detalles
+        )
+
+        # Limpiar carrito
         if 'cart' in request.session:
             del request.session['cart']
             request.session.modified = True
-        return redirect('payment_success')
+
+        # Enviar correo al usuario
+        subject = "Confirmación de tu compra en CompuEasys"
+        message = (
+            f"¡Hola {nombre}!\n\n"
+            f"Gracias por tu compra en CompuEasys.\n\n"
+            f"Resumen de tu pedido:\n{detalles}\n"
+            f"Total: ${cart_total}\n"
+            f"Dirección: {direccion}, {ciudad}, {departamento}, CP: {codigo_postal}\n\n"
+            f"Se ha creado una cuenta para ti con el email: {email}\n"
+            f"Tu contraseña temporal es tu número de celular: {telefono}\n"
+            f"Puedes cambiarla cuando quieras desde la tienda.\n\n"
+            f"¡Gracias por confiar en nosotros!"
+        )
+        send_mail(subject, message, None, [email])
+
+        # Generar link de WhatsApp
+        import urllib.parse
+        mensaje = f"Hola, soy {nombre}. Mi pedido:\n{detalles}\nTotal: ${cart_total}\nDirección: {direccion}, {ciudad}, {departamento}, CP: {codigo_postal}\nTeléfono: {telefono}"
+        mensaje_encoded = urllib.parse.quote(mensaje)
+        whatsapp_url = f"https://wa.me/57{telefono}?text={mensaje_encoded}"
+
+        return render(request, 'pago_exitoso.html', {
+            'nombre': nombre,
+            'whatsapp_url': whatsapp_url
+        })
     return HttpResponse("Invalid request", status=400)
 
 def auctions(request):
@@ -89,8 +177,6 @@ def aboutUs(request):
 def register(request):
     return render(request, 'register.html')
 
-def login(request):
-    return render(request, 'login.html')
 
 def index(request):
     return render(request, "index.html")
@@ -186,3 +272,17 @@ def clear_cart(request):
         del request.session['cart']
         request.session.modified = True
     return redirect('cart')
+
+def mis_pedidos(request):
+    # Busca el usuario por email (puedes adaptar a tu sistema de login)
+    if request.user.is_authenticated:
+        email = request.user.email
+        try:
+            simple_user = SimpleUser.objects.get(email=email)
+        except SimpleUser.DoesNotExist:
+            return HttpResponse("No tienes pedidos registrados.", status=404)
+        pedidos = Pedido.objects.filter(user=simple_user).order_by('-fecha')
+    else:
+        return redirect('login')  # O muestra un mensaje de error
+
+    return render(request, 'mis_pedidos.html', {'pedidos': pedidos})    

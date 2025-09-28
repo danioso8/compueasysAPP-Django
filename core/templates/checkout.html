@@ -4,7 +4,7 @@
   <head>
     <meta charset="UTF-8" />
     <title>Checkout</title>
-    <link rel="stylesheet" href="{% static 'css/checkout.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/checkout.css' %}?v=2" />
   </head>
   <body>
       <div class="header">
@@ -12,11 +12,8 @@
         </div>
     <div class="container-checkout">
          <h2>Informacion de la compra</h2>
-        <form class="form-payment" method="post" action="{% url 'procesar_pago' %}">
+        <form class="form-payment" method="post" action="{% url 'pago_exitoso' %}">
             {% csrf_token %}
-            
-            
-            
             <div class="form-group1">
                 <h4>ENTREGA:</h4>
                <input type="email" id="email" name="email" required placeholder="Correo electrónico" /> 
@@ -74,8 +71,9 @@
              
             <div class="divider">
                   <div class="form-group2">
-                    <h2>Detalles del pago</h2>
-                      <table>          
+                    <div><h2>Detalles del pago</h2></div>
+                      <div class="table-scroll">
+                        <table class="table-cart">          
                          <tbody>
                             {% for item in cart_items %}
                                 <tr>
@@ -86,7 +84,9 @@
                                 </tr>
                             {% endfor %}
                          </tbody>
-                      </table>                      
+                      </table>                 
+                      </div>
+                           
                   </div>
                   <div class="total-amount">
                      <div class="form-group-codigo-descuento">
@@ -94,10 +94,14 @@
                         <input type="text" id="discount_code" name="discount_code" placeholder="Código de descuento" />
                         <button type="button">Aplicar</button>
                      </div>
-                     <h3>Total a pagar: ${{ cart_total|intcomma }}</h3>              
-                      <!-- Aquí puedes pedir datos de envío, pago, etc. -->
-                     <button type="submit">Confirmar y pagar</button>
-                     <a href="{% url 'cart' %}">Volver al carrito</a>
+                    <div class="form-group-total">
+                       <span>Subtotal</span>
+                        <h3> ${{ cart_total|intcomma }}</h3>              
+                         <!-- Aquí puedes pedir datos de envío, pago, etc. -->
+                        
+                    </div>
+                       <button type="submit">Confirmar y pagar</button>
+                         <a href="{% url 'cart' %}">Volver al carrito</a>
                   </div>          
             </div>
             

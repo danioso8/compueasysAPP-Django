@@ -22,7 +22,7 @@
              
              
              <a href="{% url 'clear_cart' %}" class="btn-clear">Vaciar carrito</a>
-            
+              <a href="{% url 'checkout' %}" class="btn-pagar">Pagar  <i class="bi bi-cart-plus-fill fs-1"></i></a>          
             
        
         </div>
@@ -63,20 +63,25 @@
                     </tr>
                     {% endfor %}
                 </tbody>
+               
             </table>
-        </div>
-        <div class="cart-summary">
-            <p>Cantidad de productos: <span class="cart-count">{{ cart_count }}</span></p>
-            <h4>Total: <span class="cart-total">${{ cart_total|intcomma|cut:"." }}</span></h4>
-             <a href="{% url 'checkout' %}" class="btn-pagar">Pagar  <i class="bi bi-cart-plus-fill fs-1"></i></a>
-        </div>
-        <div class="cart-ordernote">
+             <p>Cantidad de productos: <span class="cart-count">{{ cart_count }}</span></p>
+            <div class="cart-ordernote">
               <span class="cart-ordernote-heading">Ingrese una nota de regalo o instrucciones especiales de entrega a continuación:</span>
               <div class="form-field">
                 <textarea class="form-field-input form-field-textarea" name="note" id="cart-note"></textarea>
                 <label class="form-field-title" for="cart-note">Instrucciones especiales</label>
               </div>
             </div>
+        </div>
+        <hr>
+        <div class="cart-summary">
+            <p>Total a pagar </p>
+            <h1 class="cart-total">${{ cart_total|intcomma|cut:"." }}</h1> 
+        </div>
+        <div class="btn-pagar2">
+                <a href="{% url 'checkout' %}">Pagar </a>
+         </div>
         <div class="cart-actions">
             <a href="{% url 'store' %}" class="btn-back">&larr; Seguir comprando</a>
         </div>
