@@ -71,7 +71,8 @@ def checkout(request):
             cart_total += subtotal
         except Product.DoesNotExist:
             continue
-    context = {'cart_items': cart_items, 'cart_total': cart_total, 'cart_count': sum(cart.values())}
+    saved = request.session.get('saved_checkout', {})
+    context = {'cart_items': cart_items, 'cart_total': cart_total, 'cart_count': sum(cart.values()), 'saved': saved}
     return render(request, 'checkout.html', context)
 
 
@@ -128,7 +129,19 @@ def pago_exitoso(request):
             total=cart_total,
             detalles=detalles
         )
-
+        if request.POST.get('save_info'):
+            request.session['saved_checkout'] = {
+                'email': request.POST.get('email'),
+                'nombre': request.POST.get('nombre'),
+                'cedula': request.POST.get('cedula'),
+                'direccion': request.POST.get('direccion'),
+                'departament': request.POST.get('departament'),
+                'ciudad': request.POST.get('ciudad'),
+                'codigo_postal': request.POST.get('codigo_postal'),
+                'telefono': request.POST.get('telefono'),
+        }
+        else:
+            request.session.pop('saved_checkout', None)
         # Limpiar carrito
         if 'cart' in request.session:
             del request.session['cart']

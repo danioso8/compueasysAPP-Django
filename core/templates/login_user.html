@@ -1,6 +1,23 @@
-<form method="post" action="{% url 'login_user' %}">
-    {% csrf_token %}
-    <input type="text" name="username" placeholder="Correo electrónico" required>
-    <input type="password" name="password" placeholder="Contraseña" required>
-    <button type="submit">Iniciar sesión</button>
-</form>
+{% load static %}
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
+    <title>Iniciar sesión</title>   
+    <link rel="stylesheet" href="{% static 'css/login_user.css' %}">
+</head>
+<body>
+<div class="login-container">
+    <h2>Iniciar sesión</h2>
+    <form method="post" action="{% url 'login_user' %}">
+        {% csrf_token %}
+        <input type="text" name="username" placeholder="Correo electrónico" required>
+        <input type="password" name="password" placeholder="Contraseña" required>
+        <button type="submit">Iniciar sesión</button>
+    </form>
+</div>
+</body>
+</html>

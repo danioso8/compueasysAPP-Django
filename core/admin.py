@@ -1,9 +1,9 @@
 from django.contrib import admin
 
 # Register your models here.
-from .models import ProductStore, Galeria, Category, Type, Pedido, SimpleUser
+from .models import ProductStore, Galeria, Category, Type, Pedido, SimpleUser, ProductVariant
 
-
+admin.site.register(ProductVariant)
 admin.site.register(Galeria)   
 admin.site.register(Category)
 admin.site.register(Type)
@@ -24,12 +24,18 @@ class GaleriaInline(admin.TabularInline):
     preview.allow_tags = True
     preview.short_description = "Vista previa"
 
+class ProductVariantInline(admin.TabularInline):
+    model = ProductVariant
+    extra = 1
+    fields = ['nombre', 'precio', 'stock', 'color', 'talla', 'imagen']
+
 @admin.register(ProductStore)
 class ProductStoreAdmin(admin.ModelAdmin):
+    
     list_display = ('name', 'price', 'descuento', 'stock', 'category', 'image_tag')
     list_filter = ('category',)
     search_fields = ('name', 'description')
-    inlines = [GaleriaInline]
+    inlines = [GaleriaInline, ProductVariantInline]
     fieldsets = (
         ('Información básica', {
             'fields': ('name', 'price', 'descuento', 'stock')

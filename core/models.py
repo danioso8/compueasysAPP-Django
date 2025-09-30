@@ -37,7 +37,19 @@ class ProductStore(models.Model):
     def __str__(self):
         return self.name
     
-    
+class ProductVariant(models.Model):
+    product = models.ForeignKey(ProductStore, on_delete=models.CASCADE, related_name='variants')
+    nombre = models.CharField(max_length=100)  # Ej: "Rojo - M", "Azul - L"
+    precio = models.DecimalField(max_digits=10, decimal_places=2)
+    stock = models.PositiveIntegerField(default=0)
+    # Puedes agregar más campos como color, talla, etc.
+    color = models.CharField(max_length=50, blank=True, null=True)
+    talla = models.CharField(max_length=50, blank=True, null=True)
+    imagen = models.ImageField(upload_to='variant_images/', blank=True, null=True)  # <-- NUEVO CAMPO
+
+    def __str__(self):
+        return f"{self.product.name} - {self.nombre}"
+
 class Galeria(models.Model):
     galeria = models.ImageField(upload_to='galeria/')
     product = models.ForeignKey(ProductStore, related_name='galeria', on_delete=models.CASCADE)
@@ -62,6 +74,8 @@ class Pedido(models.Model):
      total = models.DecimalField(max_digits=10, decimal_places=2)
      fecha = models.DateTimeField(auto_now_add=True)
      detalles = models.TextField()  # Puedes guardar el resumen del carrito aquí
-
+    
      def __str__(self):
         return f"Pedido {self.id} de {self.user.email}"
+
+

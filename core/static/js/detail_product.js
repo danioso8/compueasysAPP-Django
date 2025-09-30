@@ -18,3 +18,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 
+function updateVariantImage() {
+    var select = document.getElementById('variant_id');
+    var img = document.getElementById('variant-image');
+    var selected = select.options[select.selectedIndex];
+    var imgUrl = selected.getAttribute('data-img');
+    if (imgUrl) {
+        img.src = imgUrl;
+        img.style.display = 'block';
+    } else {
+        img.style.display = 'none';
+    }
+}

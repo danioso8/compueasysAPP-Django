@@ -11,26 +11,26 @@
          <h1>COMPUEASYS</h1>
         </div>
     <div class="container-checkout">
-         <h2>Informacion de la compra</h2>
+         <h2>Informacion del pedido</h2>
         <form class="form-payment" method="post" action="{% url 'pago_exitoso' %}">
             {% csrf_token %}
             <div class="form-group1">
                 <h4>ENTREGA:</h4>
-               <input type="email" id="email" name="email" required placeholder="Correo electrónico" /> 
+               <input type="email" id="email" name="email" required placeholder="Correo electrónico" value="{{ saved.email|default_if_none:'' }}" />
                <div class="form-check-entrega">
                    <div class="form-check-direccion">
-                      <input type="radio" id="entrega_direccion" name="entrega_opcion" checked/>
+                      <input type="radio" id="entrega_direccion" name="entrega_opcion" value="{{ saved.direccion|default_if_none:'' }}" checked/>
                      <label for="entrega_direccion">Entregar en esta dirección</label>
                    </div>
                    <div class="form-check-pickup">
-                       <input type="radio" id="recoger_tienda" name="entrega_opcion"/>
+                       <input type="radio" id="recoger_tienda" name="entrega_opcion" value="recoger_tienda"/>
                        <label for="recoger_tienda">Recoger en tienda</label>
                   </div>   
-                      <input type="text" id="nombre" name="nombre" required placeholder="Nombre completo" />
-                      <input type="text" id="cedula" name="cedula" required placeholder="Cédula" />
-                      <input type="text" id="direccion" name="direccion" required placeholder="Dirección de envío" />
+                      <input type="text" id="nombre" name="nombre" required placeholder="Nombre completo" value="{{ saved.nombre|default_if_none:'' }}" />
+                      <input type="text" id="cedula" name="cedula" required placeholder="Cédula" value="{{ saved.cedula|default_if_none:'' }}" />
+                      <input type="text" id="direccion" name="direccion" required placeholder="Dirección de envío" value="{{ saved.direccion|default_if_none:'' }}" />
                     <div class="form-group-destination">
-                             <select type="text" id="departament" name="departament" required placeholder="Departamento" />
+                             <select type="text" id="departament" name="departament" required placeholder="Departamento"/>
                                   <option value="">Departamento</option>
                                   <option value="departamento1">Departamento 1</option>
                                   <option value="departamento2">Departamento 2</option>
@@ -42,11 +42,11 @@
                                   <option value="ciudad2">Ciudad 2</option>
                                   <option value="ciudad3">Ciudad 3</option>
                               </select>
-                              <input type="text" id="codigo_postal" name="codigo_postal" required placeholder="Código postal" />
+                              <input type="text" id="codigo_postal" name="codigo_postal" required placeholder="Código postal" value="{{ saved.codigo_postal|default_if_none:'' }}" />
                       </div>
-                       <input type="tel" id="telefono" name="telefono" required placeholder="Teléfono" />
+                       <input type="tel" id="telefono" name="telefono" required placeholder="Teléfono" value="{{ saved.telefono|default_if_none:'' }}" />
                        <div class="form-check-save">
-                          <input type="checkbox" id="save_info" name="save_info" />
+                          <input type="checkbox" id="save_info" name="save_info" checked />
                            <label for="save_info">Guardar esta información para la próxima vez</label> 
             
                        </div>
@@ -71,7 +71,7 @@
              
             <div class="divider">
                   <div class="form-group2">
-                    <div><h2>Detalles del pago</h2></div>
+                    <div><h2>Detalles del pedido</h2></div>
                       <div class="table-scroll">
                         <table class="table-cart">          
                          <tbody>
@@ -100,7 +100,7 @@
                          <!-- Aquí puedes pedir datos de envío, pago, etc. -->
                         
                     </div>
-                       <button type="submit">Confirmar y pagar</button>
+                       <button type="submit">Confirmar y pedir</button>
                          <a href="{% url 'cart' %}">Volver al carrito</a>
                   </div>          
             </div>

@@ -17,9 +17,10 @@ body {
     box-sizing: border-box;
 }
 
+
 .name-company {
     color: #f3efef;
-    font-size: 24px;
+    font-size: 36px;
     font-weight: bold;
     text-decoration: none;
     margin-left: 0;

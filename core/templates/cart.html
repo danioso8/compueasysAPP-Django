@@ -22,7 +22,7 @@
              
              
              <a href="{% url 'clear_cart' %}" class="btn-clear">Vaciar carrito</a>
-              <a href="{% url 'checkout' %}" class="btn-pagar">Pagar  <i class="bi bi-cart-plus-fill fs-1"></i></a>          
+              <a href="{% url 'checkout' %}" class="btn-pagar">Pedir  <i class="bi bi-cart-plus-fill fs-1"></i></a>          
             
        
         </div>
@@ -80,7 +80,7 @@
             <h1 class="cart-total">${{ cart_total|intcomma|cut:"." }}</h1> 
         </div>
         <div class="btn-pagar2">
-                <a href="{% url 'checkout' %}">Pagar </a>
+                <a href="{% url 'checkout' %}">Finalizar Pedido </a>
          </div>
         <div class="cart-actions">
             <a href="{% url 'store' %}" class="btn-back">&larr; Seguir comprando</a>
