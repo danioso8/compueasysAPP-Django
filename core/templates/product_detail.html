@@ -65,35 +65,41 @@
                             <p class="description">{{ product.description|truncatechars:100|safe }}</p>
                         </div>
                         <div class="price">
-                            <span class="amount">${{ product.price|intcomma }} COP</span>
+                            <span id="main-product-price" class="amount">${{ product.price|intcomma }} COP</span>
                             <span class="price-discount">Antes: ${{ product.price|add:"30000"|intcomma }} COP</span>
                         </div>
                        <div class="car">
     <span class="ui-pdp-buybox__quantity__selected">Disponibles {{ product.stock }}</span>
-    <form class="btn" method="post" action="{% url 'add_to_cart_detail' product.id %}">
+    <form class="btn for-variant" method="post" action="{% url 'add_to_cart_detail' product.id %}">
         {% csrf_token %}
         {# Selector de variantes #}
         {% if product.variants.all %}
             <label for="variant_id"><strong>Elige una variante:</strong></label>
-            <select name="variant_id" id="variant_id" required onchange="updateVariantImage()">
-                <option value="">Selecciona una opción</option>
-                {% for variant in product.variants.all %}
-                     <option value="{{ variant.id }}"
-                          {% if variant.imagen %}
-                             data-img="{{ variant.imagen.url }}"
-                          {% else %}
-                             data-img=""
-                          {% endif %}
-                         data-precio="{{ variant.precio }}"
-                         data-stock="{{ variant.stock }}">
-                         {{ variant.nombre }}
-                         {% if variant.color %} - {{ variant.color }}{% endif %}
-                          {% if variant.talla %} - {{ variant.talla }}{% endif %}
-                        - ${{ variant.precio|intcomma }}
-                         {% if variant.stock == 0 %} (Agotado){% endif %}
-                   </option>
-                {% endfor %}
-            </select>
+            {% if product.variants.all %}
+    <label><strong>Elige un color:</strong></label>
+    <div id="variant-swatches" class="variant-swatches" style="display: flex; gap: 12px; margin-bottom: 16px;">
+        {% for variant in product.variants.all %}
+            <button type="button" class="variant-swatch" data-variant-id="{{ variant.id }}"
+                   {% if variant.imagen %}
+                    data-img="{{ variant.imagen.url }}"
+                    {% else %}
+                    data-img=""
+                   {% endif %}
+                    data-precio="{{ variant.precio }}"
+                    data-stock="{{ variant.stock }}"
+                    style="border: 2px solid #ccc;  background: none; padding: 2px; border-radius: 10%; cursor: pointer;">
+                {% if variant.imagen %}
+                    <img src="{{ variant.imagen.url }}" alt="{{ variant.color }}" title="{{ variant.color }}"
+                         style="width: 106px; height: 106px; display: block; border-radius: 10%; border: 2px solid #eee;">
+                         <label>{{ variant.color }}</label>
+                {% else %}
+                    <span style="display:inline-block;width:36px;height:36px;border-radius:50%;background:{{ variant.color|default:'#ccc' }}"></span>
+                {% endif %}
+            </button>
+        {% endfor %}
+    </div>
+    <input type="hidden" name="variant_id" id="variant_id" required>
+{% endif %}
             <br>
             <img id="variant-image" src="" alt="Imagen variante" style="max-width: 180px; margin: 10px 0; display: none;">
         {% endif %}
@@ -151,57 +157,73 @@
     <script src="{% static 'js/detail_product.js' %}"></script>
     <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Recoge todas las URLs de las imágenes de la galería
-        const galleryImages = [
-            {% for imagen in Galeria_images %}
-                "{{ imagen.galeria.url }}",
-            {% endfor %}
-        ];
-        // Si no hay galería, usa la imagen principal del producto
-        {% if not Galeria_images %}
-            galleryImages.push("{{ product.imagen.url }}");
-        {% endif %}
+    // Galería de imágenes
+    const galleryImages = [
+        {% for imagen in Galeria_images %}
+            "{{ imagen.galeria.url }}",
+        {% endfor %}
+    ];
+    {% if not Galeria_images %}
+        galleryImages.push("{{ product.imagen.url }}");
+    {% endif %}
 
-        let currentIndex = 0;
-        const mainImg = document.getElementById('main-product-image');
-        const prevBtn = document.getElementById('prev-img');
-        const nextBtn = document.getElementById('next-img');
+    let currentIndex = 0;
+    const mainImg = document.getElementById('main-product-image');
+    const prevBtn = document.getElementById('prev-img');
+    const nextBtn = document.getElementById('next-img');
 
-        function showImage(index) {
-            if (galleryImages.length === 0) return;
-            mainImg.src = galleryImages[index];
-        }
+    function showImage(index) {
+        if (galleryImages.length === 0) return;
+        mainImg.src = galleryImages[index];
+    }
 
-        prevBtn.addEventListener('click', function() {
-            currentIndex = (currentIndex - 1 + galleryImages.length) % galleryImages.length;
+    prevBtn.addEventListener('click', function() {
+        currentIndex = (currentIndex - 1 + galleryImages.length) % galleryImages.length;
+        showImage(currentIndex);
+    });
+
+    nextBtn.addEventListener('click', function() {
+        currentIndex = (currentIndex + 1) % galleryImages.length;
+        showImage(currentIndex);
+    });
+
+    // Cambia la imagen principal al hacer clic en una miniatura
+    document.querySelectorAll('.thumbnail').forEach(function(thumb, idx) {
+        thumb.addEventListener('click', function() {
+            currentIndex = idx;
             showImage(currentIndex);
-        });
-
-        nextBtn.addEventListener('click', function() {
-            currentIndex = (currentIndex + 1) % galleryImages.length;
-            showImage(currentIndex);
-        });
-
-        // Cambia la imagen principal al hacer clic en una miniatura
-        document.querySelectorAll('.thumbnail').forEach(function(thumb, idx) {
-            thumb.addEventListener('click', function() {
-                currentIndex = idx;
-                showImage(currentIndex);
-            });
         });
     });
-    function updateVariantImage() {
-    var select = document.getElementById('variant_id');
-    var img = document.getElementById('variant-image');
-    var selected = select.options[select.selectedIndex];
-    var imgUrl = selected.getAttribute('data-img');
-    if (imgUrl) {
-        img.src = imgUrl;
-        img.style.display = 'block';
-    } else {
-        img.style.display = 'none';
-    }
-}
+
+    // --- Swatches de variantes ---
+    document.querySelectorAll('.variant-swatch').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            // Quitar selección previa
+            document.querySelectorAll('.variant-swatch').forEach(function(b) {
+                b.style.border = "2px solid #ccc";
+            });
+            // Marcar seleccionada
+            btn.style.border = "2px solid #405cdb";
+            // Actualizar input oculto
+            document.getElementById('variant_id').value = btn.getAttribute('data-variant-id');
+            // Cambiar imagen principal
+            var imgUrl = btn.getAttribute('data-img');
+            if (imgUrl) {
+                mainImg.src = imgUrl;
+            } else {
+                mainImg.src = "{{ product.imagen.url }}";
+            }
+            // Cambiar precio
+            var precio = btn.getAttribute('data-precio');
+            var mainPrice = document.getElementById('main-product-price');
+            if (precio) {
+                mainPrice.textContent = "$" + Number(precio).toLocaleString('es-CO') + " COP";
+            } else {
+                mainPrice.textContent = "${{ product.price|intcomma }} COP";
+            }
+        });
+    });
+});
     </script>
 </body>
 </html>

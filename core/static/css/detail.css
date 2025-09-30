@@ -197,6 +197,24 @@ body {
     gap: 12px;
     flex-wrap: wrap;
 }
+.variant-swatches {
+    
+    display: flex;
+    width: 100%;
+    gap: 12px;
+    padding: 20PX;
+    margin-bottom: 16px;
+     text-align: center;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 10px 10px 10px 10px rgba(0,0,0,0.05);
+}
+.for-variant{
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+    align-items: center;
+}
 
 .ui-pdp-buybox__quantity__selected {
     font-size: 1rem;
