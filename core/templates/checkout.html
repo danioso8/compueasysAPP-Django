@@ -1,4 +1,5 @@
 {% load humanize %} {% load static %}
+
 <!DOCTYPE html>
 <html lang="es">
   <head>
@@ -14,6 +15,9 @@
          <h2>Informacion del pedido</h2>
         <form class="form-payment" method="post" action="{% url 'pago_exitoso' %}">
             {% csrf_token %}
+           
+               <!-- ...otros campos... -->
+             <input type="hidden" name="note" value="{{ nota|default_if_none:'' }}">
             <div class="form-group1">
                 <h4>ENTREGA:</h4>
                <input type="email" id="email" name="email" required placeholder="Correo electrónico" value="{{ saved.email|default_if_none:'' }}" />
@@ -30,18 +34,21 @@
                       <input type="text" id="cedula" name="cedula" required placeholder="Cédula" value="{{ saved.cedula|default_if_none:'' }}" />
                       <input type="text" id="direccion" name="direccion" required placeholder="Dirección de envío" value="{{ saved.direccion|default_if_none:'' }}" />
                     <div class="form-group-destination">
-                             <select type="text" id="departament" name="departament" required placeholder="Departamento"/>
-                                  <option value="">Departamento</option>
-                                  <option value="departamento1">Departamento 1</option>
-                                  <option value="departamento2">Departamento 2</option>
-                             </select>
-
-                             <select id="ciudad" name="ciudad" required>
-                                  <option value="">Ciudad</option>
-                                  <option value="ciudad1">Ciudad 1</option>
-                                  <option value="ciudad2">Ciudad 2</option>
-                                  <option value="ciudad3">Ciudad 3</option>
+                    
+                             <select name="departament" id="departament" required>
+                                 <option value="">Departamento</option>
+                                  {% for dep in departamentos.keys %}
+                                  <option value="{{ dep }}" {% if dep == departament_selected %}selected{% endif %}>{{ dep }}</option>
+                                  {% endfor %}
                               </select>
+
+                             
+                             <select name="ciudad" id="ciudad" required>
+    <option value="">Ciudad</option>
+    {% for ciudad in ciudades %}
+        <option value="{{ ciudad }}" {% if ciudad == city_selected %}selected{% endif %}>{{ ciudad }}</option>
+    {% endfor %}
+</select>
                               <input type="text" id="codigo_postal" name="codigo_postal" required placeholder="Código postal" value="{{ saved.codigo_postal|default_if_none:'' }}" />
                       </div>
                        <input type="tel" id="telefono" name="telefono" required placeholder="Teléfono" value="{{ saved.telefono|default_if_none:'' }}" />
@@ -108,4 +115,30 @@
         </form>
     </div>
   </body>
+  <script src="{% static 'js/checkout.js' %}?v=2"></script>
+  <script>const departamentosCiudades = {{ departamentos|safe }};
+const depSelect = document.getElementById('departament');
+const ciudadSelect = document.getElementById('ciudad');
+const ciudadSeleccionada = "{{ city_selected|escapejs }}";
+
+function actualizarCiudades() {
+    const dep = depSelect.value;
+    ciudadSelect.innerHTML = '<option value="">Seleccione una ciudad</option>';
+    if (departamentosCiudades[dep]) {
+        departamentosCiudades[dep].forEach(function(ciudad) {
+            const selected = ciudad === ciudadSeleccionada ? 'selected' : '';
+            ciudadSelect.innerHTML += `<option value="${ciudad}" ${selected}>${ciudad}</option>`;
+        });
+    }
+}
+
+// Inicializa ciudades si ya hay un departamento seleccionado
+if(depSelect.value) {
+    actualizarCiudades();
+}
+
+depSelect.addEventListener('change', function() {
+    actualizarCiudades();
+});
+</script>
 </html>

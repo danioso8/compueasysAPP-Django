@@ -12,6 +12,9 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
 </head>
 <body>
+    <a href="#" id="whatsapp-chat-float" class="whatsapp-float" title="Chatea por WhatsApp" target="_blank">
+         <img src="{% static 'img/whatsapp-icon.png' %}" alt="WhatsApp" style="width:60px; height:60px; border-radius:50%;">
+    </a>
     <header>
         {% include 'navbarr.html' %}
     </header>
@@ -104,11 +107,11 @@
             <img id="variant-image" src="" alt="Imagen variante" style="max-width: 180px; margin: 10px 0; display: none;">
         {% endif %}
         <input type="number" name="quantity" min="1" value="1" class="quantity-input">
-        <button type="submit" class="btn2">🛒</button>
-    </form>
+        <button type="submit" id="add_to_cart" class="btn2">🛒</button>
+   
 </div>
-                        <a href="{% url 'add_to_cart' product.id %}" class="btn1">PEDIR AHORA</a>
-                        <a href="{% url 'add_to_cart' product.id %}" class="btn3">CONSULTAR</a>
+                        <button type="submit" id="go_to_cart" name="go_to_cart" class="btn1">PEDIR AHORA</button>
+                       </form>
                         <div class="cart-right-polices">
                             <h2>Políticas de Compra</h2>
                             <ul>
@@ -223,6 +226,20 @@
             }
         });
     });
+});
+
+
+
+
+
+document.getElementById('whatsapp-chat-float').addEventListener('click', function(e) {
+    e.preventDefault();
+    var numero = "573007915262"; // Cambia por tu número real
+    var nombre = "{{ product.name }}";
+   
+    var mensaje = "Hola, quiero más información sobre el producto: " + nombre ;
+    var url = "https://wa.me/" + numero + "?text=" + mensaje;
+    window.open(url, "_blank");
 });
     </script>
 </body>

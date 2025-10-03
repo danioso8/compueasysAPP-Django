@@ -40,7 +40,7 @@ class ProductStore(models.Model):
 class ProductVariant(models.Model):
     product = models.ForeignKey(ProductStore, on_delete=models.CASCADE, related_name='variants')
     nombre = models.CharField(max_length=100)  # Ej: "Rojo - M", "Azul - L"
-    precio = models.DecimalField(max_digits=10, decimal_places=2)
+    precio = models.DecimalField(max_digits=10, decimal_places=0)
     stock = models.PositiveIntegerField(default=0)
     # Puedes agregar más campos como color, talla, etc.
     color = models.CharField(max_length=50, blank=True, null=True)
@@ -72,6 +72,7 @@ class Pedido(models.Model):
      departamento = models.CharField(max_length=100)
      codigo_postal = models.CharField(max_length=20)
      total = models.DecimalField(max_digits=10, decimal_places=2)
+     nota = models.TextField(blank=True, null=True)
      fecha = models.DateTimeField(auto_now_add=True)
      detalles = models.TextField()  # Puedes guardar el resumen del carrito aquí
     
@@ -79,3 +80,9 @@ class Pedido(models.Model):
         return f"Pedido {self.id} de {self.user.email}"
 
 
+class PedidoDetalle(models.Model):
+    pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE)
+    producto = models.ForeignKey(ProductStore, on_delete=models.CASCADE)
+    variante = models.ForeignKey('ProductVariant', on_delete=models.SET_NULL, null=True, blank=True)
+    cantidad = models.PositiveIntegerField()
+    precio = models.DecimalField(max_digits=10, decimal_places=2)

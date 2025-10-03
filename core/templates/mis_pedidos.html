@@ -15,6 +15,7 @@
                 <tr>
                     <th>Fecha</th>
                     <th>Detalle</th>
+                    <th>Nota</th>
                     <th>Total</th>
                     <th>Estado</th>
                 </tr>
@@ -24,6 +25,7 @@
                 <tr>
                     <td>{{ pedido.fecha|date:"d/m/Y H:i" }}</td>
                     <td><pre>{{ pedido.detalles }}</pre></td>
+                    <td>{{ pedido.nota }}</td>
                     <td>${{ pedido.total|intcomma }}</td>
                     <td>Pendiente</td>
                 </tr>

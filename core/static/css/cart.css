@@ -67,15 +67,15 @@
     transition: background 0.2s, color 0.2s;
 }
 .btn-remove {
-    background: #979596;
-    color: #fff;
+    background:none;
+    color: #818792;
     border: none;
-    padding: 6px 12px;
+    padding: 3px 6px;
     border-radius: 50%;
     text-decoration: none;
     font-weight: 500;
     cursor: pointer;
-    font-size: 10px;
+    font-size: 18px;
     transition: background 0.2s;
 }
 
@@ -91,7 +91,8 @@
     transition: background 0.2s;
 }
 .btn-clear:hover, .btn-remove:hover {
-    background: #b52a37;
+    background: none;
+    color: #0f0f0f;
 }
 .btn-back {
     background: #405cdb;
@@ -151,7 +152,12 @@
     justify-content: center;
     gap: 6px;
 }
-
+.btn-back{
+    background: none;
+    text-decoration: none;
+    color: black;
+    font-size: 14px;
+}
 .btn-qty {
     background-color: #fff;
     color: #111111;
