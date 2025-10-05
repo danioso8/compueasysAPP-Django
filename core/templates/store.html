@@ -43,12 +43,7 @@
     </header>
     <main>
         <div class="container1">
-            <!-- Barra de navegación horizontal de categorías -->
-           
-
-            <!-- Contenido principal -->
             <div class="containerP">
-                <!-- Barra de búsqueda -->
                 <form method="get" class="mb-4">
                     <div class="input-group">
                         <input type="text" name="q" class="form-control" placeholder="Buscar productos..." value="{{ request.GET.q }}">
@@ -66,18 +61,16 @@
                         </div>
                     </div>
                 </form>
-                      <div class="slug-categoria">
+                <div class="slug-categoria">
                     {% if current_category %}
                        <h2 class="category-title">
                           Categoría: {{ current_category.nombre }}
                           <span class="badge bg-secondary ms-2">{{ current_category.slug }}</span>
-
                         </h2>
                     {% else %}
                           <h2 class="category-title">Todos los productos</h2>
                     {% endif %}
-                      </div>
-                <!-- Lista de productos -->
+                </div>
                 <div class="container_product_all">
                     <div class="row_product_all">
                         {% for product in products %}
@@ -93,18 +86,22 @@
                                     <div class="price">${{ product.price|intcomma }} COP</div>
                                 </a>
                                 <div class="btnAdd mt-2">
-                                    <form class="btn" method="post" action="{% url 'add_to_cart' product.id %}">
-                                        {% csrf_token %}
-                                        <div>
-                                            <input type="number" name="quantity" min="1" max="{{ product.stock }}" value="1" class="quantity-input">
-                                        </div>
-                                        <span class="ui-pdp-buybox__quantity__selected">Disponibles {{ product.stock }}</span>
-                                        <div>
-                                            <button type="submit" class="add-to-cart-btn">
-                                                <i class="bi bi-cart-plus-fill"></i>
-                                            </button>
-                                        </div>
-                                    </form>
+                                    {% if product.stock == 0 %}
+                                        <span class="agotado" style="color:blue;font-weight:bold;">Agotado</span>
+                                    {% else %}
+                                        <form class="btn" method="post" action="{% url 'add_to_cart' product.id %}">
+                                            {% csrf_token %}
+                                            <div>
+                                                <input type="number" name="quantity" min="1" max="{{ product.stock }}" value="1" class="quantity-input">
+                                            </div>
+                                            <span class="ui-pdp-buybox__quantity__selected">Disponibles {{ product.stock }}</span>
+                                            <div>
+                                                <button type="submit" class="add-to-cart-btn">
+                                                    <i class="bi bi-cart-plus-fill"></i>
+                                                </button>
+                                            </div>
+                                        </form>
+                                    {% endif %}
                                 </div>
                             </div>
                         {% empty %}

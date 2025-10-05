@@ -1,6 +1,5 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
-from .models import Category, Type, Galeria, SimpleUser, Pedido, ProductVariant, ProductStore as Product
 from django.db.models import Q
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -8,10 +7,7 @@ from django.core.mail import send_mail
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login
 import urllib.parse
-from django.views.decorators.csrf import csrf_exempt
-from django.http import JsonResponse
-
-from django.http import JsonResponse
+from .models import Category, Type, Galeria, SimpleUser, Pedido, ProductVariant, ProductStore as Product, PedidoDetalle
 
 # Create your views here.
 def home(request):
@@ -214,16 +210,31 @@ def pago_exitoso(request):
             nota=nota
         )
 
-        # Guardar cada item en el detalle del pedido (si tienes modelo PedidoDetalle)
-        # for item in cart_items:
-        #     PedidoDetalle.objects.create(
-        #         pedido=pedido,
-        #         producto=item['product'],
-        #         variante=item['variant'],
-        #         cantidad=item['quantity'],
-        #         precio=item['variant'].precio if item['variant'] else item['product'].price,
-        #     )
+        # Guardar cada item en el detalle del pedido y descontar stock (¡DENTRO DEL CICLO!)
+        for item in cart_items:
+            PedidoDetalle.objects.create(
+                pedido=pedido,
+                producto=item['product'],
+                variante=item['variant'],
+                cantidad=item['quantity'],
+                precio=item['variant'].precio if item['variant'] else item['product'].price,
+            )
+            # Descontar stock
+            if item['variant']:
+                variant = item['variant']
+                # Asegúrate de tener la instancia real
+                if not hasattr(variant, 'save'):
+                    variant = ProductVariant.objects.get(id=variant.id)
+                variant.stock = max(0, variant.stock - item['quantity'])
+                variant.save()
+            else:
+                product = item['product']
+                if not hasattr(product, 'save'):
+                    product = Product.objects.get(id=product.id)
+                product.stock = max(0, product.stock - item['quantity'])
+                product.save()
 
+        # Guardar info para futuros checkouts
         if request.POST.get('save_info'):
             request.session['saved_checkout'] = {
                 'email': email,
@@ -282,7 +293,6 @@ def pago_exitoso(request):
             'whatsapp_url': whatsapp_url
         })
     return HttpResponse("Invalid request", status=400)
-
 def auctions(request):
     return render(request, 'auctions.html')
 

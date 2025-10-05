@@ -102,16 +102,21 @@
         {% endfor %}
     </div>
     <input type="hidden" name="variant_id" id="variant_id" required>
-{% endif %}
+     {% endif %}
             <br>
             <img id="variant-image" src="" alt="Imagen variante" style="max-width: 180px; margin: 10px 0; display: none;">
         {% endif %}
-        <input type="number" name="quantity" min="1" value="1" class="quantity-input">
+        {% if product.stock == 0 %}
+        <span class="agotado" style="color:black;font-weight:bold;">Agotado</span>
+       {% else %}
+        <input type="number" name="quantity" min="1" value="1" max="{{ product.stock }}" class="quantity-input">        
         <button type="submit" id="add_to_cart" class="btn2">🛒</button>
-   
-</div>
-                        <button type="submit" id="go_to_cart" name="go_to_cart" class="btn1">PEDIR AHORA</button>
-                       </form>
+         
+      
+      </div>
+                       <button type="submit" id="go_to_cart" name="go_to_cart" class="btn1">PEDIR AHORA</button>
+                     {% endif %}   
+                    </form>
                         <div class="cart-right-polices">
                             <h2>Políticas de Compra</h2>
                             <ul>

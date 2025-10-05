@@ -1,4 +1,4 @@
-<script>
+
 document.addEventListener('DOMContentLoaded', function() {
     // Manejar clicks en los botones de agregar al carrito
     document.querySelectorAll('.add-to-cart-btn').forEach(function(btn) {
@@ -31,4 +31,19 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
-</script>
+
+
+// Suponiendo que tienes un select con id="variant-select"
+document.getElementById('variant-select').addEventListener('change', function() {
+    var selected = this.options[this.selectedIndex];
+    var stock = selected.getAttribute('data-stock');
+    if (stock == "0") {
+        document.getElementById('agotado-msg').style.display = 'block';
+        document.getElementById('btn-cart').disabled = true;
+        document.getElementById('btn-pedir').disabled = true;
+    } else {
+        document.getElementById('agotado-msg').style.display = 'none';
+        document.getElementById('btn-cart').disabled = false;
+        document.getElementById('btn-pedir').disabled = false;
+    }
+});
