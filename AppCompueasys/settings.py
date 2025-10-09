@@ -4,15 +4,7 @@ from os.path import join
 import os
 from django.contrib.auth import get_user_model
 
-def create_admin():
-    User = get_user_model()
-    if not User.objects.filter(username='admin').exists():
-        User.objects.create_superuser('admin', 'danioso8@hotmail.com', 'Miesposa1@')
 
-try:
-    create_admin()
-except Exception:
-    pass
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -140,3 +132,14 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', 'compueasys@gmail.com')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+
+def create_admin():
+    User = get_user_model()
+    if not User.objects.filter(username='admin').exists():
+        User.objects.create_superuser('admin', 'danioso8@hotmail.com', 'Miesposa1@')
+
+try:
+    create_admin()
+except Exception:
+    pass
