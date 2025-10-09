@@ -11,6 +11,9 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-5ykh0i3xxbu298h!xo-bh#k+97
 DEBUG = False
 
 ALLOWED_HOSTS = ['.onrender.com', 'localhost', '127.0.0.1']
+render_external_host = os.getenv('RENDER_EXTERNAL_HOSTNAME')
+if render_external_host:
+    ALLOWED_HOSTS.append(render_external_host)
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -28,6 +31,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "debug_toolbar.middleware.DebugToolbarMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -60,11 +64,11 @@ WSGI_APPLICATION = 'AppCompueasys.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('compueasys'),
-        'USER': os.getenv('compueasys_user'),
-        'PASSWORD': os.getenv('3B5WolKIDQLYgWm2j6XpbV4m1TvKxUZt'),
-        'HOST': os.getenv('dpg-d3jf1ut6ubrc73cpji70-a'),
-        'PORT': os.getenv('5432'),
+        'NAME': os.getenv('DB_NAME'),
+        'USER': os.getenv('DB_USERNAME'),
+        'PASSWORD': os.getenv('DB_PASSWORD'),
+        'HOST': os.getenv('DB_HOST'),
+        'PORT': os.getenv('DB_PORT'),
     }
 }
 
