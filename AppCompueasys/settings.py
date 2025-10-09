@@ -134,12 +134,8 @@ EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 
-def create_admin():
+@receiver(post_migrate)
+def create_admin_user(sender, **kwargs):
     User = get_user_model()
     if not User.objects.filter(username='admin').exists():
         User.objects.create_superuser('admin', 'danioso8@hotmail.com', 'Miesposa1@')
-
-try:
-    create_admin()
-except Exception:
-    pass
