@@ -1,0 +1,1 @@
+web: gunicorn AppCompueasys.wsgi:application

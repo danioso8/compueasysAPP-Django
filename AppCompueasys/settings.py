@@ -60,11 +60,11 @@ WSGI_APPLICATION = 'AppCompueasys.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME'),
-        'USER': os.getenv('DB_USERNAME'),
-        'PASSWORD': os.getenv('DB_PASSWORD'),
-        'HOST': os.getenv('DB_ADDRESS'),
-        'PORT': os.getenv('DB_PORT'),
+        'NAME': os.getenv('compueasys'),
+        'USER': os.getenv('compueasys_user'),
+        'PASSWORD': os.getenv('3B5WolKIDQLYgWm2j6XpbV4m1TvKxUZt'),
+        'HOST': os.getenv('dpg-d3jf1ut6ubrc73cpji70-a'),
+        'PORT': os.getenv('5432'),
     }
 }
 
@@ -106,5 +106,5 @@ EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', 'compueasys@gmail.com')
-EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', 'wcgv eqgb vpkf jgkh')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
