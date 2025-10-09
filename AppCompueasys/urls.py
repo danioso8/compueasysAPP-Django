@@ -28,9 +28,11 @@ urlpatterns = [
     path('index/', index, name='index'),  # Added this line to map the /index URL to the index view
     path('', include('core.urls')),  # Included the core app's URL configurations
     path('', include('contable.urls')),  # Included the contable app's URL configurations
+    path('dashboard/', include('dashboard.urls')),
 ]
 
-urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 # If using Django Debug Toolbar, include its URLs only in DEBUG mode
 if settings.DEBUG:

@@ -14,7 +14,7 @@
                 {% if user.is_authenticated %}
                     <li><a class="text-bg-success" href="/mis-pedidos">Bienvenido, {{ user.get_full_name|default:user.username }}</a></li>
                 {% else %}
-                    <li><a href="/login_user/">Iniciar Sesión</a></li>                
+                    <li><a href="/admin">Iniciar Sesión</a></li>                
                 {% endif %}
             </div>
         </ul>

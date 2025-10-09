@@ -2,13 +2,25 @@ from pathlib import Path
 from dotenv import load_dotenv
 from os.path import join
 import os
+from django.contrib.auth import get_user_model
 
+def create_admin():
+    User = get_user_model()
+    if not User.objects.filter(username='admin').exists():
+        User.objects.create_superuser('admin', 'danioso8@hotmail.com', 'Miesposa1@')
+
+try:
+    create_admin()
+except Exception:
+    pass
+
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 load_dotenv(os.path.join(BASE_DIR, '.env'))
 
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-5ykh0i3xxbu298h!xo-bh#k+97m!f=qb_7rt3x@zhhji$-pfb%')
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['.onrender.com', 'localhost', '127.0.0.1']
 render_external_host = os.getenv('RENDER_EXTERNAL_HOSTNAME')
@@ -27,6 +39,7 @@ INSTALLED_APPS = [
     'bootstrap5',
     "debug_toolbar",
     'django.contrib.humanize',
+    'dashboard',
 ]
 
 MIDDLEWARE = [
@@ -46,7 +59,10 @@ ROOT_URLCONF = 'AppCompueasys.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'core', 'templates')],
+        'DIRS': [
+            os.path.join(BASE_DIR, 'core', 'templates'),
+            os.path.join(BASE_DIR, 'dashboard', 'templates'),
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -58,19 +74,28 @@ TEMPLATES = [
     },
 ]
 
+
 WSGI_APPLICATION = 'AppCompueasys.wsgi.application'
 
 # Base de datos principal: PostgreSQL para Render
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME'),
-        'USER': os.getenv('DB_USERNAME'),
-        'PASSWORD': os.getenv('DB_PASSWORD'),
-        'HOST': os.getenv('DB_HOST'),
-        'PORT': os.getenv('DB_PORT'),
+if os.getenv('DJANGO_DEVELOPMENT') == 'True':
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('DB_NAME'),
+            'USER': os.getenv('DB_USERNAME'),
+            'PASSWORD': os.getenv('DB_PASSWORD'),
+            'HOST': os.getenv('DB_HOST'),
+            'PORT': os.getenv('DB_PORT'),
+        }
+    }
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -94,13 +119,16 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+
 STATICFILES_DIRS = [
-    join(BASE_DIR, 'core', 'static'),
-    join(BASE_DIR, 'contable', 'static'),
+     join(BASE_DIR, 'core', 'static'),
+     join(BASE_DIR, 'dashboard', 'static'),
+     join(BASE_DIR, 'contable', 'static'),
 ]
 
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media_files/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media_files')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 INTERNAL_IPS = ["127.0.0.1"]
