@@ -60,6 +60,16 @@ class Galeria(models.Model):
 class SimpleUser(models.Model):
     email = models.EmailField(unique=True)
     telefono = models.CharField(max_length=20)
+    name = models.CharField(max_length=100)
+    password = models.CharField(max_length=100)  # Considera usar un sistema de
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    is_active = models.BooleanField(default=True)
+    address = models.CharField(max_length=255, blank=True, null=True)
+    city = models.CharField(max_length=100, blank=True, null=True)  
+    departamento = models.CharField(max_length=100, blank=True, null=True)
+    codigo_postal = models.CharField(max_length=20, blank=True, null=True)
+    
 
     def __str__(self):
         return self.email

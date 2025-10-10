@@ -5,8 +5,9 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.core.mail import send_mail  
 from django.contrib.auth.models import User
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 import urllib.parse
+from dashboard.models import register_superuser
 from .models import Category, Type, Galeria, SimpleUser, Pedido, ProductVariant, ProductStore as Product, PedidoDetalle
 
 # Create your views here.
@@ -20,10 +21,15 @@ def login_user(request):
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
-            return redirect('mis_pedidos')
+            if user.is_staff or user.is_superuser:
+                return redirect('/dashboard/dashboard_home')
+            else:
+                return redirect('/mis-pedidos')
         else:
             return render(request, 'login.html', {'error': 'Credenciales incorrectas'})
     return render(request, 'login_user.html')
+
+
 
 def store(request):
     query = request.GET.get('q', '')
@@ -306,9 +312,35 @@ def aboutUs(request):
     return render(request, 'aboutUs.html')
 
 
-def register(request):
-    return render(request, 'register.html')
-
+def register_user(request):
+    if request.method == 'POST':       
+        username = request.POST.get('username')
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+        phone = request.POST.get('phone', '')
+        address = request.POST.get('address', '')
+        # Si quieres que el usuario sea staff, usa True
+       
+        if User.objects.filter(username=username).exists():
+            return render(request, 'register_user.html', {'error': 'El nombre de usuario ya está en uso'})
+        if User.objects.filter(email=email).exists():
+            return render(request, 'register_user.html', {'error': 'El correo electrónico ya está en uso'})
+        user = User.objects.create_user(username=username, email=email, password=password)
+       
+        user.save()
+        # Guarda info adicional en tu modelo register_superuser si lo necesitas
+        register_superuser.objects.create(
+            username=username,
+            email=email,
+            password=password,
+            phone=phone,
+            address=address,
+            is_superuser=True,
+            is_staff=True,
+            is_active=True
+        )
+        return redirect('login_user')
+    return render(request, 'register_user.html')
 
 def index(request):
     return render(request, "index.html")
@@ -515,6 +547,11 @@ def mis_pedidos(request):
         return redirect('login')  # O muestra un mensaje de error
 
     return render(request, 'mis_pedidos.html', {'pedidos': pedidos})    
+
+def logout_view(request):
+    logout(request)
+    return redirect('store')  # Redirect to your homepage or login page
+
 
 # Datos de departamentos y ciudades
 DEPARTAMENTOS_CIUDADES = {

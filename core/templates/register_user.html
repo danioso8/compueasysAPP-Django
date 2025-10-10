@@ -1,0 +1,40 @@
+<html>
+    {% load static %}
+    {% load humanize %}
+    <link rel="stylesheet" type="text/css" href="{% static 'css/styles.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}">
+ 
+ 
+<!DOCTYPE html>
+<head>
+    {% include "navbarr.html" %}
+    <title>Registro de Usuario</title>
+</head>
+<body>
+    <h1>Registro de Usuario</h1>
+    <form method="post" action="{% url 'register_user' %}">
+        {% csrf_token %}
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" required><br>
+
+        <label for="Celular">Teléfono:</label>
+        <input type="text" id="phone" name="phone" required><br>
+
+        <label for="username">Nombre de Usuario:</label>
+        <input type="text" id="username" name="username" required><br>
+
+        <label for="password">Contraseña:</label>
+        <input type="text" id="password" name="password" required><br>
+        <label for="password2">Confirmar Contraseña:</label>
+        <input type="text" id="password2" name="password2" required><br>
+        <label> is_staff:</label>
+        <input type="checkbox" id="is_staff" name="is_staff"><br>
+
+        <input type="submit" value="Registrar_user">
+        {% if error_message %}
+            <p class="error-message">{{ error_message }}</p>
+        {% endif %}
+    </form>
+</body>
+{% include "footer.html" %}
+</html>

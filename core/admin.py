@@ -8,7 +8,8 @@ admin.site.register(Galeria)
 admin.site.register(Category)
 admin.site.register(Type)
 admin.site.register(Pedido)   
-admin.site.register(SimpleUser)    
+admin.site.register(SimpleUser)   
+
 
 
 class GaleriaInline(admin.TabularInline):

@@ -17,6 +17,10 @@
         <input type="text" name="username" placeholder="Correo electrónico" required>
         <input type="password" name="password" placeholder="Contraseña" required>
         <button type="submit">Iniciar sesión</button>
+        <a href="{% url 'register_user' %}">¿No tienes una cuenta? Regístrate</a>
+        {% if error_message %}
+            <p class="error-message">{{ error_message }}</p>
+        {% endif %}
     </form>
 </div>
 </body>

@@ -3,7 +3,7 @@ from django.urls import path, include
 from django.conf.urls.static import static
 from django.contrib import admin
 
-from core.views import login_user, add_to_cart, add_to_cart_detail, clear_cart, pago_exitoso, mis_pedidos, remove_from_cart, store, auctions, services, contactUs, aboutUs, cart, register, login, product_detail, checkout, update_cart
+from core.views import add_to_cart, login_user, add_to_cart_detail, clear_cart, pago_exitoso, mis_pedidos, remove_from_cart, store, auctions, services, contactUs, aboutUs, cart, register_user, login, product_detail, checkout, update_cart, logout_view
 
 from django.conf import settings
 
@@ -12,8 +12,8 @@ urlpatterns = [
     path('store/', store, name='store'),  # Added this line to map the /store URL to the store view    
     path('services/', services, name='services'),  # Added this line to map the /services URL to the Services view
     path('contactUs/', contactUs, name='contactUs'),  # Added this line to map the /contactUs URL to the contactUs view
-    path('aboutUs/', aboutUs, name='aboutUs'),  # Added this line to map the /aboutUs URL to the aboutUs view    
-    path('register/', register, name='register'),  # Added this line to map the /register URL to the register view
+    path('aboutUs/', aboutUs, name='aboutUs'),  # Added this line to map the /aboutUs URL to the aboutUs view
+    path('register_user/', register_user, name='register_user'),  # Added this line to map the /register URL to the register view
     path('login/', login, name='login'),  # Added this line to map the /login URL to the login view
     path('admin/', admin.site.urls),  # URL pattern for the admin site
     path('checkout/', checkout, name='checkout'),  # URL pattern for checkout view
@@ -28,4 +28,5 @@ urlpatterns = [
     path('pago_exitoso/', pago_exitoso, name='pago_exitoso'),  # URL pattern for processing payment
     path('mis-pedidos/', mis_pedidos, name='mis_pedidos'),  # URL pattern for viewing user orders
     path('login_user/', login_user, name='login_user'),  # URL pattern for user login
+    path('logout_view/', logout_view, name='logout_view'),  # URL pattern for user logout
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
