@@ -20,9 +20,30 @@ body {
 .dropdown {
     position: relative;
     display: inline-block;
+    background:none;
+    border:none;
+    font-size: 16px;
+  
+    font-family: Arial, sans-serif;
+    cursor: pointer;
+    padding: 8px 12px;
+    
+    
+   
 }
-
-.dropdown-content {
+.btn-dropdown{
+    background: none;
+    border: none;
+    font-size: 16px;
+    color: #f8f6f6;
+    text-decoration: none;
+    font-family: Arial, sans-serif;
+    cursor: pointer;
+    padding: 8px 12px;
+    
+    
+}
+.dropdown-content-ul {
     display: none;
     position: absolute;
     background-color: #f9f9f9;
@@ -31,25 +52,35 @@ body {
     z-index: 1;
     margin-top: 5px;
     right: 0;
+    color: #0e0d0d;
+   
 }
-
-.dropdown-content li {
+.dropdown-content-ul li {
     list-style: none;
+   
+   
 }
 
-.dropdown-content li a {
-    color: #333;
+.dropdown-content-ul li a {
+    color: #0e0d0d;
     padding: 8px 12px;
     text-decoration: none;
-    display: block;
+    display: block;  
+    
 }
 
-.dropdown-content li a:hover {
-    background-color: #eee;
+.btn-dropdown:hover {
+   box-shadow: 0 4px 8px rgba(236, 233, 233, 0.2);
+    cursor: pointer;
 }
 
-.dropdown:hover .dropdown-content {
+.dropdown-content li a:hover {    
+    color: #000;
+}
+
+.dropdown:hover .dropdown-content-ul {
     display: block;
+    color: #0e0d0d;
 }
 .name-company {
     color: #f3efef;

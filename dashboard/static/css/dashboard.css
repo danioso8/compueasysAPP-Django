@@ -62,6 +62,107 @@ th {
     background: #eee;
 }
 
+/* form crear producto */
+
+.form-crear-producto {
+    background: #fff;
+    padding: 24px 32px;
+    border-radius: 8px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+    max-width: 100%;
+    margin: 24px auto;
+}
+.precios{
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    margin-top: 10px;
+}
+.categorias-proveedor{
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    margin-top: 10px;
+}
+.form-crear-producto h2 {
+    margin-top: 0;
+    color: #222;
+    font-size: 1.4em;
+    margin-bottom: 18px;
+}
+
+.form-crear-producto label {
+    display: block;
+    margin-top: 14px;
+    margin-bottom: 4px;
+    font-weight: bold;
+    color: #333;
+}
+
+.form-crear-producto input[type="text"],
+.form-crear-producto input[type="number"],
+.form-crear-producto input[type="file"],
+.form-crear-producto textarea {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    font-size: 1em;
+    box-sizing: border-box;
+}
+
+.form-crear-producto textarea {
+    min-height: 60px;
+    resize: vertical;
+}
+
+.form-crear-producto button[type="submit"] {
+    background: #222;
+    color: #fff;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 4px;
+    font-size: 1em;
+    cursor: pointer;
+    margin-top: 16px;
+    transition: background 0.2s;
+}
+.form-select, select {
+    background: #fff !important;
+    color: #222 !important;
+    border: 1px solid #ccc !important;
+}
+
+.form-select option {
+    background: #fff !important;
+    color: #222 !important;
+}
+.form-crear-producto button[type="submit"]:hover {
+    background: #444;
+}
+
+.variante-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.form-crear-producto button[type="button"] {
+    background: #eee;
+    color: #222;
+    border: 1px solid #ccc;
+    padding: 6px 16px;
+    border-radius: 4px;
+    font-size: 0.95em;
+    cursor: pointer;
+    margin-bottom: 10px;
+}
+
+.form-crear-producto button[type="button"]:hover {
+    background: #ddd;
+}
+
 /* ventana modal comentario */
   .modal1 {
             display: none;

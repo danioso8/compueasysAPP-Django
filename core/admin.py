@@ -1,14 +1,16 @@
 from django.contrib import admin
 
 # Register your models here.
-from .models import ProductStore, Galeria, Category, Type, Pedido, SimpleUser, ProductVariant
+from .models import ProductStore, Galeria, Category, Type, Pedido, SimpleUser, ProductVariant, proveedor
 
 admin.site.register(ProductVariant)
 admin.site.register(Galeria)   
 admin.site.register(Category)
 admin.site.register(Type)
 admin.site.register(Pedido)   
-admin.site.register(SimpleUser)   
+admin.site.register(SimpleUser)  
+admin.site.register(proveedor)
+
 
 
 

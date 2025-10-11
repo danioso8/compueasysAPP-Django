@@ -29,8 +29,6 @@ def login_user(request):
             return render(request, 'login.html', {'error': 'Credenciales incorrectas'})
     return render(request, 'login_user.html')
 
-
-
 def store(request):
     query = request.GET.get('q', '')
     category_id = request.GET.get('category', '')
@@ -129,7 +127,6 @@ def checkout(request, note=None):
         'saved': saved
     }
     return render(request, 'checkout.html', context)
-
 
 def pago_exitoso(request):
     nota = request.POST.get('note', '')
@@ -299,6 +296,7 @@ def pago_exitoso(request):
             'whatsapp_url': whatsapp_url
         })
     return HttpResponse("Invalid request", status=400)
+
 def auctions(request):
     return render(request, 'auctions.html')
 
@@ -384,8 +382,6 @@ def cart(request):
         'cart_count': sum([item['quantity'] if isinstance(item, dict) else item for item in cart.values()])
     }
     return render(request, 'cart.html', context)
-
-
 
 def update_cart(request, product_id):
     if request.method == 'POST':

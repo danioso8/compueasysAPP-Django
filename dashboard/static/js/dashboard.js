@@ -14,3 +14,15 @@ window.onclick = function(event) {
         closeEditModal();
     }
 }
+
+
+function agregarVariante() {
+    var container = document.getElementById('variantes-container');
+    var row = document.createElement('div');
+    row.className = 'variante-row';
+    row.innerHTML =
+        '<input type="text" name="variante_nombre[]" placeholder="Nombre variante" />' +
+        '<input type="text" name="variante_valor[]" placeholder="Valor variante" />' +
+        '<input type="file" name="variante_imagen[]" />';
+    container.appendChild(row);
+}

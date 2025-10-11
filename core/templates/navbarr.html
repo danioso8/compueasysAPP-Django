@@ -11,13 +11,13 @@
         <li><a href="{% url 'contactUs' %}">Contactenos</a></li>
         <div class="login-user">
             {% if user.is_authenticated %}
-                <li class="dropdown">
-                    <a class="text-bg-success" href="/admin">Bienvenido, {{ user.get_full_name|default:user.username }}</a>
-                    <ul class="dropdown-content">
+            <div class="dropdown">
+                    <a class="btn-dropdown"> {{ user.get_full_name|default:user.username }}</a>
+                    <div class="dropdown-content-ul">
                         <li><a href="/mis-pedidos">Mis pedidos</a></li>
                         <li><a href="{% url 'logout_view' %}">Cerrar sesión</a></li>
-                    </ul>
-                </li>
+                    </div>              
+            </div>
             {% else %}
                 <li><a href="/admin">Iniciar Sesión</a></li>
             {% endif %}
