@@ -1,10 +1,25 @@
 from django.contrib.auth.decorators import login_required, permission_required
-from core.models import ProductStore, Pedido, SimpleUser, Category, Type, proveedor, Galeria
+from core.models import ProductStore, Pedido, SimpleUser, Category, Type, proveedor, Galeria, ProductVariant
 from django.contrib.auth.models import User
 from dashboard.models import register_superuser
 from django.shortcuts import get_object_or_404, redirect, render
+from django.db.models.signals import post_delete
+from django.dispatch import receiver
 
+@receiver(post_delete, sender=ProductStore)
+def delete_product_image(sender, instance, **kwargs):
+    if instance.imagen:
+        instance.imagen.delete(False)
 
+@receiver(post_delete, sender=ProductVariant)
+def delete_variant_image(sender, instance, **kwargs):
+    if instance.imagen:
+        instance.imagen.delete(False)
+
+@receiver(post_delete, sender=Galeria)
+def delete_galeria_image(sender, instance, **kwargs):
+    if instance.galeria:
+        instance.galeria.delete(False)
 
 from django.views.decorators.csrf import csrf_exempt
 
@@ -14,6 +29,7 @@ def dashboard_home(request):
     categorias = Category.objects.all()
     tipos = Type.objects.all()
     proveedores = proveedor.objects.all()
+    userSimples = SimpleUser.objects.all()
     show_create_product_form = request.GET.get('view') == 'productos' and request.GET.get('crear') == '1'
 
     if request.method == 'POST' and show_create_product_form:
@@ -69,6 +85,8 @@ def dashboard_home(request):
             imagen=imagen
         )
 
+        
+
         # Galería (ManyToMany)
         for img in galeria_files:
             galeria_obj = Galeria.objects.create(galeria=img, product=product)  # Usa el nombre real del campo de imagen
@@ -76,12 +94,22 @@ def dashboard_home(request):
 
         # Variantes (si tienes modelo Variante)
         variante_nombres = request.POST.getlist('variante_nombre[]')
-        variante_valores = request.POST.getlist('variante_valor[]')
+        variante_precio = request.POST.getlist('variante_precio[]')
         variante_imagenes = request.FILES.getlist('variante_imagen[]')
-        if hasattr(product, 'variantes'):
-            for nombre, valor, img in zip(variante_nombres, variante_valores, variante_imagenes):
-                if nombre and valor:
-                    product.variantes.create(nombre=nombre, valor=valor, imagen=img)
+        variante_stock = request.POST.getlist('variante_stock[]')
+        variante_color = request.POST.getlist('variante_color[]')
+        variante_talla = request.POST.getlist('variante_talla[]')
+        for nombre, precio, stock, color, talla, img in zip(variante_nombres, variante_precio, variante_stock, variante_color, variante_talla, variante_imagenes):
+            if nombre and precio:
+                ProductVariant.objects.create(
+                    product=product,
+                    nombre=nombre,
+                    precio=precio,
+                    stock=stock,
+                    color=color,
+                    talla=talla,
+                    imagen=img
+                    )
 
         return redirect('dashboard_home')
 
@@ -90,6 +118,7 @@ def dashboard_home(request):
         'categorias': categorias,
         'tipos': tipos,
         'proveedores': proveedores,
+        'usuarios': userSimples,
         'show_create_product_form': show_create_product_form,
     })
 
@@ -157,3 +186,12 @@ def delete_product(request, product_id):
     product = get_object_or_404(ProductStore, id=product_id)
     product.delete()
     return redirect('dashboard_home')           
+
+
+
+
+
+
+
+
+   

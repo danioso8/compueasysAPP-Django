@@ -22,7 +22,10 @@ function agregarVariante() {
     row.className = 'variante-row';
     row.innerHTML =
         '<input type="text" name="variante_nombre[]" placeholder="Nombre variante" />' +
-        '<input type="text" name="variante_valor[]" placeholder="Valor variante" />' +
+        '<input type="text" name="variante_precio[]" placeholder="Precio variante" />' +
+        '<input type="number" name="variante_stock[]" placeholder="Stock variante" />' +
+        '<input type="text" name="variante_color[]" placeholder="Color variante" />' +
+        '<input type="text" name="variante_talla[]" placeholder="Talla variante" />' +
         '<input type="file" name="variante_imagen[]" />';
     container.appendChild(row);
 }

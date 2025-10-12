@@ -30,3 +30,9 @@ function updateVariantImage() {
         img.style.display = 'none';
     }
 }
+
+
+
+
+
+

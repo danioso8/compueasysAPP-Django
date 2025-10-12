@@ -191,10 +191,13 @@
                     <input type="file" name="galeria" multiple />
                     <label>Variantes:</label>
                     <div id="variantes-container">
-                        <div class="variante-row">
+                        <div class="variante-row">                            
                             <input type="text" name="variante_nombre[]" placeholder="Nombre variante" />
-                            <input type="text" name="variante_valor[]" placeholder="Valor variante" />
-                            <input type="file" name="variante_imagen[]" />
+                            <input type="number" name="variante_precio[]" placeholder="Precio" step="0.01" />
+                            <input type="number" name="variante_stock[]" placeholder="Stock" />
+                            <input type="text" name="variante_color[]" placeholder="Color" />
+                            <input type="text" name="variante_talla[]" placeholder="Talla" />
+                            <input type="file" name="variante_imagen[]" />  
                         </div>
                     </div>
                     <button type="button" onclick="agregarVariante()">Agregar otra variante</button>

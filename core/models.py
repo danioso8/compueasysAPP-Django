@@ -71,6 +71,7 @@ class SimpleUser(models.Model):
     email = models.EmailField(unique=True)
     telefono = models.CharField(max_length=20)
     name = models.CharField(max_length=100)
+    username = models.CharField(max_length=100,)
     password = models.CharField(max_length=100)  # Considera usar un sistema de
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
