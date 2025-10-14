@@ -26,8 +26,8 @@ def login_user(request):
             else:
                 return redirect('/mis-pedidos')
         else:
-            return render(request, 'login.html', {'error': 'Credenciales incorrectas'})
-    return render(request, 'login.html')
+            return render(request, 'login_user.html', {'error': 'Credenciales incorrectas'})
+    return render(request, 'login_user.html')
 
 def store(request):
     query = request.GET.get('q', '')
