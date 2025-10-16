@@ -7,8 +7,12 @@ from django.core.mail import send_mail
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 import urllib.parse
+from django.http import JsonResponse, HttpResponseRedirect
 from dashboard.models import register_superuser
 from .models import Category, Type, Galeria, SimpleUser, Pedido, ProductVariant, ProductStore as Product, PedidoDetalle
+
+from django.conf import settings
+import json
 
 # Create your views here.
 def home(request):
@@ -18,7 +22,17 @@ def login_user(request):
     if request.method == 'POST':
         username = request.POST['username']
         password = request.POST['password']
-        user = authenticate(request, username=username, password=password)        
+        superuser_qs = register_superuser.objects.filter(username=username)
+        if superuser_qs.exists():
+            superuser = superuser_qs.first()
+            if superuser.password == password:
+                request.session['superuser_id'] = superuser.id
+                request.session['superuser_username'] = superuser.username
+                return redirect('/dashboard/dashboard_home')  
+            else:
+                return render(request, 'login_user.html', {'error': 'Contraseña incorrecta'})
+        return render(request, 'login_user.html', {'error': 'El usuario no está registrado'})
+        user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
             if user.is_staff:
@@ -447,37 +461,46 @@ def update_cart(request, product_id):
         return JsonResponse({'success': False})
     return JsonResponse({'success': False}, status=400)
 
-def add_to_cart(request, product_id):
-    product = Product.objects.get(id=product_id)
+def add_to_cart(request, product_id):    
+    try:
+        product = Product.objects.get(id=product_id)     
+    except Product.DoesNotExist:
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'error': 'Producto no encontrado'}, status=404)
+        return HttpResponseRedirect('/store')
+
     variant_id = request.POST.get('variant_id')
     product_id = str(product_id)
     key = f"{product_id}-{variant_id}" if variant_id else product_id
     cart = request.session.get('cart', {})
 
+     # Cantidad a añadir
+
     if request.method == 'POST':
         quantity = int(request.POST.get('quantity', 1))
     else:
         quantity = 1
-     # --- Unifica formato antiguo a nuevo ---
+
     if key in cart and isinstance(cart[key], int):
         cart[key] = {
             'product_id': product_id,
             'variant_id': variant_id,
             'quantity': cart[key],
-        }    
-    # Si ya existe ese producto+variante, suma la cantidad
+        }
     if key in cart:
         cart[key]['quantity'] += quantity
     else:
-     # Usa una clave única para producto+variante
-     key = f"{product_id}-{variant_id}" if variant_id else str(product_id)
-     cart[key] = {
-        'product_id': product_id,
-        'variant_id': variant_id,
-        'quantity': quantity,
-    }
+        cart[key] = {
+            'product_id': product_id,
+            'variant_id': variant_id,
+            'quantity': quantity,
+        }
     request.session['cart'] = cart
-    return redirect('store')
+
+    cart_count = sum([item['quantity'] if isinstance(item, dict) else item for item in cart.values()])
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return JsonResponse({'cart_count': cart_count})
+    return HttpResponseRedirect('/store')
 
 def add_to_cart_detail(request, product_id):
     product = Product.objects.get(id=product_id)

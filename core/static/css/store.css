@@ -20,9 +20,9 @@
 }
 .navbar-store .login-user{
     position: absolute;
-    width: 10%;
-   
-    margin-left: 1750px; 
+    width: 50%;
+    display: flex;
+    margin-left: 2500px; 
     font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
    
      
@@ -39,7 +39,8 @@
     text-decoration: none;
     color: rgb(146, 202, 15);
     padding: 5px;
-    font-size: 20px;
+    font-size: 26px;
+   
 }
 .navbar-store .login-user li a i {
     margin-left: 8px;

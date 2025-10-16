@@ -6,6 +6,8 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
 from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
+
 
 @login_required
 def dashboard_home(request):
@@ -13,7 +15,7 @@ def dashboard_home(request):
     categorias = Category.objects.all()
     tipos = Type.objects.all()
     proveedores = proveedor.objects.all()
-    userSimples = SimpleUser.objects.all()
+    userSimples = register_superuser.objects.all()
     show_create_product_form = request.GET.get('view') == 'productos' and request.GET.get('crear') == '1'
 
     if request.method == 'POST' and show_create_product_form:
@@ -112,11 +114,21 @@ def dar_permiso_staff(request, user_id):
     usuario.is_staff = True
     usuario.save()
     return redirect('dashboard_home')
+
 @login_required
 def eliminar_usuario(request, user_id):
-    usuario = get_object_or_404(User, id=user_id)
-    usuario.delete()
+    success = False
+    if request.method == 'POST':
+        try:
+            usuario = register_superuser.objects.get(id=user_id)
+            usuario.delete()
+            success = True
+        except register_superuser.DoesNotExist:
+            success = False
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return JsonResponse({'success': success})
     return redirect('dashboard_home')
+
 @login_required
 def editar_usuario(request, user_id):
     usuario = get_object_or_404(User, id=user_id)
@@ -128,17 +140,9 @@ def editar_usuario(request, user_id):
     return render(request, 'dashboard/editar_usuario.html', {'usuario': usuario})
 
 
-@login_required
-def crear_usuario(request):
-    if request.method == 'POST':
-        username = request.POST.get('username')
-        email = request.POST.get('email')
-        password = request.POST.get('password')
-        usuario = User.objects.create_user(username=username, email=email, password=password)
-        return redirect('dashboard_home')
-    return render(request, 'dashboard/crear_usuario.html')
 
-from core.models import ProductStore, Galeria
+
+
 
 @login_required
 def edit_product(request, product_id):
@@ -173,8 +177,30 @@ def delete_product(request, product_id):
 
 
 
+@login_required
+def crear_categoria(request):
+    if request.method == 'POST':
+        nombre = request.POST.get('nombre')
+        if nombre:
+            Category.objects.create(nombre=nombre)
+    return redirect('dashboard_home')  # O la vista que corresponda
 
+@login_required
+def delete_category(request, category_id):
+    category = get_object_or_404(Category, id=category_id)
+    category.delete()
+    return redirect('dashboard_home')
 
+@login_required
+def editar_categoria(request, category_id):
+    category = get_object_or_404(Category, id=category_id)
+    if request.method == 'POST':
+        nombre = request.POST.get('nombre')
+        if nombre:
+            category.nombre = nombre
+            category.save()
+            return redirect('dashboard_home')
+    return render(request, 'dashboard/editar_categoria.html', {'category': category})        
 
 
 

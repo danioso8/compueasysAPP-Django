@@ -29,3 +29,35 @@ function agregarVariante() {
         '<input type="file" name="variante_imagen[]" />';
     container.appendChild(row);
 }
+
+
+
+  const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+document.querySelectorAll('.eliminar-usuario-btn').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        if (!confirm('¿Seguro que deseas eliminar este usuario?')) return;
+        const userId = btn.getAttribute('data-user-id');  
+        alert(userId);   
+        fetch(`/dashboard/usuario/${userId}/eliminar_usuario/`, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': csrfToken              
+            }
+        })
+        .then(response => response.json())       
+        .then(data => {
+           alert(data);
+            if (data.success) {
+                // Elimina la fila del usuario por id
+                const fila = btn.closest('tr');
+                if (fila) fila.remove();
+            } else {
+                alert('No se pudo eliminar el usuario.');
+            }
+        })
+        .catch(() => alert('Error al eliminar el usuario.'));
+    });
+});

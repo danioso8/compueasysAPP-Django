@@ -17,6 +17,7 @@
                 <li><a href="?view=usuarios">Usuarios</a></li>
                 <li><a href="?view=productos">Productos</a></li>
                 <li><a href="?view=pedidos">Pedidos</a></li>
+                <li><a href="?view=categoria">Categorías</a></li>
                 <li><a href="?view=inventario">Inventario</a></li>
                 <li><a href="?view=proveedores">Proveedores</a></li>
             </ul>
@@ -24,6 +25,7 @@
         <main class="main-content">
             {% if request.GET.view == "usuarios" %}
                 <h2>Usuarios</h2>
+                 <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}"> 
                 <table>
                     <tr>
                         <th>Username</th>
@@ -61,10 +63,12 @@
                                 <option value="True">Sí</option>
                                 <option value="False">No</option>
                             </select>
-                        </td>
-                        <td>
-                            <button onclick="openEditModal('{{ usuario.id }}', '{{ usuario.username }}', '{{ usuario.email }}')">Editar</button>
-                            <a href="{% url 'eliminar_usuario' usuario.id %}">Eliminar</a>
+                        </td>                    
+                            
+                            <td>
+                                <button onclick="openEditModal('{{ usuario.id }}', '{{ usuario.username }}', '{{ usuario.email }}')">Editar</button>
+                                <button class="btn btn-danger eliminar-usuario-btn" data-user-id="{{ usuario.id }}">Eliminar</button>
+                           </td>
                             {% if usuario.is_staff %}
                                 <span>Admin</span>
                             {% endif %}
@@ -100,8 +104,11 @@
                             </select>
                         </td>
                         <td>
-                            <button onclick="openEditModal('{{ usuario.id }}', '{{ usuario.username }}', '{{ usuario.email }}')">Editar</button>
-                            <a href="{% url 'eliminar_usuario' usuario.id %}">Eliminar</a>
+                            <td>
+                                <button onclick="openEditModal('{{ usuario.id }}', '{{ usuario.username }}', '{{ usuario.email }}')">Editar</button>
+                            <td>
+                                <button class="btn btn-danger eliminar-usuario-btn" data-user-id="{{ usuario.id }}">Eliminar</button>
+                            </td>
                             {% if usuario.is_staff %}
                                 <span>Admin</span>
                             {% endif %}
@@ -126,7 +133,7 @@
                     </tr>
                     {% endfor %}
                 </table>
-                {% if show_create_product_form %}
+            {% if show_create_product_form %}
                 <h2>Crear Producto</h2>
                 <form method="post" enctype="multipart/form-data" class="form-crear-producto">
                     {% csrf_token %}
@@ -225,6 +232,30 @@
             {% elif request.GET.view == "inventario" %}
                 <h2>Inventario</h2>
                 <p>Aquí puedes mostrar tu inventario...</p>
+            {% elif request.GET.view == "categoria" %}
+                <h2>Categorías</h2>
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNuevaCategoria">
+                    Nueva Categoría
+                </button>
+                 
+                <table>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Acciones</th>
+                       
+                    </tr>
+                    {% for categoria in categorias %}
+                    <tr>
+                       
+                        <td>{{ categoria.nombre }}</td>
+                        <td>
+                            <a href="{% url 'editar_categoria' categoria.id %}" class="btn btn-sm btn-warning">Editar</a>
+                            <a href="{% url 'delete_category' categoria.id %}" class="btn btn-sm btn-danger">Eliminar</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </table> 
+              
             {% elif request.GET.view == "proveedores" %}
                 <h2>Proveedores</h2>
                 {% if proveedores %}
@@ -242,6 +273,30 @@
             {% endif %}
         </main>
     </div>
+    <!-- Modal para nueva categoría -->
+     <!-- Modal para crear nueva categoría -->
+<div class="modal fade" id="modalNuevaCategoria" tabindex="-1" aria-labelledby="modalNuevaCategoriaLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="post" action="{% url 'crear_categoria' %}">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalNuevaCategoriaLabel">Crear nueva categoría</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <label for="nombre_categoria">Nombre de la categoría:</label>
+          <input type="text" class="form-control" id="nombre_categoria" name="nombre" required>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+    <!-- Modal para editar usuario -->
     <div id="editModal" class="modal1">
         <div class="modal-content1">
             <span class="close" onclick="closeEditModal()">&times;</span>
@@ -277,5 +332,7 @@
     </div>
     <script src="{% static 'js/dashboard.js' %}"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+
+    
 </body>
 </html>

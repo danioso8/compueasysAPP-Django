@@ -124,7 +124,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media_files')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 INTERNAL_IPS = ["127.0.0.1"]
-
+LOGIN_URL = '/login_user/'
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
