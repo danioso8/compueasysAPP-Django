@@ -2,13 +2,13 @@ from django.contrib.auth.decorators import login_required, permission_required
 from core.models import ProductStore, Pedido, SimpleUser, Category, Type, proveedor, Galeria, ProductVariant
 from django.contrib.auth.models import User
 from dashboard.models import register_superuser
-from django.shortcuts import get_object_or_404, redirect, render
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from functools import wraps
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render, get_object_or_404
+from django.urls import reverse
 
 def superuser_required(view_func):
     @wraps(view_func)
@@ -213,4 +213,57 @@ def editar_categoria(request, category_id):
 
 
 
-   
+# ...existing code...
+
+
+def api_get_product(request, product_id):
+    try:
+        producto = Product.objects.get(id=product_id)  # ajusta el modelo si se llama distinto
+    except Product.DoesNotExist:
+        return JsonResponse({'error': 'Producto no encontrado'}, status=404)
+
+    # main image
+    try:
+        imagen_url = producto.imagen.url if producto.imagen else ''
+    except Exception:
+        imagen_url = ''
+
+    # gallery: intenta varios patrones según tu modelo
+    gallery_urls = []
+    # si tienes relación product.galeria_set o product.galeria
+    if hasattr(producto, 'galeria'):
+        try:
+            for f in producto.galeria.all():
+                if hasattr(f, 'imagen'):
+                    gallery_urls.append(f.imagen.url)
+                elif hasattr(f, 'url'):
+                    gallery_urls.append(f.url)
+        except Exception:
+            pass
+    # fallback: si tienes campo galeria como texto separado por comas
+    if not gallery_urls:
+        gal_text = getattr(producto, 'galeria', '') or ''
+        if isinstance(gal_text, str) and gal_text:
+            for p in gal_text.split(','):
+                p = p.strip()
+                if p:
+                    gallery_urls.append(p)
+
+    data = {
+        'id': producto.id,
+        'name': producto.name,
+        'description': producto.description,
+        'price_buy': getattr(producto, 'price_buy', ''),
+        'price': getattr(producto, 'price', ''),
+        'stock': getattr(producto, 'stock', ''),
+        'descuento': getattr(producto, 'descuento', ''),
+        'iva': getattr(producto, 'iva', ''),
+        'proveedor_id': getattr(producto.proveedor, 'id', '') if getattr(producto, 'proveedor', None) else '',
+        'categoria_id': getattr(producto.categoria, 'id', '') if getattr(producto, 'categoria', None) else '',
+        'type_id': getattr(producto.type, 'id', '') if getattr(producto, 'type', None) else '',
+        'imagen': imagen_url,
+        'gallery': gallery_urls,
+        'update_url': reverse('edit_product', args=[producto.id]) if 'edit_product' in [u.name for u in []] else '',  # placeholder
+    }
+    return JsonResponse(data)
+# ...existing code...   

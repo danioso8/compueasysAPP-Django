@@ -17,7 +17,8 @@ from .views import (
     delete_product,
     delete_category,
     crear_categoria,
-    editar_categoria,    
+    editar_categoria,  
+    api_get_product,  
 )
 
 urlpatterns = [
@@ -34,7 +35,8 @@ urlpatterns = [
     path('categoria/crear/', crear_categoria, name='crear_categoria'),
     path('categoria/<int:category_id>/editar/', editar_categoria, name='editar_categoria'),
     path('categoria/<int:category_id>/eliminar/', delete_category, name='delete_category'),
-   
+
+     path('api/producto/<int:product_id>/', api_get_product, name='api_get_product'),
 ]
 
 if settings.DEBUG:

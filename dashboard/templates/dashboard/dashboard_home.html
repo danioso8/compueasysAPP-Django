@@ -131,97 +131,119 @@
                 <a href="?view=productos&crear=1" class="btn-crear-producto">Crear producto</a>
                 <table>
                     <tr>
+                        <th>Img</th>
                         <th>Nombre</th>
                         <th>Stock</th>
                         <th>Precio</th>
                     </tr>
                     {% for producto in productos %}
-                    <tr>
+                  
+                     <tr>
+                      <a href="?view=productos&editar={{ producto.id }}"> 
                         <td><img src="{{ producto.imagen.url }}" alt="{{ producto.name }}" width="50" height="50"/></td>
                         <td>{{ producto.name }}</td>
                         <td>{{ producto.stock }}</td>
                         <td>${{ producto.price }}</td>
+                     </a>
                     </tr>
+                
                     {% endfor %}
                 </table>
-            {% if show_create_product_form %}
-                <h2>Crear Producto</h2>
-                <form method="post" enctype="multipart/form-data" class="form-crear-producto">
-                    {% csrf_token %}
-                    <label>Nombre:</label>
-                    <input type="text" name="name" required />
-                    <label>Descripción:</label>
-                    <textarea name="description"></textarea>
-                    <div class="precios">
-                        <div>
-                            <label>Precio de compra:</label>
-                            <input type="number" name="price_buy" step="0.01" required />
-                        </div>
-                        <div>
-                            <label>Precio de venta:</label>
-                            <input type="number" name="price" step="0.01" required />
-                        </div>
-                        <div>
-                            <label>Stock:</label>
-                            <input type="number" name="stock" required />
-                        </div>
-                        <div>
-                            <label>Descuento:</label>
-                            <input type="number" name="descuento" step="0.01" />
-                        </div>
-                        <div>
-                            <label>IVA:</label>
-                            <input type="number" name="iva" step="0.01" />
-                        </div>
-                    </div>
-                    <div class="categorias-proveedor">
-                        <div>
-                            <label>Proveedor:</label>
-                            <select name="proveedor" class="form-select">                               
-                                <option value="">Seleccione un proveedor</option>
-                                {% for prov in proveedores %}
-                                    <option value="{{ prov.id }}">{{ prov.nombre }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div>
-                            <label>Categorías:</label>
-                            <select name="categoria" class="form-select">
-                               <option value="">Seleccione una categoría</option>
-                                {% for categoria in categorias %}
-                                    <option value="{{ categoria.id }}">{{ categoria.nombre }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div>
-                            <label>Tipo de producto:</label>
-                            <select name="type" class="form-select">
-                                <option value="">Seleccione un tipo</option>
-                                {% for tipo in tipos %}
-                                    <option value="{{ tipo.id }}">{{ tipo.name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                    </div>
-                    <label>Imagen principal:</label>
-                    <input type="file" name="images" />
-                    <label>Galería:</label>
-                    <input type="file" name="galeria" multiple />
-                    <label>Variantes:</label>
-                    <div id="variantes-container">
-                        <div class="variante-row">                            
-                            <input type="text" name="variante_nombre[]" placeholder="Nombre variante" />
-                            <input type="number" name="variante_precio[]" placeholder="Precio" step="0.01" />
-                            <input type="number" name="variante_stock[]" placeholder="Stock" />
-                            <input type="text" name="variante_color[]" placeholder="Color" />
-                            <input type="text" name="variante_talla[]" placeholder="Talla" />
-                            <input type="file" name="variante_imagen[]" />  
-                        </div>
-                    </div>
-                    <button type="button" onclick="agregarVariante()">Agregar otra variante</button>
-                    <button type="submit">Guardar</button>
-                </form>
-                {% endif %}
+                
+            <!-- ...existing code... -->
+{% if show_create_product_form %}
+    <h2 id="form-title">Crear Producto</h2>
+    <form id="form-crear-producto" method="post" enctype="multipart/form-data" class="form-crear-producto" action="{% url 'create_product' %}">
+        {% csrf_token %}
+        <input type="hidden" name="product_id" id="producto_id" value="" />
+
+        <label>Nombre:</label>
+        <input type="text" name="name" id="producto_name" required />
+
+        <label>Descripción:</label>
+        <textarea name="description" id="producto_description"></textarea>
+
+        <div class="precios">
+            <div>
+                <label>Precio de compra:</label>
+                <input type="number" name="price_buy" id="producto_price_buy" step="0.01" required />
+            </div>
+            <div>
+                <label>Precio de venta:</label>
+                <input type="number" name="price" id="producto_price" step="0.01" required />
+            </div>
+            <div>
+                <label>Stock:</label>
+                <input type="number" name="stock" id="producto_stock" required />
+            </div>
+            <div>
+                <label>Descuento:</label>
+                <input type="number" name="descuento" id="producto_descuento" step="0.01" />
+            </div>
+            <div>
+                <label>IVA:</label>
+                <input type="number" name="iva" id="producto_iva" step="0.01" />
+            </div>
+        </div>
+
+        <div class="categorias-proveedor">
+            <div>
+                <label>Proveedor:</label>
+                <select name="proveedor" id="producto_proveedor" class="form-select">
+                    <option value="">Seleccione un proveedor</option>
+                    {% for prov in proveedores %}
+                        <option value="{{ prov.id }}">{{ prov.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label>Categorías:</label>
+                <select name="categoria" id="producto_categoria" class="form-select">
+                    <option value="">Seleccione una categoría</option>
+                    {% for categoria in categorias %}
+                        <option value="{{ categoria.id }}">{{ categoria.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label>Tipo de producto:</label>
+                <select name="type" id="producto_type" class="form-select">
+                    <option value="">Seleccione un tipo</option>
+                    {% for tipo in tipos %}
+                        <option value="{{ tipo.id }}">{{ tipo.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <label>Imagen principal:</label>
+        <input type="file" name="images" id="producto_images" />
+        <div id="preview-main" style="margin-top:8px;">
+            <img id="preview-main-img" src="" alt="Imagen principal" style="max-width:150px; display:none;" />
+        </div>
+
+        <label>Galería:</label>
+        <input type="file" name="galeria" id="producto_galeria" multiple />
+        <div id="preview-gallery" style="margin-top:8px; display:flex; gap:8px;"></div>
+
+        <label>Variantes:</label>
+        <div id="variantes-container">
+            <div class="variante-row">
+                <input type="text" name="variante_nombre[]" placeholder="Nombre variante" />
+                <input type="number" name="variante_precio[]" placeholder="Precio" step="0.01" />
+                <input type="number" name="variante_stock[]" placeholder="Stock" />
+                <input type="text" name="variante_color[]" placeholder="Color" />
+                <input type="text" name="variante_talla[]" placeholder="Talla" />
+                <input type="file" name="variante_imagen[]" />
+            </div>
+        </div>
+
+        <button type="button" onclick="agregarVariante()">Agregar otra variante</button>
+        <button type="submit" id="form-submit-btn">Guardar</button>
+        <button type="button" id="form-clear-btn">Nuevo</button>
+    </form>
+{% endif %}
+<!-- ...existing code... -->
             {% elif request.GET.view == "pedidos" %}
                 <h2>Pedidos</h2>
                 <table>
@@ -284,7 +306,7 @@
             {% endif %}
         </main>
     </div>
-    <!-- Modal para nueva categoría -->
+    
      <!-- Modal para crear nueva categoría -->
 <div class="modal fade" id="modalNuevaCategoria" tabindex="-1" aria-labelledby="modalNuevaCategoriaLabel" aria-hidden="true">
   <div class="modal-dialog">
