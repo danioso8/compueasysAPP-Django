@@ -20,10 +20,10 @@ def home(request):
 
 def login_user(request):
     if request.method == 'POST':
-        username = request.POST['username']
-        password = request.POST['password']
+        username = request.POST['username']        
+        password = request.POST['password']       
         superuser_qs = register_superuser.objects.filter(username=username)
-        if superuser_qs.exists():
+        if superuser_qs.exists():           
             superuser = superuser_qs.first()
             if superuser.password == password:
                 request.session['superuser_id'] = superuser.id

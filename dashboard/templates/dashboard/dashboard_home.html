@@ -10,7 +10,17 @@
 
 </head>
 <body>
-    {% include 'navbarr.html' %}
+    <header>
+       <div class="admin-container">
+         <h1>Tienda CompuEasys</h1>
+          <div class="logout-container">
+            <form method="post" action="{% url 'logout_view' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn ">Cerrar sesión</button>
+            </form>
+          </div>
+       </div>
+    </header>
     <div class="dashboard-container">
         <aside class="sidebar">
             <ul>
@@ -127,6 +137,7 @@
                     </tr>
                     {% for producto in productos %}
                     <tr>
+                        <td><img src="{{ producto.imagen.url }}" alt="{{ producto.name }}" width="50" height="50"/></td>
                         <td>{{ producto.name }}</td>
                         <td>{{ producto.stock }}</td>
                         <td>${{ producto.price }}</td>

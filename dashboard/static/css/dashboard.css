@@ -2,7 +2,34 @@ body {
     margin: 0;
     font-family: Arial, sans-serif;
 }
-
+.admin-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+   
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 20px;
+}  
+.admin-container h1 {
+    margin: 0;
+    font-size: 1.8em;
+    color: #222;
+} 
+.admin-container .btn {
+   
+   color: #111111;
+   border-radius: 10px;
+   
+    padding: 10px 20px;
+    border-radius: 4px;
+    transition: background 0.2s ease;
+}
+.admin-container .btn:hover {
+    background: #444;
+    color: white;
+    transition: background 0.2s ease;
+}
 .dashboard-container {
     display: flex;
     min-height: 100vh;

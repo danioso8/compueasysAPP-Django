@@ -15,12 +15,8 @@ document.addEventListener("DOMContentLoaded", function () {
         body: formData,
       })
         .then((response) => response.json())
-        .then((data) => {
-          debugger;
-          if (data.cart_count !== undefined) {
-            console.log("data:", data);
-            console.log(
-              "cart-count element:",
+        .then((data) => {         
+          if (data.cart_count !== undefined) {           
               document.getElementById("cart-count")
             );
             document.getElementById("cart-count").textContent = data.cart_count;

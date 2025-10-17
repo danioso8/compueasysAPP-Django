@@ -7,9 +7,18 @@ from django.db.models.signals import post_delete
 from django.dispatch import receiver
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
+from functools import wraps
+from django.shortcuts import redirect
 
+def superuser_required(view_func):
+    @wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        if request.session.get('superuser_id'):
+            return view_func(request, *args, **kwargs)
+        return redirect('/login_user/?next=' + request.path)
+    return _wrapped_view
 
-@login_required
+@superuser_required
 def dashboard_home(request):
     productos = ProductStore.objects.all()
     categorias = Category.objects.all()
@@ -108,14 +117,14 @@ def dashboard_home(request):
         'show_create_product_form': show_create_product_form,
     })
 
-@login_required
+@superuser_required
 def dar_permiso_staff(request, user_id):
     usuario = get_object_or_404(User, id=user_id)
     usuario.is_staff = True
     usuario.save()
     return redirect('dashboard_home')
 
-@login_required
+@superuser_required
 def eliminar_usuario(request, user_id):
     success = False
     if request.method == 'POST':
@@ -129,7 +138,7 @@ def eliminar_usuario(request, user_id):
         return JsonResponse({'success': success})
     return redirect('dashboard_home')
 
-@login_required
+@superuser_required
 def editar_usuario(request, user_id):
     usuario = get_object_or_404(User, id=user_id)
     if request.method == 'POST':
@@ -144,7 +153,7 @@ def editar_usuario(request, user_id):
 
 
 
-@login_required
+@superuser_required
 def edit_product(request, product_id):
     product = get_object_or_404(ProductStore, id=product_id)
     if request.method == 'POST':
@@ -169,7 +178,7 @@ def edit_product(request, product_id):
         return redirect('dashboard_home')
 
     return render(request, 'dashboard/editar_producto.html', {'product': product})
-@login_required
+@superuser_required
 def delete_product(request, product_id):
     product = get_object_or_404(ProductStore, id=product_id)
     product.delete()
@@ -177,7 +186,7 @@ def delete_product(request, product_id):
 
 
 
-@login_required
+@superuser_required
 def crear_categoria(request):
     if request.method == 'POST':
         nombre = request.POST.get('nombre')
@@ -185,13 +194,13 @@ def crear_categoria(request):
             Category.objects.create(nombre=nombre)
     return redirect('dashboard_home')  # O la vista que corresponda
 
-@login_required
+@superuser_required
 def delete_category(request, category_id):
     category = get_object_or_404(Category, id=category_id)
     category.delete()
     return redirect('dashboard_home')
 
-@login_required
+@superuser_required
 def editar_categoria(request, category_id):
     category = get_object_or_404(Category, id=category_id)
     if request.method == 'POST':
