@@ -15,7 +15,7 @@
     {% include "navbarr.html" %}
     <div class="cart-container">
       <h1 class="cart-title">Carrito de Compras</h1>
-      <div class="cart-actions">
+      <div class="cart-actions-vaciar">
         <a href="{% url 'clear_cart' %}" class="btn-clear">Vaciar carrito</a>
         <a href="{% url 'checkout' %}" class="btn-pagar">
           Pedir <i class="bi bi-cart-plus-fill fs-1"></i>
@@ -91,6 +91,9 @@
             {% endfor %}
           </tbody>
         </table>
+        <div class="cart-actions">
+        <a href="{% url 'store' %}" class="btn-back">&larr; Seguir comprando</a>
+      </div>
         <p>
           Cantidad de productos:
           <span class="cart-count">{{ cart_count }}</span>
@@ -113,9 +116,7 @@
       <div class="btn-pagar2">
         <a href="#" id="finalizar-pedido">Finalizar Pedido</a>
       </div>
-      <div class="cart-actions">
-        <a href="{% url 'store' %}" class="btn-back">&larr; Seguir comprando</a>
-      </div>
+      
     </div>
     {% include "footer.html" %}
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>

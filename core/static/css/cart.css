@@ -20,10 +20,17 @@
     text-align: center;
 }
 
-.cart-actions {
-    display: flex;
+.cart-actions-vaciar {
+    display: flex;   
     align-items: center;
-    justify-content: space-between;
+    justify-content:space-between;
+    margin-bottom: 18px;
+    gap: 10px;
+}
+.cart-actions {
+    display: flex;   
+    align-items: center;
+    justify-content:end;
     margin-bottom: 18px;
     gap: 10px;
 }

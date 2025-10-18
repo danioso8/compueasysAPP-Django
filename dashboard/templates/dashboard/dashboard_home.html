@@ -278,7 +278,7 @@
                        
                     </tr>
                     {% for categoria in categorias %}
-                    <tr>
+                   
                        
                         <td>{{ categoria.nombre }}</td>
                         <td>
@@ -286,17 +286,37 @@
                             <a href="{% url 'delete_category' categoria.id %}" class="btn btn-sm btn-danger">Eliminar</a>
                         </td>
                     </tr>
+                 
                     {% endfor %}
                 </table> 
               
             {% elif request.GET.view == "proveedores" %}
                 <h2>Proveedores</h2>
-                {% if proveedores %}
-                    <ul>
-                        {% for proveedor in proveedores %}
-                            <li>{{ proveedor.nombre }} - {{ proveedor.telefono }}</li>
+                    <a href="{% url 'create_proveedor' %}" data-bs-toggle="modal" data-bs-target="#modalNuevoProveedor" class="btn btn-primary mb-3">Crear Proveedor</a>
+                    <table>
+                        <tr>
+                            <th>Cédula</th>
+                            <th>Nombre</th>
+                            <th>Email</th>
+                            <th>Teléfono</th>
+                            <th>Dirección</th>
+                            <th>Acciones</th>
+                        </tr>
+                    {% if proveedores %}
+                        <tr>
+                            {% for proveedor in proveedores %}
+                                <td>{{ proveedor.cedulaOnita }}</td>
+                                <td>{{ proveedor.nombre }}</td>
+                                <td>{{ proveedor.email }}</td>
+                                <td>{{ proveedor.telefono }}</td>
+                                <td>{{ proveedor.direccion }}</td>
+                                <td>
+                                    <a href="{% url 'edit_proveedor' proveedor.id %}" class="btn btn-sm btn-warning">Editar</a>
+                                    <a href="{% url 'delete_proveedor' proveedor.id %}" class="btn btn-sm btn-danger">Eliminar</a>
+                                </td>
+                          
+                        </tr>
                         {% endfor %}
-                    </ul>
                 {% else %}
                     <p>No hay proveedores disponibles.</p>
                 {% endif %}
@@ -307,19 +327,29 @@
         </main>
     </div>
     
-     <!-- Modal para crear nueva categoría -->
-<div class="modal fade" id="modalNuevaCategoria" tabindex="-1" aria-labelledby="modalNuevaCategoriaLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <form method="post" action="{% url 'crear_categoria' %}">
+
+    <!-- Modal para crear nuevos proveedores -->
+    <div class="modal fade" id="modalNuevoProveedor" tabindex="-1" aria-labelledby="modalNuevoProveedorLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form method="post" action="{% url 'create_proveedor' %}">
         {% csrf_token %}
         <div class="modal-header">
-          <h5 class="modal-title" id="modalNuevaCategoriaLabel">Crear nueva categoría</h5>
+          <h5 class="modal-title" id="modalNuevoProveedorLabel">Crear nuevo proveedor</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
         </div>
         <div class="modal-body">
-          <label for="nombre_categoria">Nombre de la categoría:</label>
-          <input type="text" class="form-control" id="nombre_categoria" name="nombre" required>
+          <label for="nombre_proveedor">Nombre del proveedor:</label>
+          <input type="text" class="form-control" id="nombre_proveedor" name="nombre" required>
+            <label for="cedula_proveedor">Cédula:</label>
+            <input type="text" class="form-control" id="cedula_proveedor" name="cedulaOnita" required>
+            <label for="email_proveedor">Email:</label>
+            <input type="email" class="form-control" id="email_proveedor" name="email" required>
+            <label for="telefono_proveedor">Teléfono:</label>
+            <input type="text" class="form-control" id="telefono_proveedor" name="telefono" required>
+            <label for="direccion_proveedor">Dirección:</label>
+            <input type="text" class="form-control" id="direccion_proveedor" name="direccion" required>
+
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>

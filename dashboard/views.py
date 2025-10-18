@@ -148,6 +148,62 @@ def editar_usuario(request, user_id):
         return redirect('dashboard_home')
     return render(request, 'dashboard/editar_usuario.html', {'usuario': usuario})
 
+# ...existing code...
+def create_proveedor(request):
+    if request.method == 'POST':
+        data = {
+            'nombre': request.POST.get('nombre'),
+            'cedulaOnita': request.POST.get('cedulaOnita'),
+            'email': request.POST.get('email'),
+            'telefono': request.POST.get('telefono'),
+            'direccion': request.POST.get('direccion'),
+        }
+
+        # Asegurarse de que 'proveedor' es el modelo Django y obtener sus campos
+        model = proveedor
+        try:
+            model_field_names = [f.name for f in model._meta.fields]
+        except Exception as e:
+            # Si no es un modelo, registrar y redirigir
+            print('create_proveedor: objeto "proveedor" no es un modelo:', e)
+            return redirect('dashboard_home')
+
+        # Filtrar solo los campos que existen en el modelo y no vacíos
+        create_kwargs = {k: v for k, v in data.items() if k in model_field_names and v}
+
+        try:
+            if create_kwargs:
+                model.objects.create(**create_kwargs)
+        except TypeError as e:
+            # Registrar para depuración y crear con al menos el nombre si es posible
+            print('create_proveedor TypeError:', e)
+            if data.get('nombre'):
+                try:
+                    model.objects.create(nombre=data.get('nombre'))
+                except Exception as e2:
+                    print('create_proveedor fallback error:', e2)
+        except Exception as e:
+            print('create_proveedor error:', e)
+
+    return redirect('dashboard_home')
+# ...existing code...
+
+@superuser_required
+def edit_proveedor(request, proveedor_id):
+    proveedor_obj = get_object_or_404(proveedor, id=proveedor_id)
+    if request.method == 'POST':
+        nombre = request.POST.get('nombre')
+        if nombre:
+            proveedor_obj.nombre = nombre
+            proveedor_obj.save()
+            return redirect('dashboard_home')
+    return render(request, 'dashboard/editar_proveedor.html', {'proveedor': proveedor_obj})
+
+@superuser_required
+def delete_proveedor(request, proveedor_id):
+    proveedor_obj = get_object_or_404(proveedor, id=proveedor_id)
+    proveedor_obj.delete()
+    return redirect('dashboard_home')
 
 
 
