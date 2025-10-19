@@ -28,6 +28,7 @@
                 <li><a href="?view=productos">Productos</a></li>
                 <li><a href="?view=pedidos">Pedidos</a></li>
                 <li><a href="?view=categoria">Categorías</a></li>
+                <li><a href="?view=tipos">Tipos</a></li>
                 <li><a href="?view=inventario">Inventario</a></li>
                 <li><a href="?view=proveedores">Proveedores</a></li>
             </ul>
@@ -151,19 +152,19 @@
                 </table>
                 
             <!-- ...existing code... -->
-{% if show_create_product_form %}
-    <h2 id="form-title">Crear Producto</h2>
-    <form id="form-crear-producto" method="post" enctype="multipart/form-data" class="form-crear-producto" action="{% url 'create_product' %}">
-        {% csrf_token %}
-        <input type="hidden" name="product_id" id="producto_id" value="" />
+            {% if show_create_product_form %}
+                <h2 id="form-title">Crear Producto</h2>
+              <form id="form-crear-producto" method="post" enctype="multipart/form-data" class="form-crear-producto" action="{% url 'dashboard_home' %}?view=productos&crear=1">
+                {% csrf_token %}
+              <input type="hidden" name="product_id" id="producto_id" value="" />
+ 
+             <label>Nombre:</label>
+             <input type="text" name="name" id="producto_name" required />
 
-        <label>Nombre:</label>
-        <input type="text" name="name" id="producto_name" required />
+              <label>Descripción:</label>
+               <textarea name="description" id="producto_description"></textarea>
 
-        <label>Descripción:</label>
-        <textarea name="description" id="producto_description"></textarea>
-
-        <div class="precios">
+          <div class="precios">
             <div>
                 <label>Precio de compra:</label>
                 <input type="number" name="price_buy" id="producto_price_buy" step="0.01" required />
@@ -289,14 +290,40 @@
                  
                     {% endfor %}
                 </table> 
-              
+            {% elif request.GET.view == "tipos" %}
+    <h2>Tipos</h2>
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNuevoTipo">
+        Nuevo Tipo
+    </button>
+
+    <table class="table mt-3">
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for tipo in tipos %}
+            <tr>
+                <td>{{ tipo.name }}</td>
+                <td>
+                    <a href="{% url 'edit_tipo' tipo.id %}" class="btn btn-sm btn-warning">Editar</a>
+                    <a href="{% url 'delete_tipo' tipo.id %}" class="btn btn-sm btn-danger">Eliminar</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="2">No hay tipos registrados.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
             {% elif request.GET.view == "proveedores" %}
                 <h2>Proveedores</h2>
                     <a href="{% url 'create_proveedor' %}" data-bs-toggle="modal" data-bs-target="#modalNuevoProveedor" class="btn btn-primary mb-3">Crear Proveedor</a>
                     <table>
                         <tr>
-                            <th>Cédula</th>
-                            <th>Nombre</th>
+                              <th>Nombre</th>
+                            <th>Cédula</th>                          
                             <th>Email</th>
                             <th>Teléfono</th>
                             <th>Dirección</th>
@@ -305,8 +332,8 @@
                     {% if proveedores %}
                         <tr>
                             {% for proveedor in proveedores %}
-                                <td>{{ proveedor.cedulaOnita }}</td>
                                 <td>{{ proveedor.nombre }}</td>
+                                <td>{{ proveedor.cedulaOnita }}</td>
                                 <td>{{ proveedor.email }}</td>
                                 <td>{{ proveedor.telefono }}</td>
                                 <td>{{ proveedor.direccion }}</td>
@@ -327,6 +354,52 @@
         </main>
     </div>
     
+
+    <!--modal crear tipo-->
+    <div class="modal fade" id="modalNuevoTipo" tabindex="-1" aria-labelledby="modalNuevoTipoLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form method="post" action="{% url 'crear_tipo' %}">
+                    {% csrf_token %}
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalNuevoTipoLabel">Crear nuevo tipo</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <label for="nombre_tipo">Nombre del tipo:</label>
+                        <input type="text" class="form-control" id="nombre_tipo" name="nombre" required>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para crear nuevas categorías -->
+    <div class="modal fade" id="modalNuevaCategoria" tabindex="-1" aria-labelledby="modalNuevaCategoriaLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form method="post" action="{% url 'crear_categoria' %}">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalNuevaCategoriaLabel">Crear nueva categoría</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <label for="nombre_categoria">Nombre de la categoría:</label>
+          <input type="text" class="form-control" id="nombre_categoria" name="nombre" required>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
 
     <!-- Modal para crear nuevos proveedores -->
     <div class="modal fade" id="modalNuevoProveedor" tabindex="-1" aria-labelledby="modalNuevoProveedorLabel" aria-hidden="true">

@@ -20,6 +20,7 @@ def superuser_required(view_func):
 
 @superuser_required
 def dashboard_home(request):
+    crear_producto_url = f"{reverse('dashboard_home')}?view=productos&crear=1"
     productos = ProductStore.objects.all()
     categorias = Category.objects.all()
     tipos = Type.objects.all()
@@ -27,6 +28,7 @@ def dashboard_home(request):
     userSimples = register_superuser.objects.all()
     show_create_product_form = request.GET.get('view') == 'productos' and request.GET.get('crear') == '1'
 
+    # ...existing code...
     if request.method == 'POST' and show_create_product_form:
         name = request.POST.get('name')
         description = request.POST.get('description')
@@ -65,7 +67,7 @@ def dashboard_home(request):
             except Type.DoesNotExist:
                 type_obj = None
 
-        # Crear producto
+        # Crear producto (sin argumentos repetidos)
         product = ProductStore.objects.create(
             name=name,
             description=description,
@@ -80,34 +82,32 @@ def dashboard_home(request):
             imagen=imagen
         )
 
-        
-
         # Galería (ManyToMany)
         for img in galeria_files:
-            galeria_obj = Galeria.objects.create(galeria=img, product=product)  # Usa el nombre real del campo de imagen
+            galeria_obj = Galeria.objects.create(galeria=img, product=product)
             product.galeria.add(galeria_obj)
 
-        # Variantes (si tienes modelo Variante)
+        # Variantes
         variante_nombres = request.POST.getlist('variante_nombre[]')
         variante_precio = request.POST.getlist('variante_precio[]')
         variante_imagenes = request.FILES.getlist('variante_imagen[]')
         variante_stock = request.POST.getlist('variante_stock[]')
         variante_color = request.POST.getlist('variante_color[]')
         variante_talla = request.POST.getlist('variante_talla[]')
-        for nombre, precio, stock, color, talla, img in zip(variante_nombres, variante_precio, variante_stock, variante_color, variante_talla, variante_imagenes):
+        for nombre, precio, stock_v, color, talla, img in zip(variante_nombres, variante_precio, variante_stock, variante_color, variante_talla, variante_imagenes):
             if nombre and precio:
                 ProductVariant.objects.create(
                     product=product,
                     nombre=nombre,
                     precio=precio,
-                    stock=stock,
+                    stock=stock_v,
                     color=color,
                     talla=talla,
                     imagen=img
-                    )
+                )
 
-        return redirect('dashboard_home')
-
+        return redirect(crear_producto_url)
+# ...existing code...
     return render(request, 'dashboard/dashboard_home.html', {
         'productos': productos,
         'categorias': categorias,
@@ -150,6 +150,8 @@ def editar_usuario(request, user_id):
 
 # ...existing code...
 def create_proveedor(request):
+    redirect_url = f"{reverse('dashboard_home')}?view=proveedores"
+
     if request.method == 'POST':
         data = {
             'nombre': request.POST.get('nombre'),
@@ -159,23 +161,19 @@ def create_proveedor(request):
             'direccion': request.POST.get('direccion'),
         }
 
-        # Asegurarse de que 'proveedor' es el modelo Django y obtener sus campos
         model = proveedor
         try:
             model_field_names = [f.name for f in model._meta.fields]
         except Exception as e:
-            # Si no es un modelo, registrar y redirigir
             print('create_proveedor: objeto "proveedor" no es un modelo:', e)
-            return redirect('dashboard_home')
+            return redirect(redirect_url)
 
-        # Filtrar solo los campos que existen en el modelo y no vacíos
-        create_kwargs = {k: v for k, v in data.items() if k in model_field_names and v}
+        create_kwargs = {k: v for k, v in data.items() if k in model_field_names and v not in (None, '')}
 
         try:
             if create_kwargs:
                 model.objects.create(**create_kwargs)
         except TypeError as e:
-            # Registrar para depuración y crear con al menos el nombre si es posible
             print('create_proveedor TypeError:', e)
             if data.get('nombre'):
                 try:
@@ -185,7 +183,7 @@ def create_proveedor(request):
         except Exception as e:
             print('create_proveedor error:', e)
 
-    return redirect('dashboard_home')
+    return redirect(redirect_url)
 # ...existing code...
 
 @superuser_required
@@ -199,11 +197,12 @@ def edit_proveedor(request, proveedor_id):
             return redirect('dashboard_home')
     return render(request, 'dashboard/editar_proveedor.html', {'proveedor': proveedor_obj})
 
-@superuser_required
+@superuser_required 
 def delete_proveedor(request, proveedor_id):
+    redirect_url = f"{reverse('dashboard_home')}?view=proveedores"
     proveedor_obj = get_object_or_404(proveedor, id=proveedor_id)
     proveedor_obj.delete()
-    return redirect('dashboard_home')
+    return redirect(redirect_url)
 
 
 
@@ -269,57 +268,81 @@ def editar_categoria(request, category_id):
 
 
 
+@superuser_required
+def crear_tipo(request):
+    crear_tipo_url = f"{reverse('dashboard_home')}?view=tipos"
+    if request.method == 'POST':
+        # aceptar 'name' o 'nombre' desde el formulario
+        nombre = request.POST.get('name') or request.POST.get('nombre')
+        if nombre:
+            # escoger campo correcto según el modelo Type
+            field_names = [f.name for f in Type._meta.fields]
+            field = 'nombre' if 'nombre' in field_names else 'name'
+            Type.objects.create(**{field: nombre})
+    return redirect(crear_tipo_url)
+
+@superuser_required
+def edit_tipo(request, tipo_id):
+    redirect_url = f"{reverse('dashboard_home')}?view=tipos"
+    tipo = get_object_or_404(Type, id=tipo_id)
+    if request.method == 'POST':
+        nombre = request.POST.get('name') or request.POST.get('nombre')
+        if nombre:
+            field_names = [f.name for f in Type._meta.fields]
+            field = 'nombre' if 'nombre' in field_names else 'name'
+            setattr(tipo, field, nombre)
+            tipo.save()
+            return redirect(redirect_url)
+    return render(request, 'dashboard/editar_tipo.html', {'tipo': tipo})
+
+@superuser_required
+def delete_tipo(request, tipo_id):
+    crear_tipo_url = f"{reverse('dashboard_home')}?view=tipos"
+    tipo = get_object_or_404(Type, id=tipo_id)
+    tipo.delete()
+    return redirect(crear_tipo_url)
+
+
 # ...existing code...
-
-
 def api_get_product(request, product_id):
     try:
-        producto = Product.objects.get(id=product_id)  # ajusta el modelo si se llama distinto
-    except Product.DoesNotExist:
+        producto = ProductStore.objects.get(id=product_id)
+    except ProductStore.DoesNotExist:
         return JsonResponse({'error': 'Producto no encontrado'}, status=404)
 
-    # main image
+    # imagen principal
     try:
-        imagen_url = producto.imagen.url if producto.imagen else ''
+        imagen_url = producto.imagen.url if getattr(producto, 'imagen', None) else ''
     except Exception:
         imagen_url = ''
 
-    # gallery: intenta varios patrones según tu modelo
+    # galería
     gallery_urls = []
-    # si tienes relación product.galeria_set o product.galeria
     if hasattr(producto, 'galeria'):
         try:
             for f in producto.galeria.all():
-                if hasattr(f, 'imagen'):
+                if getattr(f, 'imagen', None):
                     gallery_urls.append(f.imagen.url)
-                elif hasattr(f, 'url'):
-                    gallery_urls.append(f.url)
+                elif getattr(f, 'image', None):
+                    gallery_urls.append(f.image.url)
         except Exception:
             pass
-    # fallback: si tienes campo galeria como texto separado por comas
-    if not gallery_urls:
-        gal_text = getattr(producto, 'galeria', '') or ''
-        if isinstance(gal_text, str) and gal_text:
-            for p in gal_text.split(','):
-                p = p.strip()
-                if p:
-                    gallery_urls.append(p)
 
     data = {
         'id': producto.id,
-        'name': producto.name,
-        'description': producto.description,
+        'name': getattr(producto, 'name', '') or getattr(producto, 'nombre', ''),
+        'description': getattr(producto, 'description', '') or getattr(producto, 'descripcion', ''),
         'price_buy': getattr(producto, 'price_buy', ''),
         'price': getattr(producto, 'price', ''),
         'stock': getattr(producto, 'stock', ''),
         'descuento': getattr(producto, 'descuento', ''),
         'iva': getattr(producto, 'iva', ''),
-        'proveedor_id': getattr(producto.proveedor, 'id', '') if getattr(producto, 'proveedor', None) else '',
-        'categoria_id': getattr(producto.categoria, 'id', '') if getattr(producto, 'categoria', None) else '',
-        'type_id': getattr(producto.type, 'id', '') if getattr(producto, 'type', None) else '',
+        'proveedor_id': getattr(getattr(producto, 'proveedor', None), 'id', '') if getattr(producto, 'proveedor', None) else '',
+        'categoria_id': getattr(getattr(producto, 'category', None), 'id', '') if getattr(producto, 'category', None) else '',
+        'type_id': getattr(getattr(producto, 'type', None), 'id', '') if getattr(producto, 'type', None) else '',
         'imagen': imagen_url,
         'gallery': gallery_urls,
-        'update_url': reverse('edit_product', args=[producto.id]) if 'edit_product' in [u.name for u in []] else '',  # placeholder
+        'update_url': reverse('edit_product', args=[producto.id]) if 'edit_product' else '',
     }
     return JsonResponse(data)
-# ...existing code...   
+# ...existing code...

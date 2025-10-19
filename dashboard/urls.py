@@ -22,6 +22,9 @@ from .views import (
     create_proveedor,
     edit_proveedor,
     delete_proveedor,
+    crear_tipo,
+    edit_tipo,
+    delete_tipo,
 )
 
 urlpatterns = [
@@ -44,6 +47,10 @@ urlpatterns = [
      path('crear/proveedor/', create_proveedor, name='create_proveedor'),
      path('proveedor/<int:proveedor_id>/editar/', edit_proveedor, name='edit_proveedor'),
      path('proveedor/<int:proveedor_id>/eliminar/', delete_proveedor, name='delete_proveedor'),
+
+     path('crear/tipo/', crear_tipo, name='crear_tipo'),
+     path('tipo/<int:tipo_id>/editar/', edit_tipo, name='edit_tipo'),
+     path('tipo/<int:tipo_id>/eliminar/', delete_tipo, name='delete_tipo'),
 
 ]
 
