@@ -22,46 +22,26 @@
   <body>
     <header>
       <nav
-        class="navbar-store"
-        style="
-          background-color: #405cdbff;
-          width: 100%;
-          height: 60px;
-          display: flex;
-          align-items: center;
-          padding: 0 20px;
-          margin-bottom: 50px;
-          margin-top: 30px;
-          justify-content: center;
-        "
-      >
+        class="top-navbar navbar-store" role="navigation" aria-label="Main navigation">
         <a
-          href="{% url 'home' %}"
-          class="title"
-          style="
-            color: white;
-            text-decoration: none;
-            font-size: 24px;
-            font-weight: bold;
-            margin-right: 20px;
-            justify-content: start;
-            position: absolute;
-            left: 20px;
-          "
-        >
+          href="{% url 'home' %}" class="title brand">       
           CompuEasys
         </a>
-        <a
-          href="{% url 'store' %}"
-          class="nav-link px-3 rounded-pill {% if not request.GET.category %}active bg-light text-primary fw-bold{% else %}text-light{% endif %}"
-        >
-          Todos
-        </a>
+        <button class="menu-toggle" aria-controls="store-nav" aria-expanded="false" aria-label="Abrir menú">
+          <span class="hamburger" aria-hidden="true"><span></span><span></span><span></span></span>
+        </button>
+        <ul id="store-nav" class="nav-links">
+          <li>
+            <a href="{% url 'store' %}" class="nav-link px-3 rounded-pill {% if not request.GET.category %}active bg-light text-primary fw-bold{% else %}text-light{% endif %}">
+                  Todos
+            </a>
+          </li>
         {% for category in categories %}
-        <a
-          href="?category={{ category.id }}"
-          class="nav-link px-3 rounded-pill {% if request.GET.category == category.id|stringformat:'s' %}active bg-light text-primary fw-bold{% else %}text-light{% endif %}"
-        >
+        <li>
+          <a
+            href="?category={{ category.id }}"
+            class="nav-link px-3 rounded-pill {% if request.GET.category == category.id|stringformat:'s' %}active bg-light text-primary fw-bold{% else %}text-light{% endif %}"
+          >
           {{ category.nombre }}
         </a>
         {% endfor %}
@@ -78,6 +58,7 @@
           <li><a href="/login_user">Iniciar Sesión</a></li>
           {% endif %}
         </div>
+        </ul>
       </nav>
     </header>
     <main>

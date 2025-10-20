@@ -23,7 +23,8 @@
             <div class="container_product">
                 <!-- Carrito flotante -->
                 <div class="car-buy">
-                    <a href="/cart" type="button" class="btn position-relative">
+                    <!-- ...existing code... -->
+                    <a href="/cart" type="button" class="cart-toggle-btn btn position-relative">
                         <i class="bi bi-cart-plus-fill fs-1"></i>
                         <span class="position-absolute top-45 start-80 translate-middle badge rounded-pill bg-danger">
                             {{ cart_count }}
@@ -251,6 +252,29 @@ document.getElementById('whatsapp-chat-float').addEventListener('click', functio
     var mensaje = "Hola, quiero más información sobre el producto: " + nombre ;
     var url = "https://wa.me/" + numero + "?text=" + mensaje;
     window.open(url, "_blank");
+});
+
+document.addEventListener('DOMContentLoaded', function () {
+  const cart = document.querySelector('.cart-sidebar, #cart, .cart-widget');
+  const toggleBtn = document.querySelector('.cart-toggle-btn, .open-cart-btn, .btn-cart');
+  if (!cart || !toggleBtn) return;
+
+  toggleBtn.addEventListener('click', function (e) {
+    e.preventDefault();
+    // si es sidebar deslizable usa clase .open, si es bloque flotante togglea display
+    if (cart.classList.contains('cart-sidebar')) {
+      cart.classList.toggle('open');
+    } else {
+      cart.style.display = (cart.style.display === 'block' ? 'none' : 'block');
+    }
+  });
+
+  // cerrar al tocar fuera (móvil)
+  document.addEventListener('click', function (e) {
+    if (!cart.contains(e.target) && !toggleBtn.contains(e.target)) {
+      if (cart.classList.contains('open')) cart.classList.remove('open');
+    }
+  });
 });
     </script>
 </body>

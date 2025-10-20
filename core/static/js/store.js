@@ -110,3 +110,40 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 });
 // ...existing code...
+
+
+//script navbar.js
+document.addEventListener('DOMContentLoaded', function () {
+  const nav = document.querySelector('.top-navbar');
+  const toggle = document.querySelector('.menu-toggle');
+  const menu = document.getElementById('store-nav');
+
+  if (!nav || !toggle || !menu) return;
+
+  toggle.addEventListener('click', function () {
+    const open = nav.classList.toggle('open');
+    menu.classList.toggle('open', open);
+    toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    toggle.setAttribute('aria-label', open ? 'Cerrar menú' : 'Abrir menú');
+  });
+
+  // cerrar al click fuera
+  document.addEventListener('click', function (e) {
+    if (!nav.contains(e.target) && nav.classList.contains('open')) {
+      nav.classList.remove('open');
+      menu.classList.remove('open');
+      toggle.setAttribute('aria-expanded', 'false');
+      toggle.setAttribute('aria-label', 'Abrir menú');
+    }
+  });
+
+  // cerrar al redimensionar a desktop
+  window.addEventListener('resize', function () {
+    if (window.innerWidth > 992 && nav.classList.contains('open')) {
+      nav.classList.remove('open');
+      menu.classList.remove('open');
+      toggle.setAttribute('aria-expanded', 'false');
+      toggle.setAttribute('aria-label', 'Abrir menú');
+    }
+  });
+});

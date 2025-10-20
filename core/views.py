@@ -357,13 +357,15 @@ def register_user(request):
 def index(request):
     return render(request, "index.html")
 
+# ...existing code...
 def cart(request):
     cart = request.session.get('cart', {})
     cart_items = []
     cart_total = 0
+    removed_keys = []
 
-    for key, item in cart.items():
-        # Si item es un int, es el formato antiguo (solo cantidad)
+    for key, item in list(cart.items()):
+        # Normalizar formato del item
         if isinstance(item, int):
             product_id = key
             quantity = item
@@ -376,10 +378,16 @@ def cart(request):
             if variant_id:
                 try:
                     variant = ProductVariant.objects.get(id=variant_id)
-                except:
+                except ProductVariant.DoesNotExist:
                     variant = None
 
-        product = Product.objects.get(id=product_id)
+        # Intentar obtener el producto; si no existe, eliminar la entrada del carrito y continuar
+        try:
+            product = Product.objects.get(id=product_id)
+        except Product.DoesNotExist:
+            removed_keys.append(key)
+            continue
+
         price = variant.precio if variant else product.price
         subtotal = price * quantity
         cart_items.append({
@@ -390,12 +398,32 @@ def cart(request):
         })
         cart_total += subtotal
 
+    # Limpiar items inválidos del session cart
+    if removed_keys:
+        for k in removed_keys:
+            if k in cart:
+                del cart[k]
+        request.session['cart'] = cart
+        request.session.modified = True
+
+    # recalcular contador de carrito seguro
+    cart_count = 0
+    for v in cart.values():
+        if isinstance(v, dict):
+            cart_count += v.get('quantity', 0)
+        else:
+            try:
+                cart_count += int(v)
+            except Exception:
+                pass
+
     context = {
         'cart_items': cart_items,
         'cart_total': cart_total,
-        'cart_count': sum([item['quantity'] if isinstance(item, dict) else item for item in cart.values()])
+        'cart_count': cart_count
     }
     return render(request, 'cart.html', context)
+# ...existing code...
 
 def update_cart(request, product_id):
     if request.method == 'POST':
@@ -553,19 +581,23 @@ def clear_cart(request):
         request.session.modified = True
     return redirect('cart')
 
+# ...existing code...
 def mis_pedidos(request):
     # Busca el usuario por email (puedes adaptar a tu sistema de login)
     if request.user.is_authenticated:
         email = request.user.email
         try:
             simple_user = SimpleUser.objects.get(email=email)
+            pedidos = Pedido.objects.filter(user=simple_user).order_by('-fecha')
+            message = "" if pedidos.exists() else "Aún no tienes pedidos para visualizar."
         except SimpleUser.DoesNotExist:
-            return HttpResponse("No tienes pedidos registrados.", status=404)
-        pedidos = Pedido.objects.filter(user=simple_user).order_by('-fecha')
+            pedidos = []
+            message = "Aún no tienes pedidos para visualizar."
     else:
         return redirect('login')  # O muestra un mensaje de error
 
-    return render(request, 'mis_pedidos.html', {'pedidos': pedidos})    
+    return render(request, 'mis_pedidos.html', {'pedidos': pedidos, 'message': message})
+# ...existing code...
 
 def logout_view(request):
     logout(request)
