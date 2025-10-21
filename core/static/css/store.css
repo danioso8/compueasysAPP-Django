@@ -135,7 +135,8 @@
     justify-content: center;
     /* Centra las tarjetas horizontalmente */
     width: 100%;   
-
+    
+    margin-bottom: 100px;
 
    
 }
@@ -148,6 +149,7 @@
    height: 500px;
   padding: 10px;
     transition: box-shadow 0.3s ease;
+   
 }
 .card_product img {
     width: 100%;

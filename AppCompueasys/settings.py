@@ -28,14 +28,12 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'core',
     'contable.apps.ContableConfig',
-    'bootstrap5',
-    "debug_toolbar",
+    'bootstrap5',    
     'django.contrib.humanize',
     'dashboard',
 ]
 
-MIDDLEWARE = [
-    "debug_toolbar.middleware.DebugToolbarMiddleware",
+MIDDLEWARE = [    
     "whitenoise.middleware.WhiteNoiseMiddleware",
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',

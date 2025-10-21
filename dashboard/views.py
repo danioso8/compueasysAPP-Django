@@ -18,6 +18,7 @@ def superuser_required(view_func):
         return redirect('/login_user/?next=' + request.path)
     return _wrapped_view
 
+
 @superuser_required
 def dashboard_home(request):
     crear_producto_url = f"{reverse('dashboard_home')}?view=productos"
@@ -26,21 +27,29 @@ def dashboard_home(request):
     tipos = Type.objects.all()
     proveedores = proveedor.objects.all()
     userSimples = register_superuser.objects.all()
-    show_create_product_form = request.GET.get('view') == 'productos' and request.GET.get('crear') == '1'
 
-    # ...existing code...
-    if request.method == 'POST' and show_create_product_form:
+    # mostrar formulario crear / editar según query params
+    show_create_product_form = request.GET.get('view') == 'productos' and request.GET.get('crear') == '1'
+    editar_id = request.GET.get('editar')
+    show_edit_product_form = request.GET.get('view') == 'productos' and bool(editar_id)
+    producto_to_edit = None
+    if editar_id:
+        producto_to_edit = ProductStore.objects.filter(id=editar_id).first()
+
+    # POST: crear o actualizar según product_id
+    if request.method == 'POST' and (show_create_product_form or show_edit_product_form):
+        # recoger campos
         name = request.POST.get('name')
         description = request.POST.get('description')
-        price_buy = float(request.POST.get('price_buy', 0))
-        price = float(request.POST.get('price', 0))
-        stock = int(request.POST.get('stock', 0))
-        descuento = float(request.POST.get('descuento', 0))
-        iva = float(request.POST.get('iva', 0))
+        price_buy = float(request.POST.get('price_buy', 0) or 0)
+        price = float(request.POST.get('price', 0) or 0)
+        stock = int(request.POST.get('stock', 0) or 0)
+        descuento = float(request.POST.get('descuento', 0) or 0)
+        iva = float(request.POST.get('iva', 0) or 0)
         imagen = request.FILES.get('images')
         galeria_files = request.FILES.getlist('galeria')
 
-        # Proveedor (opcional)
+        # Proveedor / Categoria / Tipo (opcional)
         proveedor_id = request.POST.get('proveedor')
         proveedor_obj = None
         if proveedor_id:
@@ -49,7 +58,6 @@ def dashboard_home(request):
             except proveedor.DoesNotExist:
                 proveedor_obj = None
 
-        # Categoría (opcional)
         categoria_id = request.POST.get('categoria')
         category_obj = None
         if categoria_id:
@@ -58,7 +66,6 @@ def dashboard_home(request):
             except Category.DoesNotExist:
                 category_obj = None
 
-        # Tipo de producto (opcional)
         type_id = request.POST.get('type')
         type_obj = None
         if type_id:
@@ -67,48 +74,124 @@ def dashboard_home(request):
             except Type.DoesNotExist:
                 type_obj = None
 
-        # Crear producto (sin argumentos repetidos)
+        # identificar si es actualización o creación
         product_id = request.POST.get('product_id') or None
-        name = request.POST.get('name')
-        product = ProductStore.objects.create(
-            name=name,
-            description=description,
-            price_buy=price_buy,
-            price=price,
-            stock=stock,
-            proveedor=proveedor_obj,
-            category=category_obj,
-            iva=iva,
-            descuento=descuento,
-            type=type_obj,
-            imagen=imagen
-         )
+        if product_id:
+            # actualizar existente
+            product = get_object_or_404(ProductStore, id=product_id)
+            product.name = name
+            product.description = description
+            product.price_buy = price_buy
+            product.price = price
+            product.stock = stock
+            product.proveedor = proveedor_obj
+            product.category = category_obj
+            product.iva = iva
+            product.descuento = descuento
+            product.type = type_obj
+            if imagen:
+                # eliminar anterior si deseas (opcional)
+                try:
+                    if getattr(product, 'imagen', None):
+                        product.imagen.delete(save=False)
+                except Exception:
+                    pass
+                product.imagen = imagen
+            product.save()
 
-        # Galería (ManyToMany)
-        for img in galeria_files:
-            galeria_obj = Galeria.objects.create(galeria=img, product=product)
-            product.galeria.add(galeria_obj)
+            # agregar nuevas imágenes de galería si se enviaron
+            if galeria_files:
+                for img in galeria_files:
+                    galeria_obj = Galeria.objects.create(galeria=img, product=product)
+                    product.galeria.add(galeria_obj)
 
-        # Variantes
-        variante_nombres = request.POST.getlist('variante_nombre[]')
-        variante_precio = request.POST.getlist('variante_precio[]')
-        variante_imagenes = request.FILES.getlist('variante_imagen[]')
-        variante_stock = request.POST.getlist('variante_stock[]')
-        variante_color = request.POST.getlist('variante_color[]')
-        variante_talla = request.POST.getlist('variante_talla[]')
-        for nombre, precio, stock_v, color, talla, img in zip(variante_nombres, variante_precio, variante_stock, variante_color, variante_talla, variante_imagenes):
-            if nombre and precio:
-                ProductVariant.objects.create(
-                    product=product,
-                    nombre=nombre,
-                    precio=precio,
-                    stock=stock_v,
-                    color=color,
-                    talla=talla,
-                    imagen=img
-                )
+            # manejar variantes: opción simple -> borrar existentes y recrear
+            # (ajusta si prefieres actualizar por id)
+            variante_nombres = request.POST.getlist('variante_nombre[]')
+            variante_precios = request.POST.getlist('variante_precio[]')
+            variante_imagenes = request.FILES.getlist('variante_imagen[]')
+            variante_stocks = request.POST.getlist('variante_stock[]')
+            variante_colores = request.POST.getlist('variante_color[]')
+            variante_tallas = request.POST.getlist('variante_talla[]')
 
-        return redirect(crear_producto_url)
+            if hasattr(product, 'variants'):
+                # eliminar variantes viejas
+                product.variants.all().delete()
+                # crear nuevas variantes
+                max_len = max(len(variante_nombres), len(variante_precios), len(variante_stocks),
+                              len(variante_colores), len(variante_tallas), len(variante_imagenes))
+                for i in range(max_len):
+                    nombre = variante_nombres[i] if i < len(variante_nombres) else ''
+                    precio_v = variante_precios[i] if i < len(variante_precios) else None
+                    stock_v = variante_stocks[i] if i < len(variante_stocks) else None
+                    color = variante_colores[i] if i < len(variante_colores) else ''
+                    talla = variante_tallas[i] if i < len(variante_tallas) else ''
+                    img_v = variante_imagenes[i] if i < len(variante_imagenes) else None
+                    if nombre or precio_v:
+                        ProductVariant.objects.create(
+                            product=product,
+                            nombre=nombre,
+                            precio=(float(precio_v) if precio_v else 0),
+                            stock=(int(stock_v) if stock_v else 0),
+                            color=color,
+                            talla=talla,
+                            imagen=img_v
+                        )
+
+            # redirigir a la lista o a la edición del producto actualizado
+            return redirect(crear_producto_url)
+
+        else:
+            # crear nuevo producto
+            product = ProductStore.objects.create(
+                name=name,
+                description=description,
+                price_buy=price_buy,
+                price=price,
+                stock=stock,
+                proveedor=proveedor_obj,
+                category=category_obj,
+                iva=iva,
+                descuento=descuento,
+                type=type_obj,
+                imagen=imagen
+            )
+
+            # guardar galería
+            for img in galeria_files:
+                galeria_obj = Galeria.objects.create(galeria=img, product=product)
+                product.galeria.add(galeria_obj)
+
+            # crear variantes
+            variante_nombres = request.POST.getlist('variante_nombre[]')
+            variante_precios = request.POST.getlist('variante_precio[]')
+            variante_imagenes = request.FILES.getlist('variante_imagen[]')
+            variante_stocks = request.POST.getlist('variante_stock[]')
+            variante_colores = request.POST.getlist('variante_color[]')
+            variante_tallas = request.POST.getlist('variante_talla[]')
+
+            max_len = max(len(variante_nombres), len(variante_precios), len(variante_stocks),
+                          len(variante_colores), len(variante_tallas), len(variante_imagenes))
+            for i in range(max_len):
+                nombre = variante_nombres[i] if i < len(variante_nombres) else ''
+                precio_v = variante_precios[i] if i < len(variante_precios) else None
+                stock_v = variante_stocks[i] if i < len(variante_stocks) else None
+                color = variante_colores[i] if i < len(variante_colores) else ''
+                talla = variante_tallas[i] if i < len(variante_tallas) else ''
+                img_v = variante_imagenes[i] if i < len(variante_imagenes) else None
+                if nombre or precio_v:
+                    ProductVariant.objects.create(
+                        product=product,
+                        nombre=nombre,
+                        precio=(float(precio_v) if precio_v else 0),
+                        stock=(int(stock_v) if stock_v else 0),
+                        color=color,
+                        talla=talla,
+                        imagen=img_v
+                    )
+
+            # tras crear, redirigir a la lista sin abrir el form crear
+            return redirect(f"{reverse('dashboard_home')}?view=productos")
 # ...existing code...
     return render(request, 'dashboard/dashboard_home.html', {
         'productos': productos,
@@ -117,8 +200,10 @@ def dashboard_home(request):
         'proveedores': proveedores,
         'usuarios': userSimples,
         'show_create_product_form': show_create_product_form,
+        'show_edit_product_form': show_edit_product_form,
+        'producto_to_edit': producto_to_edit,
     })
-
+# ...existing code...
 
 @superuser_required
 # ...existing code...
