@@ -20,7 +20,7 @@ def superuser_required(view_func):
 
 @superuser_required
 def dashboard_home(request):
-    crear_producto_url = f"{reverse('dashboard_home')}?view=productos&crear=1"
+    crear_producto_url = f"{reverse('dashboard_home')}?view=productos"
     productos = ProductStore.objects.all()
     categorias = Category.objects.all()
     tipos = Type.objects.all()
@@ -68,6 +68,8 @@ def dashboard_home(request):
                 type_obj = None
 
         # Crear producto (sin argumentos repetidos)
+        product_id = request.POST.get('product_id') or None
+        name = request.POST.get('name')
         product = ProductStore.objects.create(
             name=name,
             description=description,
@@ -80,7 +82,7 @@ def dashboard_home(request):
             descuento=descuento,
             type=type_obj,
             imagen=imagen
-        )
+         )
 
         # Galería (ManyToMany)
         for img in galeria_files:
@@ -116,6 +118,64 @@ def dashboard_home(request):
         'usuarios': userSimples,
         'show_create_product_form': show_create_product_form,
     })
+
+
+@superuser_required
+# ...existing code...
+def eliminar_producto(request, product_id):
+    # Aceptar solo POST y devolver JSON (no redirect) para uso por AJAX
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Método no permitido.'}, status=405)
+
+    # Permisos: aceptar sesión superuser personalizada o usuario Django staff/superuser
+    is_super_session = bool(request.session.get('superuser_id'))
+    is_django_staff = request.user.is_authenticated and (request.user.is_staff or request.user.is_superuser)
+    if not (is_super_session or is_django_staff):
+        return JsonResponse({'success': False, 'error': 'Permiso denegado.'}, status=403)
+
+    # Usar el modelo correcto (ProductStore) — antes estaba Product (no importado)
+    product = get_object_or_404(ProductStore, id=product_id)
+    try:
+        # eliminar imagen principal si existe
+        try:
+            if getattr(product, 'imagen', None):
+                product.imagen.delete(save=False)
+        except Exception:
+            pass
+
+        # eliminar imágenes de galería asociadas (soporta varios nombres de campo)
+        try:
+            if hasattr(product, 'galeria'):
+                for g in product.galeria.all():
+                    try:
+                        if getattr(g, 'imagen', None):
+                            g.imagen.delete(save=False)
+                        elif getattr(g, 'image', None):
+                            g.image.delete(save=False)
+                        elif getattr(g, 'galeria', None):
+                            g.galeria.delete(save=False)
+                    except Exception:
+                        pass
+        except Exception:
+            pass
+
+        # eliminar imágenes de variantes si existen
+        try:
+            if hasattr(product, 'variants'):
+                for v in product.variants.all():
+                    try:
+                        if getattr(v, 'imagen', None):
+                            v.imagen.delete(save=False)
+                    except Exception:
+                        pass
+        except Exception:
+            pass
+
+        product.delete()
+        return JsonResponse({'success': True})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+# ...existing code...
 
 @superuser_required
 def dar_permiso_staff(request, user_id):

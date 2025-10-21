@@ -110,10 +110,14 @@
               <div class="container_product mb-4">
                 <a href="{% url 'product_detail' product.id %}">
                   <div class="card_product">
+                    {% if product.imagen  and product.imagen.name %}
+                    <img src="{{ product.imagen.url }}" alt="{{ product.name }}" />
+                    {% else %}
                     <img
-                      src="{{ product.imagen.url }}"
-                      alt="{{ product.name }}"
+                      src="{% static 'images/no_image_available.png' %}"
+                      alt="No Image Available"
                     />
+                    {% endif %}
                   </div>
                   <div class="cardbody_product">
                     <h5 class="title">{{ product.name }}</h5>

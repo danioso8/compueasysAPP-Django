@@ -136,35 +136,45 @@
                         <th>Nombre</th>
                         <th>Stock</th>
                         <th>Precio</th>
+                        <th>Acciones</th>
                     </tr>
                     {% for producto in productos %}
-                  
-                     <tr>
-                      <a href="?view=productos&editar={{ producto.id }}"> 
-                        <td><img src="{{ producto.imagen.url }}" alt="{{ producto.name }}" width="50" height="50"/></td>
-                        <td>{{ producto.name }}</td>
-                        <td>{{ producto.stock }}</td>
-                        <td>${{ producto.price }}</td>
-                     </a>
+                   
+                     <tr data-producto-id="{{ producto.id }}">
+                        <td>
+                           <a href="?view=productos&editar={{ producto.id }}"> 
+                            {% if producto.imagen %}
+                                   <img src="{{ producto.imagen.url }}" alt="{{ producto.name }}" width="50" height="50"/>
+                               {% else %}
+                                   sin imagen
+                               {% endif %} 
+                           </a>
+                       </td>
+                        <td class="align-middle"><a href="?view=productos&editar={{ producto.id }}">{{ producto.name }}</a></td>
+                        <td class="align-middle"><a href="?view=productos&editar={{ producto.id }}">{{ producto.stock }}</a></td>
+                        <td class="align-middle"><a href="?view=productos&editar={{ producto.id }}">${{ producto.price }}</a></td>
+                        <td class="align-middle" >
+                            <button type="button" class="btn btn-danger delete-product-btn" data-product-id="{{ producto.id }}">Eliminar</button>
+                         </td>
                     </tr>
                 
                     {% endfor %}
                 </table>
-                
+               
             <!-- ...existing code... -->
             {% if show_create_product_form %}
-                <h2 id="form-title">Crear Producto</h2>
-              <form id="form-crear-producto" method="post" enctype="multipart/form-data" class="form-crear-producto" action="{% url 'dashboard_home' %}?view=productos&crear=1">
-                {% csrf_token %}
-              <input type="hidden" name="product_id" id="producto_id" value="" />
- 
-             <label>Nombre:</label>
-             <input type="text" name="name" id="producto_name" required />
+    <h2 id="form-title">Crear Producto</h2>
+    <form id="form-crear-producto" method="post" enctype="multipart/form-data" class="form-crear-producto" action="{% url 'dashboard_home' %}?view=productos&crear=1" data-create-action="{% url 'dashboard_home' %}?view=productos&crear=1">
+        {% csrf_token %}
+        <input type="hidden" name="product_id" id="producto_id" value="" />
 
-              <label>Descripción:</label>
-               <textarea name="description" id="producto_description"></textarea>
+        <label>Nombre:</label>
+        <input type="text" name="name" id="producto_name" required />
 
-          <div class="precios">
+        <label>Descripción:</label>
+        <textarea name="description" id="producto_description"></textarea>
+
+        <div class="precios">
             <div>
                 <label>Precio de compra:</label>
                 <input type="number" name="price_buy" id="producto_price_buy" step="0.01" required />
@@ -229,18 +239,131 @@
 
         <label>Variantes:</label>
         <div id="variantes-container">
-            <div class="variante-row">
-                <input type="text" name="variante_nombre[]" placeholder="Nombre variante" />
-                <input type="number" name="variante_precio[]" placeholder="Precio" step="0.01" />
-                <input type="number" name="variante_stock[]" placeholder="Stock" />
-                <input type="text" name="variante_color[]" placeholder="Color" />
-                <input type="text" name="variante_talla[]" placeholder="Talla" />
-                <input type="file" name="variante_imagen[]" />
+            <div class="variante-row d-flex gap-2 mb-2">
+                <input type="text" name="variante_nombre[]" placeholder="Nombre variante" class="form-control" />
+                <input type="number" name="variante_precio[]" placeholder="Precio" step="0.01" class="form-control" />
+                <input type="number" name="variante_stock[]" placeholder="Stock" class="form-control" />
+                <input type="text" name="variante_color[]" placeholder="Color" class="form-control" />
+                <input type="text" name="variante_talla[]" placeholder="Talla" class="form-control" />
+                <input type="file" name="variante_imagen[]" class="form-control" />
             </div>
         </div>
 
         <button type="button" onclick="agregarVariante()">Agregar otra variante</button>
         <button type="submit" id="form-submit-btn">Guardar</button>
+        <button type="button" id="form-clear-btn">Nuevo</button>
+    </form>
+{% endif %}
+
+{# Formulario para EDITAR producto (muestra cuando show_edit_product_form es True) #}
+{% if show_edit_product_form and producto_to_edit %}
+    <h2 id="form-title">Editar Producto</h2>
+    <form id="form-editar-producto" method="post" enctype="multipart/form-data" class="form-editar-producto" action="{% url 'dashboard_home' %}?view=productos&editar={{ producto_to_edit.id }}">
+        {% csrf_token %}
+        <input type="hidden" name="product_id" id="producto_id" value="{{ producto_to_edit.id }}" />
+
+        <label>Nombre:</label>
+        <input type="text" name="name" id="producto_name" required value="{{ producto_to_edit.name }}" />
+
+        <label>Descripción:</label>
+        <textarea name="description" id="producto_description">{{ producto_to_edit.description }}</textarea>
+
+        <div class="precios">
+            <div>
+                <label>Precio de compra:</label>
+                <input type="number" name="price_buy" id="producto_price_buy" step="0.01" required value="{{ producto_to_edit.price_buy }}" />
+            </div>
+            <div>
+                <label>Precio de venta:</label>
+                <input type="number" name="price" id="producto_price" step="0.01" required value="{{ producto_to_edit.price }}" />
+            </div>
+            <div>
+                <label>Stock:</label>
+                <input type="number" name="stock" id="producto_stock" required value="{{ producto_to_edit.stock }}" />
+            </div>
+            <div>
+                <label>Descuento:</label>
+                <input type="number" name="descuento" id="producto_descuento" step="0.01" value="{{ producto_to_edit.descuento }}" />
+            </div>
+            <div>
+                <label>IVA:</label>
+                <input type="number" name="iva" id="producto_iva" step="0.01" value="{{ producto_to_edit.iva }}" />
+            </div>
+        </div>
+
+        <div class="categorias-proveedor">
+            <div>
+                <label>Proveedor:</label>
+                <select name="proveedor" id="producto_proveedor" class="form-select">
+                    <option value="">Seleccione un proveedor</option>
+                    {% for prov in proveedores %}
+                        <option value="{{ prov.id }}" {% if producto_to_edit.proveedor_id == prov.id %}selected{% endif %}>{{ prov.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label>Categorías:</label>
+                <select name="categoria" id="producto_categoria" class="form-select">
+                    <option value="">Seleccione una categoría</option>
+                    {% for categoria in categorias %}
+                        <option value="{{ categoria.id }}" {% if producto_to_edit.categoria_id == categoria.id %}selected{% endif %}>{{ categoria.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label>Tipo de producto:</label>
+                <select name="type" id="producto_type" class="form-select">
+                    <option value="">Seleccione un tipo</option>
+                    {% for tipo in tipos %}
+                        <option value="{{ tipo.id }}" {% if producto_to_edit.type_id == tipo.id %}selected{% endif %}>{{ tipo.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <label>Imagen principal:</label>
+        <input type="file" name="images" id="producto_images" />
+        <div id="preview-main" style="margin-top:8px;">
+            {% if producto_to_edit.imagen and producto_to_edit.imagen.name %}
+                <img id="preview-main-img" src="{{ producto_to_edit.imagen.url }}" alt="Imagen principal" style="max-width:150px; display:block;" />
+            {% else %}
+                <img id="preview-main-img" src="" alt="Imagen principal" style="max-width:150px; display:none;" />
+            {% endif %}
+        </div>
+
+        <label>Galería:</label>
+        <input type="file" name="galeria" id="producto_galeria" multiple />
+        <div id="preview-gallery" style="margin-top:8px; display:flex; gap:8px;">
+            {% for img in producto_to_edit.galeria.all %}
+                {% if img.galeria and img.galeria.name %}
+                    <img src="{{ img.galeria.url }}" style="max-width:80px; object-fit:cover; margin-right:6px;" />
+                {% elif img.imagen and img.imagen.name %}
+                    <img src="{{ img.imagen.url }}" style="max-width:80px; object-fit:cover; margin-right:6px;" />
+                {% elif img.image and img.image.name %}
+                    <img src="{{ img.image.url }}" style="max-width:80px; object-fit:cover; margin-right:6px;" />
+                {% endif %}
+            {% endfor %}
+        </div>
+
+        <label>Variantes:</label>
+        <div id="variantes-container">
+            {% for v in producto_to_edit.variants.all %}
+            <div class="variante-row d-flex gap-2 mb-2">
+                <input type="text" name="variante_nombre[]" value="{{ v.nombre }}" placeholder="Nombre variante" class="form-control" />
+                <input type="number" name="variante_precio[]" value="{{ v.precio }}" placeholder="Precio" step="0.01" class="form-control" />
+                <input type="number" name="variante_stock[]" value="{{ v.stock }}" placeholder="Stock" class="form-control" />
+                <input type="text" name="variante_color[]" value="{{ v.color }}" placeholder="Color" class="form-control" />
+                <input type="text" name="variante_talla[]" value="{{ v.talla }}" placeholder="Talla" class="form-control" />
+                <input type="file" name="variante_imagen[]" class="form-control" />
+                {% if v.imagen and v.imagen.name %}
+                    <img src="{{ v.imagen.url }}" style="max-width:80px; margin-left:6px; object-fit:cover;" />
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+
+        <button type="button" onclick="agregarVariante()">Agregar otra variante</button>
+        <button type="submit" id="form-submit-btn">Actualizar</button>
         <button type="button" id="form-clear-btn">Nuevo</button>
     </form>
 {% endif %}
@@ -291,29 +414,29 @@
                     {% endfor %}
                 </table> 
             {% elif request.GET.view == "tipos" %}
-    <h2>Tipos</h2>
-    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNuevoTipo">
-        Nuevo Tipo
-    </button>
+                 <h2>Tipos</h2>
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNuevoTipo">
+                     Nuevo Tipo
+                    </button>
 
-    <table class="table mt-3">
-        <thead>
-            <tr>
-                <th>Nombre</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for tipo in tipos %}
-            <tr>
-                <td>{{ tipo.name }}</td>
-                <td>
-                    <a href="{% url 'edit_tipo' tipo.id %}" class="btn btn-sm btn-warning">Editar</a>
-                    <a href="{% url 'delete_tipo' tipo.id %}" class="btn btn-sm btn-danger">Eliminar</a>
-                </td>
-            </tr>
-            {% empty %}
-            <tr><td colspan="2">No hay tipos registrados.</td></tr>
+                <table class="table mt-3">
+                     <thead>
+                         <tr>
+                            <th>Nombre</th>
+                            <th>Acciones</th>
+                         </tr>
+                     </thead>
+                <tbody>
+               {% for tipo in tipos %}
+                 <tr>
+                   <td>{{ tipo.name }}</td>
+                   <td>
+                      <a href="{% url 'edit_tipo' tipo.id %}" class="btn btn-sm btn-warning">Editar</a>
+                      <a href="{% url 'delete_tipo' tipo.id %}" class="btn btn-sm btn-danger">Eliminar</a>
+                   </td>
+                 </tr>
+               {% empty %}
+              <tr><td colspan="2">No hay tipos registrados.</td></tr>
             {% endfor %}
         </tbody>
     </table>
