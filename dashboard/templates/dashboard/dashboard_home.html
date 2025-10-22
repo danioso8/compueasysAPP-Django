@@ -134,6 +134,7 @@
                     <tr>
                         <th>Img</th>
                         <th>Nombre</th>
+                        <th>Categoría</th>
                         <th>Stock</th>
                         <th>Precio</th>
                         <th>Acciones</th>
@@ -151,6 +152,7 @@
                           
                        </td>
                         <td class="align-middle"><a href="?view=productos&editar={{ producto.id }}">{{ producto.name }}</a></td>
+                        <td class="align-middle"><a href="?view=productos&editar={{ producto.id }}">{{ producto.categoria.nombre }}</a></td>
                         <td class="align-middle"><a href="?view=productos&editar={{ producto.id }}">{{ producto.stock }}</a></td>
                         <td class="align-middle"><a href="?view=productos&editar={{ producto.id }}">${{ producto.price }}</a></td>
                         <td class="align-middle" >
@@ -319,9 +321,74 @@
                     </tr>
                     {% endfor %}
                 </table>
-            {% elif request.GET.view == "inventario" %}
-                <h2>Inventario</h2>
-                <p>Aquí puedes mostrar tu inventario...</p>
+             {% elif request.GET.view == "inventario" %}
+      <div class="inventory-filters">
+        <h2>Inventario</h2>
+        <form id="inventario-filter-form" method="get" action="" class="inventory-filters mb-3 d-flex align-items-center gap-2">
+          <input type="hidden" name="view" value="inventario">
+          <select name="inventory_category" id="inventory_category_select" class="form-select" onchange="this.form.submit()" style="max-width:320px;">
+            <option value="">Todos los productos</option>
+            {% for categoria in categorias %}
+              <option value="{{ categoria.id }}" {% if selected_category_id and selected_category_id == categoria.id %}selected{% endif %}>{{ categoria.nombre }}</option>
+            {% endfor %}
+          </select>
+          <a href="?view=inventario" class="btn btn-sm btn-outline-secondary ms-2">Limpiar</a>
+        </form>
+      </div>
+
+      <div class="inventory-overview mb-3">
+        <strong>Productos en stock:</strong> {{ cantidad_productos_stock }} &nbsp; |
+        <strong>Valor invertido:</strong> ${{ valor_invertido|floatformat:2 }} &nbsp; |
+        <strong>Valor total (venta):</strong> ${{ valor_productos|floatformat:2 }} &nbsp; |
+        <strong>Margen:</strong> ${{ margen_ganancia|floatformat:2 }}
+      </div>
+
+      {% if inventario_by_category %}
+        {% for cat in inventario_by_category %}
+          <div class="card mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <div>
+                <strong>{{ cat.category_name }}</strong>
+                <small class="text-muted ms-2">({{ cat.items|length }} productos)</small>
+              </div>
+              <div class="text-end">
+                <small class="d-block">Stock: {{ cat.cantidad_stock }}</small>
+                <small class="d-block">Valor compra: ${{ cat.valor_invertido|floatformat:2 }}</small>
+                <small class="d-block">Valor venta: ${{ cat.valor_productos|floatformat:2 }}</small>
+              </div>
+            </div>
+            <div class="card-body p-0">
+              <table class="table table-sm mb-0">
+                <thead>
+                  <tr>
+                    <th>Producto</th>
+                    <th class="text-end">Stock</th>
+                    <th class="text-end">Precio compra</th>
+                    <th class="text-end">Precio venta</th>
+                    <th class="text-end">Subtotal compra</th>
+                    <th class="text-end">Subtotal venta</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for item in cat.items %}
+                    <tr>
+                      <td>{{ item.product_name }}</td>
+                      <td class="text-end">{{ item.stock }}</td>
+                      <td class="text-end">${{ item.price_buy|floatformat:2 }}</td>
+                      <td class="text-end">${{ item.price|floatformat:2 }}</td>
+                      <td class="text-end">${{ item.subtotal_buy|floatformat:2 }}</td>
+                      <td class="text-end">${{ item.subtotal_sell|floatformat:2 }}</td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <p>No hay productos en inventario para la categoría seleccionada.</p>
+      {% endif %}
+    
             {% elif request.GET.view == "categoria" %}
                 <h2>Categorías</h2>
                 <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNuevaCategoria">
@@ -524,7 +591,16 @@
     </div>
     <script src="{% static 'js/dashboard.js' %}"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
-
+<script>
+  document.getElementById('inventory_category_select').addEventListener('change', function(){
+    const val = this.value;
+    const url = new URL(window.location.href);
+    url.searchParams.set('view','inventario');
+    if(val) url.searchParams.set('inventory_category', val);
+    else url.searchParams.delete('inventory_category');
+    window.location.href = url.toString();
+  });
+</script>
     
 </body>
 </html>

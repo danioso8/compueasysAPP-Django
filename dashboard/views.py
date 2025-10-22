@@ -21,20 +21,108 @@ def superuser_required(view_func):
 
 @superuser_required
 def dashboard_home(request):
+    
     crear_producto_url = f"{reverse('dashboard_home')}?view=productos"
     productos = ProductStore.objects.all()
     categorias = Category.objects.all()
     tipos = Type.objects.all()
     proveedores = proveedor.objects.all()
     userSimples = register_superuser.objects.all()
+  
+    
 
-    # mostrar formulario crear / editar según query params
     show_create_product_form = request.GET.get('view') == 'productos' and request.GET.get('crear') == '1'
     editar_id = request.GET.get('editar')
     show_edit_product_form = request.GET.get('view') == 'productos' and bool(editar_id)
     producto_to_edit = None
+    
+   
     if editar_id:
         producto_to_edit = ProductStore.objects.filter(id=editar_id).first()
+
+        inventario_all = []
+        inventario_by_category = []
+        resumen_inventario = {
+         'valor_invertido': 0,
+         'valor_productos': 0,
+         'margen_ganancia': 0,
+         'cantidad_productos_stock': 0,
+     }
+
+    def _calcular_inventario(queryset):
+        items = []
+        by_cat = {}
+        total_invertido = 0.0
+        total_productos = 0.0
+        total_cantidad = 0
+        for p in queryset:
+            stock = int(getattr(p, 'stock', 0) or 0)
+            price_buy = float(getattr(p, 'price_buy', 0) or 0)
+            price_sell = float(getattr(p, 'price', 0) or 0)
+            subtotal_buy = price_buy * stock
+            subtotal_sell = price_sell * stock
+            cat = getattr(p, 'category', None) or getattr(p, 'categoria', None)
+            if cat:
+                cat_id = getattr(cat, 'id', 'sin-categoria')
+                cat_name = getattr(cat, 'nombre', None) or getattr(cat, 'name', None) or str(cat)
+            else:
+                cat_id = 'sin-categoria'
+                cat_name = 'Sin categoría'
+            item = {
+                'product_id': p.id,
+                'product_name': getattr(p, 'name', None) or getattr(p, 'nombre', ''),
+                'stock': stock,
+                'price_buy': price_buy,
+                'price': price_sell,
+                'subtotal_buy': subtotal_buy,
+                'subtotal_sell': subtotal_sell,
+                'category_id': cat_id,
+                'category_name': cat_name,
+            }
+            items.append(item)
+            grp = by_cat.setdefault(cat_id, {
+                'category_id': cat_id,
+                'category_name': cat_name,
+                'items': [],
+                'valor_invertido': 0.0,
+                'valor_productos': 0.0,
+                'cantidad_stock': 0
+            })
+            grp['items'].append(item)
+            grp['valor_invertido'] += subtotal_buy
+            grp['valor_productos'] += subtotal_sell
+            grp['cantidad_stock'] += stock
+            total_invertido += subtotal_buy
+            total_productos += subtotal_sell
+            total_cantidad += stock
+        resumen = {
+            'valor_invertido': total_invertido,
+            'valor_productos': total_productos,
+            'margen_ganancia': total_productos - total_invertido,
+            'cantidad_productos_stock': total_cantidad,
+        }
+        inventario_by_category_list = sorted(by_cat.values(), key=lambda x: x['category_name'])
+        return resumen, items, inventario_by_category_list
+
+    # si hay filtro GET (inventory_category) o si el view es 'inventario' calculamos para GET
+    selected_category = request.GET.get('inventory_category')
+    try:
+        selected_category = int(selected_category) if selected_category not in (None, '', 'None') else None
+    except Exception:
+        selected_category = None
+     
+    if request.method != 'POST':
+        qs = ProductStore.objects.all()
+        if selected_category:
+            qs = ProductStore.objects.filter(category_id=selected_category) if ProductStore.objects.filter(category_id=selected_category).exists() else ProductStore.objects.filter(categoria_id=selected_category)
+        try:
+            resumen_inventario, inventario_items, inventario_by_category = _calcular_inventario(qs)
+            inventario_all = [resumen_inventario] + inventario_items
+        except Exception:
+            inventario_all = []
+            inventario_by_category = []
+            resumen_inventario = resumen_inventario  # mantiene valores iniciales
+
 
     # POST: crear o actualizar según product_id
     if request.method == 'POST' and (show_create_product_form or show_edit_product_form):
@@ -49,6 +137,22 @@ def dashboard_home(request):
         imagen = request.FILES.get('images')
         galeria_files = request.FILES.getlist('galeria')
 
+
+        
+        productos_all = ProductStore.objects.all()
+        total_productos_stock = sum(p.stock for p in productos_all)
+        productos_comprados = sum(p.price_buy * p.stock for p in productos_all)
+        valor_productos = sum(p.price * p.stock for p in productos_all)
+        margen_ganancia = valor_productos - productos_comprados
+        inventario_all = []
+        inventario_by_category = []
+        inventario_all.append({
+            'nombre': 'Todos los productos',
+            'valor_invertido': productos_comprados,
+            'valor_productos': valor_productos,
+            'margen_ganancia': margen_ganancia,
+            'cantidad_productos_stock': total_productos_stock,
+        })
         # Proveedor / Categoria / Tipo (opcional)
         proveedor_id = request.POST.get('proveedor')
         proveedor_obj = None
@@ -56,7 +160,8 @@ def dashboard_home(request):
             try:
                 proveedor_obj = proveedor.objects.get(id=proveedor_id)
             except proveedor.DoesNotExist:
-                proveedor_obj = None
+                proveedor_obj = None        
+       
 
         categoria_id = request.POST.get('categoria')
         category_obj = None
@@ -73,7 +178,8 @@ def dashboard_home(request):
                 type_obj = Type.objects.get(id=type_id)
             except Type.DoesNotExist:
                 type_obj = None
-
+        
+    
         # identificar si es actualización o creación
         product_id = request.POST.get('product_id') or None
         if product_id:
@@ -201,12 +307,16 @@ def dashboard_home(request):
         'usuarios': userSimples,
         'show_create_product_form': show_create_product_form,
         'show_edit_product_form': show_edit_product_form,
-        'producto_to_edit': producto_to_edit,
+        'producto_to_edit': producto_to_edit,       
+        'inventario_all': inventario_all,
+        'inventario_by_category': inventario_by_category,
+        'resumen_inventario': resumen_inventario,
+
     })
 # ...existing code...
 
+
 @superuser_required
-# ...existing code...
 def eliminar_producto(request, product_id):
     # Aceptar solo POST y devolver JSON (no redirect) para uso por AJAX
     if request.method != 'POST':
@@ -350,9 +460,6 @@ def delete_proveedor(request, proveedor_id):
     return redirect(redirect_url)
 
 
-
-
-
 @superuser_required
 def edit_product(request, product_id):
     product = get_object_or_404(ProductStore, id=product_id)
@@ -378,13 +485,12 @@ def edit_product(request, product_id):
         return redirect('dashboard_home')
 
     return render(request, 'dashboard/editar_producto.html', {'product': product})
+
 @superuser_required
 def delete_product(request, product_id):
     product = get_object_or_404(ProductStore, id=product_id)
     product.delete()
     return redirect('dashboard_home')           
-
-
 
 @superuser_required
 def crear_categoria(request):

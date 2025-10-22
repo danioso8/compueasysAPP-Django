@@ -25,6 +25,7 @@ from .views import (
     crear_tipo,
     edit_tipo,
     delete_tipo,
+   
 )
 
 urlpatterns = [
@@ -42,6 +43,9 @@ urlpatterns = [
     path('categoria/crear/', crear_categoria, name='crear_categoria'),
     path('categoria/<int:category_id>/editar/', editar_categoria, name='editar_categoria'),
     path('categoria/<int:category_id>/eliminar/', delete_category, name='delete_category'),    
+   
+   
+
 
     path('crear/proveedor/', create_proveedor, name='create_proveedor'),
     path('proveedor/<int:proveedor_id>/editar/', edit_proveedor, name='edit_proveedor'),
