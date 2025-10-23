@@ -70,7 +70,7 @@
                             <span class="price-discount">Antes: ${{ product.price|add:"30000"|intcomma }} COP</span>
                         </div>
                        <div class="car">
-    <span class="ui-pdp-buybox__quantity__selected">Disponibles {{ product.stock }}</span>
+    <span class="ui-pdp-buybox__quantity__selected" id="available-stock">Disponibles {{ product.stock }}</span>
     <form class="btn for-variant" method="post" action="{% url 'add_to_cart_detail' product.id %}">
         {% csrf_token %}
         {# Selector de variantes #}
@@ -92,10 +92,9 @@
                 {% if variant.imagen %}
                     <img src="{{ variant.imagen.url }}" alt="{{ variant.color }}" title="{{ variant.color }}"
                          style="width: 106px; height: 106px; display: block; border-radius: 10%; border: 2px solid #eee;">
-                        <div class="info-variant" style="text-align:left; font-size:12px; margin-top:5px;">
-                           <div>Marca:{{ variant.nombre }}</div>
+                        <div class="info-variant" style="text-align:left; font-size:12px; margin-top:5px;">                           
                            <div>Color:{{ variant.color }}</div>
-                           <div>Talla:{{ variant.talla }}</div>
+                           <div>Stock:{{ variant.stock }}</div>
                            
                         </div>
 
@@ -113,6 +112,7 @@
         {% if product.stock == 0 %}
         <span class="agotado" style="color:black;font-weight:bold;">Agotado</span>
        {% else %}
+       
         <input type="number" name="quantity" min="1" value="1" max="{{ product.stock }}" class="quantity-input">        
         <button type="submit" id="add_to_cart" class="btn2">🛒</button>
          
@@ -140,11 +140,11 @@
                         <p>Excelente producto, muy satisfecho con la compra.</p>
                     </div>
                     <div class="review">
-                        <p><strong>María Gómez</strong> - ★★★★☆</p>
+                        <p><strong>María Gómez</strong> - ★★★★★</p>
                         <p>Buena calidad, pero el envío tardó un poco más de lo esperado.</p>
                     </div>
                     <div class="review">
-                        <p><strong>Carlos Rodríguez</strong> - ★★★☆☆</p>
+                        <p><strong>Carlos Rodríguez</strong> - ★★★★★</p>
                         <p>El producto es aceptable, pero esperaba más por el precio.</p>
                     </div>
                 </div>
@@ -236,6 +236,17 @@
                 mainPrice.textContent = "$" + Number(precio).toLocaleString('es-CO') + " COP";
             } else {
                 mainPrice.textContent = "${{ product.price|intcomma }} COP";
+            }
+            // Actualizar stock disponible
+            var stock = btn.getAttribute('data-stock');
+            var stockDisplay = document.getElementById('available-stock');
+            if (stockDisplay) {
+                stockDisplay.textContent = "Disponibles " + (stock || 0);
+            }
+            // Actualizar cantidad máxima
+            var quantityInput = document.querySelector('.quantity-input');
+            if (quantityInput) {
+                quantityInput.max = stock || 0;
             }
         });
     });
