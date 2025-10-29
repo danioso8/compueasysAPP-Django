@@ -6,21 +6,17 @@
   align-items:center;
   justify-content:space-between;
   gap:1rem;
-  padding:0.6rem 1rem;
-  background: #0f0c29;  /* fallback for old browsers */
-   background: -webkit-linear-gradient(to right, #24243e, #302b63, #0f0c29);  /* Chrome 10-25, Safari 5.1-6 */
-   background: linear-gradient(to right, #24243e, #302b63, #0f0c29); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
-
-  color:#fff;
+  padding:40px ;
+  background: #f3f3f5;  /* fallback for old browsers */  
   position:relative;
-  z-index:100;
+  z-index:100;  
 }
 
 .name-company {
-  color:#fff;
+  color:#5a44da;
   text-decoration:none;
   font-weight:700;
-  font-size:1.1rem;
+  font-size:2.1rem;
 }
 
 /* Lista horizontal (desktop) */
@@ -31,12 +27,16 @@
   align-items:center;
 }
 .nav-list li a {
-  color:#fff;
+  color:#0a0a0a;
   text-decoration:none;
   padding:0.4rem 0.6rem;
   border-radius:4px;
+  font-size: 16px;
 }
-.nav-list li a:hover { background: rgba(255,255,255,0.06); }
+.nav-list li a:hover { 
+  border-bottom: 1px solid #000;
+  background: none; 
+}
 
 /* Botón hamburguesa (oculto desktop) */
 .menu-toggle {
@@ -57,7 +57,7 @@
 .hamburger span { 
   display:block;
   height:2px;
-  background:#fff;
+  background:#0f0f0f;
   margin:4px 0;
   transition:transform .25s ease, opacity .25s ease;
 }

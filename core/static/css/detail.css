@@ -1,4 +1,5 @@
 body {
+    
     background: #f8f9fa;
     font-family: 'Segoe UI', Arial, sans-serif;
 }
@@ -9,10 +10,11 @@ body {
     
     margin: 0 auto;
     padding: 0 15px;
+   
 }
 .car-buy {
     position: absolute;
-    top: 100px;
+    top: 150px;
     right: 20px;
     font-size: 1.2rem;    
     border-radius:50% ;

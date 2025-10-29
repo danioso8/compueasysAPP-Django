@@ -1,0 +1,147 @@
+/* ...existing code... */
+.contact-us-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    background-color: #b99225;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin: 40px auto;
+    width: 70%;
+}
+form {
+    margin-bottom: 15px;
+    display: flex;
+    width: 70%;
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+    justify-content: center;
+    margin-top: 20px;
+    
+
+}
+
+form h2 {
+    font-size: 1.8rem;
+    color: #111010;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+form label {
+    font-size: 1rem;
+    color: #111010;
+    font-weight: 500;
+}
+form input[type="text"], form input[type="email"], form input[type="password"], form textarea {
+    padding: 10px;
+    width: 80%;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 1rem;
+},
+form input[type="password"] {
+    padding: 10px;
+    width: 80%;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+
+/* Layout para footer pegado abajo */
+html, body {
+  height: 100%;
+}
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  /* ...existing body rules kept above (font, margin, padding) ... */
+}
+
+/* Hacer que el main ocupe el espacio disponible */
+main {
+  flex: 1 0 auto;
+}
+
+/* Asegurar que el footer quede al final */
+footer {
+  margin-top: auto;
+  width: 100%;
+  /* si prefieres footer fijo a la pantalla usa:
+     position: fixed;
+     bottom: 0;
+     left: 0;
+     z-index: 1000;
+   y ajusta el contenido para no quedar oculto detrás del footer */
+}
+
+/* ...existing code... */
+.footer-container{
+    display: flex;   
+    padding: 20px;    
+    color: #fff;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+    padding: 30px ;
+    gap: 280px;
+  
+}
+.contacto-us-footer {
+    
+    color: #f3eeee;
+    text-align: left;
+    width: 500px;
+   
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+.contacto-us-footer h3 {
+    margin-bottom: 20px;
+    font-size: 20px;
+}
+.contacto-us-footer p {
+    margin: 5px 0;
+    font-size: 16px;
+}
+.social-media-icons {
+    color: #f3eeee;
+    text-align: left;
+    padding: 40px 20px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+.social-media-icons a {
+    margin-right: 15px;
+    color: #f3eeee;
+    text-decoration: none;
+    font-size: 24px;
+    margin-bottom: 20px;
+    font-size: 20px;
+}
+.social-media-icons p {
+    margin: 5px 0;
+    font-size: 16px;
+}
+.footer-copyright {
+    text-align: center;
+    padding: 10px;
+    background-color: #111010;
+    color: #f3eeee;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+   
+}
+@media screen and (max-width: 768px) {
+    .footer-container {
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+    }
+    .contacto-us-footer, .social-media-icons {
+        text-align: center;
+        width: auto;
+    }
+    
+}

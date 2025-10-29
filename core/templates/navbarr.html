@@ -2,6 +2,7 @@
 <link rel="stylesheet" href="{% static 'css/navbarr.css' %}">
 
 <nav class="navbar">
+
   <a class="name-company" href="{% url 'home' %}">Compueasys</a>
 
   <button class="menu-toggle" aria-controls="nav-menu" aria-expanded="false" aria-label="Abrir menú">
@@ -17,6 +18,9 @@
     <li><a href="{% url 'services' %}">Servicios</a></li>
     <li><a href="{% url 'contactUs' %}">Contactenos</a></li>
   </ul>
+  <div class="cart-icon">
+  
+  </div>
 </nav>
 
 <script src="{% static 'js/navbar.js' %}"></script>

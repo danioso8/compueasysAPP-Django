@@ -6,27 +6,202 @@ body {
 }
 
 footer {
-     background: #070707;
+    background: #070707;
     color: #f3eeee;
     text-align: center;
     padding: 10px 0;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    position: fixed;
-    left: 0;
-    bottom: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;   
     width: 100%;
-    z-index: 100;
-}
-
-.container {
-    max-width: 100%; /* Corregido para usar porcentaje */
     
+}
+.services {
+    background: #24243e;  /* fallback for old browsers */
+   background: -webkit-linear-gradient(to right, #302b63, #0f0c29);  /* Chrome 10-25, Safari 5.1-6 */
+   background: linear-gradient(to right, #302b63, #0f0c29); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+    color: #fff;
+    text-align: center;
+    padding: 60px 20px;
+    margin-bottom: 50px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+.services .title {
+    
+    color: #f5efef;
+    text-align: center;
+    font-size: 34px;
+    text-transform: uppercase;
+    font-weight: bold;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+.services .subtitle {
+    color: #cfc8c8;
+    text-align: center;
+    font-size: 24px;
+    margin-top: 40px;
+    margin-bottom: 40px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}   
+.services .btn {
+    display: inline-block;
+   
+    padding: 15px;
+    font-size: 16px;
+    color: #fff;
+    background-color: transparent;
+    border: 1px solid #fff  ;
+    border-radius: 35px;
+    width: 250px;
+    text-decoration: none;
+    margin: 10px;
+    cursor: pointer;
+    
+    transition: background-color 0.3s ease;
+   }   
+   .services .btn:hover {
+    background-color: #0056b3;
+   }
+.section-divider {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);   
+    text-align: center;
+    justify-content: center;   
+    background-color: #e0e0e0;
+    margin: 40px 0;   
+    background: #24243e;  /* fallback for old browsers */
+    background: -webkit-linear-gradient(to right, #302b63, #0f0c29);  /* Chrome 10-25, Safari 5.1-6 */
+    background: linear-gradient(to right, #302b63, #0f0c29); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+   
+}
+.services .section-divider .card {
+    position: relative;
+    background: #49497e;   
+    width: 400px;
+    min-height: 350px;
+    display: flex;   
+    flex-direction: column;   
+    gap: 30px;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.services .section-divider .card:hover {
+    transform: translateY(-8px) scale(1.03);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+}
+.card .icon,
+.card .icon img {
+   margin: 0;
+  padding: 0;
+  display: block;
+  width: 100%; 
+    height: 350px;      /* altura fija */
+ 
+  object-fit: cover;       /* recorta centrado si estableces height fijo */
+  border-radius: 0;
+
+}
+.card h3 {
+    position: absolute;
+    bottom: 150px;
+    left: 50%;                   /* centrar horizontalmente */
+    transform: translateX(-50%); /* ajustar posición al centro */
+    text-align: center;
+    color: #8ada09;
+    font-size: 18px;
+    text-transform: uppercase;
+    font-weight: bold;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    z-index: 2;           
+}  
+
+.sobre-AppCompueasys {
+    display: flex; 
+    gap: 150px;  
+    background-color: #e0e0e0;
+    background: white;
+    margin: 40px 0; 
+    align-items: center; 
+    text-align: center;
+    justify-content: center;
+   
+    
+}
+.sobre-AppCompueasys .card {
+    position: relative;
+    background: none;  
+    padding: 40px 20px; 
+    width: 500px;
+    min-height: 350px;
+    display: flex;   
+    flex-direction: column;   
+    gap: 40px;
+    transition: transform 0.2s, box-shadow 0.2s;
+    border: none;
+}
+.sobre-AppCompueasys .card .title {
+    color: #131212;
+    text-align: left;   
+    font-size: 44px;    
+    font-weight: bold;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}   
+.sobre-AppCompueasys .card .subtitle {
+    color: #555151;
+    text-align: left;
+   
+    font-size: 14px;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}   
+.sobre-AppCompueasys .card .btn {
+    display: inline-block;
+    width: 200px;
+   
+    padding: 10px 20px;
+    font-size: 16px;
+    color: #080808;
+   
+    border: 1px solid #080808;
+    border-radius: 25px;
+    text-decoration: none;
+    
+    cursor: pointer;
+    
+    transition: background-color 0.3s ease;
+   }   
+   .sobre-AppCompueasys .card .btn:hover {
+    background-color: #0056b3;
+   }
+   .sobre-AppCompueasys .card img {
+    text-align: center;
+    width: 300px; 
+    height: 300px; 
+   
+   }
+   .sobre-AppCompueasys .title1 {
+    top: 0%;
+    color: #131212;
+    text-align: center;   
+    font-size:24px;    
+    font-weight: bold;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+.sobre-AppCompueasys .subtitle2 {
+    color: #555151;
+    text-align: center;   
+    font-size: 14px;
+    margin-top: -30px;    
+    margin-bottom: 20px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+.container1 {
+    max-width: 100%; /* Corregido para usar porcentaje */
+    width: 100%;
     max-height: 500px; /* Añadido para asegurar el ancho */
     text-align: center;
-   background: #0f0c29;  /* fallback for old browsers */
-   background: -webkit-linear-gradient(to right, #24243e, #302b63, #0f0c29);  /* Chrome 10-25, Safari 5.1-6 */
-   background: linear-gradient(to right, #24243e, #302b63, #0f0c29); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
-
+   background: #24243e;  /* fallback for old browsers */
+   background: -webkit-linear-gradient(to right, #302b63, #0f0c29);  /* Chrome 10-25, Safari 5.1-6 */
+   background: linear-gradient(to right, #302b63, #0f0c29); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+    color: #fff;
     margin-bottom: 50px;
     padding: 10px;
     padding-bottom: 40px;
@@ -236,6 +411,32 @@ footer {
 
 /* Responsive */
 @media (max-width: 1100px) {
+    .section-divider {
+        display: grid;
+        grid-template-columns: repeat(1, 1fr);
+        padding: 20px;  
+
+    }
+    .section-divider .card {
+        width: 80%;
+        margin: 0 auto 32px auto;
+    }
+    .sobre-AppCompueasys {
+        flex-direction: column;
+        align-items: center;
+        
+    }
+    .sobre-AppCompueasys .card img {
+        width: 90%;
+        height: auto;
+        margin-top: 50px;
+        padding: 30px;
+    }
+    .sobre-AppCompueasys .card {
+        width: 90%;
+        margin-bottom: 32px;
+        text-align: center;
+    }
     .plan-pago-cart {
         flex-direction: column;
         align-items: center;
