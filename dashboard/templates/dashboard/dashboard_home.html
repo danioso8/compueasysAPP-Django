@@ -36,6 +36,7 @@
         <main class="main-content">
             {% if request.GET.view == "usuarios" %}
                 <h2>Usuarios</h2>
+
                  <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}"> 
                 <table>
                     <tr>
@@ -78,7 +79,8 @@
                             
                             <td>
                                 <button class="btn btn-primary" onclick="openEditModal('{{ usuario.id }}', '{{ usuario.username }}', '{{ usuario.email }}')">Editar</button>
-                                <button class="btn btn-danger eliminar-usuario-btn" data-user-id="{{ usuario.id }}">x</button>
+                                <button  class="btn btn-danger eliminar-usuario-btn" data-user-id="{{ usuario.id }}">x</button>
+                                <button  class="btn btn-info" href="?view=usuarios&reset_password={{ usuario.id }}">Restablecer contraseña</button>
                            </td>
                             {% if usuario.is_staff %}
                                 <span>Admin</span>
@@ -307,14 +309,15 @@
                 <h2>Pedidos</h2>
                 <table>
                     <tr>
-                        <th>ID</th>
-                        <th>Usuario</th>
+                       
+                        <th>Nombre</th>
+                        <th>Email</th>
                         <th>Total</th>
                         <th>Fecha</th>
                     </tr>
                     {% for pedido in pedidos %}
                     <tr>
-                        <td>{{ pedido.id }}</td>
+                        <td>{{ pedido.nombre }}</td>
                         <td>{{ pedido.user }}</td>
                         <td>${{ pedido.total }}</td>
                         <td>{{ pedido.created_at }}</td>

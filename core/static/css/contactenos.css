@@ -1,10 +1,52 @@
 
-.contactenos {
+.contact-us-container {
     display: flex;
     flex-direction: column;
-    
     align-items: center;
-    background-color: #f9f9f9;
-    padding: 50px 20px;
-    text-align: center;
+    justify-content: center;
+   
+    background-color: #f4f7f1;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(95, 216, 14, 0.1);
+    margin: 40px auto;
+    width: 60%;
+    height: 100%;
+}
+form {
+    margin-bottom: 15px;
+    display: flex;
+    width: 70%;
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+    justify-content: center;
+    margin-top: 20px;
+    
+
+}
+
+form h2 {
+    font-size: 1.8rem;
+    color: #111010;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+form label {
+    font-size: 1rem;
+    color: #111010;
+    font-weight: 500;
+}
+form input[type="text"], form input[type="email"], form input[type="password"], form textarea {
+    padding: 10px;
+    width: 80%;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+form input[type="password"] {
+    padding: 10px;
+    width: 80%;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 1rem;
 }

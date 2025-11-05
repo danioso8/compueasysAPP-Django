@@ -283,7 +283,16 @@ def pago_exitoso(request):
             f"Puedes cambiarla cuando quieras desde la tienda.\n\n"
             f"¡Gracias por confiar en nosotros!"
         )
-        send_mail(subject, message, None, [email])
+        # Remitente seguro: DEFAULT_FROM_EMAIL o EMAIL_HOST_USER
+        from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', None) or getattr(settings, 'EMAIL_HOST_USER', None)
+        if not from_email:
+            logger.error("No se ha configurado DEFAULT_FROM_EMAIL ni EMAIL_HOST_USER en settings.py")
+        else:
+            try:
+                send_mail(subject, message, from_email, [email], fail_silently=False)
+            except Exception as e:
+                logger.exception("Error enviando correo de confirmación: %s", e)
+                # no interrumpir flujo, solo loggear; opcionalmente notificar al admin
 
         # Generar link de WhatsApp ORDENADO
         mensaje = (
@@ -604,6 +613,30 @@ def logout_view(request):
     return redirect('store')  # Redirect to your homepage or login page
 
 
+
+import logging
+logger = logging.getLogger(__name__)
+
+def enviarEmail(request):
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Método no permitido.'}, status=405)
+
+    nombre = request.POST.get('name')
+    email = request.POST.get('email')
+    mensaje = request.POST.get('message')
+
+    subject = f"Nuevo mensaje de contacto de {nombre}"
+    message = f"Nombre: {nombre}\nEmail: {email}\n\nMensaje:\n{mensaje}"
+    from_email = settings.DEFAULT_FROM_EMAIL
+    recipient_list = [getattr(settings, 'CONTACT_EMAIL', from_email)]
+
+    try:
+        send_mail(subject, message, from_email, recipient_list, fail_silently=False)
+    except Exception as e:
+        logger.exception("Error enviando email de contacto")
+        return JsonResponse({'success': False, 'message': 'Error enviando correo.', 'error': str(e)}, status=500)
+
+    return JsonResponse({'success': True, 'message': 'Correo enviado exitosamente.'})
 # Datos de departamentos y ciudades
 DEPARTAMENTOS_CIUDADES = {
     "Amazonas": ["Leticia", "Puerto Nariño"],

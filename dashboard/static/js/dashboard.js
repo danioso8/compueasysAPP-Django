@@ -694,3 +694,42 @@
   }); // DOMContentLoaded end
 })();
 // ...existing code...
+
+function getCookie(name) {
+  const v = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+  return v ? v.pop() : '';
+}
+
+// ---------- Eliminar usuario desde lista (fetch API) ----------
+document.addEventListener('DOMContentLoaded', function () {
+  document.querySelectorAll('.eliminar-usuario-btn').forEach(btn => {
+    btn.addEventListener('click', async function (e) {
+      const userId = btn.dataset.userId;
+      if (!userId) return;
+      if (!confirm('¿Eliminar usuario?')) return;
+      const csrftoken = getCookie('csrftoken');
+      try {
+        const res = await fetch(`/dashboard/eliminar_usuario/${userId}/`, {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': csrftoken,
+            'Accept': 'application/json'
+          },
+          credentials: 'same-origin'
+        });
+        const data = await res.json().catch(() => null);
+        if (res.ok && data && data.success) {
+          const row = btn.closest('tr');
+          if (row) row.remove();
+          else location.reload();
+        } else {
+          alert((data && data.message) || 'Error eliminando usuario');
+          console.error('Delete user error', data);
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Error de red al eliminar usuario');
+      }
+    });
+  });
+});

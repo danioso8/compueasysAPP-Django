@@ -10,6 +10,10 @@ from functools import wraps
 from django.shortcuts import redirect, render, get_object_or_404
 from django.urls import reverse
 
+from django.shortcuts import get_object_or_404, redirect
+from django.contrib.auth import get_user_model
+from django.contrib import messages
+
 def superuser_required(view_func):
     @wraps(view_func)
     def _wrapped_view(request, *args, **kwargs):
@@ -21,16 +25,15 @@ def superuser_required(view_func):
 
 @superuser_required
 def dashboard_home(request):
-    
+    Pedidos = [];
+    categorias = [];
     crear_producto_url = f"{reverse('dashboard_home')}?view=productos"
     productos = ProductStore.objects.all()
     categorias = Category.objects.all()
     tipos = Type.objects.all()
     proveedores = proveedor.objects.all()
-    userSimples = register_superuser.objects.all()
-  
-    
-
+    userSimples = register_superuser.objects.all()    
+    Pedidos = Pedido.objects.all()
     show_create_product_form = request.GET.get('view') == 'productos' and request.GET.get('crear') == '1'
     editar_id = request.GET.get('editar')
     show_edit_product_form = request.GET.get('view') == 'productos' and bool(editar_id)
@@ -48,6 +51,17 @@ def dashboard_home(request):
          'margen_ganancia': 0,
          'cantidad_productos_stock': 0,
      }
+      # Inicializar variables usadas en el contexto para evitar UnboundLocalError
+   
+    message = ''
+    inventario_all = []
+    inventario_by_category = []
+    resumen_inventario = {
+        'valor_invertido': 0,
+        'valor_productos': 0,
+        'margen_ganancia': 0,
+        'cantidad_productos_stock': 0,
+    }
 
     def _calcular_inventario(queryset):
         items = []
@@ -152,7 +166,9 @@ def dashboard_home(request):
             'valor_productos': valor_productos,
             'margen_ganancia': margen_ganancia,
             'cantidad_productos_stock': total_productos_stock,
-        })
+        })      
+        
+
         # Proveedor / Categoria / Tipo (opcional)
         proveedor_id = request.POST.get('proveedor')
         proveedor_obj = None
@@ -311,6 +327,7 @@ def dashboard_home(request):
         'inventario_all': inventario_all,
         'inventario_by_category': inventario_by_category,
         'resumen_inventario': resumen_inventario,
+        'pedidos': Pedidos,
 
     })
 # ...existing code...

@@ -5,6 +5,15 @@
 
 
 /* ...existing code... */
+footer {
+    background: #070707;
+    color: #f3eeee;
+    text-align: center;
+    padding: 10px 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;   
+    width: 100%;
+    
+}
 
 /* ====== Navbar superior responsive (añadido) ====== */
 .top-navbar {
@@ -13,19 +22,21 @@
   justify-content: space-between;
   gap: 1rem;
   padding: 0.6rem 1rem;
-  background: #645be9;
-  color: #fff;
+  
+  background: #ffffff;
+ 
+  color: #0a0a0a;
   position: sticky;
   top: 0;
   z-index: 1100;
-  margin-bottom: 80px;
+  margin-bottom: 40px;
 }
 
 .top-navbar .brand {
-  color: #fff;
+  color: #302df3;
   text-decoration: none;
   font-weight: 700;
-  font-size: 1.1rem;
+  font-size: 1.8rem;
 }
 
 .top-navbar .nav-links {
@@ -38,13 +49,81 @@
 }
 
 .top-navbar .nav-links a {
-  color: #fff;
+  color: #0e0d0d;
   text-decoration: none;
   padding: 0.4rem 0.6rem;
   border-radius: 4px;
 }
 .top-navbar .nav-links a:hover {
   background: rgba(255,255,255,0.06);
+}
+.top-navbar ul{
+  display: flex;
+  gap: 15px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.top-navbar ul li a{
+  color: #050505;
+  text-decoration: none;
+  padding: 0.4rem 0.6rem;
+  border-radius: 4px;
+}
+.login-user{
+  position: relative;
+  margin-left: 20px;
+  text-decoration: none;
+ 
+  width: auto;
+  display:flex;
+  list-style: none;
+}
+.login-user a{
+  text-decoration: none;
+  color: rgb(177, 214, 12);
+}
+.login-user a i{
+  font-size: 20px;
+  margin-right: 5px;
+  color: #000;
+  padding: 10px;
+}
+
+.nav-categorias {
+  margin-top: 20px;
+  width: 100%;
+  background: #2960f7;  /* fallback for old browsers */
+
+  justify-content: center;
+  padding: 10px 0;
+}
+.nav-categorias .nav-links-categorias {
+  display: flex;
+  gap: 15px;
+  list-style: none;
+  margin: 5px;
+  padding: 10px;
+  justify-content: center;
+  color: #000;  
+  
+}
+.nav-categorias .nav-links-categorias li {
+  margin: 0;
+ 
+  border-radius: 10px;
+  color: #000;
+}
+.nav-categorias .nav-links-categorias li a {
+  color: #eee8e8;
+  text-decoration: none;
+  padding: 8px 12px;
+ 
+  font-weight: 600;
+}.nav-categorias .nav-links-categorias li a:hover {
+  background: #979393;
+  color: #fff;
+  border-radius: 10px;
 }
 
 /* botón hamburguesa (oculto en desktop) */
@@ -70,6 +149,38 @@
   margin: 4px 0;
   transition: transform .25s ease, opacity .25s ease;
 }
+/* ...existing code... */
+
+:root{
+  --nav-height:64px;         /* ajustar según alto real del nav */
+  --container1-height:56px;  /* ajustar según alto del container1 si existe */
+}
+
+/* NAV fijo */
+.top-navbar{
+  position: fixed; /* antes: sticky */
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--nav-height);
+  z-index: 1100;
+  margin-bottom: 40; /* quitar margen que empuja el contenido */
+}
+
+/* Si tienes un contenedor superior adicional (container1) que debe quedar justo debajo del nav */
+
+
+/* Empujar el contenido principal para que no quede oculto tras el nav + container1 */
+
+
+/* Ajustes responsive (si necesitas menor altura en móvil) */
+@media (max-width: 768px){
+  :root{ --nav-height:56px; --container1-height:48px; }
+  .container_product_all,
+  main { padding-top: calc(var(--nav-height) + var(--container1-height) + 12px); }
+}
+
+/* ...existing code... */
 
 /* Mobile: ocultar enlaces y mostrar botón */
 @media (max-width: 992px) {
@@ -112,6 +223,13 @@
     margin: 20px 0;
     color: #645be9;
     text-transform: uppercase;
+}
+.containerP{
+  
+ 
+  
+  padding: 10px;
+  padding-top: 80px;
 }
 
 .container_product_all {

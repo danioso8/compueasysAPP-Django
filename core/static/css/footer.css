@@ -1,54 +1,5 @@
 /* ...existing code... */
-.contact-us-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 40px 20px;
-    background-color: #b99225;
-    border-radius: 10px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    margin: 40px auto;
-    width: 70%;
-}
-form {
-    margin-bottom: 15px;
-    display: flex;
-    width: 70%;
-    flex-direction: column;
-    gap: 12px;
-    align-items: center;
-    justify-content: center;
-    margin-top: 20px;
-    
 
-}
-
-form h2 {
-    font-size: 1.8rem;
-    color: #111010;
-    margin-bottom: 10px;
-    font-weight: 600;
-}
-form label {
-    font-size: 1rem;
-    color: #111010;
-    font-weight: 500;
-}
-form input[type="text"], form input[type="email"], form input[type="password"], form textarea {
-    padding: 10px;
-    width: 80%;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    font-size: 1rem;
-},
-form input[type="password"] {
-    padding: 10px;
-    width: 80%;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    font-size: 1rem;
-}
 
 /* Layout para footer pegado abajo */
 html, body {
@@ -80,25 +31,58 @@ footer {
 
 /* ...existing code... */
 .footer-container{
-    display: flex;   
+    display: flex;     
     padding: 20px;    
     color: #fff;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     text-align: center;
     align-items: center;
-    justify-content: center;
+   
     padding: 30px ;
-    gap: 280px;
+    gap: 300px;
   
 }
-.contacto-us-footer {
+.footer-content {   
+    display: flex;
+    align-items: center;
+    gap: 100px;
+    text-align: center;
     
+   
+}
+
+.footer-content .linea i{
+    font-size: 40px;
+    color: #eafa12;
+    margin-bottom: 20px;
+}
+.contacto-us-footer {
+    display: flex;
     color: #f3eeee;
     text-align: left;
-    width: 500px;
-   
+    width: 40%;
+    justify-content: space-between;
+    gap: 30px;
+    align-items: center;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
+.footer-about {
+    margin-left: 100px;
+    text-align: left;
+}
+.footer-logo h2 {
+    font-size: 28px;
+    color: #eafa12;
+    margin-bottom: 20px;
+    text-align: left;
+}   
+.contacto-us-footer .footer-logo{
+   position: relative;
+   z-index: 1;
+  
+    margin-bottom: 20px;
+    text-align: left;
+}   
 .contacto-us-footer h3 {
     margin-bottom: 20px;
     font-size: 20px;
@@ -133,15 +117,37 @@ footer {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
    
 }
-@media screen and (max-width: 768px) {
+@media screen and (max-width: 1380px) , (max-width: 668px) {
     .footer-container {
+        display: flex;
+        flex-direction: column;       
+        align-items: center;        
+    }
+    .footer-content {
         flex-direction: column;
         align-items: center;
-        gap: 20px;
+    }
+    .footer-content {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+       
     }
     .contacto-us-footer, .social-media-icons {
         text-align: center;
         width: auto;
+    }
+     .footer-content .linea i{      
+        font-size: 30px;
+        color: #eafa12;
+        margin-bottom: 20px;
+
+    }
+    .contacto-us-footer {     
+        
+        text-align: center;
+        flex-direction: column;
+        align-items: center;
     }
     
 }
