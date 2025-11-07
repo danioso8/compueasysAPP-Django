@@ -113,7 +113,7 @@
               <li>
                 <a
                   href="{% url 'store' %}"
-                  class="nav-link px-3 rounded-pill {% if not request.GET.category %}active bg-light text-dark fw-bold{% else %}text-light{% endif %}"
+                  class="nav-link px-3 rounded-pill {% if not request.GET.category %}active bg-light text-primary fw-bold{% else %}text-dark{% endif %}"
                 >
                   Todos
                 </a>
@@ -122,7 +122,7 @@
               <li>
                 <a
                   href="?category={{ category.id }}"
-                  class="nav-link px-3 rounded-pill {% if request.GET.category == category.id|stringformat:'s' %}active bg-light text-dark fw-bold{% else %}text-light{% endif %}"
+                  class="nav-link px-3 rounded-pill border {% if request.GET.category == category.id|stringformat:'s' %}active bg-light text-primary fw-bold{% else %}text-dark{% endif %}"
                 >
                   {{ category.nombre }}
                 </a>

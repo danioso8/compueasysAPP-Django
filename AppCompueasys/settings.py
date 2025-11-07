@@ -27,6 +27,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    # 'cloudinary_storage',  # Comentado temporalmente hasta instalar
+    # 'cloudinary',          # Comentado temporalmente hasta instalar
     'core',
     'contable.apps.ContableConfig',
     'bootstrap5',    
@@ -118,9 +120,6 @@ STATICFILES_DIRS = [
      join(BASE_DIR, 'contable', 'static'),
 ]
 
-MEDIA_URL = '/media_files/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media_files')
-
 EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
 EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
 EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
@@ -129,5 +128,33 @@ EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', 'compueasys@gmail.com')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')  # app password de Gmail
 DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER)
 CONTACT_EMAIL = os.getenv('CONTACT_EMAIL', DEFAULT_FROM_EMAIL)
+
+# ====== Cloudinary Configuration ======
+# Configuración condicional para producción vs desarrollo
+USE_CLOUDINARY = os.getenv('USE_CLOUDINARY', 'False') == 'True'
+
+if USE_CLOUDINARY:
+    # Importar cloudinary solo cuando se necesite
+    import cloudinary
+    import cloudinary.uploader
+    import cloudinary.api
+    
+    # Configuración Cloudinary para producción
+    cloudinary.config(
+        cloud_name=os.getenv('CLOUDINARY_CLOUD_NAME'),
+        api_key=os.getenv('CLOUDINARY_API_KEY'),
+        api_secret=os.getenv('CLOUDINARY_API_SECRET'),
+        secure=True
+    )
+    
+    # Storage backends para archivos media
+    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+    
+    # URLs para archivos media
+    MEDIA_URL = '/media/'
+else:
+    # Configuración local para desarrollo
+    MEDIA_URL = '/media_files/'
+    MEDIA_ROOT = os.path.join(BASE_DIR, 'media_files')
 
 

@@ -92,11 +92,13 @@ footer {
 
 .nav-categorias {
   margin-top: 20px;
-  width: 100%;
-  background: #9e9ece;  /* fallback for old browsers */
 
+  background:white;  /* fallback for old browsers */
+  border: #cccbcb  solid 1px ;
+  margin: 0 20px;
   justify-content: center;
   padding: 10px 0;
+  margin-bottom: 60px;
 }
 .nav-categorias h2 {
  display: none;
@@ -254,7 +256,7 @@ footer {
     top: 100%;
     left: 0;
     right: 0;
-    background: #9595e9;
+    background: White;
     padding: 1rem;
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     z-index: 1000;
