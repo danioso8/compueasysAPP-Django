@@ -22,23 +22,31 @@
   </head>
   <body>
     <header>
-      <nav class="top-navbar navbar-store" role="navigation" aria-label="Main navigation">
-        <a
-          href="{% url 'home' %}" class="title brand">       
-          CompuEasys
-        </a>
-        <button class="menu-toggle" aria-controls="store-nav" aria-expanded="false" aria-label="Abrir menú">
-          <span class="hamburger" aria-hidden="true"><span></span><span></span><span></span></span>
+      <nav
+        class="top-navbar navbar-store"
+        role="navigation"
+        aria-label="Main navigation"
+      >
+        <a href="{% url 'home' %}" class="title brand"> CompuEasys </a>
+        <button
+          class="menu-toggle"
+          aria-expanded="false"
+          aria-label="Abrir menú"
+        >
+          <div class="hamburger">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
         </button>
-        <ul>
-            <li><a href="{% url 'home' %}">Inicio</a></li>
-             <li><a href="{% url 'store' %}">Tienda</a></li>
-             <li><a href="{% url 'aboutUs' %}">Sobre Nosotros</a></li>
-             <li><a href="{% url 'services' %}">Servicios</a></li>
-             <li><a href="{% url 'contactUs' %}">Contactenos</a></li>
+        <ul class="nav-links">
+          <li><a href="{% url 'home' %}">Inicio</a></li>
+          <li><a href="{% url 'store' %}">Tienda</a></li>
+          <li><a href="{% url 'aboutUs' %}">Sobre Nosotros</a></li>
+          <li><a href="{% url 'services' %}">Servicios</a></li>
+          <li><a href="{% url 'contactUs' %}">Contactenos</a></li>
         </ul>
         <div class="login-user">
-                     
           {% if user.is_authenticated %}
           <li>
             <a class="" href="/mis-pedidos">
@@ -48,22 +56,22 @@
           </li>
           {% else %}
           <li><a href="/login_user">Iniciar Sesión</a></li>
-          {% endif %}       
+          {% endif %}
         </div>
       </nav>
-      
     </header>
     <main>
       <div class="container1">
         <div class="containerP">
-          <form method="get" class=" Buscar-productos-form">
+          <form method="get" class="Buscar-productos-form">
             <div class="input-group">
               <input
                 type="text"
                 name="q"
                 class="form-control"
                 placeholder="Buscar productos..."
-                value="{{ request.GET.q }}" />
+                value="{{ request.GET.q }}"
+              />
               <button class="btn btn-primary" type="submit">
                 <i class="bi bi-search"></i> Buscar
               </button>
@@ -74,7 +82,9 @@
                   class="btn position-relative"
                 >
                   <i class="bi bi-cart-plus-fill fs-1"></i>
-                  <span id="cart-count" class="position-absolute top-0 start-70 translate-middle badge rounded-pill bg-danger"
+                  <span
+                    id="cart-count"
+                    class="position-absolute top-0 start-70 translate-middle badge rounded-pill bg-danger"
                   >
                     {{ cart_count }}
                     <span class="visually-hidden">unread messages</span>
@@ -83,28 +93,46 @@
               </div>
             </div>
           </form>
-          <nav id="store-nav" class="nav-categorias">
-            <ul id="store-nav" class="nav-links-categorias">
-             <li>
-               <a href="{% url 'store' %}" class="nav-link px-3 rounded-pill {% if not request.GET.category %}active bg-light text-dark fw-bold{% else %}text-light{% endif %}">
-                  Todos
-              </a>
-            </li>
-            {% for category in categories %}
-           <li>
-             <a
-               href="?category={{ category.id }}"
-               class="nav-link px-3 rounded-pill  {% if request.GET.category == category.id|stringformat:'s' %}active  bg-light text-dark fw-bold{% else %}text-light{% endif %}"
-             >
-             {{ category.nombre }}
-             </a>
-           </li>
-           {% endfor %}
-
-        </ul>
         </div>
-     
-      </nav>
+
+        <nav id="store-nav" class="nav-categorias" data-title="Categorías">
+          <h2>Categorías</h2>
+          <div class="container-categorias">
+            <button
+              class="menu-toggle"
+              id="toggle-categoria"
+              aria-controls="nav-links-categorias"
+              aria-expanded="false"
+              aria-label="Abrir menú"
+            >
+              <span class="hamburger" aria-hidden="true"
+                ><span></span><span></span><span></span
+              ></span>
+            </button>
+            <ul id="nav-links-categorias" class="nav-links-categorias">
+              <li>
+                <a
+                  href="{% url 'store' %}"
+                  class="nav-link px-3 rounded-pill {% if not request.GET.category %}active bg-light text-dark fw-bold{% else %}text-light{% endif %}"
+                >
+                  Todos
+                </a>
+              </li>
+              {% for category in categories %}
+              <li>
+                <a
+                  href="?category={{ category.id }}"
+                  class="nav-link px-3 rounded-pill {% if request.GET.category == category.id|stringformat:'s' %}active bg-light text-dark fw-bold{% else %}text-light{% endif %}"
+                >
+                  {{ category.nombre }}
+                </a>
+              </li>
+              {% endfor %}
+            </ul>
+          </div>
+        </nav>
+
+        <div class="store-content">
           <div class="slug-categoria">
             {% if current_category %}
             <h2 class="category-title">
@@ -123,8 +151,11 @@
               <div class="container_product mb-4">
                 <a href="{% url 'product_detail' product.id %}">
                   <div class="card_product">
-                    {% if product.imagen  and product.imagen.name %}
-                    <img src="{{ product.imagen.url }}" alt="{{ product.name }}" />
+                    {% if product.imagen and product.imagen.name %}
+                    <img
+                      src="{{ product.imagen.url }}"
+                      alt="{{ product.name }}"
+                    />
                     {% else %}
                     <img
                       src="{% static 'images/no_image_available.png' %}"
@@ -183,11 +214,9 @@
         </div>
       </div>
     </main>
-    <footer>
-      {% include 'footer.html' %}
-    </footer>
+    <footer>{% include 'footer.html' %}</footer>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="{% static 'js/store.js' %}"></script>   
+    <script src="{% static 'js/store.js' %}"></script>
   </body>
 </html>

@@ -74,11 +74,12 @@
     background:#0b2b3a;
     flex-direction:column;
     padding:0.5rem 1rem 1rem;
+   
     gap:0.25rem;
     box-shadow:0 6px 18px rgba(0,0,0,0.25);
   }
   .nav-list.open { display:flex; }
-  .nav-list li a { padding:0.8rem 0.6rem; border-radius:4px; }
+  .nav-list li a {color: white; padding:0.8rem 0.6rem; border-radius:4px; }
 
   /* Animación hamburguesa cuando está abierto */
   .navbar.open .hamburger span:nth-child(1){ transform: translateY(6px) rotate(45deg); }
