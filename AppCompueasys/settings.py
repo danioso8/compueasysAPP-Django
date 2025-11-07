@@ -27,8 +27,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    # 'cloudinary_storage',  # Comentado temporalmente hasta instalar
-    # 'cloudinary',          # Comentado temporalmente hasta instalar
+    'cloudinary_storage',  # Descomentado - listo para usar
+    'cloudinary',          # Descomentado - listo para usar
     'core',
     'contable.apps.ContableConfig',
     'bootstrap5',    
@@ -152,6 +152,8 @@ if USE_CLOUDINARY:
     
     # URLs para archivos media
     MEDIA_URL = '/media/'
+    # Definir MEDIA_ROOT para compatibilidad (aunque no se use con Cloudinary)
+    MEDIA_ROOT = os.path.join(BASE_DIR, 'media_files')
 else:
     # Configuración local para desarrollo
     MEDIA_URL = '/media_files/'
