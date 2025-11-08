@@ -109,11 +109,14 @@
                 ><span></span><span></span><span></span
               ></span>
             </button>
+            
+            
+            
             <ul id="nav-links-categorias" class="nav-links-categorias">
               <li>
                 <a
                   href="{% url 'store' %}"
-                  class="nav-link px-3 rounded-pill {% if not request.GET.category %}active bg-light text-primary fw-bold{% else %}text-dark{% endif %}"
+                  class="nav-link px-3 rounded-pill {% if not request.GET.category and view_mode == 'all' %}active bg-light text-primary fw-bold{% else %}text-dark{% endif %}"
                 >
                   Todos
                 </a>
@@ -131,23 +134,135 @@
             </ul>
           </div>
         </nav>
+        <!-- Botones de vista -->
+            <div class="view-toggle-buttons mb-3">
+              <div class="btn-group" role="group">
+                <a href="{% url 'store' %}?view=all" 
+                   class="btn btn-sm {% if view_mode == 'all' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                  <i class="bi bi-grid-3x3-gap"></i> Todos
+                </a>
+                <a href="{% url 'store' %}?view=category" 
+                   class="btn btn-sm {% if view_mode == 'category' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                  <i class="bi bi-collection"></i> Por Categorías
+                </a>
+              </div>
+            </div>
 
         <div class="store-content">
-          <div class="slug-categoria">
-            {% if current_category %}
-            <h2 class="category-title">
-              Categoría: {{ current_category.nombre }}
-              <span class="badge bg-secondary ms-2"
-                >{{ current_category.slug }}</span
-              >
-            </h2>
-            {% else %}
-            <h2 class="category-title">Todos los productos</h2>
-            {% endif %}
-          </div>
-          <div class="container_product_all">
-            <div class="row_product_all">
-              {% for product in products %}
+          {% if view_mode == 'category' %}
+            <!-- Vista por categorías -->
+            <div class="category-header mb-4">
+              <h2 class="category-title">
+                <i class="bi bi-collection"></i> Productos por Categorías
+              </h2>
+              <p class="text-muted">Explora nuestros productos organizados por categorías</p>
+            </div>
+            
+            {% for category, category_products in products_by_category.items %}
+            <div class="category-section mb-5">
+              <div class="category-header-section d-flex align-items-center mb-3">
+                <h3 class="category-name me-3">
+                  {% if category != 'Sin categoría' %}
+                    {{ category.nombre }}
+                  {% else %}
+                    {{ category }}
+                  {% endif %}
+                </h3>
+                <span class="badge bg-primary">{{ category_products.count }} productos</span>
+              </div>
+              
+              <div class="container_product_all">
+                <div class="row_product_all">
+                  {% for product in category_products %}
+                  <div class="container_product mb-4">
+                    <a href="{% url 'product_detail' product.id %}">
+                      <div class="card_product">
+                        {% if product.imagen and product.imagen.name %}
+                        <img
+                          src="{{ product.imagen.url }}"
+                          alt="{{ product.name }}"
+                        />
+                        {% else %}
+                        <img
+                          src="{% static 'images/no_image_available.png' %}"
+                          alt="No Image Available"
+                        />
+                        {% endif %}
+                      </div>
+                      <div class="cardbody_product">
+                        <h5 class="title">{{ product.name }}</h5>
+                        <div class="description">
+                          {{ product.description|truncatechars:30 }}
+                        </div>
+                      </div>
+                      <div class="price">${{ product.price|intcomma }} COP</div>
+                    </a>
+                    <div class="btnAdd mt-2">
+                      {% if product.stock == 0 %}
+                      <span class="agotado" style="color: blue; font-weight: bold"
+                        >Agotado</span
+                      >
+                      {% else %}
+                      <form
+                        class="btn add-to-cart-form"
+                        id="add-to-cart-form-{{ product.id }}"
+                        method="post"
+                        action="{% url 'add_to_cart' product.id %}"
+                      >
+                        {% csrf_token %}
+                        <div>
+                          <input
+                            type="number"
+                            name="quantity"
+                            min="1"
+                            max="{{ product.stock }}"
+                            value="1"
+                            class="quantity-input"
+                          />
+                        </div>
+                        <span class="ui-pdp-buybox__quantity__selected"
+                          >Disponibles {{ product.stock }}</span
+                        >
+                        <div>
+                          <button type="submit" class="add-to-cart-btn">
+                            <i class="bi bi-cart-plus-fill"></i>
+                          </button>
+                        </div>
+                      </form>
+                      {% endif %}
+                    </div>
+                  </div>
+                  {% empty %}
+                  <div class="col-12">
+                    <p class="text-center text-muted">No hay productos en esta categoría.</p>
+                  </div>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+            {% empty %}
+            <div class="text-center mt-5">
+              <p class="text-muted">No hay productos disponibles en este momento.</p>
+            </div>
+            {% endfor %}
+            
+          {% else %}
+            <!-- Vista tradicional (todos los productos o filtrado) -->
+            <div class="slug-categoria">
+              {% if current_category %}
+              <h2 class="category-title">
+                Categoría: {{ current_category.nombre }}
+                <span class="badge bg-secondary ms-2"
+                  >{{ current_category.slug }}</span
+                >
+              </h2>
+              {% else %}
+              
+              {% endif %}
+            </div>
+            <div class="container_product_all">
+              <div class="row_product_all">
+                {% for product in products %}
               <div class="container_product mb-4">
                 <a href="{% url 'product_detail' product.id %}">
                   <div class="card_product">
@@ -209,8 +324,9 @@
               {% empty %}
               <p>No hay productos disponibles en este momento.</p>
               {% endfor %}
+              </div>
             </div>
-          </div>
+          {% endif %}
         </div>
       </div>
     </main>

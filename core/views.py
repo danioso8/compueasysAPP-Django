@@ -46,19 +46,56 @@ def login_user(request):
 def store(request):
     query = request.GET.get('q', '')
     category_id = request.GET.get('category', '')
+    view_mode = request.GET.get('view', 'all')  # 'all', 'category'
+    
     categories = Category.objects.all()
     products = Product.objects.all()
     cart = request.session.get('cart', {})
     cart_count = sum([item['quantity'] if isinstance(item, dict) else item for item in cart.values()])
-    # Filtrar productos por nombre o categoría si se proporciona una consulta de búsqueda o categoría
+    
+    # Filtrar productos por búsqueda
     if query:
         products = products.filter(name__icontains=query)
-    if category_id:
-        products = products.filter(category_id=category_id)
-    context = {
-        'products': products, 
-        'categories': categories,
-        'cart_count': cart_count
+    
+    # Organizar productos por categorías
+    if view_mode == 'category' and not category_id:
+        # Mostrar productos agrupados por categoría
+        products_by_category = {}
+        for category in categories:
+            category_products = products.filter(category=category)
+            if category_products.exists():
+                products_by_category[category] = category_products
+        
+        # Productos sin categoría
+        products_without_category = products.filter(category__isnull=True)
+        if products_without_category.exists():
+            products_by_category['Sin categoría'] = products_without_category
+        
+        context = {
+            'products_by_category': products_by_category,
+            'categories': categories,
+            'cart_count': cart_count,
+            'view_mode': view_mode,
+            'query': query
+        }
+    else:
+        # Vista tradicional (todos o filtrado por categoría específica)
+        if category_id:
+            products = products.filter(category_id=category_id)
+            try:
+                current_category = Category.objects.get(id=category_id)
+            except Category.DoesNotExist:
+                current_category = None
+        else:
+            current_category = None
+            
+        context = {
+            'products': products, 
+            'categories': categories,
+            'cart_count': cart_count,
+            'current_category': current_category,
+            'view_mode': view_mode,
+            'query': query
         }
    
     return render(request, 'store.html', context)

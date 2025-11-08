@@ -70,8 +70,14 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'AppCompueasys.wsgi.application'
 
-# Base de datos principal: PostgreSQL para Render
-if os.getenv('DJANGO_DEVELOPMENT') == 'True':
+# Base de datos principal: configuración flexible
+import dj_database_url
+
+# Usar DB de producción localmente si está configurado
+USE_PRODUCTION_DB = os.getenv('USE_PRODUCTION_DB', 'False') == 'True'
+
+if os.getenv('DJANGO_DEVELOPMENT') == 'True' and not USE_PRODUCTION_DB:
+    # Desarrollo local con SQLite
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
@@ -79,16 +85,31 @@ if os.getenv('DJANGO_DEVELOPMENT') == 'True':
         }
     }
 else:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.getenv('DB_NAME'),
-            'USER': os.getenv('DB_USERNAME'),
-            'PASSWORD': os.getenv('DB_PASSWORD'),
-            'HOST': os.getenv('DB_HOST'),
-            'PORT': os.getenv('DB_PORT'),
+    # Producción o desarrollo con DB de producción
+    DATABASE_URL = os.getenv('DATABASE_URL')
+    if DATABASE_URL:
+        DATABASES = {
+            'default': dj_database_url.parse(
+                DATABASE_URL,
+                conn_max_age=600,
+                conn_health_checks=True
+            )
         }
-    }
+    else:
+        # Fallback a variables individuales
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.postgresql',
+                'NAME': os.getenv('DB_NAME'),
+                'USER': os.getenv('DB_USERNAME'),
+                'PASSWORD': os.getenv('DB_PASSWORD'),
+                'HOST': os.getenv('DB_HOST'),
+                'PORT': os.getenv('DB_PORT'),
+                'OPTIONS': {
+                    'sslmode': 'require',
+                },
+            }
+        }
 
 AUTH_PASSWORD_VALIDATORS = [
     {

@@ -15,6 +15,57 @@ footer {
     
 }
 
+/* ====== Estilos para vista por categorías ====== */
+.view-toggle-buttons {
+ 
+  display: flex;
+  margin: 0 20px;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.category-section {
+ 
+  border-radius: 8px;
+  padding: 1.5rem;
+  background: #f8f9fa;
+  margin-bottom: 2rem;
+}
+
+.category-header-section {
+  border-bottom: 2px solid #dee2e6;
+  padding-bottom: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.category-name {
+  color: #2c3e50;
+  font-weight: 600;
+  margin: 0;
+}
+
+.category-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.category-title {
+  color: #2c3e50;
+  font-weight: 700;
+}
+
+/* Responsivo para botones de vista */
+@media (max-width: 768px) {
+  .view-toggle-buttons .btn-group {
+    width: 100%;
+  }
+  
+  .view-toggle-buttons .btn {
+    flex: 1;
+    font-size: 0.875rem;
+  }
+}
+
 /* ====== Navbar superior responsive (añadido) ====== */
 .top-navbar {
   display: flex;
@@ -368,7 +419,7 @@ footer {
     text-decoration: none;
 }
 .container_product {
-  border: #e7e4e4  solid 1px;
+ 
    width: 300px;
    height: 500px;   
    transition: box-shadow 0.3s ease;
