@@ -1,11 +1,14 @@
 from django.contrib.auth.decorators import login_required, permission_required
-from core.models import ProductStore, Pedido, SimpleUser, Category, Type, proveedor, Galeria, ProductVariant
+from core.models import ProductStore, Pedido, SimpleUser, Category, Type, proveedor, Galeria, ProductVariant, PedidoDetalle
 from django.contrib.auth.models import User
 from dashboard.models import register_superuser
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
+from django.db.models import Sum, Count, Q, F
+from datetime import datetime, timedelta
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from functools import wraps
 from django.shortcuts import redirect, render, get_object_or_404
 from django.urls import reverse
@@ -28,7 +31,44 @@ def dashboard_home(request):
     Pedidos = [];
     categorias = [];
     crear_producto_url = f"{reverse('dashboard_home')}?view=productos"
-    productos = ProductStore.objects.all()
+    
+    # Filtros y paginación para productos
+    view_param = request.GET.get('view', 'ventas')  # 'ventas' por defecto
+    
+    # Obtener filtros para productos
+    categoria_filter = request.GET.get('categoria_filter', '')
+    search_query = request.GET.get('search', '')
+    page_number = request.GET.get('page', 1)
+    
+    # Base queryset para productos
+    productos_queryset = ProductStore.objects.select_related('category', 'proveedor', 'type').all()
+    
+    # Aplicar filtros
+    if categoria_filter:
+        try:
+            categoria_filter_id = int(categoria_filter)
+            productos_queryset = productos_queryset.filter(category_id=categoria_filter_id)
+        except (ValueError, TypeError):
+            pass
+    
+    if search_query:
+        productos_queryset = productos_queryset.filter(
+            Q(name__icontains=search_query) |
+            Q(description__icontains=search_query)
+        )
+    
+    # Paginación para productos
+    productos_paginator = Paginator(productos_queryset, 10)  # 10 productos por página
+    try:
+        productos_page = productos_paginator.page(page_number)
+    except PageNotAnInteger:
+        productos_page = productos_paginator.page(1)
+    except EmptyPage:
+        productos_page = productos_paginator.page(productos_paginator.num_pages)
+    
+    # Para compatibilidad con el código existente
+    productos = productos_page.object_list
+    
     categorias = Category.objects.all()
     tipos = Type.objects.all()
     proveedores = proveedor.objects.all()
@@ -38,6 +78,17 @@ def dashboard_home(request):
     editar_id = request.GET.get('editar')
     show_edit_product_form = request.GET.get('view') == 'productos' and bool(editar_id)
     producto_to_edit = None
+    
+    # Variables para análisis de ventas
+    ventas_por_categoria = []
+    total_ventas_general = 0
+    estadisticas_ventas = {
+        'pedidos_totales': 0,
+        'productos_vendidos': 0,
+        'promedio_por_pedido': 0,
+        'categoria_mas_vendida': None,
+        'categoria_mayor_ingresos': None,
+    }
     
    
     if editar_id:
@@ -314,9 +365,84 @@ def dashboard_home(request):
 
             # tras crear, redirigir a la lista sin abrir el form crear
             return redirect(f"{reverse('dashboard_home')}?view=productos")
+
+    # Calcular estadísticas de ventas por categorías (siempre, para usar en home)
+    view_param = request.GET.get('view', 'ventas')  # 'ventas' por defecto
+    
+    # Obtener todas las ventas (pedidos confirmados)
+    ventas_detalles = PedidoDetalle.objects.select_related('producto', 'producto__category', 'pedido').all()
+    
+    # Calcular ventas por categoría
+    ventas_por_categoria_dict = {}
+    total_ventas_general = 0
+    total_productos_vendidos = 0
+    
+    for detalle in ventas_detalles:
+        categoria = detalle.producto.category
+        categoria_nombre = categoria.nombre if categoria else 'Sin Categoría'
+        precio_total = float(detalle.precio) * int(detalle.cantidad)
+        
+        if categoria_nombre not in ventas_por_categoria_dict:
+            ventas_por_categoria_dict[categoria_nombre] = {
+                'nombre': categoria_nombre,
+                'total_ingresos': 0,
+                'cantidad_productos': 0,
+                'cantidad_pedidos': 0,
+                'productos_vendidos': [],
+                'pedidos_ids': set(),
+            }
+        
+        ventas_por_categoria_dict[categoria_nombre]['total_ingresos'] += precio_total
+        ventas_por_categoria_dict[categoria_nombre]['cantidad_productos'] += int(detalle.cantidad)
+        ventas_por_categoria_dict[categoria_nombre]['pedidos_ids'].add(detalle.pedido.id)
+        
+        # Agregar producto vendido si no está ya en la lista
+        producto_info = {
+            'nombre': detalle.producto.name,
+            'cantidad': int(detalle.cantidad),
+            'precio_unitario': float(detalle.precio),
+            'total': precio_total
+        }
+        ventas_por_categoria_dict[categoria_nombre]['productos_vendidos'].append(producto_info)
+        
+        total_ventas_general += precio_total
+        total_productos_vendidos += int(detalle.cantidad)
+    
+    # Convertir a lista y agregar cantidad de pedidos
+    ventas_por_categoria = []
+    for categoria_data in ventas_por_categoria_dict.values():
+        categoria_data['cantidad_pedidos'] = len(categoria_data['pedidos_ids'])
+        del categoria_data['pedidos_ids']  # Remover el set que no es serializable
+        ventas_por_categoria.append(categoria_data)
+    
+    # Ordenar por total de ingresos descendente
+    ventas_por_categoria.sort(key=lambda x: x['total_ingresos'], reverse=True)
+    
+    # Calcular estadísticas generales
+    pedidos_totales = Pedido.objects.count()
+    promedio_por_pedido = total_ventas_general / pedidos_totales if pedidos_totales > 0 else 0
+    
+    categoria_mas_vendida = None
+    categoria_mayor_ingresos = None
+    
+    if ventas_por_categoria:
+        # Categoría con más productos vendidos
+        categoria_mas_vendida = max(ventas_por_categoria, key=lambda x: x['cantidad_productos'])
+        # Categoría con mayores ingresos
+        categoria_mayor_ingresos = ventas_por_categoria[0]  # Ya está ordenada por ingresos
+    
+    estadisticas_ventas = {
+        'pedidos_totales': pedidos_totales,
+        'productos_vendidos': total_productos_vendidos,
+        'promedio_por_pedido': round(promedio_por_pedido, 2),
+        'categoria_mas_vendida': categoria_mas_vendida,
+        'categoria_mayor_ingresos': categoria_mayor_ingresos,
+    }
+
 # ...existing code...
     return render(request, 'dashboard/dashboard_home.html', {
         'productos': productos,
+        'productos_page': productos_page,
         'categorias': categorias,
         'tipos': tipos,
         'proveedores': proveedores,
@@ -328,6 +454,11 @@ def dashboard_home(request):
         'inventario_by_category': inventario_by_category,
         'resumen_inventario': resumen_inventario,
         'pedidos': Pedidos,
+        'ventas_por_categoria': ventas_por_categoria,
+        'total_ventas_general': total_ventas_general,
+        'estadisticas_ventas': estadisticas_ventas,
+        'categoria_filter': categoria_filter,
+        'search_query': search_query,
 
     })
 # ...existing code...
@@ -613,4 +744,154 @@ def api_get_product(request, product_id):
         'update_url': reverse('edit_product', args=[producto.id]) if 'edit_product' else '',
     }
     return JsonResponse(data)
-# ...existing code...
+
+
+# ---------- Category Management Views ----------
+
+@superuser_required
+def crear_categoria(request):
+    """Crear nueva categoría vía AJAX"""
+    if request.method == 'POST':
+        try:
+            nombre = request.POST.get('nombre', '').strip()
+            slug = request.POST.get('slug', '').strip()
+            
+            if not nombre:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'El nombre de la categoría es requerido'
+                })
+            
+            if not slug:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'El slug es requerido'
+                })
+            
+            # Verificar que el slug sea único
+            if Category.objects.filter(slug=slug).exists():
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Ya existe una categoría con ese slug'
+                })
+            
+            # Crear la categoría
+            categoria = Category.objects.create(
+                nombre=nombre,
+                slug=slug
+            )
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Categoría creada exitosamente',
+                'categoria': {
+                    'id': categoria.id,
+                    'nombre': categoria.nombre,
+                    'slug': categoria.slug,
+                    'products_count': categoria.products.count()
+                }
+            })
+            
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'message': f'Error al crear la categoría: {str(e)}'
+            })
+    
+    return JsonResponse({'success': False, 'message': 'Método no permitido'})
+
+
+@superuser_required
+def editar_categoria(request, categoria_id):
+    """Editar categoría existente vía AJAX"""
+    if request.method == 'POST':
+        try:
+            categoria = get_object_or_404(Category, id=categoria_id)
+            
+            nombre = request.POST.get('nombre', '').strip()
+            slug = request.POST.get('slug', '').strip()
+            
+            if not nombre:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'El nombre de la categoría es requerido'
+                })
+            
+            if not slug:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'El slug es requerido'
+                })
+            
+            # Verificar que el slug sea único (excluyendo la categoría actual)
+            if Category.objects.filter(slug=slug).exclude(id=categoria_id).exists():
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Ya existe otra categoría con ese slug'
+                })
+            
+            # Actualizar la categoría
+            categoria.nombre = nombre
+            categoria.slug = slug
+            categoria.save()
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Categoría actualizada exitosamente',
+                'categoria': {
+                    'id': categoria.id,
+                    'nombre': categoria.nombre,
+                    'slug': categoria.slug,
+                    'products_count': categoria.products.count()
+                }
+            })
+            
+        except Category.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'message': 'La categoría no existe'
+            })
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'message': f'Error al actualizar la categoría: {str(e)}'
+            })
+    
+    return JsonResponse({'success': False, 'message': 'Método no permitido'})
+
+
+@superuser_required
+def eliminar_categoria(request, categoria_id):
+    """Eliminar categoría vía AJAX"""
+    if request.method == 'POST':
+        try:
+            categoria = get_object_or_404(Category, id=categoria_id)
+            
+            # Verificar si la categoría tiene productos asociados
+            productos_count = categoria.products.count()
+            if productos_count > 0:
+                return JsonResponse({
+                    'success': False,
+                    'message': f'No se puede eliminar la categoría porque tiene {productos_count} producto(s) asociado(s). Primero debe reasignar o eliminar esos productos.'
+                })
+            
+            categoria_nombre = categoria.nombre
+            categoria.delete()
+            
+            return JsonResponse({
+                'success': True,
+                'message': f'Categoría "{categoria_nombre}" eliminada exitosamente'
+            })
+            
+        except Category.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'message': 'La categoría no existe'
+            })
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'message': f'Error al eliminar la categoría: {str(e)}'
+            })
+    
+    return JsonResponse({'success': False, 'message': 'Método no permitido'})

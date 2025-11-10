@@ -36,40 +36,567 @@ body {
 }
 
 .sidebar {
-    width: 220px;
-    background: #222;
+    width: 280px;
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
     color: #fff;
-    padding: 30px 0;
-    box-shadow: 2px 0 8px rgba(0,0,0,0.05);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 2px 0 15px rgba(0,0,0,0.1);
+    position: relative;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
 }
 
-.sidebar ul {
+.sidebar.collapsed {
+    width: 70px;
+}
+
+/* Header del Sidebar */
+.sidebar-header {
+    padding: 20px 15px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(0, 0, 0, 0.1);
+    min-height: 70px;
+}
+
+.logo-area {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.sidebar-logo-icon {
+    font-size: 24px;
+    color: #64b5f6;
+    flex-shrink: 0;
+}
+
+.logo-text {
+    font-size: 18px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -0.5px;
+}
+
+.sidebar-toggle {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: #fff;
+    padding: 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+
+.sidebar-toggle:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.05);
+}
+
+.sidebar.collapsed .sidebar-toggle i {
+    transform: rotate(180deg);
+}
+
+/* Navegación */
+.sidebar-nav {
+    flex: 1;
+    padding: 20px 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.nav-list {
     list-style: none;
     padding: 0;
     margin: 0;
 }
 
-.sidebar ul li {
-    margin: 20px 0;
+.nav-item {
+    margin: 0;
+    padding: 0 15px;
 }
 
-.sidebar ul li a {
-    color: #fff;
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 14px 20px;
+    color: rgba(255, 255, 255, 0.8);
     text-decoration: none;
-    padding: 12px 24px;
-    display: block;
-    border-radius: 4px;
-    transition: background 0.2s;
+    border-radius: 12px;
+    margin: 4px 0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    font-weight: 500;
+    font-size: 14px;
 }
 
-.sidebar ul li a:hover {
-    background: #444;
+.nav-link:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    transform: translateX(5px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
+.nav-link.active {
+    background: linear-gradient(45deg, #64b5f6, #42a5f5);
+    color: #fff;
+    font-weight: 600;
+    box-shadow: 0 6px 20px rgba(100, 181, 246, 0.4);
+    transform: translateX(5px);
+}
+
+.nav-link.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 4px;
+    background: #fff;
+    border-radius: 0 4px 4px 0;
+}
+
+.nav-icon {
+    font-size: 18px;
+    flex-shrink: 0;
+    width: 20px;
+    text-align: center;
+    transition: all 0.3s ease;
+    display: inline-block;
+    font-family: "Font Awesome 6 Free", "Font Awesome 6 Pro", FontAwesome;
+    font-weight: 900;
+}
+
+.nav-link:hover .nav-icon {
+    transform: scale(1.1);
+}
+
+.nav-link.active .nav-icon {
+    color: #fff;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.sidebar-logo-icon {
+    font-size: 24px;
+    color: #64b5f6;
+    flex-shrink: 0;
+    display: inline-block;
+    font-family: "Font Awesome 6 Free", "Font Awesome 6 Pro", FontAwesome;
+    font-weight: 900;
+}
+
+/* Separador */
+.nav-separator {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.1);
+    margin: 15px 20px;
+    padding: 0;
+}
+
+/* Footer del Sidebar */
+.sidebar-footer {
+    padding: 20px 15px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 14px;
+}
+
+/* Estados colapsado */
+.sidebar.collapsed .sidebar-text {
+    opacity: 0;
+    width: 0;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.sidebar.collapsed .nav-link {
+    justify-content: center;
+    gap: 0;
+    padding: 14px 0;
+}
+
+.sidebar.collapsed .sidebar-header {
+    justify-content: center;
+}
+
+.sidebar.collapsed .logo-area {
+    gap: 0;
+}
+
+.sidebar.collapsed .sidebar-footer {
+    text-align: center;
+}
+
+.sidebar.collapsed .user-info {
+    justify-content: center;
+    gap: 0;
+}
+
+/* Tooltips para modo colapsado */
+.sidebar.collapsed .nav-link {
+    position: relative;
+}
+
+.sidebar.collapsed .nav-link::after {
+    content: attr(title);
+    position: absolute;
+    left: 70px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #333;
+    color: #fff;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.sidebar.collapsed .nav-link:hover::after {
+    opacity: 1;
+    visibility: visible;
+    left: 75px;
+}
+
+/* Animaciones adicionales */
+@keyframes slideIn {
+    from {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.sidebar {
+    animation: slideIn 0.5s ease-out;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 70px;
+    }
+    
+    .sidebar .sidebar-text {
+        display: none;
+    }
+    
+    .sidebar-toggle {
+        display: none;
+    }
+}
+
+/* Ajustes para el main content */
 .main-content {
     flex: 1;
-    padding: 40px;
-    background: #f9f9f9;
+    padding: 30px;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    min-height: 100vh;
+    transition: all 0.3s ease;
+    margin-left: 0;
+}
+
+.dashboard-container {
+    display: flex;
+    min-height: 100vh;
+    background: #f8f9fa;
+}
+
+/* Estilos adicionales para la vista de ventas */
+.ventas-dashboard .card {
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    border: none;
+    margin-bottom: 1.5rem;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.ventas-dashboard .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+}
+
+.ventas-dashboard .progress {
+    height: 20px;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.ventas-dashboard .badge {
+    font-size: 0.9rem;
+    padding: 0.5rem 0.8rem;
+    border-radius: 8px;
+}
+
+.ventas-dashboard .table th {
+    border-top: none;
+    font-weight: 600;
+    background: #f8f9fa;
+    color: #495057;
+    padding: 1rem;
+}
+
+.ventas-dashboard .table td {
+    padding: 1rem;
+    vertical-align: middle;
+}
+
+.ventas-dashboard .card-header {
+    border-bottom: none;
+    font-weight: 600;
+    padding: 1.25rem 1.5rem;
+}
+
+.ventas-dashboard .card-body {
+    padding: 1.5rem;
+}
+
+/* Mejoras para botones */
+.btn {
+    border-radius: 8px;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    transition: all 0.3s ease;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* Mejoras para las cards de estadísticas */
+.card.bg-primary,
+.card.bg-success,
+.card.bg-info,
+.card.bg-warning {
+    border: none;
+    border-radius: 15px;
+    overflow: hidden;
+    position: relative;
+}
+
+.card.bg-primary::before,
+.card.bg-success::before,
+.card.bg-info::before,
+.card.bg-warning::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, rgba(255,255,255,0.1), rgba(255,255,255,0));
+    pointer-events: none;
+}
+
+/* Animaciones suaves para las tablas */
+.table tbody tr {
+    transition: all 0.3s ease;
+}
+
+.table tbody tr:hover {
+    background-color: rgba(0,0,0,0.02);
+    transform: scale(1.01);
+}
+
+/* Asegurar que Font Awesome se carga correctamente */
+.fas, .fa-solid {
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+    display: inline-block;
+    font-style: normal;
+    font-variant: normal;
+    text-rendering: auto;
+    line-height: 1;
+}
+
+/* Iconos específicos como fallback */
+.fa-chart-line::before { content: "\f201"; }
+.fa-chart-bar::before { content: "\f080"; }
+.fa-shopping-cart::before { content: "\f07a"; }
+.fa-boxes::before { content: "\f468"; }
+.fa-warehouse::before { content: "\f494"; }
+.fa-tags::before { content: "\f02c"; }
+.fa-list::before { content: "\f03a"; }
+.fa-truck::before { content: "\f0d1"; }
+.fa-users::before { content: "\f0c0"; }
+.fa-desktop::before { content: "\f108"; }
+.fa-chevron-left::before { content: "\f053"; }
+.fa-user-shield::before { content: "\f505"; }
+
+/* Scrollbar personalizado para el sidebar */
+.sidebar-nav::-webkit-scrollbar {
+    width: 4px;
+}
+
+.sidebar-nav::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+}
+
+/* Estilos para la vista de productos */
+.productos-dashboard .card {
+    border: none;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    border-radius: 12px;
+}
+
+.productos-dashboard .table th {
+    background: #343a40;
+    color: white;
+    border: none;
+    font-weight: 600;
+    padding: 1rem 0.75rem;
+}
+
+.productos-dashboard .table td {
+    padding: 1rem 0.75rem;
+    vertical-align: middle;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.productos-dashboard .product-thumbnail {
+    border: 2px solid #e9ecef;
+    transition: all 0.3s ease;
+}
+
+.productos-dashboard .product-thumbnail:hover {
+    transform: scale(1.1);
+    border-color: #007bff;
+}
+
+.productos-dashboard .no-image-placeholder {
+    width: 50px;
+    height: 50px;
+    background: #f8f9fa;
+    border: 2px dashed #dee2e6;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+}
+
+.productos-dashboard .product-info strong {
+    color: #495057;
+}
+
+.productos-dashboard .badge {
+    font-size: 0.75rem;
+    padding: 0.375rem 0.75rem;
+}
+
+.productos-dashboard .btn-group-sm .btn {
+    padding: 0.375rem 0.5rem;
+}
+
+.productos-dashboard .no-products {
+    padding: 2rem;
+}
+
+/* Estilos para filtros */
+.productos-dashboard .card-header {
+    background: linear-gradient(45deg, #f8f9fa, #e9ecef);
+    border-bottom: 2px solid #dee2e6;
+}
+
+.productos-dashboard .form-control,
+.productos-dashboard .form-select {
+    border-radius: 8px;
+    border: 1px solid #ced4da;
+    transition: all 0.3s ease;
+}
+
+.productos-dashboard .form-control:focus,
+.productos-dashboard .form-select:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Estilos para paginación */
+.pagination {
+    margin-bottom: 0;
+}
+
+.pagination .page-link {
+    border-radius: 8px;
+    margin: 0 2px;
+    border: 1px solid #dee2e6;
+    color: #495057;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.pagination .page-link:hover {
+    background-color: #e9ecef;
+    border-color: #adb5bd;
+    color: #495057;
+    transform: translateY(-1px);
+}
+
+.pagination .page-item.active .page-link {
+    background-color: #007bff;
+    border-color: #007bff;
+    color: white;
+    box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+}
+
+.pagination .page-item.disabled .page-link {
+    color: #adb5bd;
+    background-color: #f8f9fa;
+    border-color: #dee2e6;
+}
+
+/* Responsive para la tabla de productos */
+@media (max-width: 768px) {
+    .productos-dashboard .table-responsive {
+        font-size: 0.875rem;
+    }
+    
+    .productos-dashboard .table th,
+    .productos-dashboard .table td {
+        padding: 0.5rem 0.25rem;
+    }
+    
+    .productos-dashboard .product-thumbnail {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .productos-dashboard .btn-group-sm .btn {
+        padding: 0.25rem 0.375rem;
+    }
 }
 
 table {

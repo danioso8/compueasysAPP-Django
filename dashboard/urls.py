@@ -17,7 +17,8 @@ from .views import (
     eliminar_producto,
     delete_category,
     crear_categoria,
-    editar_categoria,  
+    editar_categoria,
+    eliminar_categoria,  # Nueva función de eliminación  
     api_get_product,  
     create_proveedor,
     edit_proveedor,
@@ -41,8 +42,13 @@ urlpatterns = [
     path('usuario/<int:user_id>/editar/', editar_usuario, name='editar_usuario'), 
       
     path('categoria/crear/', crear_categoria, name='crear_categoria'),
-    path('categoria/<int:category_id>/editar/', editar_categoria, name='editar_categoria'),
+    path('categoria/<int:categoria_id>/editar/', editar_categoria, name='editar_categoria'),
     path('categoria/<int:category_id>/eliminar/', delete_category, name='delete_category'),    
+   
+    # Nuevas rutas AJAX para categorías
+    path('categorias/crear/', crear_categoria, name='ajax_crear_categoria'),
+    path('categorias/editar/<int:categoria_id>/', editar_categoria, name='ajax_editar_categoria'),
+    path('categorias/eliminar/<int:categoria_id>/', eliminar_categoria, name='ajax_eliminar_categoria'),    
    
    
 
