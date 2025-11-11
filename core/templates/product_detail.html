@@ -4,12 +4,21 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Tienda Online</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, maximum-scale=3.0">
+    <title>{{ product.name }} - Tienda Online</title>
     <link rel="stylesheet" href="{% static 'css/main.css' %}">
     <link rel="stylesheet" href="{% static 'css/detail.css' %}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    
+    <!-- Precargar imágenes importantes -->
+    <link rel="preload" href="{% if product.imagen %}{{ product.imagen.url }}{% endif %}" as="image">
+    
+    <!-- Meta tags para redes sociales -->
+    <meta property="og:title" content="{{ product.name }}">
+    <meta property="og:description" content="{{ product.description|truncatechars:150 }}">
+    <meta property="og:image" content="{% if product.imagen %}{{ product.imagen.url }}{% endif %}">
+    <meta name="description" content="{{ product.description|truncatechars:150 }}">
 </head>
 <body>
     <a href="#" id="whatsapp-chat-float" class="whatsapp-float" title="Chatea por WhatsApp" target="_blank">
@@ -21,129 +30,292 @@
     <main>
         <div class="container-product-all mt-5">
             <div class="container_product">
-                <!-- Carrito flotante -->
+                <!-- Carrito flotante mejorado -->
                 <div class="car-buy">
-                    <!-- ...existing code... -->
-                    <a href="/cart" type="button" class="cart-toggle-btn btn-cart position-relative">
-                        <i class="bi bi-cart-plus-fill fs-1"></i>
-                        <span class="position-absolute top-45 start-80 translate-middle badge rounded-pill bg-danger">
+                    <a href="/cart" class="cart-toggle-btn position-relative" title="Ver carrito">
+                        <i class="bi bi-cart-plus-fill"></i>
+                        {% if cart_count > 0 %}
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
                             {{ cart_count }}
-                            <span class="visually-hidden">unread messages</span>
                         </span>
+                        {% endif %}
                     </a>
                 </div>
+                
                 <div class="product-Galery">
-                    <!-- Imagen principal y galería -->
+                    <!-- Sección de imagen principal y galería mejorada -->
                     <div class="product-image">
                         <h1>{{ product.name }}</h1>
-                        <div class="image-slider" style="position: relative; display: flex; align-items: center;  width: 100%; height: 400px; overflow: hidden;">
-                            <button id="prev-img" class="slider-arrow" style="position: absolute; left: 0; z-index: 2; background: none; border: none; font-size: 2rem; cursor: pointer;">&#8592;</button>
+                        
+                        <!-- Slider de imagen principal con controles mejorados -->
+                        <div class="image-slider">
                             <img id="main-product-image"
                                  src="{% if Galeria_images %}{{ Galeria_images.0.galeria.url }}{% else %}{{ product.imagen.url }}{% endif %}"
                                  alt="{{ product.name }}"
-                                 style="max-width: 100%; max-height: 400px; margin: 0 auto; display: block;">
-                            <button id="next-img" class="slider-arrow" style="position: absolute; right: 0; z-index: 2; background: none; border: none; font-size: 2rem; cursor: pointer;">&#8594;</button>
+                                 loading="lazy"
+                                 title="Haz clic para ver en pantalla completa">
+                            
+                            {% if Galeria_images|length > 1 %}
+                            <button id="prev-img" class="slider-arrow prev" aria-label="Imagen anterior">
+                                <i class="bi bi-chevron-left"></i>
+                            </button>
+                            <button id="next-img" class="slider-arrow next" aria-label="Imagen siguiente">
+                                <i class="bi bi-chevron-right"></i>
+                            </button>
+                            {% endif %}
                         </div>
-                          <!-- Características del producto -->
+
+                        <!-- Galería de thumbnails mejorada -->
+                        {% if Galeria_images %}
+                        <div class="Gallery">
+                            {% for imagen in Galeria_images %}
+                                <img src="{{ imagen.galeria.url }}" 
+                                     alt="Vista {{ forloop.counter }} de {{ product.name }}" 
+                                     class="thumbnail"
+                                     loading="lazy"
+                                     data-index="{{ forloop.counter0 }}">
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+                        <!-- Características del producto mejoradas -->
                         <div class="product-details">
                             <div class="cart-left">
                                 <h2>Características del Producto</h2>
-                                Producto: <span class="text-success">{{ product.name }}</span><br>
-                                description: <span class="text-success">{{ product.description }}</span><br>
-                              
+                                <div class="product-specs">
+                                    <div class="spec-item">
+                                        <span class="spec-label">Producto:</span>
+                                        <span class="spec-value text-success">{{ product.name }}</span>
+                                    </div>
+                                    <div class="spec-item">
+                                        <span class="spec-label">Descripción:</span>
+                                        <span class="spec-value">{{ product.description|default:"Sin descripción disponible" }}</span>
+                                    </div>
+                                    {% if product.category %}
+                                    <div class="spec-item">
+                                        <span class="spec-label">Categoría:</span>
+                                        <span class="spec-value text-primary">{{ product.category.nombre }}</span>
+                                    </div>
+                                    {% endif %}
+                                </div>
                             </div>
                         </div>
 
-  <!-- Reseñas de clientes -->
-                <div class="product-reviews">
-                    <h2>Reseñas de Clientes</h2>
-                    <div class="review">
-                        <p><strong>Juan Pérez</strong> - ★★★★★</p>
-                        <p>Excelente producto, muy satisfecho con la compra.</p>
-                    </div>
-                    <div class="review">
-                        <p><strong>María Gómez</strong> - ★★★★★</p>
-                        <p>Buena calidad, pero el envío tardó un poco más de lo esperado.</p>
-                    </div>
-                    <div class="review">
-                        <p><strong>Carlos Rodríguez</strong> - ★★★★★</p>
-                        <p>El producto es aceptable, pero esperaba más por el precio.</p>
-                    </div>
-                </div>
-
-                        <div class="Gallery mt-3">
-                            {% for imagen in Galeria_images %}
-                                <img src="{{ imagen.galeria.url }}" alt="Thumbnail" class="thumbnail">
-                            {% endfor %}
+                        <!-- Reseñas de clientes mejoradas -->
+                        <div class="product-reviews">
+                            <h2>Reseñas de Clientes</h2>
+                            <div class="reviews-container">
+                                <div class="review">
+                                    <div class="review-header">
+                                        <strong class="reviewer-name">Juan Pérez</strong>
+                                        <div class="rating">
+                                            <span class="stars">★★★★★</span>
+                                            <span class="rating-text">5.0</span>
+                                        </div>
+                                    </div>
+                                    <p class="review-text">Excelente producto, muy satisfecho con la compra. La calidad supera mis expectativas.</p>
+                                    <div class="review-date">Hace 2 días</div>
+                                </div>
+                                <div class="review">
+                                    <div class="review-header">
+                                        <strong class="reviewer-name">María Gómez</strong>
+                                        <div class="rating">
+                                            <span class="stars">★★★★☆</span>
+                                            <span class="rating-text">4.0</span>
+                                        </div>
+                                    </div>
+                                    <p class="review-text">Buena calidad, aunque el envío tardó un poco más de lo esperado. En general, recomendable.</p>
+                                    <div class="review-date">Hace 1 semana</div>
+                                </div>
+                                <div class="review">
+                                    <div class="review-header">
+                                        <strong class="reviewer-name">Carlos Rodríguez</strong>
+                                        <div class="rating">
+                                            <span class="stars">★★★☆☆</span>
+                                            <span class="rating-text">3.0</span>
+                                        </div>
+                                    </div>
+                                    <p class="review-text">El producto es aceptable, pero esperaba más por el precio. Podría mejorar algunos aspectos.</p>
+                                    <div class="review-date">Hace 2 semanas</div>
+                                </div>
+                            </div>
                         </div>
-                      
                     </div>
-                    <!-- Información y acciones de compra -->
+                    <!-- Información y acciones de compra mejoradas -->
                     <div class="product-info">
                         <div class="description-section">
-                            <h1>Descripción del producto</h1>
-                            <p class="description">{{ product.description|truncatechars:100|safe }}</p>
+                            <h1>{{ product.name }}</h1>
+                            <p class="description">{{ product.description|default:"Descripción no disponible"|safe }}</p>
                         </div>
+                        
+                        <!-- Precio destacado -->
                         <div class="price">
                             <span id="main-product-price" class="amount">${{ product.price|intcomma }} COP</span>
                             <span class="price-discount">Antes: ${{ product.price|add:"30000"|intcomma }} COP</span>
                         </div>
-                       <div class="car">
-    <span class="ui-pdp-buybox__quantity__selected" id="available-stock">Disponibles {{ product.stock }}</span>
-    <form class="btn for-variant" method="post" action="{% url 'add_to_cart_detail' product.id %}">
-        {% csrf_token %}
-        {# Selector de variantes #}
-        {% if product.variants.all %}
-           
-            {% if product.variants.all %}
-    <label><strong>Elige un color:</strong></label>
-    <div id="variant-swatches" class="variant-swatches" style="display: flex; gap: 12px; margin-bottom: 16px;">
-        {% for variant in product.variants.all %}
-            <button type="button" class="variant-swatch" data-variant-id="{{ variant.id }}"
-                   {% if variant.imagen %}
-                    data-img="{{ variant.imagen.url }}"
-                    {% else %}
-                    data-img=""
-                   {% endif %}
-                    data-precio="{{ variant.precio }}"
-                    data-stock="{{ variant.stock }}"
-                    style="border: 2px solid #ccc;  background: none; padding: 2px; border-radius: 10%; cursor: pointer;">
-                {% if variant.imagen %}
-                    <img src="{{ variant.imagen.url }}" alt="{{ variant.color }}" title="{{ variant.color }}"
-                         style="width: 106px; height: 106px; display: block; border-radius: 10%; border: 2px solid #eee;">
-                        <div class="info-variant" style="text-align:left; font-size:12px; margin-top:5px;">                           
-                           <div>Color:{{ variant.color }}</div>
-                           <div>Stock:{{ variant.stock }}</div>
-                           
+                        
+                        <!-- Sección de compra moderna -->
+                        <div class="car">
+                            <div class="stock-indicator">
+                                <i class="bi bi-box-seam"></i>
+                                <span class="ui-pdp-buybox__quantity__selected" id="available-stock">
+                                    {{ product.stock }} disponibles
+                                </span>
+                            </div>
+                            
+                            <form class="purchase-form" method="post" action="{% url 'add_to_cart_detail' product.id %}">
+                                {% csrf_token %}
+                                
+                                <!-- Selector de variantes mejorado -->
+                                {% if product.variants.all %}
+                                <div class="variant-selection">
+                                    <label class="variant-label"><strong>Elige una variante:</strong></label>
+                                    <div id="variant-swatches" class="variant-swatches">
+                                        {% for variant in product.variants.all %}
+                                            <div class="variant-option" 
+                                                 data-variant-id="{{ variant.id }}"
+                                                 data-color="{{ variant.color }}"
+                                                 data-price="{{ variant.precio }}"
+                                                 data-stock="{{ variant.stock }}"
+                                                 {% if variant.imagen %}data-img="{{ variant.imagen.url }}"{% endif %}
+                                                 title="{{ variant.color|default:'Variante' }} - Stock: {{ variant.stock }}">
+                                                
+                                                {% if variant.imagen %}
+                                                    <!-- Variante con imagen -->
+                                                    <div class="variant-image-container">
+                                                        <img src="{{ variant.imagen.url }}" 
+                                                             alt="{{ variant.color }}" 
+                                                             class="variant-image"
+                                                             loading="lazy">
+                                                        <div class="variant-overlay">
+                                                            <span class="variant-color-indicator" style="background-color: {{ variant.color|default:'#ccc' }}"></span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="variant-info">
+                                                        <span class="variant-color-name">{{ variant.color|default:'Color' }}</span>
+                                                        <span class="variant-stock">Stock: {{ variant.stock }}</span>
+                                                        {% if variant.precio %}
+                                                            <span class="variant-price">${{ variant.precio|floatformat:0 }}</span>
+                                                        {% endif %}
+                                                    </div>
+                                                {% else %}
+                                                    <!-- Variante solo color -->
+                                                    <div class="variant-color-only" style="background-color: {{ variant.color|default:'#ccc' }}">
+                                                        <div class="variant-color-check">
+                                                            <i class="bi bi-check"></i>
+                                                        </div>
+                                                    </div>
+                                                    <div class="variant-info">
+                                                        <span class="variant-color-name">{{ variant.color|default:'Color' }}</span>
+                                                        <span class="variant-stock">{{ variant.stock }}</span>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                    <input type="hidden" name="variant_id" id="variant_id" required>
+                                    
+                                    <!-- Vista previa de la variante seleccionada -->
+                                    <div id="selected-variant-preview" class="selected-variant-preview" style="display: none;">
+                                        <div class="preview-content">
+                                            <img id="variant-preview-image" src="" alt="Variante seleccionada" class="preview-image">
+                                            <div class="preview-info">
+                                                <span id="variant-preview-color" class="preview-color"></span>
+                                                <span id="variant-preview-stock" class="preview-stock"></span>
+                                                <span id="variant-preview-price" class="preview-price"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                
+                                <!-- Controles de cantidad modernos -->
+                                {% if product.stock > 0 %}
+                                <div class="quantity-controls">
+                                    <label class="quantity-label">
+                                        <strong>Cantidad:</strong>
+                                    </label>
+                                    <div class="quantity-wrapper">
+                                        <button type="button" class="quantity-btn quantity-decrease" aria-label="Disminuir cantidad">
+                                            <i class="bi bi-dash"></i>
+                                        </button>
+                                        <input type="number" 
+                                               name="quantity" 
+                                               min="1" 
+                                               value="1" 
+                                               max="{{ product.stock }}" 
+                                               class="quantity-input"
+                                               aria-label="Cantidad">
+                                        <button type="button" class="quantity-btn quantity-increase" aria-label="Aumentar cantidad">
+                                            <i class="bi bi-plus"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <!-- Botones de acción modernos -->
+                                <div class="action-buttons">
+                                    <button type="submit" id="add_to_cart" class="btn btn-primary">
+                                        <i class="bi bi-cart-plus"></i>
+                                        Agregar al Carrito
+                                    </button>
+                                    <button type="submit" id="go_to_cart" name="go_to_cart" class="btn btn-success">
+                                        <i class="bi bi-lightning"></i>
+                                        Comprar Ahora
+                                    </button>
+                                </div>
+                                
+                                {% else %}
+                                <div class="out-of-stock">
+                                    <div class="stock-alert">
+                                        <i class="bi bi-exclamation-triangle"></i>
+                                        <strong>Producto Agotado</strong>
+                                    </div>
+                                    <p>Este producto no está disponible en este momento. Te notificaremos cuando vuelva a estar en stock.</p>
+                                    <button type="button" class="btn btn-outline" disabled>
+                                        <i class="bi bi-bell"></i>
+                                        Notificarme
+                                    </button>
+                                </div>
+                                {% endif %}
+                            </form>
+                            
+                            <!-- Políticas de compra mejoradas -->
+                            <div class="cart-right-polices">
+                                <h2>Información de Compra</h2>
+                                <div class="policies-grid">
+                                    <div class="policy-item">
+                                        <i class="bi bi-truck"></i>
+                                        <div>
+                                            <strong>Envío Gratis</strong>
+                                            <p>En compras superiores a $200,000 COP. Entrega en 3-5 días hábiles.</p>
+                                        </div>
+                                    </div>
+                                    <div class="policy-item">
+                                        <i class="bi bi-shield-check"></i>
+                                        <div>
+                                            <strong>Garantía</strong>
+                                            <p>Garantía de 30 días por defectos de fábrica.</p>
+                                        </div>
+                                    </div>
+                                    <div class="policy-item">
+                                        <i class="bi bi-arrow-left-right"></i>
+                                        <div>
+                                            <strong>Devoluciones</strong>
+                                            <p>Devoluciones gratuitas dentro de los primeros 15 días.</p>
+                                        </div>
+                                    </div>
+                                    <div class="policy-item">
+                                        <i class="bi bi-credit-card"></i>
+                                        <div>
+                                            <strong>Pago Seguro</strong>
+                                            <p>Múltiples métodos de pago seguros disponibles.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-
-                {% else %}
-                    <span style="display:inline-block;width:36px;height:36px;border-radius:50%;background:{{ variant.color|default:'#ccc' }}"></span>
-                {% endif %}
-            </button>
-        {% endfor %}
-    </div>
-    <input type="hidden" name="variant_id" id="variant_id" required>
-     {% endif %}
-            <br>
-            <img id="variant-image" src="" alt="Imagen variante" style="max-width: 180px; margin: 10px 0; display: none;">
-        {% endif %}
-        {% if product.stock == 0 %}
-        <span class="agotado" style="color:black;font-weight:bold;">Agotado</span>
-       {% else %}
-       
-        <input type="number" name="quantity" min="1" value="1" max="{{ product.stock }}" class="quantity-input">        
-        <button type="submit" id="add_to_cart" class="btn2">🛒</button>
-         
-      
-      </div>
-                       <button type="submit" id="go_to_cart" name="go_to_cart" class="btn1">PEDIR AHORA</button>
-                     {% endif %}   
-                    </form>
-                        <div class="cart-right-polices">
-                            <h2>Políticas de Compra</h2>
-                            <ul>
-                                <li><strong>Envío:</strong> Envío gratuito en compras superiores a $200,000 COP. Tiempo de entrega estimado: 3-5 días hábiles.</li>
+                    </div>
+                </div>
                                 <li><strong>Devoluciones:</strong> Aceptamos devoluciones dentro de los 30 días posteriores a la compra. El producto debe estar en su estado original.</li>
                                 <li><strong>Garantía:</strong> Todos nuestros productos cuentan con una garantía de 3 meses contra defectos de fabricación.</li>
                                 <li><strong>Soporte:</strong> Nuestro equipo de soporte está disponible para ayudarte con cualquier consulta o problema relacionado con tu compra.</li>
@@ -256,10 +428,7 @@
     });
 });
 
-
-
-
-
+// WhatsApp Integration
 document.getElementById('whatsapp-chat-float').addEventListener('click', function(e) {
     e.preventDefault();
     var numero = "573007915262"; // Cambia por tu número real
@@ -270,28 +439,114 @@ document.getElementById('whatsapp-chat-float').addEventListener('click', functio
     window.open(url, "_blank");
 });
 
+// Cart Integration
 document.addEventListener('DOMContentLoaded', function () {
-  const cart = document.querySelector('.cart-sidebar, #cart, .cart-widget');
-  const toggleBtn = document.querySelector('.cart-toggle-btn, .open-cart-btn, .btn-cart');
-  if (!cart || !toggleBtn) return;
+    const cart = document.querySelector('.cart-sidebar, #cart, .cart-widget');
+    const toggleBtn = document.querySelector('.cart-toggle-btn, .open-cart-btn, .btn-cart');
+    
+    if (cart && toggleBtn) {
+        toggleBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            if (cart.classList.contains('cart-sidebar')) {
+                cart.classList.toggle('open');
+            } else {
+                cart.style.display = (cart.style.display === 'block' ? 'none' : 'block');
+            }
+        });
 
-  toggleBtn.addEventListener('click', function (e) {
-    e.preventDefault();
-    // si es sidebar deslizable usa clase .open, si es bloque flotante togglea display
-    if (cart.classList.contains('cart-sidebar')) {
-      cart.classList.toggle('open');
-    } else {
-      cart.style.display = (cart.style.display === 'block' ? 'none' : 'block');
+        // Cerrar al tocar fuera (móvil)
+        document.addEventListener('click', function (e) {
+            if (!cart.contains(e.target) && !toggleBtn.contains(e.target)) {
+                if (cart.classList.contains('open')) cart.classList.remove('open');
+            }
+        });
     }
-  });
-
-  // cerrar al tocar fuera (móvil)
-  document.addEventListener('click', function (e) {
-    if (!cart.contains(e.target) && !toggleBtn.contains(e.target)) {
-      if (cart.classList.contains('open')) cart.classList.remove('open');
-    }
-  });
 });
     </script>
+    
+    <!-- Enhanced Variant Selection Script -->
+    <script>
+    // Script adicional para las variantes con imágenes
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('🎨 Inicializando sistema de variantes mejorado...');
+        
+        // Verificar si hay variantes disponibles
+        const variantOptions = document.querySelectorAll('.variant-option');
+        const variantIdInput = document.getElementById('variant_id');
+        
+        if (variantOptions.length > 0) {
+            console.log(`✅ ${variantOptions.length} variantes encontradas`);
+            
+            // Manejar stock de variantes
+            variantOptions.forEach(variant => {
+                const stock = parseInt(variant.dataset.stock || '0');
+                
+                if (stock <= 0) {
+                    variant.classList.add('out-of-stock');
+                    variant.title += ' - AGOTADO';
+                }
+                
+                // Debugging
+                console.log('Variante:', {
+                    id: variant.dataset.variantId,
+                    color: variant.dataset.color,
+                    stock: variant.dataset.stock,
+                    price: variant.dataset.price,
+                    hasImage: !!variant.dataset.img
+                });
+            });
+            
+            // Auto-seleccionar primera variante disponible
+            const firstAvailable = Array.from(variantOptions).find(v => !v.classList.contains('out-of-stock'));
+            if (firstAvailable) {
+                setTimeout(() => {
+                    firstAvailable.click();
+                    console.log('✅ Primera variante disponible seleccionada automáticamente');
+                }, 300);
+            }
+        } else {
+            console.log('ℹ️ No hay variantes para este producto');
+            // Si no hay variantes, asegurar que el formulario funcione sin variant_id
+            if (variantIdInput) {
+                variantIdInput.removeAttribute('required');
+            }
+        }
+        
+        // Mejorar experiencia visual
+        const variantImages = document.querySelectorAll('.variant-image');
+        variantImages.forEach(img => {
+            img.addEventListener('load', function() {
+                this.style.opacity = '1';
+            });
+            
+            img.addEventListener('error', function() {
+                console.warn('⚠️ Error cargando imagen de variante:', this.src);
+                this.style.display = 'none';
+                // Mostrar el indicador de color en su lugar
+                const colorIndicator = this.parentElement.querySelector('.variant-color-indicator');
+                if (colorIndicator) {
+                    colorIndicator.style.width = '40px';
+                    colorIndicator.style.height = '40px';
+                }
+            });
+        });
+        
+        // Añadir efectos de carga
+        variantOptions.forEach(variant => {
+            variant.addEventListener('click', function() {
+                this.classList.add('loading');
+                setTimeout(() => {
+                    this.classList.remove('loading');
+                }, 300);
+            });
+        });
+    });
+    </script>
+    
+    <!-- Modern Product Detail JavaScript -->
+    <script src="{% static 'js/product_detail.js' %}"></script>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

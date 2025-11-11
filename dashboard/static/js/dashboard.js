@@ -8,6 +8,7 @@
    - submit para crear/actualizar (ajusta action cuando se edita)
    - eliminación de productos con confirmación
    - utilidades: toasts, confirm, CSRF
+   - funcionalidad móvil: menú sidebar responsive
 */
 
 (function () {
@@ -1195,5 +1196,103 @@ document.addEventListener('DOMContentLoaded', function() {
       icon.style.opacity = '1';
       icon.style.transform = 'translateY(0)';
     }, index * 50);
+  });
+});
+
+/* ---------- Inicialización específica para móviles ---------- */
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('🔧 Dashboard móvil: DOM cargado');
+  
+  // Función para manejar el menú móvil
+  function initMobileMenu() {
+    console.log('🔧 Iniciando menú móvil...');
+    
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const mobileOverlay = document.getElementById('mobileOverlay');
+    const sidebar = document.getElementById('sidebar');
+    
+    console.log('🔧 Elementos encontrados:', {
+      mobileMenuBtn: !!mobileMenuBtn,
+      mobileOverlay: !!mobileOverlay,
+      sidebar: !!sidebar
+    });
+    
+    if (!mobileMenuBtn || !mobileOverlay || !sidebar) {
+      console.warn('⚠️ Elementos del menú móvil no encontrados');
+      return;
+    }
+    
+    console.log('✅ Menú móvil: todos los elementos encontrados');
+    
+    // Abrir menú móvil
+    mobileMenuBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      console.log('📱 Abriendo menú móvil');
+      sidebar.classList.add('mobile-open');
+      mobileOverlay.classList.add('active');
+      document.body.style.overflow = 'hidden'; // Prevenir scroll
+    });
+    
+    // Cerrar menú móvil
+    function closeMobileMenu() {
+      console.log('📱 Cerrando menú móvil');
+      sidebar.classList.remove('mobile-open');
+      mobileOverlay.classList.remove('active');
+      document.body.style.overflow = ''; // Restaurar scroll
+    }
+    
+    mobileOverlay.addEventListener('click', closeMobileMenu);
+    
+    // Cerrar menú al hacer clic en un enlace de navegación
+    const navLinks = sidebar.querySelectorAll('.nav-link');
+    console.log(`🔧 Enlaces de navegación encontrados: ${navLinks.length}`);
+    
+    navLinks.forEach(link => {
+      link.addEventListener('click', function() {
+        // Solo cerrar en móvil
+        if (window.innerWidth <= 768) {
+          setTimeout(closeMobileMenu, 100);
+        }
+      });
+    });
+    
+    // Cerrar menú al cambiar orientación o resize
+    window.addEventListener('resize', function() {
+      if (window.innerWidth > 768) {
+        closeMobileMenu();
+      }
+    });
+    
+    console.log('✅ Menú móvil inicializado correctamente');
+  }
+  
+  // Inicializar menú móvil
+  initMobileMenu();
+  
+  // Prevenir zoom en iOS al hacer foco en inputs
+  if (navigator.userAgent.match(/iPhone|iPad|iPod/i)) {
+    const inputs = document.querySelectorAll('input[type="text"], input[type="email"], input[type="number"], input[type="tel"], input[type="url"], select, textarea');
+    inputs.forEach(input => {
+      input.addEventListener('focus', function() {
+        if (input.style.fontSize !== '16px') {
+          input.dataset.originalFontSize = input.style.fontSize;
+          input.style.fontSize = '16px';
+        }
+      });
+      
+      input.addEventListener('blur', function() {
+        if (input.dataset.originalFontSize) {
+          input.style.fontSize = input.dataset.originalFontSize;
+        } else {
+          input.style.fontSize = '';
+        }
+      });
+    });
+  }
+  
+  // Mejorar experiencia táctil
+  const touchElements = document.querySelectorAll('.btn, .nav-link, .pagination .page-link');
+  touchElements.forEach(element => {
+    element.style.touchAction = 'manipulation';
   });
 });

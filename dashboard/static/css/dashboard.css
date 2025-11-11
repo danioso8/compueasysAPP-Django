@@ -295,16 +295,130 @@ body {
 
 /* Responsive */
 @media (max-width: 768px) {
+    .dashboard-container {
+        flex-direction: column;
+    }
+    
     .sidebar {
-        width: 70px;
+        position: fixed;
+        top: 0;
+        left: -280px;
+        width: 280px;
+        height: 100vh;
+        z-index: 1045;
+        transition: left 0.3s ease;
+        box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+    }
+    
+    .sidebar.mobile-open {
+        left: 0;
     }
     
     .sidebar .sidebar-text {
-        display: none;
+        display: block !important;
     }
     
     .sidebar-toggle {
         display: none;
+    }
+    
+    .main-content {
+        margin-left: 0;
+        padding: 80px 15px 15px 15px;
+        width: 100%;
+    }
+}
+
+/* Barra superior móvil */
+.mobile-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    z-index: 1050;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.mobile-menu-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 10px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mobile-menu-btn:hover,
+.mobile-menu-btn:focus {
+    background: rgba(255,255,255,0.2);
+    outline: none;
+}
+
+.mobile-logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: white;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.mobile-logo i {
+    font-size: 1.3rem;
+}
+
+.mobile-user {
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    transition: background 0.3s ease;
+}
+
+.mobile-user:hover {
+    background: rgba(255,255,255,0.2);
+}
+
+.mobile-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 1040;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.mobile-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Mejoras para tablets */
+@media (max-width: 992px) and (min-width: 769px) {
+    .sidebar {
+        width: 240px;
+    }
+    
+    .main-content {
+        padding: 20px;
     }
 }
 
@@ -582,11 +696,14 @@ body {
 @media (max-width: 768px) {
     .productos-dashboard .table-responsive {
         font-size: 0.875rem;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
     }
     
     .productos-dashboard .table th,
     .productos-dashboard .table td {
         padding: 0.5rem 0.25rem;
+        white-space: nowrap;
     }
     
     .productos-dashboard .product-thumbnail {
@@ -596,6 +713,157 @@ body {
     
     .productos-dashboard .btn-group-sm .btn {
         padding: 0.25rem 0.375rem;
+        font-size: 0.75rem;
+    }
+    
+    /* Ocultar columnas menos importantes en móvil */
+    .productos-dashboard .table .d-none-mobile {
+        display: none !important;
+    }
+    
+    /* Mejorar filtros en móvil */
+    .productos-dashboard .row > .col-md-3,
+    .productos-dashboard .row > .col-md-6 {
+        margin-bottom: 1rem;
+    }
+    
+    /* Cards más compactas en móvil */
+    .productos-dashboard .card {
+        margin-bottom: 1rem;
+    }
+    
+    .productos-dashboard .card-header {
+        padding: 0.75rem 1rem;
+    }
+    
+    .productos-dashboard .card-body {
+        padding: 1rem;
+    }
+}
+
+/* Mejoras generales para móvil */
+@media (max-width: 576px) {
+    .main-content {
+        padding: 70px 10px 10px 10px;
+    }
+    
+    .main-content h2, .main-content h3 {
+        font-size: 1.25rem;
+        margin-bottom: 1rem;
+    }
+    
+    /* Botones más grandes en móvil */
+    .btn {
+        min-height: 44px;
+        touch-action: manipulation;
+    }
+    
+    /* Inputs más grandes */
+    .form-control, .form-select {
+        min-height: 44px;
+        font-size: 16px; /* Evita zoom en iOS */
+    }
+    
+    /* Tablas responsivas */
+    .table-responsive {
+        border: none;
+        margin-bottom: 1rem;
+    }
+    
+    .table {
+        margin-bottom: 0;
+        font-size: 0.8rem;
+    }
+    
+    .table th, .table td {
+        padding: 0.5rem 0.25rem;
+        border-top: 1px solid #dee2e6;
+    }
+    
+    /* Paginación responsive */
+    .pagination {
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-top: 1rem;
+    }
+    
+    .pagination .page-link {
+        padding: 0.5rem 0.75rem;
+        margin: 2px;
+        font-size: 0.875rem;
+    }
+    
+    /* Modales responsivos */
+    .modal-dialog {
+        margin: 1rem;
+    }
+    
+    .modal-header, .modal-body, .modal-footer {
+        padding: 1rem;
+    }
+}
+
+/* Estilos adicionales para mejorar UX móvil */
+.touch-friendly {
+    min-height: 44px;
+    min-width: 44px;
+}
+
+/* Mejoras para badges y elementos pequeños en móvil */
+@media (max-width: 576px) {
+    .badge {
+        font-size: 0.7rem;
+        padding: 0.35em 0.65em;
+    }
+    
+    .btn-group-sm .btn {
+        padding: 0.375rem 0.5rem;
+        font-size: 0.8rem;
+    }
+    
+    .table-responsive {
+        font-size: 0.8rem;
+    }
+    
+    /* Scroll horizontal suave para tablas */
+    .table-responsive {
+        scrollbar-width: thin;
+        scrollbar-color: #6c757d #f8f9fa;
+    }
+    
+    .table-responsive::-webkit-scrollbar {
+        height: 6px;
+    }
+    
+    .table-responsive::-webkit-scrollbar-track {
+        background: #f8f9fa;
+    }
+    
+    .table-responsive::-webkit-scrollbar-thumb {
+        background: #6c757d;
+        border-radius: 3px;
+    }
+    
+    .table-responsive::-webkit-scrollbar-thumb:hover {
+        background: #495057;
+    }
+}
+
+/* Estilos para el colapso de filtros en móvil */
+.collapse.collapsing {
+    transition: height 0.35s ease;
+}
+
+/* Mejoras para la paginación en dispositivos muy pequeños */
+@media (max-width: 480px) {
+    .pagination .page-link {
+        padding: 0.375rem 0.5rem;
+        font-size: 0.8rem;
+    }
+    
+    /* Ocultar algunos números de página en pantallas muy pequeñas */
+    .pagination .page-item:not(.active):not(:first-child):not(:last-child):not(:nth-child(2)):not(:nth-last-child(2)) {
+        display: none;
     }
 }
 

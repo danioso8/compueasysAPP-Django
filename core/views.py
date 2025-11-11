@@ -495,9 +495,18 @@ def update_cart(request, product_id):
                     cart[key] = quantity
                 else:
                     cart[key]['quantity'] = quantity
+            
             request.session['cart'] = cart
+            request.session.modified = True
 
             subtotal = price * quantity
+            
+            # 🔍 DEBUG: Ver valores exactos del backend
+            print(f"🔍 Backend DEBUG - Product ID: {product_id}")
+            print(f"🔍 Backend DEBUG - Variant ID: {variant_id}")
+            print(f"🔍 Backend DEBUG - Price: ${price:,}")
+            print(f"🔍 Backend DEBUG - Quantity: {quantity}")
+            print(f"🔍 Backend DEBUG - Calculated Subtotal: ${subtotal:,}")
 
             # Calcula total del carrito y cantidad total
             cart_total = 0
@@ -525,12 +534,13 @@ def update_cart(request, product_id):
                 cart_total += p * q
                 cart_count += q
 
-                return JsonResponse({
-                   'success': True,
-                   'subtotal': subtotal,      # sin formato
-                   'cart_total': cart_total,  # sin formato
-                   'cart_count': cart_count
-               })
+            return JsonResponse({
+                'success': True,
+                'subtotal': subtotal,      # sin formato
+                'quantity': quantity,      # 🔄 Agregar cantidad actualizada
+                'cart_total': cart_total,  # sin formato
+                'cart_count': cart_count
+            })
                
         return JsonResponse({'success': False})
     return JsonResponse({'success': False}, status=400)
@@ -548,28 +558,34 @@ def add_to_cart(request, product_id):
     key = f"{product_id}-{variant_id}" if variant_id else product_id
     cart = request.session.get('cart', {})
 
-     # Cantidad a añadir
-
+    # Cantidad a añadir
     if request.method == 'POST':
         quantity = int(request.POST.get('quantity', 1))
     else:
         quantity = 1
 
-    if key in cart and isinstance(cart[key], int):
-        cart[key] = {
-            'product_id': product_id,
-            'variant_id': variant_id,
-            'quantity': cart[key],
-        }
+    # Unifica formato antiguo a nuevo y suma cantidad
     if key in cart:
-        cart[key]['quantity'] += quantity
+        if isinstance(cart[key], int):
+            # Formato antiguo: convertir a nuevo formato Y sumar cantidad
+            cart[key] = {
+                'product_id': product_id,
+                'variant_id': variant_id,
+                'quantity': cart[key] + quantity,
+            }
+        else:
+            # Formato nuevo: solo sumar cantidad
+            cart[key]['quantity'] += quantity
     else:
+        # Producto nuevo en el carrito
         cart[key] = {
             'product_id': product_id,
             'variant_id': variant_id,
             'quantity': quantity,
         }
+        
     request.session['cart'] = cart
+    request.session.modified = True
 
     cart_count = sum([item['quantity'] if isinstance(item, dict) else item for item in cart.values()])
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
@@ -587,25 +603,30 @@ def add_to_cart_detail(request, product_id):
         quantity = int(request.POST.get('quantity', 1))
     else:
         quantity = 1
-     # --- Unifica formato antiguo a nuevo ---
-    if key in cart and isinstance(cart[key], int):
+        
+    # Unifica formato antiguo a nuevo y suma cantidad
+    if key in cart:
+        if isinstance(cart[key], int):
+            # Formato antiguo: convertir a nuevo formato Y sumar cantidad
+            cart[key] = {
+                'product_id': product_id,
+                'variant_id': variant_id,
+                'quantity': cart[key] + quantity,
+            }
+        else:
+            # Formato nuevo: solo sumar cantidad
+            cart[key]['quantity'] += quantity
+    else:
+        # Producto nuevo en el carrito
         cart[key] = {
             'product_id': product_id,
             'variant_id': variant_id,
-            'quantity': cart[key],
-        }    
-    # Si ya existe ese producto+variante, suma la cantidad
-    if key in cart:
-        cart[key]['quantity'] += quantity
-    else:
-     # Usa una clave única para producto+variante
-     key = f"{product_id}-{variant_id}" if variant_id else str(product_id)
-     cart[key] = {
-        'product_id': product_id,
-        'variant_id': variant_id,
-        'quantity': quantity,
-    }
+            'quantity': quantity,
+        }
+        
     request.session['cart'] = cart
+    request.session.modified = True
+    
     if 'go_to_cart' in request.POST:
         return redirect('cart')
     else:
