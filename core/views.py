@@ -44,61 +44,219 @@ def login_user(request):
     return render(request, 'login_user.html')
 
 def store(request):
+    """
+    Vista principal de la tienda con filtros modernos y AJAX
+    """
+    # Obtener parámetros de filtro
     query = request.GET.get('q', '')
+    print(query)
     category_id = request.GET.get('category', '')
-    view_mode = request.GET.get('view', 'all')  # 'all', 'category'
-    
+    price_min = request.GET.get('price_min', '')
+    price_max = request.GET.get('price_max', '')
+    in_stock = request.GET.get('in_stock', 'true')
+    out_of_stock = request.GET.get('out_of_stock', 'false')
+    sort_by = request.GET.get('sort', 'name')
+    page = request.GET.get('page', 1)
+
+    # Base queryset
+    products = Product.objects.all().select_related('category')
     categories = Category.objects.all()
-    products = Product.objects.all()
+    
+    # Aplicar filtros
+    if query:
+        products = products.filter(
+            Q(name__icontains=query) |
+            Q(description__icontains=query) |
+            Q(category__nombre__icontains=query)
+        )
+    
+    if category_id:
+        products = products.filter(category_id=category_id)
+    
+    if price_min:
+        try:
+            products = products.filter(price__gte=int(price_min))
+        except (ValueError, TypeError):
+            pass
+    
+    if price_max:
+        try:
+            products = products.filter(price__lte=int(price_max))
+        except (ValueError, TypeError):
+            pass
+    
+    # Filtro de stock
+    stock_filters = []
+    if in_stock == 'true':
+        stock_filters.append(Q(stock__gt=0))
+    if out_of_stock == 'true':
+        stock_filters.append(Q(stock=0))
+    
+    if stock_filters:
+        stock_query = stock_filters[0]
+        for filter_q in stock_filters[1:]:
+            stock_query |= filter_q
+        products = products.filter(stock_query)
+    
+    # Ordenamiento
+    if sort_by == 'price_asc':
+        products = products.order_by('price')
+    elif sort_by == 'price_desc':
+        products = products.order_by('-price')
+    elif sort_by == 'name':
+        products = products.order_by('name')
+    elif sort_by == 'newest':
+        products = products.order_by('-id')
+    elif sort_by == 'stock':
+        products = products.order_by('-stock')
+    
+    # Contar carrito
     cart = request.session.get('cart', {})
     cart_count = sum([item['quantity'] if isinstance(item, dict) else item for item in cart.values()])
     
-    # Filtrar productos por búsqueda
-    if query:
-        products = products.filter(name__icontains=query)
+    # Para requests AJAX, devolver JSON
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        from django.template.loader import render_to_string
+        
+        products_html = render_to_string('partials/products_grid.html', {
+            'products': products,
+        }, request)
+        
+        return JsonResponse({
+            'success': True,
+            'html': products_html,
+            'count': products.count(),
+            'cart_count': cart_count
+        })
     
-    # Organizar productos por categorías
-    if view_mode == 'category' and not category_id:
-        # Mostrar productos agrupados por categoría
-        products_by_category = {}
-        for category in categories:
-            category_products = products.filter(category=category)
-            if category_products.exists():
-                products_by_category[category] = category_products
-        
-        # Productos sin categoría
-        products_without_category = products.filter(category__isnull=True)
-        if products_without_category.exists():
-            products_by_category['Sin categoría'] = products_without_category
-        
-        context = {
-            'products_by_category': products_by_category,
-            'categories': categories,
-            'cart_count': cart_count,
-            'view_mode': view_mode,
-            'query': query
+    # Context para template
+    context = {
+        'products': products,
+        'categories': categories,
+        'cart_count': cart_count,
+        'query': query,
+        'current_category_id': category_id,
+        'price_min': price_min,
+        'price_max': price_max,
+        'sort_by': sort_by,
+        'filters': {
+            'query': query,
+            'category': category_id,
+            'price_min': price_min,
+            'price_max': price_max,
+            'in_stock': in_stock,
+            'out_of_stock': out_of_stock,
         }
-    else:
-        # Vista tradicional (todos o filtrado por categoría específica)
-        if category_id:
-            products = products.filter(category_id=category_id)
-            try:
-                current_category = Category.objects.get(id=category_id)
-            except Category.DoesNotExist:
-                current_category = None
-        else:
-            current_category = None
-            
-        context = {
-            'products': products, 
-            'categories': categories,
-            'cart_count': cart_count,
-            'current_category': current_category,
-            'view_mode': view_mode,
-            'query': query
-        }
-   
+    }
+    
     return render(request, 'store.html', context)
+
+def store_modern(request):
+    """
+    Vista moderna para la tienda con filtros avanzados y AJAX
+    """
+    # Obtener parámetros de filtro
+    query = request.GET.get('q', '')
+    category_id = request.GET.get('category', '')
+    price_min = request.GET.get('price_min', '')
+    price_max = request.GET.get('price_max', '')
+    in_stock = request.GET.get('in_stock', 'true')
+    out_of_stock = request.GET.get('out_of_stock', 'false')
+    sort_by = request.GET.get('sort', 'name')
+    page = request.GET.get('page', 1)
+
+    # Base queryset
+    products = Product.objects.all().select_related('category')
+    categories = Category.objects.all()
+    
+    # Aplicar filtros
+    if query:
+        products = products.filter(
+            Q(name__icontains=query) |
+            Q(description__icontains=query) |
+            Q(category__nombre__icontains=query)
+        )
+    
+    if category_id:
+        products = products.filter(category_id=category_id)
+    
+    if price_min:
+        try:
+            products = products.filter(price__gte=int(price_min))
+        except (ValueError, TypeError):
+            pass
+    
+    if price_max:
+        try:
+            products = products.filter(price__lte=int(price_max))
+        except (ValueError, TypeError):
+            pass
+    
+    # Filtro de stock
+    stock_filters = []
+    if in_stock == 'true':
+        stock_filters.append(Q(stock__gt=0))
+    if out_of_stock == 'true':
+        stock_filters.append(Q(stock=0))
+    
+    if stock_filters:
+        stock_query = stock_filters[0]
+        for filter_q in stock_filters[1:]:
+            stock_query |= filter_q
+        products = products.filter(stock_query)
+    
+    # Ordenamiento
+    if sort_by == 'price_asc':
+        products = products.order_by('price')
+    elif sort_by == 'price_desc':
+        products = products.order_by('-price')
+    elif sort_by == 'name':
+        products = products.order_by('name')
+    elif sort_by == 'newest':
+        products = products.order_by('-id')
+    elif sort_by == 'stock':
+        products = products.order_by('-stock')
+    
+    # Contar carrito
+    cart = request.session.get('cart', {})
+    cart_count = sum([item['quantity'] if isinstance(item, dict) else item for item in cart.values()])
+    
+    # Para requests AJAX, devolver JSON
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        from django.template.loader import render_to_string
+        
+        products_html = render_to_string('partials/products_grid.html', {
+            'products': products,
+        }, request)
+        
+        return JsonResponse({
+            'success': True,
+            'html': products_html,
+            'count': products.count(),
+            'cart_count': cart_count
+        })
+    
+    # Context para template
+    context = {
+        'products': products,
+        'categories': categories,
+        'cart_count': cart_count,
+        'query': query,
+        'current_category_id': category_id,
+        'price_min': price_min,
+        'price_max': price_max,
+        'sort_by': sort_by,
+        'filters': {
+            'query': query,
+            'category': category_id,
+            'price_min': price_min,
+            'price_max': price_max,
+            'in_stock': in_stock,
+            'out_of_stock': out_of_stock,
+        }
+    }
+    
+    return render(request, 'store_modern.html', context)
    
 def product_detail(request, product_id):
     try:
@@ -499,15 +657,8 @@ def update_cart(request, product_id):
             request.session['cart'] = cart
             request.session.modified = True
 
-            subtotal = price * quantity
-            
-            # 🔍 DEBUG: Ver valores exactos del backend
-            print(f"🔍 Backend DEBUG - Product ID: {product_id}")
-            print(f"🔍 Backend DEBUG - Variant ID: {variant_id}")
-            print(f"🔍 Backend DEBUG - Price: ${price:,}")
-            print(f"🔍 Backend DEBUG - Quantity: {quantity}")
-            print(f"🔍 Backend DEBUG - Calculated Subtotal: ${subtotal:,}")
-
+            subtotal = price * quantity            
+         
             # Calcula total del carrito y cantidad total
             cart_total = 0
             cart_count = 0
@@ -730,3 +881,162 @@ DEPARTAMENTOS_CIUDADES = {
     "Vaupés": ["Mitú"],
     "Vichada": ["Puerto Carreño", "La Primavera"]
 }
+
+# Endpoints AJAX para el store moderno
+def search_suggestions(request):
+    """
+    Endpoint para sugerencias de búsqueda en tiempo real
+    """
+    if request.headers.get('X-Requested-With') != 'XMLHttpRequest':
+        return JsonResponse({'error': 'Not AJAX'}, status=400)
+    
+    query = request.GET.get('q', '').strip()
+    if len(query) < 2:
+        return JsonResponse({'suggestions': []})
+    
+    try:
+        # Búsqueda en productos
+        product_names = Product.objects.filter(
+            name__icontains=query
+        ).values_list('name', flat=True).distinct()[:5]
+        
+        # Búsqueda en categorías
+        category_names = Category.objects.filter(
+            nombre__icontains=query
+        ).values_list('nombre', flat=True).distinct()[:3]
+        
+        # Combinar sugerencias
+        suggestions = list(product_names) + list(category_names)
+        
+        return JsonResponse({
+            'success': True,
+            'suggestions': suggestions[:8]  # Máximo 8 sugerencias
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+def filter_products_ajax(request):
+    """
+    Endpoint AJAX para filtrado dinámico de productos
+    """
+    if request.headers.get('X-Requested-With') != 'XMLHttpRequest':
+        return JsonResponse({'error': 'Not AJAX'}, status=400)
+    
+    try:
+        # Obtener filtros
+        query = request.GET.get('q', '')
+        category_id = request.GET.get('category', '')
+        price_min = request.GET.get('price_min', '')
+        price_max = request.GET.get('price_max', '')
+        in_stock = request.GET.get('in_stock', 'true') == 'true'
+        out_of_stock = request.GET.get('out_of_stock', 'false') == 'true'
+        sort_by = request.GET.get('sort', 'name')
+        
+        # Base queryset
+        products = Product.objects.all().select_related('category')
+        
+        # Aplicar filtros
+        if query:
+            products = products.filter(
+                Q(name__icontains=query) |
+                Q(description__icontains=query) |
+                Q(category__nombre__icontains=query)
+            )
+        
+        if category_id:
+            products = products.filter(category_id=category_id)
+        
+        if price_min:
+            try:
+                products = products.filter(price__gte=int(price_min))
+            except (ValueError, TypeError):
+                pass
+        
+        if price_max:
+            try:
+                products = products.filter(price__lte=int(price_max))
+            except (ValueError, TypeError):
+                pass
+        
+        # Filtro de stock
+        if in_stock and not out_of_stock:
+            products = products.filter(stock__gt=0)
+        elif out_of_stock and not in_stock:
+            products = products.filter(stock=0)
+        elif not in_stock and not out_of_stock:
+            products = products.none()  # No mostrar nada si ambos están desactivados
+        
+        # Ordenamiento
+        if sort_by == 'price_asc':
+            products = products.order_by('price')
+        elif sort_by == 'price_desc':
+            products = products.order_by('-price')
+        elif sort_by == 'name':
+            products = products.order_by('name')
+        elif sort_by == 'newest':
+            products = products.order_by('-id')
+        elif sort_by == 'stock':
+            products = products.order_by('-stock')
+        
+        # Contar productos antes del slice
+        total_count = products.count()
+        
+        # Limitar resultados para mejor rendimiento
+        products = products[:50]
+        
+        # Renderizar HTML de productos
+        from django.template.loader import render_to_string
+        products_html = render_to_string('partials/products_grid.html', {
+            'products': products,
+        }, request)
+        
+        # Contar carrito
+        cart = request.session.get('cart', {})
+        cart_count = sum([item['quantity'] if isinstance(item, dict) else item for item in cart.values()])
+        
+        return JsonResponse({
+            'success': True,
+            'html': products_html,
+            'count': total_count,
+            'cart_count': cart_count,
+            'message': f'Se encontraron {total_count} productos'
+        })
+        
+    except Exception as e:
+        print(f"Error in filter_products_ajax: {e}")
+        return JsonResponse({
+            'success': False,
+            'error': 'Error interno del servidor'
+        }, status=500)
+
+def get_categories_ajax(request):
+    """
+    Endpoint para obtener categorías con conteo de productos
+    """
+    if request.headers.get('X-Requested-With') != 'XMLHttpRequest':
+        return JsonResponse({'error': 'Not AJAX'}, status=400)
+    
+    try:
+        categories_data = []
+        for category in Category.objects.all():
+            product_count = Product.objects.filter(category=category).count()
+            categories_data.append({
+                'id': category.id,
+                'name': category.name,
+                'product_count': product_count
+            })
+        
+        return JsonResponse({
+            'success': True,
+            'categories': categories_data
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)

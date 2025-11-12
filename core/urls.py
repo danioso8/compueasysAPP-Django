@@ -3,13 +3,20 @@ from django.urls import path, include
 from django.conf.urls.static import static
 from django.contrib import admin
 
-from core.views import add_to_cart, login_user, add_to_cart_detail, clear_cart, pago_exitoso, mis_pedidos, remove_from_cart, store, auctions, services, contactUs, aboutUs, cart, register_user, login, product_detail, checkout, update_cart, logout_view
+from core.views import (
+    add_to_cart, login_user, add_to_cart_detail, clear_cart, pago_exitoso, 
+    mis_pedidos, remove_from_cart, store, auctions, services, contactUs, 
+    aboutUs, cart, register_user, login, product_detail, checkout, 
+    update_cart, logout_view, search_suggestions, 
+    filter_products_ajax, get_categories_ajax
+)
 
 from django.conf import settings
 
 urlpatterns = [  
     
-    path('store/', store, name='store'),  # Added this line to map the /store URL to the store view    
+    path('store/', store, name='store'),  # Added this line to map the /store URL to the store view
+    
     path('services/', services, name='services'),  # Added this line to map the /services URL to the Services view
     path('contactUs/', contactUs, name='contactUs'),  # Added this line to map the /contactUs URL to the contactUs view
     path('aboutUs/', aboutUs, name='aboutUs'),  # Added this line to map the /aboutUs URL to the aboutUs view
@@ -32,4 +39,9 @@ urlpatterns = [
     path('mis-pedidos/', mis_pedidos, name='mis_pedidos'),  # URL pattern for viewing user orders
     path('login_user/', login_user, name='login_user'),  # URL pattern for user login
     path('logout_view/', logout_view, name='logout_view'),  # URL pattern for user logout
+    
+    # Endpoints AJAX para store moderno
+    path('api/search-suggestions/', search_suggestions, name='search_suggestions'),
+    path('api/filter-products/', filter_products_ajax, name='filter_products_ajax'),
+    path('api/categories/', get_categories_ajax, name='get_categories_ajax'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

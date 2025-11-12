@@ -1,298 +1,1167 @@
-// ...existing code...
+/* ========================================
+   STORE MODERNO JAVASCRIPT - COMPUEASYS
+   Sistema avanzado de filtros y experiencia táctil
+======================================== */
 
-// ====== Funcionalidad de menús responsive ======
-function initMenuToggle() {
-  console.log('🔧 Initializing menu toggles...');
-  
-  // Verificar que los elementos existan
-  const elements = {
-    topNavbar: document.querySelector('.top-navbar'),
-    menuToggleBtn: document.querySelector('.top-navbar .menu-toggle'),
-    navLinks: document.querySelector('.top-navbar .nav-links'),
-    navCategorias: document.querySelector('.nav-categorias'),
-    toggleCategoriaBtn: document.getElementById('toggle-categoria'),
-    navLinksCategoria: document.getElementById('nav-links-categorias')
+(function() {
+  'use strict';
+
+  // Estado global del store
+  const StoreState = {
+    filters: {
+      category: '',
+      priceMin: 0,
+      priceMax: 5000000,
+      inStock: true,
+      outOfStock: false,
+      search: ''
+    },
+    sort: 'name',
+    view: 'grid',
+    isLoading: false,
+    searchTimeout: null,
+    currentPage: 1,
+    hasMore: true
   };
-  
-  console.log('🔧 Found elements:', elements);
-  
-  // Toggle menu principal (top-navbar)
-  if (elements.menuToggleBtn && elements.navLinks && elements.topNavbar) {
-    console.log('✅ Setting up top navbar toggle');
-    elements.menuToggleBtn.addEventListener('click', function(e) {
-      e.preventDefault();
-      e.stopPropagation();
-      
-      // Toggle clases
-      elements.navLinks.classList.toggle('open');
-      elements.topNavbar.classList.toggle('open');
-      
-      // Actualizar aria-expanded
-      const isExpanded = elements.navLinks.classList.contains('open');
-      elements.menuToggleBtn.setAttribute('aria-expanded', isExpanded);
-      
-      console.log('🔧 Top navbar toggled:', isExpanded);
-    });
-  } else {
-    console.error('❌ Top navbar elements not found:', {
-      menuToggleBtn: !!elements.menuToggleBtn,
-      navLinks: !!elements.navLinks,
-      topNavbar: !!elements.topNavbar
-    });
-  }
 
-  // Toggle menu de categorías  
-  if (elements.toggleCategoriaBtn && elements.navLinksCategoria && elements.navCategorias) {
-    console.log('✅ Setting up categories toggle');
-    elements.toggleCategoriaBtn.addEventListener('click', function(e) {
-      e.preventDefault();
-      e.stopPropagation();
-      
-      // Toggle clases
-      elements.navLinksCategoria.classList.toggle('open');
-      elements.navCategorias.classList.toggle('open');
-      
-      // Actualizar aria-expanded
-      const isExpanded = elements.navLinksCategoria.classList.contains('open');
-      elements.toggleCategoriaBtn.setAttribute('aria-expanded', isExpanded);
-      
-      console.log('🔧 Categories menu toggled:', isExpanded);
-    });
-  } else {
-    console.error('❌ Categories elements not found:', {
-      toggleCategoriaBtn: !!elements.toggleCategoriaBtn,
-      navLinksCategoria: !!elements.navLinksCategoria,
-      navCategorias: !!elements.navCategorias
-    });
-  }
-
-  // Cerrar menús cuando se hace click fuera
-  document.addEventListener('click', function(e) {
-    // Cerrar menu principal
-    if (elements.topNavbar && elements.navLinks && elements.navLinks.classList.contains('open')) {
-      if (!elements.topNavbar.contains(e.target)) {
-        elements.navLinks.classList.remove('open');
-        elements.topNavbar.classList.remove('open');
-        if (elements.menuToggleBtn) elements.menuToggleBtn.setAttribute('aria-expanded', 'false');
+  // Utilidades
+  const Utils = {
+    // Obtener CSRF token
+    getCsrfToken() {
+      const cookies = document.cookie.split(';');
+      for (let cookie of cookies) {
+        const [name, value] = cookie.trim().split('=');
+        if (name === 'csrftoken') {
+          return decodeURIComponent(value);
+        }
       }
-    }
-    
-    // Cerrar menu categorías
-    if (elements.navCategorias && elements.navLinksCategoria && elements.navLinksCategoria.classList.contains('open')) {
-      if (!elements.navCategorias.contains(e.target)) {
-        elements.navLinksCategoria.classList.remove('open');
-        elements.navCategorias.classList.remove('open');
-        if (elements.toggleCategoriaBtn) elements.toggleCategoriaBtn.setAttribute('aria-expanded', 'false');
+      return null;
+    },
+
+    // Formatear precio
+    formatPrice(price) {
+      return new Intl.NumberFormat('es-CO').format(price);
+    },
+
+    // Debounce function
+    debounce(func, wait) {
+      let timeout;
+      return function executedFunction(...args) {
+        const later = () => {
+          clearTimeout(timeout);
+          func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+      };
+    },
+
+    // Mostrar notificación toast
+    showToast(message, type = 'success') {
+      let toastContainer = document.getElementById('toast-container');
+      if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.id = 'toast-container';
+        toastContainer.style.cssText = `
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          z-index: 10000;
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          pointer-events: none;
+        `;
+        document.body.appendChild(toastContainer);
       }
+
+      const toast = document.createElement('div');
+      const bgColor = type === 'success' ? '#10b981' : 
+                     type === 'error' ? '#ef4444' : 
+                     type === 'warning' ? '#f59e0b' : '#06b6d4';
+      
+      toast.style.cssText = `
+        background: ${bgColor};
+        color: white;
+        padding: 16px 20px;
+        border-radius: 12px;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        transform: translateX(100%);
+        transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+        pointer-events: auto;
+        font-weight: 500;
+        max-width: 300px;
+        word-wrap: break-word;
+      `;
+      toast.textContent = message;
+
+      toastContainer.appendChild(toast);
+
+      requestAnimationFrame(() => {
+        toast.style.transform = 'translateX(0)';
+      });
+
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+          if (toast.parentNode) {
+            toast.parentNode.removeChild(toast);
+          }
+        }, 300);
+      }, 4000);
+    },
+
+    // Vibración táctil
+    vibrate(pattern = [50]) {
+      if ('vibrate' in navigator) {
+        navigator.vibrate(pattern);
+      }
+    },
+
+    // Detectar dispositivo táctil
+    isTouchDevice() {
+      return 'ontouchstart' in window || navigator.maxTouchPoints > 0;
     }
-  });
+  };
 
-  console.log('🔧 Menu toggles initialized successfully');
-}
+  // Gestor de búsqueda
+  const SearchManager = {
+    init() {
+      console.log('🔍 Initializing SearchManager...');
+      
+      const searchInput = document.getElementById('search-input');
+      const searchClear = document.getElementById('search-clear');
+      const searchSuggestions = document.getElementById('search-suggestions');
 
-document.addEventListener("DOMContentLoaded", function () {
-  console.log('🔧 Store.js loaded - initializing functionality');
-  
-  // ====== Inicializar funcionalidad de menús ======
-  console.log('🔧 About to initialize menu toggles...');
-  initMenuToggle();
-  console.log('🔧 Menu toggles initialization complete');
-  
-  // Manejar el submit de todos los formularios de agregar al carrito
-  document.querySelectorAll(".add-to-cart-form").forEach(function (form) {
-    form.addEventListener("submit", function (e) {
-      e.preventDefault();
-      const url = form.action;
-      const formData = new FormData(form);
-      // debugger; // Descomenta solo cuando quieras detener el navegador
+      if (!searchInput) return;
 
-      fetch(url, {
-        method: "POST",
+      // Búsqueda en tiempo real con debounce
+      const debouncedSearch = Utils.debounce((query) => {
+        this.performSearch(query);
+      }, 300);
+
+      searchInput.addEventListener('input', (e) => {
+        const query = e.target.value.trim();
+        
+        if (query.length === 0) {
+          this.clearSearch();
+          return;
+        }
+
+        this.showSearchClear(true);
+        debouncedSearch(query);
+      });
+
+      // Limpiar búsqueda
+      if (searchClear) {
+        searchClear.addEventListener('click', () => {
+          this.clearSearch();
+        });
+      }
+
+      // Sugerencias al hacer foco
+      searchInput.addEventListener('focus', () => {
+        if (searchInput.value.length > 0) {
+          this.showSuggestions();
+        }
+      });
+
+      // Cerrar sugerencias al perder foco
+      document.addEventListener('click', (e) => {
+        if (!searchInput.contains(e.target) && !searchSuggestions.contains(e.target)) {
+          this.hideSuggestions();
+        }
+      });
+
+      // Navegación con teclado
+      searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          this.hideSuggestions();
+        }
+      });
+    },
+
+    performSearch(query) {
+      console.log('🔍 Performing search:', query);
+      
+      StoreState.filters.search = query;
+      StoreState.currentPage = 1;
+      
+      // Actualizar URL
+      this.updateURL();
+      
+      // Mostrar sugerencias si hay query
+      if (query.length > 2) {
+        this.fetchSuggestions(query);
+      }
+      
+      // Ejecutar filtrado
+      FilterManager.applyFilters();
+    },
+
+    fetchSuggestions(query) {
+      // Fetch sugerencias del backend
+      fetch(`/api/search-suggestions/?q=${encodeURIComponent(query)}`, {
+        method: 'GET',
         headers: {
-          "X-Requested-With": "XMLHttpRequest",
-          "X-CSRFToken": form.querySelector("[name=csrfmiddlewaretoken]").value,
-        },
-        body: formData,
+          'X-Requested-With': 'XMLHttpRequest'
+        }
       })
-        .then((response) => response.text())
-        .then((text) => {
-          // Intentar parsear JSON; si viene HTML, se captura el error
-          let data;
-          try {
-            data = JSON.parse(text);
-          } catch (err) {
-            console.error("Respuesta no JSON:", text);
-            throw new Error("Respuesta inválida del servidor");
-          }
+      .then(response => response.json())
+      .then(data => {
+        if (data.success && data.suggestions) {
+          this.displaySuggestions(data.suggestions);
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching suggestions:', error);
+      });
+    },
 
-          // Actualizar contador de carrito si existe
-          const cartCountElem = document.getElementById("cart-count");
-          if (cartCountElem && data.cart_count !== undefined) {
-            cartCountElem.textContent = data.cart_count;
-            if (window.Swal) {
-              Swal.fire({
-                icon: "success",
-                title: "¡Agregado!",
-                text: "Producto agregado al carrito",
-                timer: 1500,
-                showConfirmButton: false,
-              });
-            } else {
-              // Fallback mínimo
-              console.log("Producto agregado, nuevo contador:", data.cart_count);
-            }
-          }
+    displaySuggestions(suggestions) {
+      const suggestionsContainer = document.getElementById('search-suggestions');
+      if (!suggestionsContainer) return;
 
-          // Si usas modal, puedes actualizar el contenido aquí
-          if (data.cart_items) {
-            let html = "";
-            if (data.cart_items.length > 0) {
-              html += '<ul class="list-group mb-3">';
-              data.cart_items.forEach(function (item) {
-                html += `<li class="list-group-item d-flex justify-content-between align-items-center">
-                                ${item.product_name}
-                                <span class="badge bg-primary rounded-pill">${item.quantity}</span>
-                            </li>`;
-              });
-              html += "</ul>";
-              html += `<div class="text-end"><strong>Total: $${data.cart_total}</strong></div>`;
-            } else {
-              html = "<p>Tu carrito está vacío.</p>";
-            }
-            const modalBody = document.getElementById("cart-modal-body");
-            if (modalBody) modalBody.innerHTML = html;
-            if (window.bootstrap && document.getElementById("cartModal")) {
-              var cartModal = new bootstrap.Modal(document.getElementById("cartModal"));
-              cartModal.show();
-            }
+      if (suggestions.length === 0) {
+        this.hideSuggestions();
+        return;
+      }
+
+      suggestionsContainer.innerHTML = suggestions.map(suggestion => `
+        <div class="suggestion-item" data-suggestion="${suggestion}">
+          <i class="bi bi-search me-2"></i>
+          ${suggestion}
+        </div>
+      `).join('');
+
+      // Event listeners para sugerencias
+      suggestionsContainer.querySelectorAll('.suggestion-item').forEach(item => {
+        item.addEventListener('click', () => {
+          const suggestion = item.dataset.suggestion;
+          document.getElementById('search-input').value = suggestion;
+          this.performSearch(suggestion);
+          this.hideSuggestions();
+        });
+      });
+
+      this.showSuggestions();
+    },
+
+    showSuggestions() {
+      const suggestionsContainer = document.getElementById('search-suggestions');
+      if (suggestionsContainer) {
+        suggestionsContainer.style.display = 'block';
+      }
+    },
+
+    hideSuggestions() {
+      const suggestionsContainer = document.getElementById('search-suggestions');
+      if (suggestionsContainer) {
+        suggestionsContainer.style.display = 'none';
+      }
+    },
+
+    showSearchClear(show) {
+      const searchClear = document.getElementById('search-clear');
+      if (searchClear) {
+        searchClear.style.display = show ? 'flex' : 'none';
+      }
+    },
+
+    clearSearch() {
+      const searchInput = document.getElementById('search-input');
+      if (searchInput) {
+        searchInput.value = '';
+        this.showSearchClear(false);
+        this.hideSuggestions();
+        
+        StoreState.filters.search = '';
+        this.updateURL();
+        FilterManager.applyFilters();
+      }
+    },
+
+    updateURL() {
+      const params = new URLSearchParams();
+      if (StoreState.filters.search) {
+        params.set('q', StoreState.filters.search);
+      }
+      if (StoreState.filters.category) {
+        params.set('category', StoreState.filters.category);
+      }
+      
+      const newURL = `${window.location.pathname}?${params.toString()}`;
+      window.history.pushState({}, '', newURL);
+    }
+  };
+
+  // Gestor de filtros
+  const FilterManager = {
+    init() {
+      console.log('🎯 Initializing FilterManager...');
+      
+      this.bindCategoryFilters();
+      this.bindPriceFilters();
+      this.bindStockFilters();
+      this.bindFilterActions();
+      this.bindSortOptions();
+      this.bindViewToggle();
+      
+      // Inicializar filtros desde URL
+      this.loadFiltersFromURL();
+    },
+
+    bindCategoryFilters() {
+      const categoryInputs = document.querySelectorAll('input[name="category"]');
+      categoryInputs.forEach(input => {
+        input.addEventListener('change', (e) => {
+          StoreState.filters.category = e.target.value;
+          console.log('📦 Category filter changed:', StoreState.filters.category);
+          this.applyFilters();
+        });
+      });
+    },
+
+    bindPriceFilters() {
+      const priceMin = document.getElementById('price-min');
+      const priceMax = document.getElementById('price-max');
+      const priceRange = document.getElementById('price-range');
+
+      if (priceMin && priceMax) {
+        const debouncedPriceUpdate = Utils.debounce(() => {
+          StoreState.filters.priceMin = parseInt(priceMin.value) || 0;
+          StoreState.filters.priceMax = parseInt(priceMax.value) || 5000000;
+          console.log('💰 Price filter changed:', StoreState.filters.priceMin, '-', StoreState.filters.priceMax);
+          this.applyFilters();
+        }, 500);
+
+        priceMin.addEventListener('input', debouncedPriceUpdate);
+        priceMax.addEventListener('input', debouncedPriceUpdate);
+      }
+
+      if (priceRange) {
+        priceRange.addEventListener('input', (e) => {
+          const value = parseInt(e.target.value);
+          StoreState.filters.priceMax = value;
+          if (priceMax) priceMax.value = value;
+          console.log('💰 Price range changed:', value);
+          this.applyFilters();
+        });
+      }
+    },
+
+    bindStockFilters() {
+      const inStockCheckbox = document.querySelector('input[name="in_stock"]');
+      const outOfStockCheckbox = document.querySelector('input[name="out_of_stock"]');
+
+      if (inStockCheckbox) {
+        inStockCheckbox.addEventListener('change', (e) => {
+          StoreState.filters.inStock = e.target.checked;
+          this.applyFilters();
+        });
+      }
+
+      if (outOfStockCheckbox) {
+        outOfStockCheckbox.addEventListener('change', (e) => {
+          StoreState.filters.outOfStock = e.target.checked;
+          this.applyFilters();
+        });
+      }
+    },
+
+    bindFilterActions() {
+      const applyBtn = document.getElementById('apply-filters');
+      const clearBtn = document.getElementById('clear-filters');
+
+      if (applyBtn) {
+        applyBtn.addEventListener('click', () => {
+          console.log('✅ Apply filters clicked');
+          this.applyFilters();
+          Utils.vibrate([30]);
+        });
+      }
+
+      if (clearBtn) {
+        clearBtn.addEventListener('click', () => {
+          console.log('🔄 Clear filters clicked');
+          this.clearFilters();
+          Utils.vibrate([50, 30]);
+        });
+      }
+    },
+
+    bindSortOptions() {
+      const sortSelect = document.getElementById('sort-select');
+      if (sortSelect) {
+        sortSelect.addEventListener('change', (e) => {
+          StoreState.sort = e.target.value;
+          console.log('🔀 Sort changed:', StoreState.sort);
+          this.applyFilters();
+        });
+      }
+    },
+
+    bindViewToggle() {
+      const viewButtons = document.querySelectorAll('.view-btn');
+      viewButtons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const view = e.currentTarget.dataset.view;
+          this.switchView(view);
+        });
+      });
+    },
+
+    switchView(view) {
+      StoreState.view = view;
+      console.log('👁️ View changed:', view);
+
+      // Actualizar botones
+      document.querySelectorAll('.view-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      document.querySelector(`[data-view="${view}"]`).classList.add('active');
+
+      // Actualizar grid
+      const productsGrid = document.getElementById('products-grid');
+      if (productsGrid) {
+        productsGrid.className = view === 'list' ? 'products-list' : 'products-grid';
+      }
+
+      Utils.vibrate([20]);
+    },
+
+    applyFilters() {
+      if (StoreState.isLoading) return;
+      
+      console.log('🎯 Applying filters:', StoreState.filters);
+      
+      StoreState.isLoading = true;
+      this.showLoading(true);
+
+      // Construir parámetros de filtro
+      const params = new URLSearchParams();
+      
+      if (StoreState.filters.search) {
+        params.set('q', StoreState.filters.search);
+      }
+      if (StoreState.filters.category) {
+        params.set('category', StoreState.filters.category);
+      }
+      if (StoreState.filters.priceMin > 0) {
+        params.set('price_min', StoreState.filters.priceMin);
+      }
+      if (StoreState.filters.priceMax < 5000000) {
+        params.set('price_max', StoreState.filters.priceMax);
+      }
+      if (StoreState.filters.inStock) {
+        params.set('in_stock', 'true');
+      }
+      if (StoreState.filters.outOfStock) {
+        params.set('out_of_stock', 'true');
+      }
+      if (StoreState.sort) {
+        params.set('sort', StoreState.sort);
+      }
+
+      // Hacer petición AJAX
+      fetch(`/api/filter-products/?${params.toString()}`, {
+        method: 'GET',
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (data.success) {
+          // Actualizar contenido
+          const productsContainer = document.getElementById('products-grid');
+          if (productsContainer) {
+            productsContainer.innerHTML = data.html;
           }
-        })
-        .catch((error) => {
-          console.error("Error en add-to-cart fetch:", error);
-          // Mensaje más amable
-          if (window.Swal) {
-            Swal.fire({
-              icon: "error",
-              title: "Error",
-              text: "No se pudo agregar el producto al carrito. Intenta nuevamente.",
-            });
+          
+          // Actualizar contador de resultados
+          this.updateResultsCount(data.count);
+          
+          // Re-inicializar lazy loading para nuevas imágenes
+          LazyLoadManager.observeImages();
+          
+          // Mostrar mensaje si hay resultados
+          if (data.count > 0) {
+            Utils.showToast(data.message || `${data.count} productos encontrados`, 'info');
           } else {
-            alert("No se pudo agregar el producto al carrito. Intenta nuevamente.");
+            Utils.showToast('No se encontraron productos con esos filtros', 'warning');
+          }
+          
+        } else {
+          console.error('Server error:', data.error || 'Unknown error');
+          Utils.showToast(`Error del servidor: ${data.error || 'Error desconocido'}`, 'error');
+        }
+      })
+      .catch(error => {
+        console.error('Filter error:', error);
+        Utils.showToast(`Error de conexión: ${error.message || 'Error desconocido'}`, 'error');
+      })
+      .finally(() => {
+        this.showLoading(false);
+        StoreState.isLoading = false;
+      });
+    },
+
+    // Método legacy para compatibilidad - ahora se usa AJAX
+    filterProducts() {
+      console.log('🔄 Using legacy filter method - consider using AJAX');
+      // Este método se mantiene para compatibilidad pero se recomienda usar AJAX
+    },
+
+    shouldShowProduct(card) {
+      // Obtener datos del producto (en producción vendría del servidor)
+      const title = card.querySelector('.card-title')?.textContent.toLowerCase() || '';
+      const category = card.querySelector('.card-category')?.textContent.toLowerCase() || '';
+      const priceText = card.querySelector('.price-current')?.textContent || '';
+      const price = parseInt(priceText.replace(/[^0-9]/g, '')) || 0;
+      const hasStock = !card.querySelector('.stock-badge.out-of-stock');
+
+      // Filtro de búsqueda
+      if (StoreState.filters.search) {
+        const searchTerm = StoreState.filters.search.toLowerCase();
+        if (!title.includes(searchTerm) && !category.includes(searchTerm)) {
+          return false;
+        }
+      }
+
+      // Filtro de categoría (simplificado para demo)
+      if (StoreState.filters.category) {
+        // En producción, esto se haría con datos del servidor
+      }
+
+      // Filtro de precio
+      if (price < StoreState.filters.priceMin || price > StoreState.filters.priceMax) {
+        return false;
+      }
+
+      // Filtro de stock
+      if (!StoreState.filters.inStock && hasStock) {
+        return false;
+      }
+      if (!StoreState.filters.outOfStock && !hasStock) {
+        return false;
+      }
+
+      return true;
+    },
+
+    showProduct(card) {
+      card.style.display = 'block';
+      card.style.animation = 'fadeInUp 0.3s ease-out';
+    },
+
+    hideProduct(card) {
+      card.style.display = 'none';
+    },
+
+    updateResultsCount(count) {
+      const resultsCount = document.querySelector('.results-count');
+      if (resultsCount) {
+        resultsCount.textContent = `${count} producto${count !== 1 ? 's' : ''}`;
+      }
+    },
+
+    showEmptyState() {
+      let emptyState = document.querySelector('.empty-state');
+      if (!emptyState) {
+        const productsContainer = document.getElementById('products-container');
+        if (productsContainer) {
+          emptyState = document.createElement('div');
+          emptyState.className = 'empty-state';
+          emptyState.innerHTML = `
+            <div class="empty-icon">
+              <i class="bi bi-search"></i>
+            </div>
+            <h3 class="empty-title">No se encontraron productos</h3>
+            <p class="empty-subtitle">
+              Intenta ajustar los filtros o la búsqueda
+            </p>
+            <div class="empty-actions">
+              <button class="btn-primary" onclick="FilterManager.clearFilters()">
+                Limpiar filtros
+              </button>
+            </div>
+          `;
+          productsContainer.appendChild(emptyState);
+        }
+      }
+      
+      if (emptyState) {
+        emptyState.style.display = 'flex';
+      }
+    },
+
+    hideEmptyState() {
+      const emptyState = document.querySelector('.empty-state');
+      if (emptyState) {
+        emptyState.style.display = 'none';
+      }
+    },
+
+    clearFilters() {
+      // Reset filtros
+      StoreState.filters = {
+        category: '',
+        priceMin: 0,
+        priceMax: 5000000,
+        inStock: true,
+        outOfStock: false,
+        search: ''
+      };
+
+      // Reset UI
+      document.querySelectorAll('input[name="category"]').forEach(input => {
+        input.checked = input.value === '';
+      });
+
+      const priceMin = document.getElementById('price-min');
+      const priceMax = document.getElementById('price-max');
+      if (priceMin) priceMin.value = '';
+      if (priceMax) priceMax.value = '';
+
+      const searchInput = document.getElementById('search-input');
+      if (searchInput) {
+        searchInput.value = '';
+        SearchManager.showSearchClear(false);
+      }
+
+      // Aplicar filtros limpios
+      this.applyFilters();
+      
+      Utils.showToast('Filtros eliminados', 'info');
+    },
+
+    showLoading(show) {
+      const loadingState = document.getElementById('loading-state');
+      if (loadingState) {
+        loadingState.style.display = show ? 'flex' : 'none';
+      }
+    },
+
+    loadFiltersFromURL() {
+      const params = new URLSearchParams(window.location.search);
+      
+      if (params.has('q')) {
+        StoreState.filters.search = params.get('q');
+        const searchInput = document.getElementById('search-input');
+        if (searchInput) {
+          searchInput.value = StoreState.filters.search;
+          SearchManager.showSearchClear(true);
+        }
+      }
+
+      if (params.has('category')) {
+        StoreState.filters.category = params.get('category');
+        const categoryInput = document.querySelector(`input[name="category"][value="${StoreState.filters.category}"]`);
+        if (categoryInput) {
+          categoryInput.checked = true;
+        }
+      }
+    }
+  };
+
+  // Gestor de sidebar móvil
+  const SidebarManager = {
+    init() {
+      console.log('📱 Initializing SidebarManager...');
+      
+      const filtersToggle = document.getElementById('filters-toggle');
+      const sidebarClose = document.getElementById('sidebar-close');
+      const sidebar = document.getElementById('filters-sidebar');
+
+      if (filtersToggle && sidebar) {
+        filtersToggle.addEventListener('click', () => {
+          this.toggleSidebar();
+        });
+      }
+
+      if (sidebarClose && sidebar) {
+        sidebarClose.addEventListener('click', () => {
+          this.closeSidebar();
+        });
+      }
+
+      // Cerrar con overlay click
+      document.addEventListener('click', (e) => {
+        if (sidebar && sidebar.classList.contains('open')) {
+          if (!sidebar.contains(e.target) && !filtersToggle.contains(e.target)) {
+            this.closeSidebar();
+          }
+        }
+      });
+    },
+
+    toggleSidebar() {
+      const sidebar = document.getElementById('filters-sidebar');
+      if (sidebar) {
+        sidebar.classList.toggle('open');
+        Utils.vibrate([30]);
+      }
+    },
+
+    closeSidebar() {
+      const sidebar = document.getElementById('filters-sidebar');
+      if (sidebar) {
+        sidebar.classList.remove('open');
+      }
+    }
+  };
+
+  // Gestor de carrito
+  const CartManager = {
+    init() {
+      console.log('🛒 Initializing CartManager...');
+      
+      document.addEventListener('click', (e) => {
+        if (e.target.closest('.add-to-cart-form')) {
+          e.preventDefault();
+          this.handleAddToCart(e.target.closest('.add-to-cart-form'));
+        }
+      });
+
+      // Actualizar contador del carrito desde session storage si existe
+      this.updateCartCount();
+      
+      // Inicializar comportamiento del carrito flotante
+      this.initFloatingCart();
+    },
+
+    initFloatingCart() {
+      const floatingCart = document.querySelector('.floating-cart');
+      const cartPreview = document.getElementById('cart-preview');
+      let scrollTimeout;
+      
+      if (!floatingCart) return;
+
+      // Efecto de movimiento suave al hacer scroll
+      let lastScrollY = window.scrollY;
+      
+      window.addEventListener('scroll', () => {
+        const currentScrollY = window.scrollY;
+        
+        // Agregar clase durante el scroll
+        floatingCart.classList.add('scrolling');
+        
+        // Remover clase después del scroll
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(() => {
+          floatingCart.classList.remove('scrolling');
+        }, 150);
+        
+        // Efecto de parallax sutil
+        const scrollDifference = currentScrollY - lastScrollY;
+        if (Math.abs(scrollDifference) > 5) {
+          floatingCart.style.transform = `translateY(${scrollDifference * 0.1}px)`;
+          
+          setTimeout(() => {
+            floatingCart.style.transform = '';
+          }, 300);
+        }
+        
+        lastScrollY = currentScrollY;
+      }, { passive: true });
+
+      // Cargar preview del carrito al hacer hover
+      const cartToggleBtn = document.querySelector('.cart-toggle-btn');
+      if (cartToggleBtn) {
+        cartToggleBtn.addEventListener('mouseenter', () => {
+          this.loadCartPreview();
+        });
+      }
+
+      // Cerrar preview al perder el hover con delay
+      let hoverTimeout;
+      floatingCart.addEventListener('mouseenter', () => {
+        clearTimeout(hoverTimeout);
+      });
+
+      floatingCart.addEventListener('mouseleave', () => {
+        hoverTimeout = setTimeout(() => {
+          if (cartPreview) {
+            cartPreview.style.opacity = '0';
+            cartPreview.style.visibility = 'hidden';
+          }
+        }, 200);
+      });
+    },
+
+    async loadCartPreview() {
+      const cartPreviewBody = document.getElementById('cart-preview-body');
+      if (!cartPreviewBody) return;
+
+      try {
+        // Simular carga del carrito (en producción sería un endpoint AJAX)
+        const cart = JSON.parse(sessionStorage.getItem('cart') || '{}');
+        const cartCount = Object.keys(cart).length;
+        
+        if (cartCount === 0) {
+          cartPreviewBody.innerHTML = `
+            <div class="cart-preview-empty">
+              <i class="bi bi-cart-x"></i>
+              <p class="mb-0">Tu carrito está vacío</p>
+            </div>
+          `;
+        } else {
+          // Mostrar items del carrito (simplificado para demo)
+          cartPreviewBody.innerHTML = `
+            <div class="cart-preview-items">
+              <div class="preview-item">
+                <i class="bi bi-bag-check text-success"></i>
+                <div>
+                  <small class="text-muted">${cartCount} producto${cartCount !== 1 ? 's' : ''} agregado${cartCount !== 1 ? 's' : ''}</small>
+                </div>
+              </div>
+              <div class="preview-item">
+                <i class="bi bi-clock text-warning"></i>
+                <div>
+                  <small class="text-muted">Haz clic para ver detalles</small>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+      } catch (error) {
+        console.error('Error loading cart preview:', error);
+      }
+    },
+
+    async handleAddToCart(form) {
+      const productId = form.dataset.product;
+      const submitBtn = form.querySelector('.btn-add-cart');
+      
+      if (!productId || !submitBtn) return;
+
+      console.log('🛒 Adding to cart:', productId);
+
+      // UI feedback
+      const originalContent = submitBtn.innerHTML;
+      submitBtn.innerHTML = '<i class="bi bi-arrow-clockwise spin"></i> <span>Agregando...</span>';
+      submitBtn.disabled = true;
+
+      try {
+        const formData = new FormData();
+        formData.append('quantity', '1');
+        formData.append('csrfmiddlewaretoken', Utils.getCsrfToken());
+
+        const response = await fetch(`/add-to-cart/${productId}/`, {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest'
           }
         });
-    });
-  });
 
-  // Manejar el cambio de variante para mostrar stock y botones
-  var variantSelect = document.getElementById("variant-select");
-  if (variantSelect) {
-    variantSelect.addEventListener("change", function () {
-      var selected = this.options[this.selectedIndex];
-      var stock = selected.getAttribute("data-stock");
-      if (stock == "0") {
-        const agotado = document.getElementById("agotado-msg");
-        if (agotado) agotado.style.display = "block";
-        const btnCart = document.getElementById("btn-cart");
-        const btnPedir = document.getElementById("btn-pedir");
-        if (btnCart) btnCart.disabled = true;
-        if (btnPedir) btnPedir.disabled = true;
-      } else {
-        const agotado = document.getElementById("agotado-msg");
-        if (agotado) agotado.style.display = "none";
-        const btnCart = document.getElementById("btn-cart");
-        const btnPedir = document.getElementById("btn-pedir");
-        if (btnCart) btnCart.disabled = false;
-        if (btnPedir) btnPedir.disabled = false;
+        if (response.ok) {
+          const data = await response.json();
+          
+          // Feedback exitoso
+          submitBtn.innerHTML = '<i class="bi bi-check"></i> <span>¡Agregado!</span>';
+          submitBtn.style.background = '#10b981';
+          
+          Utils.showToast('Producto agregado al carrito', 'success');
+          Utils.vibrate([30, 20, 30]);
+          
+          // Actualizar contador
+          this.updateCartCount();
+          
+          // Efecto de rebote en el carrito flotante
+          const floatingCart = document.querySelector('.floating-cart');
+          if (floatingCart) {
+            floatingCart.classList.add('bounce');
+            setTimeout(() => {
+              floatingCart.classList.remove('bounce');
+            }, 600);
+          }
+          
+          // Actualizar preview del carrito
+          this.loadCartPreview();
+          
+          // Restaurar botón después de 2 segundos
+          setTimeout(() => {
+            submitBtn.innerHTML = originalContent;
+            submitBtn.style.background = '';
+            submitBtn.disabled = false;
+          }, 2000);
+          
+        } else {
+          throw new Error('Error al agregar al carrito');
+        }
+        
+      } catch (error) {
+        console.error('Cart error:', error);
+        Utils.showToast('Error al agregar al carrito', 'error');
+        
+        // Restaurar botón
+        submitBtn.innerHTML = originalContent;
+        submitBtn.disabled = false;
       }
-    });
-  }
-});
+    },
 
-// ====== Funcionalidad de menús responsive ======
-function initMenuToggle() {
-  // Toggle menu principal (top-navbar)
-  const topNavbar = document.querySelector('.top-navbar');
-  const menuToggle = topNavbar ? topNavbar.querySelector('.menu-toggle') : null;
-  const navLinks = topNavbar ? topNavbar.querySelector('.nav-links') : null;
+    updateCartCount() {
+      // Actualizar contador en carrito flotante
+      const cartBadge = document.querySelector('.cart-badge');
+      const cartCountText = document.querySelector('.cart-count-text');
+      
+      // En producción, esto vendría del servidor o localStorage
+      const count = parseInt(localStorage.getItem('cartCount') || '0');
+      
+      if (cartBadge) {
+        cartBadge.textContent = count;
+        cartBadge.style.display = count > 0 ? 'flex' : 'none';
+      }
+      
+      if (cartCountText) {
+        cartCountText.textContent = count;
+      }
+      
+      // Animar contador si cambió
+      if (count > 0) {
+        const floatingCart = document.querySelector('.floating-cart');
+        if (floatingCart) {
+          floatingCart.classList.add('bounce');
+          setTimeout(() => {
+            floatingCart.classList.remove('bounce');
+          }, 600);
+        }
+      }
+    }
+  };
 
-  if (menuToggle && navLinks) {
-    menuToggle.addEventListener('click', function(e) {
-      e.preventDefault();
-      e.stopPropagation();
+  // Gestor de lazy loading
+  const LazyLoadManager = {
+    init() {
+      console.log('🖼️ Initializing LazyLoadManager...');
       
-      // Toggle clases
-      navLinks.classList.toggle('open');
-      topNavbar.classList.toggle('open');
-      
-      // Actualizar aria-expanded
-      const isExpanded = navLinks.classList.contains('open');
-      menuToggle.setAttribute('aria-expanded', isExpanded);
-      
-      console.log('🔧 Top navbar toggled:', isExpanded);
-    });
-  }
+      if ('IntersectionObserver' in window) {
+        this.observer = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              this.loadImage(entry.target);
+              this.observer.unobserve(entry.target);
+            }
+          });
+        }, {
+          rootMargin: '50px'
+        });
 
-  // Toggle menu de categorías  
-  const navCategorias = document.querySelector('.nav-categorias');
-  const toggleCategoria = document.getElementById('toggle-categoria');
-  const navLinksCategoria = navCategorias ? navCategorias.querySelector('.nav-links-categorias') : null;
+        this.observeImages();
+      }
+    },
 
-  if (toggleCategoria && navLinksCategoria && navCategorias) {
-    toggleCategoria.addEventListener('click', function(e) {
-      e.preventDefault();
-      e.stopPropagation();
-      
-      // Toggle clases
-      navLinksCategoria.classList.toggle('open');
-      navCategorias.classList.toggle('open');
-      
-      // Actualizar aria-expanded
-      const isExpanded = navLinksCategoria.classList.contains('open');
-      toggleCategoria.setAttribute('aria-expanded', isExpanded);
-      
-      console.log('🔧 Categories menu toggled:', isExpanded);
-    });
-  }
+    observeImages() {
+      const images = document.querySelectorAll('.card-image[data-src]');
+      images.forEach(img => this.observer.observe(img));
+    },
 
-  // Cerrar menús cuando se hace click fuera
-  document.addEventListener('click', function(e) {
-    // Cerrar menu principal si está abierto
-    if (topNavbar && navLinks && navLinks.classList.contains('open')) {
-      if (!topNavbar.contains(e.target)) {
-        navLinks.classList.remove('open');
-        topNavbar.classList.remove('open');
-        if (menuToggle) menuToggle.setAttribute('aria-expanded', 'false');
+    loadImage(img) {
+      const src = img.dataset.src;
+      if (src) {
+        img.src = src;
+        img.removeAttribute('data-src');
+        img.classList.add('loaded');
+      }
+    }
+  };
+
+  // Gestor de gestos táctiles
+  const GestureManager = {
+    init() {
+      if (!Utils.isTouchDevice()) return;
+      
+      console.log('👆 Initializing GestureManager...');
+      
+      document.addEventListener('touchstart', this.handleTouchStart.bind(this), { passive: true });
+      document.addEventListener('touchmove', this.handleTouchMove.bind(this), { passive: false });
+      document.addEventListener('touchend', this.handleTouchEnd.bind(this), { passive: true });
+    },
+
+    handleTouchStart(e) {
+      this.startX = e.touches[0].clientX;
+      this.startY = e.touches[0].clientY;
+    },
+
+    handleTouchMove(e) {
+      if (!this.startX || !this.startY) return;
+
+      const diffX = e.touches[0].clientX - this.startX;
+      const diffY = e.touches[0].clientY - this.startY;
+
+      // Swipe horizontal en productos para acciones rápidas
+      const productCard = e.target.closest('.product-card');
+      if (productCard && Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
+        e.preventDefault();
+        
+        if (diffX > 0) {
+          // Swipe derecha - agregar a favoritos
+          this.showQuickAction(productCard, 'favorite');
+        } else {
+          // Swipe izquierda - agregar al carrito
+          this.showQuickAction(productCard, 'cart');
+        }
+      }
+    },
+
+    handleTouchEnd() {
+      this.startX = null;
+      this.startY = null;
+    },
+
+    showQuickAction(card, action) {
+      // Remover acciones previas
+      const existingAction = card.querySelector('.quick-action');
+      if (existingAction) existingAction.remove();
+
+      const actionEl = document.createElement('div');
+      actionEl.className = 'quick-action';
+      
+      if (action === 'favorite') {
+        actionEl.innerHTML = '<i class="bi bi-heart-fill"></i> Favorito';
+        actionEl.style.background = '#f59e0b';
+      } else {
+        actionEl.innerHTML = '<i class="bi bi-cart-plus"></i> Agregar';
+        actionEl.style.background = '#10b981';
+      }
+      
+      actionEl.style.cssText += `
+        position: absolute;
+        top: 50%;
+        right: 16px;
+        transform: translateY(-50%);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: 600;
+        z-index: 10;
+        animation: slideInRight 0.3s ease-out;
+      `;
+      
+      card.appendChild(actionEl);
+      Utils.vibrate([50]);
+      
+      // Remover después de 2 segundos
+      setTimeout(() => {
+        if (actionEl.parentNode) {
+          actionEl.parentNode.removeChild(actionEl);
+        }
+      }, 2000);
+    }
+  };
+
+  // Animations CSS
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
       }
     }
     
-    // Cerrar menu categorías si está abierto
-    if (navCategorias && navLinksCategoria && navLinksCategoria.classList.contains('open')) {
-      if (!navCategorias.contains(e.target)) {
-        navLinksCategoria.classList.remove('open');
-        navCategorias.classList.remove('open');
-        if (toggleCategoria) toggleCategoria.setAttribute('aria-expanded', 'false');
+    @keyframes slideInRight {
+      from {
+        opacity: 0;
+        transform: translateY(-50%) translateX(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(-50%) translateX(0);
       }
     }
-  });
-
-  // Cerrar menús con tecla Escape
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-      // Cerrar menu principal
-      if (topNavbar && navLinks && navLinks.classList.contains('open')) {
-        navLinks.classList.remove('open');
-        topNavbar.classList.remove('open');
-        if (menuToggle) menuToggle.setAttribute('aria-expanded', 'false');
-      }
-      
-      // Cerrar menu categorías
-      if (navCategorias && navLinksCategoria && navLinksCategoria.classList.contains('open')) {
-        navLinksCategoria.classList.remove('open');
-        navCategorias.classList.remove('open');
-        if (toggleCategoria) toggleCategoria.setAttribute('aria-expanded', 'false');
-      }
+    
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
     }
+    
+    .spin {
+      animation: spin 1s linear infinite;
+    }
+    
+    .card-image.loaded {
+      animation: fadeInImage 0.3s ease-out;
+    }
+    
+    @keyframes fadeInImage {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    /* Scroll suave para el carrito flotante */
+    .floating-cart {
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    /* Efecto de hover mejorado */
+    .cart-toggle-btn {
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .cart-toggle-btn::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      transition: width 0.3s ease, height 0.3s ease;
+    }
+    
+    .cart-toggle-btn:hover::before {
+      width: 120px;
+      height: 120px;
+    }
+  `;
+  document.head.appendChild(style);
+
+  // Inicialización cuando el DOM está listo
+  document.addEventListener('DOMContentLoaded', () => {
+    console.group('🏪 Store Manager Initialization');
+    console.log('Initializing modern store experience...');
+
+    // Inicializar todos los gestores
+    SearchManager.init();
+    FilterManager.init();
+    SidebarManager.init();
+    CartManager.init();
+    LazyLoadManager.init();
+    GestureManager.init();
+
+    console.log('✅ Store experience initialized successfully');
+    console.groupEnd();
+
+    // Mostrar mensaje de bienvenida
+    Utils.showToast('Tienda cargada correctamente', 'success');
   });
 
-  console.log('🔧 Menu toggles initialized successfully');
-}
+  // Exponer managers globalmente para debugging
+  window.StoreManagers = {
+    Search: SearchManager,
+    Filter: FilterManager,
+    Sidebar: SidebarManager,
+    Cart: CartManager,
+    LazyLoad: LazyLoadManager,
+    Gesture: GestureManager
+  };
+
+})();
