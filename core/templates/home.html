@@ -2,329 +2,972 @@
  
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
-   
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Home - AppCompueasys</title>    
-    <link rel="stylesheet" href="{% static 'css/main.css' %}">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="path/to/font-awesome/css/font-awesome.min.css">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CompuEasys - Soluciones Tecnológicas Integrales</title>
     
+    <!-- Estilos -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css">
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    <link rel="stylesheet" href="{% static 'css/footer.css' %}">`
+    
+    <!-- Meta tags para SEO -->
+    <meta name="description" content="CompuEasys - Desarrollo de software, reparación de computadores y tienda tecnológica. Soluciones integrales para tu negocio.">
+    <meta name="keywords" content="desarrollo software, reparación computadores, tienda tecnológica, soporte técnico">
+    
+    <!-- Custom Styles para Home -->
+    <style>
+        /* Hero Section */
+        .hero-section {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            opacity: 0.1;
+        }
+        
+        .hero-particles {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .hero-particles .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); opacity: 0.5; }
+            50% { transform: translateY(-20px); opacity: 1; }
+        }
+        
+        .hero-badge {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50px;
+            padding: 0.5rem 1rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .hero-title {
+            font-size: 3.5rem;
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+        }
+        
+        .text-gradient {
+            background: linear-gradient(45deg, #ffd700, #ffed4e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .hero-subtitle {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+        
+        .hero-actions {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 3rem;
+            flex-wrap: wrap;
+        }
+        
+        .hero-stats {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-number {
+            display: block;
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #ffd700;
+        }
+        
+        .stat-label {
+            font-size: 0.875rem;
+            opacity: 0.8;
+        }
+        
+        /* Services Section */
+        .services-section {
+            padding: 5rem 0;
+            background: #f8f9fa;
+        }
+        
+        .section-badge {
+            background: linear-gradient(45deg, #007bff, #0056b3);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            display: inline-block;
+            margin-bottom: 1rem;
+        }
+        
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            color: #212529;
+        }
+        
+        .section-subtitle {
+            font-size: 1.1rem;
+            color: #6c757d;
+            margin-bottom: 3rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .service-card {
+            background: white;
+            border-radius: 20px;
+            padding: 2.5rem;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e9ecef;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .service-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+        
+        .service-card.featured {
+            border: 2px solid #007bff;
+            transform: scale(1.05);
+        }
+        
+        .service-badge {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: #28a745;
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .service-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(45deg, #007bff, #0056b3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            color: white;
+            font-size: 2rem;
+        }
+        
+        .service-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: #212529;
+        }
+        
+        .service-description {
+            color: #6c757d;
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+        
+        .service-features {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 2rem 0;
+        }
+        
+        .service-features li {
+            padding: 0.5rem 0;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            color: #495057;
+        }
+        
+        .service-features i {
+            color: #28a745;
+            margin-right: 0.5rem;
+        }
+        
+        /* Software Section */
+        .software-section {
+            padding: 5rem 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .software-content .section-title,
+        .software-content .section-description {
+            color: white;
+        }
+        
+        .feature-list {
+            margin: 2rem 0;
+        }
+        
+        .feature-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .feature-icon {
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffd700;
+            font-size: 1.5rem;
+        }
+        
+        .feature-content h4 {
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+        
+        .feature-content p {
+            margin: 0;
+            opacity: 0.9;
+        }
+        
+        .software-preview {
+            position: relative;
+        }
+        
+        .preview-window {
+            background: #1a1a1a;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+        
+        .window-controls {
+            background: #2d2d2d;
+            padding: 1rem;
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .window-controls span {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ff5f56;
+        }
+        
+        .window-controls span:nth-child(2) { background: #ffbd2e; }
+        .window-controls span:nth-child(3) { background: #27ca3f; }
+        
+        /* Pricing Section */
+        .pricing-section {
+            padding: 5rem 0;
+            background: white;
+        }
+        
+        .pricing-card {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 20px;
+            padding: 2.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            height: 100%;
+        }
+        
+        .pricing-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        }
+        
+        .pricing-card.featured {
+            border-color: #007bff;
+            transform: scale(1.05);
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            color: white;
+        }
+        
+        .popular-badge {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #28a745;
+            color: white;
+            padding: 0.5rem 1.5rem;
+            border-radius: 50px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+        
+        .plan-price {
+            margin: 1.5rem 0;
+        }
+        
+        .currency {
+            font-size: 1.5rem;
+            vertical-align: top;
+        }
+        
+        .amount {
+            font-size: 3rem;
+            font-weight: 800;
+        }
+        
+        .period {
+            color: #6c757d;
+        }
+        
+        .plan-features {
+            list-style: none;
+            padding: 0;
+            margin: 2rem 0;
+        }
+        
+        .plan-features li {
+            padding: 0.75rem 0;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+        }
+        
+        .plan-features i {
+            color: #28a745;
+            margin-right: 0.75rem;
+        }
+        
+        /* CTA Section */
+        .cta-section {
+            padding: 5rem 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+        }
+        
+        .cta-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+        }
+        
+        .cta-description {
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+        
+        .cta-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 2.5rem;
+            }
+            
+            .hero-stats {
+                justify-content: center;
+            }
+            
+            .hero-actions {
+                justify-content: center;
+            }
+            
+            .section-title {
+                font-size: 2rem;
+            }
+            
+            .pricing-card.featured {
+                transform: none;
+            }
+        }
+    </style>
 </head>
 <body>
+    <!-- Navegación moderna -->
     {% include "navbarr.html" %}
-    <div class="services">
-        <div class="title">Nuestros Servicios</div>
-        <div class="subtitle">Desarrollo de Software y Reparacion de computadores</div>
-        <a href="/contactUs/" class="btn" type="button">Contactenos</a>
-        <div class="section-divider">
-            <div class="card">
-                <div class="icon">
-                    <img src="{% static 'img/desarrollo-de-software.jpg' %}" alt="Servicio 1">
-                </div>
-                <h3>Desarrollo de Software a la medida</h3>
-                
-            </div>
-            <div class="card">
-                <div class="icon">
-                    <img src="{% static 'img/reparacion.jpg' %}" alt="Servicio 2">
-                </div>
-                <h3>Reparacion de computadores</h3>
-                
-            </div>
-            <div class="card">
-                <div class="icon">
-                    <img src="{% static 'img/Update.webp' %}" alt="Servicio 3">
-                </div>
-                <h3>Soporte Técnico</h3>
-               
-            </div>
-             <div class="card">
-                <a href="/store" >
-                <div class="icon">
-                    <img src="{% static 'img/Productos-tecnologicos-para-regalar-esta-Navidad-con-descuentos.jpg' %}" alt="Servicio 3">
-                </div>
-                <h3>Tienda Online</h3>
-                </a>
-            </div>
-        </div>
-    </div>
-   
-    <div class="container1">
-        <div class="content">
-            <h1>Software contable</h1>
-            <p>Comience a llevar un registro de sus transacciones financieras, a tener control de sus gastos e ingresos</p>
-            <a class="btn" type="button" href="{% url 'login' %}">Iniciar Sesion</a>
-            <a class="btn1" type="button" href="{% url 'login' %}">Registrarse</a>
-        </div>
-    </div>
-
-    <div class="portafolios-container">
-         <section class="profile-section">
-            <img src="{% static 'img/factura.png' %}" alt="Juan Pérez" class="profile-img">
-            <h2>Facturas</h2>
-            <p>Cree una factura fácil y rápido que puede compartir a través de WhatsApp, Las facturas son importantes tanto para el vendedor como para el comprador, ya que permiten mantener un registro preciso de las transacciones comerciales realizadas, así como de los pagos recibidos o pendientes de recibir.</p>
-        </section>
-         <section class="profile-section">
-            <img src="{% static 'img/servicios.png' %}" alt="Juan Pérez" class="profile-img">
-            <h2>Productos y Servicios</h2>
-            <p>La gestión del inventario de productos es importante para las empresas que venden productos, ya que les permite tener una visión clara y precisa de su stock disponible, así como de las entradas y salidas de los mismos. Esto es fundamental para poder satisfacer la demanda de los clientes y evitar quedarse sin stock en momentos críticos.</p>
-        </section>
-         <section class="profile-section">
-            <img src="{% static 'img/clientes.png' %}" alt="Juan Pérez" class="profile-img">
-            <h2>Clientes</h2>
-            <p>La gestión de clientes es fundamental para garantizar la satisfacción del cliente y la lealtad, así como para maximizar la rentabilidad de la empresa.</p>
-        </section>
     
-    </div>
-
-
-    <div class="text-center mb-5">
-         <h1 class="fw-bolder">Planes y Precios</h1>
-         <p class="lead text-muted mb-0">Elija el plan que mejor se adapte a sus necesidades y comience a disfrutar de todas las ventajas que ofrecemos.</p>
+    <!-- Hero Section con animaciones -->
+    <section class="hero-section">
+        <div class="hero-background">
+            <div class="hero-particles"></div>
         </div>
- <div class="plan-pago-cart">
+        <div class="container">
+            <div class="row align-items-center min-vh-100">
+                <div class="col-lg-6">
+                    <div class="hero-content" data-aos="fade-right">
+                        <span class="hero-badge">
+                            <i class="bi bi-cpu-fill"></i>
+                            Tecnología Avanzada
+                        </span>
+                        <h1 class="hero-title">
+                            Transformamos tu
+                            <span class="text-gradient">Negocio Digital</span>
+                        </h1>
+                        <p class="hero-subtitle">
+                            Soluciones integrales en desarrollo de software, reparación de computadores y venta de productos tecnológicos. Potenciamos tu empresa con tecnología de vanguardia.
+                        </p>
+                        <div class="hero-actions">
+                            <a href="/store/" class="btn btn-light btn-lg">
+                                <i class="bi bi-shop"></i>
+                                Explorar Tienda
+                            </a>
+                            <a href="/contactUs/" class="btn btn-outline-light btn-lg">
+                                <i class="bi bi-chat-dots"></i>
+                                Contáctanos
+                            </a>
+                        </div>
+                        <div class="hero-stats" hidden>
+                            <div class="stat-item">
+                                <span class="stat-number" data-count="150">0</span>
+                                <span class="stat-label">Proyectos Completados</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-number" data-count="98">0</span>
+                                <span class="stat-label">% Satisfacción</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-number" data-count="24">0</span>
+                                <span class="stat-label">Soporte 24/7</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="hero-visual" data-aos="fade-left">
+                        <div class="text-center">
+                            <img src="{% static 'img/desarrollo-de-software.jpg' %}" alt="CompuEasys Hero" class="img-fluid rounded shadow" style="max-width: 80%;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Servicios Section -->
+    <section class="services-section py-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-12 text-center mb-5" data-aos="fade-up">
+                    <span class="section-badge">Nuestros Servicios</span>
+                    <h2 class="section-title">Soluciones Tecnológicas Completas</h2>
+                    <p class="section-subtitle">
+                        Ofrecemos un ecosistema completo de servicios tecnológicos para impulsar tu negocio
+                    </p>
+                </div>
+            </div>
+            <div class="row g-4">
+                <!-- Desarrollo de Software -->
+                <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="100">
+                    <div class="service-card h-100">
+                        <div class="service-icon">
+                            <i class="bi bi-code-slash"></i>
+                        </div>
+                        <h3 class="service-title">Desarrollo de Software</h3>
+                        <p class="service-description">
+                            Creamos soluciones personalizadas con tecnologías modernas. Desde aplicaciones web hasta sistemas empresariales complejos.
+                        </p>
+                        <ul class="service-features">
+                            <li><i class="bi bi-check-circle"></i> Aplicaciones Web</li>
+                            <li><i class="bi bi-check-circle"></i> Sistemas de Gestión</li>
+                            <li><i class="bi bi-check-circle"></i> APIs y Microservicios</li>
+                            <li><i class="bi bi-check-circle"></i> Mantenimiento 24/7</li>
+                        </ul>
+                        <a href="/services/" class="btn btn-outline-primary w-100">
+                            <i class="bi bi-arrow-right"></i>
+                            Ver Más
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Reparación de Computadores -->
+                <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="200">
+                    <div class="service-card h-100">
+                        <div class="service-icon">
+                            <i class="bi bi-tools"></i>
+                        </div>
+                        <h3 class="service-title">Reparación y Soporte</h3>
+                        <p class="service-description">
+                            Diagnóstico y reparación especializada de equipos. Soporte técnico profesional para mantener tu tecnología funcionando.
+                        </p>
+                        <ul class="service-features">
+                            <li><i class="bi bi-check-circle"></i> Diagnóstico Gratuito</li>
+                            <li><i class="bi bi-check-circle"></i> Reparación Express</li>
+                            <li><i class="bi bi-check-circle"></i> Soporte Remoto</li>
+                            <li><i class="bi bi-check-circle"></i> Garantía Extendida</li>
+                        </ul>
+                        <a href="/services/" class="btn btn-outline-primary w-100">
+                            <i class="bi bi-arrow-right"></i>
+                            Ver Más
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Tienda Online -->
+                <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="300">
+                    <div class="service-card h-100 featured">
+                        <div class="service-badge">Popular</div>
+                        <div class="service-icon">
+                            <i class="bi bi-shop"></i>
+                        </div>
+                        <h3 class="service-title">Tienda Tecnológica</h3>
+                        <p class="service-description">
+                            Amplio catálogo de productos tecnológicos con la mejor relación calidad-precio. Envíos a todo el país.
+                        </p>
+                        <ul class="service-features">
+                            <li><i class="bi bi-check-circle"></i> Productos Originales</li>
+                            <li><i class="bi bi-check-circle"></i> Envío Gratuito</li>
+                            <li><i class="bi bi-check-circle"></i> Garantía Oficial</li>
+                            <li><i class="bi bi-check-circle"></i> Soporte Post-Venta</li>
+                        </ul>
+                        <a href="/store/" class="btn btn-primary w-100">
+                            <i class="bi bi-cart-plus"></i>
+                            Comprar Ahora
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Soporte Técnico -->
+                <div class="col-lg-4 col-md-6 offset-lg-2" data-aos="fade-up" data-aos-delay="400">
+                    <div class="service-card h-100">
+                        <div class="service-icon">
+                            <i class="bi bi-headset"></i>
+                        </div>
+                        <h3 class="service-title">Soporte Técnico</h3>
+                        <p class="service-description">
+                            Asistencia técnica especializada para resolver cualquier problema tecnológico. Soporte remoto y presencial disponible.
+                        </p>
+                        <ul class="service-features">
+                            <li><i class="bi bi-check-circle"></i> Soporte 24/7</li>
+                            <li><i class="bi bi-check-circle"></i> Asistencia Remota</li>
+                            <li><i class="bi bi-check-circle"></i> Mantenimiento Preventivo</li>
+                            <li><i class="bi bi-check-circle"></i> Consultoría Técnica</li>
+                        </ul>
+                        <a href="/contactUs/" class="btn btn-outline-primary w-100">
+                            <i class="bi bi-arrow-right"></i>
+                            Contactar Soporte
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- Software Contable Section -->
+    <section class="software-section py-5">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6" data-aos="fade-right">
+                    <div class="software-content">
+                        <span class="section-badge">Software Contable</span>
+                        <h2 class="section-title">Gestión Financiera Inteligente</h2>
+                        <p class="section-description">
+                            Controla tus finanzas con nuestro software contable diseñado para pequeñas y medianas empresas. Automatiza procesos y toma decisiones informadas.
+                        </p>
+                        <div class="feature-list">
+                            <div class="feature-item">
+                                <div class="feature-icon">
+                                    <i class="bi bi-receipt"></i>
+                                </div>
+                                <div class="feature-content">
+                                    <h4>Facturación Electrónica</h4>
+                                    <p>Genera facturas profesionales y compártelas instantáneamente</p>
+                                </div>
+                            </div>
+                            <div class="feature-item">
+                                <div class="feature-icon">
+                                    <i class="bi bi-graph-up"></i>
+                                </div>
+                                <div class="feature-content">
+                                    <h4>Reportes en Tiempo Real</h4>
+                                    <p>Analiza tu rendimiento financiero con dashboards interactivos</p>
+                                </div>
+                            </div>
+                            <div class="feature-item">
+                                <div class="feature-icon">
+                                    <i class="bi bi-people"></i>
+                                </div>
+                                <div class="feature-content">
+                                    <h4>Gestión de Clientes</h4>
+                                    <p>Administra tu cartera de clientes de manera eficiente</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="software-actions">
+                            <a href="{% url 'login' %}" class="btn btn-light btn-lg">
+                                <i class="bi bi-play-circle"></i>
+                                Comenzar Gratis
+                            </a>
+                            <a href="{% url 'register_user' %}" class="btn btn-outline-light btn-lg">
+                                <i class="bi bi-person-plus"></i>
+                                Registrarse
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6" data-aos="fade-left">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <div class="preview-window">
+                                <div class="window-controls">
+                                    <span></span>
+                                    <span></span>
+                                    <span></span>
+                                </div>
+                                <div class="p-4" style="background: #f8f9fa; min-height: 200px;">
+                                    <div class="row g-3">
+                                        <div class="col-md-4">
+                                            <div class="text-center p-3 bg-white rounded shadow-sm">
+                                                <img src="{% static 'img/factura.png' %}" alt="Facturas" class="img-fluid mb-2" style="max-height: 50px;">
+                                                <h6>Facturas</h6>
+                                                <small class="text-muted">Gestión completa</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="text-center p-3 bg-white rounded shadow-sm">
+                                                <img src="{% static 'img/servicios.png' %}" alt="Productos" class="img-fluid mb-2" style="max-height: 50px;">
+                                                <h6>Productos</h6>
+                                                <small class="text-muted">Inventario inteligente</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="text-center p-3 bg-white rounded shadow-sm">
+                                                <img src="{% static 'img/clientes.png' %}" alt="Clientes" class="img-fluid mb-2" style="max-height: 50px;">
+                                                <h6>Clientes</h6>
+                                                <small class="text-muted">CRM integrado</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- Pricing Section -->
+    <section class="pricing-section py-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-12 text-center mb-5" data-aos="fade-up">
+                    <span class="section-badge">Planes y Precios</span>
+                    <h2 class="section-title">Elige el Plan Perfecto</h2>
+                    <p class="section-subtitle">
+                        Planes flexibles que se adaptan a las necesidades de tu empresa
+                    </p>
+                </div>
+            </div>
+            <div class="row g-4 justify-content-center">
+                <!-- Plan Gratis -->
+                <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="100">
+                    <div class="pricing-card h-100">
+                        <div class="pricing-header">
+                            <h3 class="plan-name">Gratis</h3>
+                            <div class="plan-price">
+                                <span class="currency">$</span>
+                                <span class="amount">0</span>
+                                <span class="period">/mes</span>
+                            </div>
+                            <p class="plan-description">Perfecto para comenzar</p>
+                        </div>
+                        <ul class="plan-features">
+                            <li><i class="bi bi-check-circle"></i> <strong>1 Usuario</strong></li>
+                            <li><i class="bi bi-check-circle"></i> <strong>Guardar Clientes</strong></li>
+                            <li><i class="bi bi-check-circle"></i> <strong>Guardar Productos</strong></li>
+                            <li><i class="bi bi-check-circle"></i> <strong>Generar Facturas</strong></li>
+                            <li><i class="bi bi-check-circle"></i> <strong>Reporte Mes Actual</strong></li>
+                            <li><i class="bi bi-check-circle"></i> <strong>Reporte Mes Anterior</strong></li>
+                            <li><i class="bi bi-check-circle"></i> <strong>Filtrar por Fechas</strong></li>
+                        </ul>
+                        <button class="btn btn-outline-primary w-100" data-bs-toggle="modal" data-bs-target="#planModal" data-plan="gratis">
+                            <i class="bi bi-rocket"></i>
+                            Comenzar Gratis
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Plan Pro -->
+                <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="200">
+                    <div class="pricing-card featured h-100">
+                        <div class="popular-badge">
+                            <i class="bi bi-star-fill"></i>
+                            Más Popular
+                        </div>
+                        <div class="pricing-header">
+                            <h3 class="plan-name">Pro</h3>
+                            <div class="plan-price">
+                                <span class="currency">$</span>
+                                <span class="amount">3</span>
+                                <span class="period">/mes</span>
+                            </div>
+                            <p class="plan-description">Para empresas en crecimiento</p>
+                        </div>
+                        <ul class="plan-features">
+                            <li><i class="bi bi-check-circle"></i> <strong>5 Usuarios</strong></li>
+                            <li><i class="bi bi-check-circle"></i> <strong>Inventarios Completos</strong></li>
+                            <li><i class="bi bi-check-circle"></i> <strong>Reportes de Gastos</strong></li>
+                            <li><i class="bi bi-check-circle"></i> <strong>Reportes de Compras</strong></li>
+                            <li><i class="bi bi-check-circle"></i> <strong>Reportes Todas las Fechas</strong></li>
+                            <li><i class="bi bi-check-circle"></i> <strong>Reportes de Presupuesto</strong></li>
+                            <li><i class="bi bi-check-circle"></i> <strong>Flujo de Efectivo</strong></li>
+                        </ul>
+                        <button class="btn btn-light w-100" data-bs-toggle="modal" data-bs-target="#planModal" data-plan="pro">
+                            <i class="bi bi-star"></i>
+                            Elegir Pro
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Plan Empresarial -->
+                <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="300">
+                    <div class="pricing-card h-100">
+                        <div class="pricing-header">
+                            <h3 class="plan-name">Empresarial</h3>
+                            <div class="plan-price">
+                                <span class="currency">$</span>
+                                <span class="amount">10</span>
+                                <span class="period">/mes</span>
+                            </div>
+                            <p class="plan-description">Para grandes organizaciones</p>
+                        </div>
+                        <ul class="plan-features">
+                            <li><i class="bi bi-check-circle"></i> <strong>Usuarios Ilimitados</strong></li>
+                            <li><i class="bi bi-check-circle"></i> <strong>Múltiples Empresas</strong></li>
+                            <li><i class="bi bi-check-circle"></i> <strong>Libro Diario</strong></li>
+                            <li><i class="bi bi-check-circle"></i> <strong>Libro Mayor</strong></li>
+                            <li><i class="bi bi-check-circle"></i> <strong>Balance de Prueba</strong></li>
+                            <li><i class="bi bi-check-circle"></i> <strong>Estado Financiero</strong></li>
+                            <li><i class="bi bi-check-circle"></i> <strong>Cuentas por Pagar/Cobrar</strong></li>
+                        </ul>
+                        <button class="btn btn-outline-primary w-100" data-bs-toggle="modal" data-bs-target="#planModal" data-plan="empresarial">
+                            <i class="bi bi-building"></i>
+                            Contactar Ventas
+                        </button>
+                    </div>
+                </div>
        
      <!-- Pricing card free-->
-     <div class="">
-         <div class="card mb-5 mb-xl-0">
-             <div class="card-body p-5">
-                 <div class="small text-uppercase fw-bold text-muted">GRATIS</div>
-                 <div class="mb-3">
-                     <span class="display-4 fw-bold text-dark">$0</span>
-                     <span class="text-dark">/ mo.</span>
-                 </div>
-                 <ul class="list-unstyled mb-4 text-dark">
-                     <li class="mb-2">
-                         <i class="bi bi-check text-primary"></i>
-                         <strong>1 usuarios</strong>
-                     </li>
-
-                     <li class="mb-2">
-                         <i class="bi bi-check text-primary"></i>
-                         <strong>Guardar clientes</strong>
-                     </li>
-                     <li class="mb-2">
-                         <i class="bi bi-check text-primary"></i>
-                         <strong>Guardar productos</strong>
-                     </li>
-                     <li class="mb-2 ">
-                         <i class="bi bi-check text-primary"></i>
-                         <strong>Generar facturas</strong>
-                     </li>
-                     <li class="mb-2 ">
-                         <i class="bi bi-check text-primary"></i>
-                         <strong>Reporte de ventas mes actual </strong>
-                     </li>
-                     <li class="mb-2 ">
-                         <i class="bi bi-check text-primary"></i>
-                         <strong> Reporte de ventas mes anterior </strong>
-                     </li>
-                     <li class="mb-2 ">
-                         <i class="bi bi-check text-primary"></i>
-                         <strong> Ver facturas y filtrar por fechas </strong>
-                     </li>
-
-                     
-                 </ul>
-                 <div class="d-grid"><a class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#exampleModal" @*href="@Url.Action("Registro")"*@>Elegir Plan</a></div>
-             </div>
-         </div>
-     </div>
-     <!-- Pricing card pro-->
-     <div class="">
-         <div class="card mb-5 mb-xl-0">
-             <div class="card-body p-5">
-                 <div class="small text-uppercase fw-bold">
-                     <i class="bi bi-star-fill text-warning"></i>
-                     Pro
-                 </div>
-                 <div class="mb-3">
-                     <span class="display-4 fw-bold text-success">$3</span>
-                     <span class="text-muted">/ mo.</span>
-                 </div>
-                 <ul class="list-unstyled mb-4 text-dark">
-                     <li class="mb-2">
-                         <i class="bi bi-check text-primary"></i>
-                         <strong>1 usuarios</strong>
-                     </li>
-
-                     <li class="mb-2">
-                         <i class="bi bi-check text-primary"></i>
-                         <strong>Guardar clientes</strong>
-                     </li>
-                     <li class="mb-2">
-                         <i class="bi bi-check text-primary"></i>
-                         <strong>Guardar productos</strong>
-                     </li>
-                     <li class="mb-2 ">
-                         <i class="bi bi-check text-primary"></i>
-                         <strong>Generar facturas</strong>
-                     </li>
-                     <li class="mb-2 ">
-                         <i class="bi bi-check text-primary"></i>
-                         <strong>Reporte de ventas mes actual </strong>
-                     </li>
-                     <li class="mb-2 ">
-                         <i class="bi bi-check text-primary"></i>
-                         <strong> Reporte de ventas mes anterior </strong>
-                     </li>
-                     <li class="mb-2 ">
-                         <i class="bi bi-check text-primary"></i>
-                         <strong> Ver facturas y filtrar por fechas </strong>
-                     </li>
-
-                     <li class="mb-2 ">
-                         <i class="bi bi-check text-primary"></i>
-                         <strong> Reporte de ventas y otros </strong>
-                     </li>
-                     <li class="mb-2 ">
-                         <i class="bi bi-check text-primary"></i>
-                         <strong> Ingreso de empleados </strong>
-                     </li>
-                     <li class="mb-2 ">
-                         <i class="bi bi-check text-primary"></i>
-                         <strong> Nomina </strong>
-                     </li>
-                     <li class="mb-2 ">
-                         <i class="bi bi-check text-primary"></i>
-                         <strong> Pedidos </strong>
-                     </li>
-                     <li class="mb-2 ">
-                         <i class="bi bi-check text-primary"></i>
-                         <strong> Inventarios </strong>
-                     </li>
-                     
-                     
-                 </ul>
-                 <div class="d-grid"><a class="btn btn-outline-primary"   href="@Url.Action("RegistroUsuario")">Elegir Plan</a></div>
-             </div>
-         </div>
-     </div>
+     <
      <!-- Pricing card enterprise-->
-     <div class="">
-         <div class="card">
-             <div class="card-body p-5">
-                 <div class="small text-uppercase fw-bold text-muted">Enterprise</div>
-                 <div class="mb-3">
-                     <span class="display-4 fw-bold text-success">$6</span>
-                     <span class="text-muted">/ mo.</span>
-                 </div>
-                 <ul class="list-unstyled mb-4 text-dark">
-                     <li class="mb-2">
-                         <i class="bi bi-check text-primary"></i>
-                         <strong>1 usuarios</strong>
-                     </li>
+    
+    <!-- CTA Section -->
+    <section class="cta-section py-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-12 text-center" data-aos="zoom-in">
+                    <div class="cta-content">
+                        <h2 class="cta-title">¿Listo para Transformar tu Negocio?</h2>
+                        <p class="cta-description">
+                            Únete a más de 1000+ empresas que ya confían en CompuEasys para sus soluciones tecnológicas
+                        </p>
+                        <div class="cta-actions">
+                            <a href="{% url 'login' %}" class="btn btn-light btn-lg">
+                                <i class="bi bi-rocket"></i>
+                                Comenzar Ahora
+                            </a>
+                            <a href="/contactUs/" class="btn btn-outline-light btn-lg">
+                                <i class="bi bi-telephone"></i>
+                                Hablar con Experto
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
-                     <li class="mb-2">
-                         <i class="bi bi-check text-primary"></i>
-                         <strong>Guardar clientes</strong>
-                     </li>
-                     <li class="mb-2">
-                         <i class="bi bi-check text-primary"></i>
-                         <strong>Guardar productos</strong>
-                     </li>
-                     <li class="mb-2 ">
-                         <i class="bi bi-check text-primary"></i>
-                         <strong>Generar facturas</strong>
-                     </li>
-                     <li class="mb-2 ">
-                         <i class="bi bi-check text-primary"></i>
-                         <strong>Reporte de ventas mes actual </strong>
-                     </li>
-                     <li class="mb-2 ">
-                         <i class="bi bi-check text-primary"></i>
-                         <strong> Reporte de ventas mes anterior </strong>
-                     </li>
-                     <li class="mb-2 ">
-                         <i class="bi bi-check text-primary"></i>
-                         <strong> Ver facturas y filtrar por fechas </strong>
-                     </li>
-
-                     <li class="mb-2 ">
-                         <i class="bi bi-check text-primary"></i>
-                         <strong> Reporte de ventas y otros </strong>
-                     </li>
-                     <li class="mb-2 ">
-                         <i class="bi bi-check text-primary"></i>
-                         <strong> Ingreso de empleados </strong>
-                     </li>
-                     <li class="mb-2 ">
-                         <i class="bi bi-check text-primary"></i>
-                         <strong> Nomina y liquidaciones </strong>
-                     </li>
-                     <li class="mb-2 ">
-                         <i class="bi bi-check text-primary"></i>
-                         <strong> Pedidos </strong>
-                     </li>
-                     <li class="mb-2 ">
-                         <i class="bi bi-check text-primary"></i>
-                         <strong> Inventarios </strong>
-                     </li>
-                     <li class="mb-2 t">
-                         <i class="bi bi-check text-primary"></i>
-                         <strong> Cotizaciones </strong>
-                     </li>
-                     <li class="mb-2 ">
-                         <i class="bi bi-check text-primary"></i>
-                         <strong>  Ingreso de gastos </strong>
-                     </li>
-                     <li class="mb-2 ">
-                         <i class="bi bi-check text-primary"></i>
-                         <strong>  Balance de la empresa </strong>
-                     </li>
-                     <li class="mb-2 ">
-                         <i class="bi bi-check text-primary"></i>
-                         <strong> Conciliaciones </strong>
-                     </li>
-                     
-                     <li class="mb-2 ">
-                         <i class="bi bi-check text-primary"></i>
-                         <strong> Cuentas por pagar </strong>
-                     </li>
-                     <li class="mb-2 ">
-                         <i class="bi bi-check text-primary"></i>
-                         <strong> Cuentas por cobrar </strong>
-                     </li>
-                     <li class="mb-2 ">
-                         <i class="bi bi-check text-primary"></i>
-                         <strong> Activos fijos </strong>
-                     </li>
-                 </ul>
-                 <div class="d-grid"><a class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#exampleModal" @*href="@Url.Action("Registro")"*@>Elegir Plan</a></div>
-             </div>
-         </div>
-     </div>
+   
+    <!-- Modal para Planes -->
+    <div class="modal fade" id="planModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-check-circle text-success"></i>
+                        Confirmar Plan
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-center mb-3">
+                        <div class="modal-icon">
+                            <i class="bi bi-star" style="font-size: 3rem; color: #007bff;"></i>
+                        </div>
+                    </div>
+                    <p class="text-center">¿Estás seguro de que deseas elegir el plan <strong id="selectedPlan">Gratis</strong>?</p>
+                    <div class="benefits">
+                        <h6>Beneficios incluidos:</h6>
+                        <ul id="planBenefits" class="list-unstyled">
+                            <!-- Se llena dinámicamente -->
+                        </ul>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x"></i>
+                        Cancelar
+                    </button>
+                    <a href="{% url 'login' %}" class="btn btn-primary">
+                        <i class="bi bi-check"></i>
+                        Confirmar y Comenzar
+                    </a>
+                </div>
+            </div>
+        </div>
     </div>
-
-   <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-       <div class="modal-dialog">
-           <div class="modal-content">
-               <div class="modal-header">
-                   <h5 class="modal-title" id="exampleModalLabel">Elegir Plan</h5>
-                   <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-               </div>
-               <div class="modal-body">
-                   <p>¿Estás seguro de que deseas elegir este plan?</p>
-               </div>
-               <div class="modal-footer">
-                   <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                   <button type="button" class="btn btn-primary">Confirmar</button>
-               </div>
-           </div>
-       </div>
-   </div>
-  
-
-    <footer>
+ <!-- Footer -->
+   
         {% include "footer.html" %}
 
-    </footer>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-   <body>
 
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        // Inicializar AOS (Animate On Scroll)
+        AOS.init({
+            duration: 1000,
+            easing: 'ease-in-out',
+            once: true
+        });
 
+        // Contador animado para estadísticas
+        function animateCounters() {
+            const counters = document.querySelectorAll('[data-count]');
+            counters.forEach(counter => {
+                const target = parseInt(counter.getAttribute('data-count'));
+                const count = +counter.innerText;
+                const increment = target / 100;
+                
+                if (count < target) {
+                    counter.innerText = Math.ceil(count + increment);
+                    setTimeout(() => animateCounters(), 20);
+                } else {
+                    counter.innerText = target;
+                }
+            });
+        }
+
+        // Ejecutar animación cuando el hero sea visible
+        const heroSection = document.querySelector('.hero-section');
+        if (heroSection) {
+            const observer = new IntersectionObserver((entries) => {
+                if (entries[0].isIntersecting) {
+                    animateCounters();
+                    observer.disconnect();
+                }
+            });
+            observer.observe(heroSection);
+        }
+
+        // Modal de planes
+        const planModal = document.getElementById('planModal');
+        if (planModal) {
+            planModal.addEventListener('show.bs.modal', function (event) {
+                const button = event.relatedTarget;
+                const plan = button.getAttribute('data-plan');
+                document.getElementById('selectedPlan').textContent = plan.charAt(0).toUpperCase() + plan.slice(1);
+                
+                const benefits = {
+                    gratis: ['1 Usuario', 'Gestión de Clientes', 'Facturación Básica', 'Reportes Mensuales'],
+                    pro: ['5 Usuarios', 'Facturación Avanzada', 'Reportes Detallados', 'Soporte Prioritario'],
+                    empresarial: ['Usuarios Ilimitados', 'API Personalizada', 'Soporte 24/7', 'Consultoría']
+                };
+                
+                const benefitsList = document.getElementById('planBenefits');
+                benefitsList.innerHTML = benefits[plan].map(benefit => 
+                    `<li><i class="bi bi-check text-success"></i> ${benefit}</li>`
+                ).join('');
+            });
+        }
+
+        // Animación de partículas en el hero
+        function createParticles() {
+            const particlesContainer = document.querySelector('.hero-particles');
+            if (!particlesContainer) return;
+
+            for (let i = 0; i < 50; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 2 + 's';
+                particlesContainer.appendChild(particle);
+            }
+        }
+
+        // Inicializar partículas
+        createParticles();
+
+        // Smooth scroll para enlaces
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
+
+</body>
 </html>

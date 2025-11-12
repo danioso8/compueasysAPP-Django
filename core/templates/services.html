@@ -1,1 +1,1015 @@
-        <p>Por favor, complete el siguiente formulario para registrarse:</p>
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Servicios - CompuEasys | Soluciones Tecnológicas Integrales</title>
+    
+    <!-- Estilos -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css">
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    
+    <!-- Meta tags para SEO -->
+    <meta name="description" content="Servicios profesionales de CompuEasys: Desarrollo de software, reparación de computadores, soporte técnico y tienda tecnológica.">
+    <meta name="keywords" content="desarrollo software, reparación computadores, soporte técnico, servicios tecnológicos">
+    
+    <!-- Custom Styles para Services -->
+    <style>
+        /* Hero Section */
+        .services-hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 8rem 0 4rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .services-hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.1);
+            z-index: 1;
+        }
+        
+        .services-hero .container {
+            position: relative;
+            z-index: 2;
+        }
+        
+        .hero-title {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+        }
+        
+        .hero-subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 2rem;
+        }
+        
+        .breadcrumb-custom {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 50px;
+            padding: 0.75rem 1.5rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .breadcrumb-custom a {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+        }
+        
+        .breadcrumb-custom a:hover {
+            color: white;
+        }
+        
+        /* Service Cards */
+        .service-detail-card {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            border: 1px solid #e9ecef;
+            margin-bottom: 3rem;
+        }
+        
+        .service-detail-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+        }
+        
+        .service-header {
+            background: linear-gradient(45deg, #007bff, #0056b3);
+            color: white;
+            padding: 3rem 2rem;
+            text-align: center;
+            position: relative;
+        }
+        
+        .service-header::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            right: 0;
+            height: 20px;
+            background: white;
+            border-radius: 20px 20px 0 0;
+        }
+        
+        .service-icon-large {
+            width: 100px;
+            height: 100px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            font-size: 3rem;
+        }
+        
+        .service-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+        
+        .service-description {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .service-content {
+            padding: 2.5rem;
+        }
+        
+        .service-features {
+            list-style: none;
+            padding: 0;
+            margin: 2rem 0;
+        }
+        
+        .service-features li {
+            padding: 0.75rem 0;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #f8f9fa;
+        }
+        
+        .service-features li:last-child {
+            border-bottom: none;
+        }
+        
+        .service-features i {
+            color: #28a745;
+            font-size: 1.25rem;
+            margin-right: 1rem;
+            width: 24px;
+        }
+        
+        .service-process {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+        
+        .process-steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+        
+        .process-step {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        }
+        
+        .process-number {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(45deg, #007bff, #0056b3);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            margin: 0 auto 1rem;
+        }
+        
+        .process-step h5 {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #212529;
+        }
+        
+        .process-step p {
+            color: #6c757d;
+            margin: 0;
+            font-size: 0.9rem;
+        }
+        
+        /* Pricing Cards */
+        .pricing-card-service {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            height: 100%;
+        }
+        
+        .pricing-card-service:hover {
+            border-color: #007bff;
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 123, 255, 0.1);
+        }
+        
+        .pricing-card-service.featured {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            color: white;
+            border-color: #007bff;
+            transform: scale(1.05);
+        }
+        
+        .price-tag {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #007bff;
+            margin: 1rem 0;
+        }
+        
+        .pricing-card-service.featured .price-tag {
+            color: white;
+        }
+        
+        /* CTA Section */
+        .cta-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 5rem 0;
+            text-align: center;
+        }
+        
+        .cta-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+        }
+        
+        .cta-description {
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+        
+        /* FAQ Section */
+        .faq-section {
+            background: #f8f9fa;
+            padding: 5rem 0;
+        }
+        
+        .accordion-button {
+            background: white;
+            border: none;
+            border-radius: 12px !important;
+            font-weight: 600;
+            font-size: 1.1rem;
+            padding: 1.25rem 1.5rem;
+        }
+        
+        .accordion-item {
+            border: none;
+            margin-bottom: 1rem;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        }
+        
+        .accordion-body {
+            background: #f8f9fa;
+            color: #6c757d;
+            line-height: 1.6;
+        }
+        
+        /* Contact Cards */
+        .contact-card {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            height: 100%;
+        }
+        
+        .contact-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+        }
+        
+        .contact-icon {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(45deg, #007bff, #0056b3);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            font-size: 1.75rem;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 2.5rem;
+            }
+            
+            .service-title {
+                font-size: 2rem;
+            }
+            
+            .pricing-card-service.featured {
+                transform: none;
+                margin-bottom: 2rem;
+            }
+            
+            .process-steps {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .animate-on-scroll {
+            animation: fadeInUp 0.8s ease forwards;
+        }
+        
+        /* Floating elements */
+        .floating-element {
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navegación -->
+    {% include "navbarr.html" %}
+    
+    <!-- Hero Section -->
+    <section class="services-hero">
+        <div class="container">
+            <div class="row">
+                <div class="col-12 text-center">
+                    <nav class="breadcrumb-custom" data-aos="fade-down">
+                        <a href="/" class="text-decoration-none">
+                            <i class="bi bi-house-door"></i>
+                            Inicio
+                        </a>
+                        <i class="bi bi-chevron-right"></i>
+                        <span>Servicios</span>
+                    </nav>
+                    <h1 class="hero-title" data-aos="fade-up">
+                        Nuestros <span style="color: #ffd700;">Servicios</span>
+                    </h1>
+                    <p class="hero-subtitle" data-aos="fade-up" data-aos-delay="200">
+                        Soluciones tecnológicas integrales para potenciar tu empresa con la mejor calidad y soporte profesional
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Desarrollo de Software -->
+    <section class="py-5">
+        <div class="container">
+            <div class="service-detail-card" data-aos="fade-up">
+                <div class="service-header">
+                    <div class="service-icon-large floating-element">
+                        <i class="bi bi-code-slash"></i>
+                    </div>
+                    <h2 class="service-title">Desarrollo de Software</h2>
+                    <p class="service-description">
+                        Creamos soluciones tecnológicas personalizadas que transforman ideas en aplicaciones robustas y escalables
+                    </p>
+                </div>
+                <div class="service-content">
+                    <div class="row">
+                        <div class="col-lg-8">
+                            <h3 class="h4 mb-3">¿Qué ofrecemos?</h3>
+                            <p class="mb-4">
+                                Nuestro equipo de desarrolladores expertos utiliza las tecnologías más modernas para crear aplicaciones web, móviles y de escritorio que impulsan el crecimiento de tu negocio. Desde sistemas de gestión empresarial hasta plataformas de e-commerce, desarrollamos soluciones que se adaptan perfectamente a tus necesidades específicas.
+                            </p>
+                            
+                            <ul class="service-features">
+                                <li>
+                                    <i class="bi bi-check-circle-fill"></i>
+                                    <div>
+                                        <strong>Aplicaciones Web Modernas</strong><br>
+                                        <small class="text-muted">Desarrollo con Django, React, Vue.js y tecnologías de vanguardia</small>
+                                    </div>
+                                </li>
+                                <li>
+                                    <i class="bi bi-check-circle-fill"></i>
+                                    <div>
+                                        <strong>Sistemas de Gestión Empresarial</strong><br>
+                                        <small class="text-muted">ERP, CRM y soluciones personalizadas para tu empresa</small>
+                                    </div>
+                                </li>
+                                <li>
+                                    <i class="bi bi-check-circle-fill"></i>
+                                    <div>
+                                        <strong>APIs y Microservicios</strong><br>
+                                        <small class="text-muted">Integración de sistemas y arquitecturas escalables</small>
+                                    </div>
+                                </li>
+                                <li>
+                                    <i class="bi bi-check-circle-fill"></i>
+                                    <div>
+                                        <strong>Aplicaciones Móviles</strong><br>
+                                        <small class="text-muted">iOS, Android y aplicaciones multiplataforma</small>
+                                    </div>
+                                </li>
+                                <li>
+                                    <i class="bi bi-check-circle-fill"></i>
+                                    <div>
+                                        <strong>Mantenimiento y Soporte</strong><br>
+                                        <small class="text-muted">Soporte técnico continuo y actualizaciones regulares</small>
+                                    </div>
+                                </li>
+                                <li>
+                                    <i class="bi bi-check-circle-fill"></i>
+                                    <div>
+                                        <strong>Consultoría Tecnológica</strong><br>
+                                        <small class="text-muted">Asesoramiento en arquitectura y tecnologías</small>
+                                    </div>
+                                </li>
+                            </ul>
+
+                            <div class="service-process">
+                                <h4 class="text-center mb-3">Nuestro Proceso de Desarrollo</h4>
+                                <div class="process-steps">
+                                    <div class="process-step">
+                                        <div class="process-number">1</div>
+                                        <h5>Análisis</h5>
+                                        <p>Entendemos tus necesidades y objetivos empresariales</p>
+                                    </div>
+                                    <div class="process-step">
+                                        <div class="process-number">2</div>
+                                        <h5>Diseño</h5>
+                                        <p>Creamos prototipos y arquitectura de la solución</p>
+                                    </div>
+                                    <div class="process-step">
+                                        <div class="process-number">3</div>
+                                        <h5>Desarrollo</h5>
+                                        <p>Programamos con las mejores prácticas y estándares</p>
+                                    </div>
+                                    <div class="process-step">
+                                        <div class="process-number">4</div>
+                                        <h5>Testing</h5>
+                                        <p>Pruebas exhaustivas para garantizar calidad</p>
+                                    </div>
+                                    <div class="process-step">
+                                        <div class="process-number">5</div>
+                                        <h5>Deployment</h5>
+                                        <p>Puesta en producción y configuración</p>
+                                    </div>
+                                    <div class="process-step">
+                                        <div class="process-number">6</div>
+                                        <h5>Soporte</h5>
+                                        <p>Mantenimiento continuo y actualizaciones</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="pricing-card-service">
+                                <h4>Desarrollo Web</h4>
+                                <div class="price-tag">Desde $500</div>
+                                <ul class="list-unstyled">
+                                    <li class="mb-2"><i class="bi bi-check text-success"></i> Diseño Responsive</li>
+                                    <li class="mb-2"><i class="bi bi-check text-success"></i> Panel Administrativo</li>
+                                    <li class="mb-2"><i class="bi bi-check text-success"></i> Base de Datos</li>
+                                    <li class="mb-2"><i class="bi bi-check text-success"></i> Hosting por 1 año</li>
+                                </ul>
+                                <a href="/contactUs/" class="btn btn-primary w-100">Solicitar Cotización</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Reparación de Computadores -->
+    <section class="py-5 bg-light">
+        <div class="container">
+            <div class="service-detail-card" data-aos="fade-up">
+                <div class="service-header" style="background: linear-gradient(45deg, #28a745, #20c997);">
+                    <div class="service-icon-large floating-element">
+                        <i class="bi bi-tools"></i>
+                    </div>
+                    <h2 class="service-title">Reparación y Soporte Técnico</h2>
+                    <p class="service-description">
+                        Diagnóstico especializado y reparación profesional para mantener tus equipos funcionando al máximo rendimiento
+                    </p>
+                </div>
+                <div class="service-content">
+                    <div class="row">
+                        <div class="col-lg-8">
+                            <h3 class="h4 mb-3">Servicios de Reparación</h3>
+                            <p class="mb-4">
+                                Contamos con técnicos certificados y equipos especializados para diagnosticar y reparar cualquier problema en tus dispositivos. Ofrecemos servicios tanto presenciales como remotos, garantizando soluciones rápidas y efectivas para minimizar el tiempo de inactividad de tu negocio.
+                            </p>
+                            
+                            <ul class="service-features">
+                                <li>
+                                    <i class="bi bi-check-circle-fill"></i>
+                                    <div>
+                                        <strong>Diagnóstico Completo Gratuito</strong><br>
+                                        <small class="text-muted">Evaluación integral sin costo de hardware y software</small>
+                                    </div>
+                                </li>
+                                <li>
+                                    <i class="bi bi-check-circle-fill"></i>
+                                    <div>
+                                        <strong>Reparación de Hardware</strong><br>
+                                        <small class="text-muted">Componentes, placas madre, fuentes de poder, discos duros</small>
+                                    </div>
+                                </li>
+                                <li>
+                                    <i class="bi bi-check-circle-fill"></i>
+                                    <div>
+                                        <strong>Optimización de Software</strong><br>
+                                        <small class="text-muted">Limpieza de virus, instalación de SO, actualizaciones</small>
+                                    </div>
+                                </li>
+                                <li>
+                                    <i class="bi bi-check-circle-fill"></i>
+                                    <div>
+                                        <strong>Recuperación de Datos</strong><br>
+                                        <small class="text-muted">Rescate de información importante de discos dañados</small>
+                                    </div>
+                                </li>
+                                <li>
+                                    <i class="bi bi-check-circle-fill"></i>
+                                    <div>
+                                        <strong>Soporte Remoto 24/7</strong><br>
+                                        <small class="text-muted">Asistencia técnica a distancia las 24 horas</small>
+                                    </div>
+                                </li>
+                                <li>
+                                    <i class="bi bi-check-circle-fill"></i>
+                                    <div>
+                                        <strong>Mantenimiento Preventivo</strong><br>
+                                        <small class="text-muted">Planes de mantenimiento para empresas</small>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="pricing-card-service featured">
+                                <h4>Reparación Express</h4>
+                                <div class="price-tag">Desde $30</div>
+                                <ul class="list-unstyled">
+                                    <li class="mb-2"><i class="bi bi-check"></i> Diagnóstico Gratuito</li>
+                                    <li class="mb-2"><i class="bi bi-check"></i> Reparación en 24h</li>
+                                    <li class="mb-2"><i class="bi bi-check"></i> Garantía 3 meses</li>
+                                    <li class="mb-2"><i class="bi bi-check"></i> Soporte Post-Reparación</li>
+                                </ul>
+                                <a href="/contactUs/" class="btn btn-light w-100">Solicitar Servicio</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Soporte Técnico -->
+    <section class="py-5">
+        <div class="container">
+            <div class="service-detail-card" data-aos="fade-up">
+                <div class="service-header" style="background: linear-gradient(45deg, #17a2b8, #6f42c1);">
+                    <div class="service-icon-large floating-element">
+                        <i class="bi bi-headset"></i>
+                    </div>
+                    <h2 class="service-title">Soporte Técnico Especializado</h2>
+                    <p class="service-description">
+                        Asistencia técnica profesional para resolver cualquier inconveniente tecnológico de manera rápida y eficiente
+                    </p>
+                </div>
+                <div class="service-content">
+                    <div class="row">
+                        <div class="col-lg-8">
+                            <h3 class="h4 mb-3">Soporte Integral</h3>
+                            <p class="mb-4">
+                                Nuestro equipo de soporte técnico está disponible para brindar asistencia inmediata cuando más lo necesites. Ofrecemos múltiples canales de comunicación y diferentes niveles de soporte para adaptarnos a las necesidades específicas de tu empresa.
+                            </p>
+                            
+                            <ul class="service-features">
+                                <li>
+                                    <i class="bi bi-check-circle-fill"></i>
+                                    <div>
+                                        <strong>Soporte 24/7</strong><br>
+                                        <small class="text-muted">Asistencia técnica disponible las 24 horas del día</small>
+                                    </div>
+                                </li>
+                                <li>
+                                    <i class="bi bi-check-circle-fill"></i>
+                                    <div>
+                                        <strong>Asistencia Remota</strong><br>
+                                        <small class="text-muted">Conexión segura para resolver problemas a distancia</small>
+                                    </div>
+                                </li>
+                                <li>
+                                    <i class="bi bi-check-circle-fill"></i>
+                                    <div>
+                                        <strong>Visitas Técnicas</strong><br>
+                                        <small class="text-muted">Servicio presencial cuando sea necesario</small>
+                                    </div>
+                                </li>
+                                <li>
+                                    <i class="bi bi-check-circle-fill"></i>
+                                    <div>
+                                        <strong>Consultoría IT</strong><br>
+                                        <small class="text-muted">Asesoramiento en mejoras tecnológicas</small>
+                                    </div>
+                                </li>
+                                <li>
+                                    <i class="bi bi-check-circle-fill"></i>
+                                    <div>
+                                        <strong>Capacitación de Usuarios</strong><br>
+                                        <small class="text-muted">Entrenamiento en uso de sistemas y software</small>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="pricing-card-service">
+                                <h4>Soporte Premium</h4>
+                                <div class="price-tag">$50/mes</div>
+                                <ul class="list-unstyled">
+                                    <li class="mb-2"><i class="bi bi-check text-success"></i> Soporte Ilimitado</li>
+                                    <li class="mb-2"><i class="bi bi-check text-success"></i> Respuesta < 2 horas</li>
+                                    <li class="mb-2"><i class="bi bi-check text-success"></i> Mantenimiento Incluido</li>
+                                    <li class="mb-2"><i class="bi bi-check text-success"></i> Consultoría Mensual</li>
+                                </ul>
+                                <a href="/contactUs/" class="btn btn-primary w-100">Contratar Plan</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tienda Tecnológica -->
+    <section class="py-5 bg-light">
+        <div class="container">
+            <div class="service-detail-card" data-aos="fade-up">
+                <div class="service-header" style="background: linear-gradient(45deg, #dc3545, #fd7e14);">
+                    <div class="service-icon-large floating-element">
+                        <i class="bi bi-shop"></i>
+                    </div>
+                    <h2 class="service-title">Tienda Tecnológica</h2>
+                    <p class="service-description">
+                        Amplio catálogo de productos tecnológicos de las mejores marcas con garantía oficial y envío a todo el país
+                    </p>
+                </div>
+                <div class="service-content">
+                    <div class="row">
+                        <div class="col-lg-8">
+                            <h3 class="h4 mb-3">Productos Disponibles</h3>
+                            <p class="mb-4">
+                                Nuestra tienda online ofrece una amplia selección de productos tecnológicos cuidadosamente seleccionados para satisfacer las necesidades de empresas y particulares. Todos nuestros productos cuentan con garantía oficial y soporte técnico especializado.
+                            </p>
+                            
+                            <ul class="service-features">
+                                <li>
+                                    <i class="bi bi-check-circle-fill"></i>
+                                    <div>
+                                        <strong>Computadores y Laptops</strong><br>
+                                        <small class="text-muted">Equipos de última generación para trabajo y gaming</small>
+                                    </div>
+                                </li>
+                                <li>
+                                    <i class="bi bi-check-circle-fill"></i>
+                                    <div>
+                                        <strong>Componentes de Hardware</strong><br>
+                                        <small class="text-muted">Procesadores, memorias, discos duros y más</small>
+                                    </div>
+                                </li>
+                                <li>
+                                    <i class="bi bi-check-circle-fill"></i>
+                                    <div>
+                                        <strong>Periféricos</strong><br>
+                                        <small class="text-muted">Teclados, mouse, monitores y accesorios</small>
+                                    </div>
+                                </li>
+                                <li>
+                                    <i class="bi bi-check-circle-fill"></i>
+                                    <div>
+                                        <strong>Software Licenciado</strong><br>
+                                        <small class="text-muted">Sistemas operativos y aplicaciones originales</small>
+                                    </div>
+                                </li>
+                                <li>
+                                    <i class="bi bi-check-circle-fill"></i>
+                                    <div>
+                                        <strong>Garantía y Soporte</strong><br>
+                                        <small class="text-muted">Garantía oficial y soporte técnico post-venta</small>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="pricing-card-service">
+                                <h4>Envío Gratis</h4>
+                                <div class="price-tag">En compras >$100</div>
+                                <ul class="list-unstyled">
+                                    <li class="mb-2"><i class="bi bi-check text-success"></i> Productos Originales</li>
+                                    <li class="mb-2"><i class="bi bi-check text-success"></i> Garantía Oficial</li>
+                                    <li class="mb-2"><i class="bi bi-check text-success"></i> Soporte Técnico</li>
+                                    <li class="mb-2"><i class="bi bi-check text-success"></i> Instalación Gratuita</li>
+                                </ul>
+                                <a href="/store/" class="btn btn-primary w-100">Ver Tienda</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="faq-section">
+        <div class="container">
+            <div class="row">
+                <div class="col-12 text-center mb-5" data-aos="fade-up">
+                    <h2 class="display-5 fw-bold">Preguntas Frecuentes</h2>
+                    <p class="lead text-muted">Resolvemos las dudas más comunes sobre nuestros servicios</p>
+                </div>
+            </div>
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="accordion" id="faqAccordion" data-aos="fade-up">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                                    ¿Cuánto tiempo toma desarrollar una aplicación web?
+                                </button>
+                            </h2>
+                            <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    El tiempo de desarrollo depende de la complejidad del proyecto. Una aplicación básica puede tomar entre 2-4 semanas, mientras que sistemas más complejos pueden requerir 2-6 meses. Siempre proporcionamos un cronograma detallado después del análisis inicial.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                                    ¿Ofrecen garantía en las reparaciones?
+                                </button>
+                            </h2>
+                            <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    Sí, todas nuestras reparaciones incluyen garantía de 3 meses en mano de obra y piezas utilizadas. En caso de problemas relacionados con la reparación realizada, corregimos el inconveniente sin costo adicional.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                                    ¿Brindan soporte fuera del horario laboral?
+                                </button>
+                            </h2>
+                            <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    Ofrecemos diferentes niveles de soporte. Nuestro plan Premium incluye soporte 24/7 con tiempo de respuesta menor a 2 horas. Para otros planes, el horario es de lunes a viernes de 8 AM a 6 PM con soporte de emergencia disponible.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                                    ¿Hacen envíos a todo el país?
+                                </button>
+                            </h2>
+                            <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    Sí, realizamos envíos a nivel nacional. El envío es gratuito para compras superiores a $100. Para compras menores, se aplica una tarifa de envío que se calcula según la ubicación y peso del producto.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq5">
+                                    ¿Ofrecen capacitación en el uso del software desarrollado?
+                                </button>
+                            </h2>
+                            <div id="faq5" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    Absolutamente. Incluimos capacitación para los usuarios finales como parte de nuestro servicio de desarrollo. Proporcionamos manuales de usuario, sesiones de entrenamiento y soporte durante el período de adaptación al nuevo sistema.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section class="py-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-12 text-center mb-5" data-aos="fade-up">
+                    <h2 class="display-5 fw-bold">¿Necesitas Ayuda?</h2>
+                    <p class="lead text-muted">Contáctanos a través de cualquiera de estos medios</p>
+                </div>
+            </div>
+            <div class="row g-4">
+                <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="100">
+                    <div class="contact-card">
+                        <div class="contact-icon">
+                            <i class="bi bi-telephone"></i>
+                        </div>
+                        <h4>Teléfono</h4>
+                        <p class="text-muted">Llámanos directamente</p>
+                        <a href="tel:+123456789" class="btn btn-outline-primary">+1 (234) 567-89</a>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="200">
+                    <div class="contact-card">
+                        <div class="contact-icon">
+                            <i class="bi bi-envelope"></i>
+                        </div>
+                        <h4>Email</h4>
+                        <p class="text-muted">Escríbenos un correo</p>
+                        <a href="mailto:info@compueasys.com" class="btn btn-outline-primary">info@compueasys.com</a>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="300">
+                    <div class="contact-card">
+                        <div class="contact-icon">
+                            <i class="bi bi-chat-dots"></i>
+                        </div>
+                        <h4>Chat Online</h4>
+                        <p class="text-muted">Chatea con nosotros</p>
+                        <a href="/contactUs/" class="btn btn-outline-primary">Iniciar Chat</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="container">
+            <div class="row">
+                <div class="col-12 text-center" data-aos="zoom-in">
+                    <h2 class="cta-title">¿Listo para Potenciar tu Negocio?</h2>
+                    <p class="cta-description">
+                        Contáctanos hoy mismo y descubre cómo nuestros servicios pueden transformar tu empresa
+                    </p>
+                    <div class="d-flex gap-3 justify-content-center flex-wrap">
+                        <a href="/contactUs/" class="btn btn-light btn-lg">
+                            <i class="bi bi-chat-dots"></i>
+                            Contactar Ahora
+                        </a>
+                        <a href="/store/" class="btn btn-outline-light btn-lg">
+                            <i class="bi bi-shop"></i>
+                            Ver Tienda
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        {% include "footer.html" %}
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    
+    <script>
+        // Inicializar AOS
+        AOS.init({
+            duration: 1000,
+            easing: 'ease-in-out',
+            once: true,
+            offset: 100
+        });
+
+        // Smooth scroll para enlaces internos
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Efecto parallax suave en hero
+        window.addEventListener('scroll', () => {
+            const scrolled = window.pageYOffset;
+            const heroSection = document.querySelector('.services-hero');
+            if (heroSection) {
+                heroSection.style.transform = `translateY(${scrolled * 0.5}px)`;
+            }
+        });
+
+        // Animación de números en cards de precios
+        const observerOptions = {
+            threshold: 0.5,
+            rootMargin: '0px 0px -100px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.animation = 'pulse 1s ease-in-out';
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.price-tag').forEach(el => {
+            observer.observe(el);
+        });
+
+        // Agregar efecto hover dinámico a las cards
+        document.querySelectorAll('.service-detail-card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-10px) scale(1.02)';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0) scale(1)';
+            });
+        });
+
+        // Efecto de typing en títulos
+        function typeWriter(element, text, speed = 100) {
+            let i = 0;
+            element.innerHTML = '';
+            function type() {
+                if (i < text.length) {
+                    element.innerHTML += text.charAt(i);
+                    i++;
+                    setTimeout(type, speed);
+                }
+            }
+            type();
+        }
+
+        // Aplicar efecto typing al título principal cuando sea visible
+        const mainTitle = document.querySelector('.hero-title');
+        if (mainTitle) {
+            const titleObserver = new IntersectionObserver((entries) => {
+                if (entries[0].isIntersecting) {
+                    const originalText = mainTitle.textContent;
+                    typeWriter(mainTitle, originalText, 80);
+                    titleObserver.disconnect();
+                }
+            });
+            titleObserver.observe(mainTitle);
+        }
+    </script>
+
+</body>
+</html>

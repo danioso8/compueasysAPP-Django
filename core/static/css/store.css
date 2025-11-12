@@ -87,12 +87,6 @@ body {
   background-color: var(--gray-50);
   overflow-x: hidden;
 }
-footer {
-  background-color: var(--gray-900);
-  color: white;
-  padding: var(--space-lg) 0;
-  text-align: center;
-}   
 
 /* ========================================
    HEADER MODERNO
@@ -1405,3 +1399,67 @@ html {
     25% { transform: scale(1.1); }
     75% { transform: scale(0.95); }
 }
+
+/* ========================================
+   FOOTER FIXES PARA HOME
+======================================== */
+
+/* Asegurar que el footer use el 100% del ancho */
+footer {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box;
+}
+
+
+/* Responsive footer */
+@media (max-width: 768px) {
+    footer .footer-container {
+        flex-direction: column;
+        gap: 2rem;
+        text-align: center;
+        padding: 2rem 1rem !important;
+    }
+    
+    footer .contacto-us-footer,
+    footer .footer-content {
+        width: 100%;
+        padding: 0;
+    }
+}
+
+/* Asegurar que el footer no tenga contenedores que limiten el ancho */
+footer * {
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+/* Fix para redes sociales en footer */
+footer .social-media-icons {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+footer .social-media-icons a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+footer .social-media-icons a:hover {
+    background: var(--primary-color);
+    transform: translateY(-2px);
+}
+
+
+

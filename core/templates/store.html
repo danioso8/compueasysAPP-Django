@@ -186,11 +186,11 @@
                                   
                                     <input type="radio" name="category" value="{{ category.id }}"
                                            {% if request.GET.category == category.id|stringformat:'s' %}checked{% endif %}>
-                                       <span class="filter-label">
-                                        <i class="bi bi-tag"></i>
-                                        {{ category.nombre }}
-                                        <span class="count">{{ category.productstore_set.count }}</span>
-                                    </span>
+                                           <span class="filter-label">
+                                               <i class="bi bi-tag"></i>
+                                               {{ category.nombre }}
+                                              <span class="count">{{ category.productstore_set.count }}</span>
+                                           </span>
                                 </label>
                                 {% endfor %}
                                
@@ -230,11 +230,11 @@
                                     <input type="checkbox" name="in_stock" value="true" checked>
                                     <span class="filter-label">
                                         <i class="bi bi-check-circle text-success"></i>
-                                        En stock
+                                        Disponible
                                     </span>
                                 </label>
                                 <label class="filter-option">
-                                    <input type="checkbox" name="out_of_stock" value="true">
+                                    <input type="checkbox" name="out_of_stock" value="true" checked>
                                     <span class="filter-label">
                                         <i class="bi bi-x-circle text-warning"></i>
                                         Agotado
