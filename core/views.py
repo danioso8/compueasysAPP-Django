@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
-from django.db.models import Q
+from django.db.models import Q, Sum
+from django.db import models
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
@@ -10,7 +11,30 @@ from django.contrib.auth import authenticate, login, logout
 import urllib.parse
 from django.http import JsonResponse, HttpResponseRedirect
 from dashboard.models import register_superuser
-from .models import Category, Type, Galeria, SimpleUser, Pedido, ProductVariant, ProductStore as Product, PedidoDetalle, BonoDescuento
+from .models import Category, Type, Galeria, SimpleUser, Pedido, ProductVariant, ProductStore as Product, PedidoDetalle, BonoDescuento, Conversation, ConversationMessage
+
+# Importar modelos temporalmente definidos en views hasta que se haga la migración
+class VerificationToken:
+    """Modelo temporal para tokens de verificación"""
+    def __init__(self, **kwargs):
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+    
+    @classmethod
+    def objects(cls):
+        class Manager:
+            def create(self, **kwargs): pass
+            def filter(self, **kwargs): return []
+            def get(self, **kwargs): return None
+        return Manager()
+    
+    @classmethod
+    def objects(cls):
+        class Manager:
+            def create(self, **kwargs): pass
+            def filter(self, **kwargs): return []
+            def get(self, **kwargs): return None
+        return Manager()
 from decimal import Decimal
 
 from django.conf import settings
@@ -37,26 +61,46 @@ def wompi_test(request):
 def login_user(request):
     if request.method == 'POST':
         username = request.POST['username']        
-        password = request.POST['password']       
+        password = request.POST['password']
+        
+        print(f"Debug - Login attempt: username={username}, password={password}")
+        
+        # Primero verificar si es un superusuario
         superuser_qs = register_superuser.objects.filter(username=username)
-        if superuser_qs.exists():           
+        if superuser_qs.exists():
+            print(f"Debug - Found superuser: {username}")           
             superuser = superuser_qs.first()
             if superuser.password == password:
+                print("Debug - Superuser password correct")
                 request.session['superuser_id'] = superuser.id
                 request.session['superuser_username'] = superuser.username
                 return redirect('/dashboard/dashboard_home')  
             else:
-                return render(request, 'login_user.html', {'error': 'Contraseña incorrecta'})
-        return render(request, 'login_user.html', {'error': 'El usuario no está registrado'})
-        user = authenticate(request, username=username, password=password)
-        if user is not None:
-            login(request, user)
-            if user.is_staff:
-                return redirect('/dashboard/dashboard_home')
+                print("Debug - Superuser password incorrect")
+                return render(request, 'login_user.html', {'error_message': 'Contraseña incorrecta'})
+        
+        # Si no es superusuario, verificar si es usuario simple (usando email)
+        simple_user_qs = SimpleUser.objects.filter(email=username)
+        if simple_user_qs.exists():
+            print(f"Debug - Found simple user: {username}")
+            simple_user = simple_user_qs.first()
+            print(f"Debug - Simple user password in DB: '{simple_user.password}', provided: '{password}'")
+            # Verificar contraseña (nota: en producción debería usar hash)
+            if simple_user.password == password:
+                print("Debug - Simple user password correct")
+                # Crear sesión de usuario simple
+                request.session['simple_user_id'] = simple_user.id
+                request.session['simple_user_email'] = simple_user.email
+                request.session['simple_user_name'] = simple_user.name
+                return redirect('/mis-pedidos/')
             else:
-                return redirect('/mis-pedidos')
-        else:
-            return render(request, 'login_user.html', {'error': 'Credenciales incorrectas'})
+                print("Debug - Simple user password incorrect")
+                return render(request, 'login_user.html', {'error_message': 'Contraseña incorrecta'})
+        
+        # Si no se encontró el usuario en ninguna tabla
+        print(f"Debug - User not found: {username}")
+        return render(request, 'login_user.html', {'error_message': 'Usuario no encontrado'})
+        
     return render(request, 'login_user.html')
 
 def store(request):
@@ -929,25 +973,88 @@ def clear_cart(request):
 
 # ...existing code...
 def mis_pedidos(request):
-    # Busca el usuario por email (puedes adaptar a tu sistema de login)
-    if request.user.is_authenticated:
+    # Verificar si hay un usuario simple en sesión
+    if 'simple_user_id' in request.session:
+        try:
+            simple_user_id = request.session['simple_user_id']
+            simple_user = SimpleUser.objects.get(id=simple_user_id)
+            pedidos = Pedido.objects.filter(user=simple_user).order_by('-fecha')
+            
+            # Calcular estadísticas
+            pedidos_pendientes = pedidos.filter(estado='pending').count()
+            total_gastado = pedidos.aggregate(
+                total=models.Sum('total')
+            )['total'] or 0
+            
+            # Obtener perfil del usuario
+            user_profile = simple_user
+            
+            message = "" if pedidos.exists() else "Aún no tienes pedidos para visualizar."
+        except SimpleUser.DoesNotExist:
+            pedidos = []
+            pedidos_pendientes = 0
+            total_gastado = 0
+            user_profile = None
+            message = "Error: Usuario no encontrado."
+    
+    # También verificar con el sistema de autenticación de Django (para compatibilidad)
+    elif request.user.is_authenticated:
         email = request.user.email
         try:
             simple_user = SimpleUser.objects.get(email=email)
             pedidos = Pedido.objects.filter(user=simple_user).order_by('-fecha')
+            
+            # Calcular estadísticas
+            pedidos_pendientes = pedidos.filter(estado='pending').count()
+            total_gastado = pedidos.aggregate(
+                total=models.Sum('total')
+            )['total'] or 0
+            
+            # Obtener perfil del usuario
+            user_profile = simple_user
+            
             message = "" if pedidos.exists() else "Aún no tienes pedidos para visualizar."
         except SimpleUser.DoesNotExist:
             pedidos = []
+            pedidos_pendientes = 0
+            total_gastado = 0
+            user_profile = None
             message = "Aún no tienes pedidos para visualizar."
     else:
-        return redirect('login')  # O muestra un mensaje de error
+        # Redirigir a login si no hay usuario autenticado
+        return redirect('login_user')
 
-    return render(request, 'mis_pedidos.html', {'pedidos': pedidos, 'message': message})
+    context = {
+        'pedidos': pedidos,
+        'pedidos_pendientes': pedidos_pendientes,
+        'total_gastado': total_gastado,
+        'user_profile': user_profile,
+        'message': message
+    }
+
+    return render(request, 'mis_pedidos_modern.html', context)
 # ...existing code...
 
 def logout_view(request):
+    # Limpiar sesión de usuarios simples
+    if 'simple_user_id' in request.session:
+        del request.session['simple_user_id']
+    if 'simple_user_email' in request.session:
+        del request.session['simple_user_email'] 
+    if 'simple_user_name' in request.session:
+        del request.session['simple_user_name']
+    
+    # Limpiar sesión de superusuarios
+    if 'superuser_id' in request.session:
+        del request.session['superuser_id']
+    if 'superuser_username' in request.session:
+        del request.session['superuser_username']
+    
+    # Limpiar autenticación de Django también
     logout(request)
-    return redirect('store')  # Redirect to your homepage or login page
+    
+    # Redirigir a la página principal
+    return redirect('store')
 
 
 
@@ -1375,96 +1482,537 @@ def validate_discount_code(request):
             'message': f'Error del servidor: {str(e)}',
             'discount_amount': 0
         })
-        
-    except json.JSONDecodeError as e:
-        logger.error(f"Invalid JSON payload: {e}")
-        return JsonResponse({'error': 'Invalid JSON'}, status=400)
-        
-    except Exception as e:
-        logger.error(f"Error en webhook de Wompi: {str(e)}")
-        return JsonResponse({'error': str(e)}, status=400)
+
+
+# ========== VIEWS PARA DASHBOARD DE USUARIO ==========
+
+import random
+import string
+from datetime import timedelta
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth.hashers import check_password
+from django.utils import timezone
 
 
 @csrf_exempt
 @require_http_methods(["POST"])
-def validate_discount_code(request):
-    """Validar código de descuento via AJAX"""
+def send_verification_email(request):
+    """Enviar código de verificación por email"""
+    if not request.user.is_authenticated:
+        return JsonResponse({'success': False, 'message': 'Usuario no autenticado'})
+    
     try:
         data = json.loads(request.body)
-        codigo = data.get('codigo', '').strip().upper()
-        cart_total = Decimal(str(data.get('cart_total', 0)))
+        action = data.get('action')
         
-        if not codigo:
-            return JsonResponse({
-                'valid': False,
-                'message': 'Código de descuento requerido',
-                'discount_amount': 0
-            })
+        # Generar código de 6 dígitos
+        code = ''.join(random.choices(string.digits, k=6))
         
-        # Buscar el bono
-        try:
-            bono = BonoDescuento.objects.get(codigo__iexact=codigo)
-        except BonoDescuento.DoesNotExist:
-            return JsonResponse({
-                'valid': False,
-                'message': 'Código de descuento no válido',
-                'discount_amount': 0
-            })
+        # Crear token de verificación
+        expires_at = timezone.now() + timedelta(minutes=10)  # Expira en 10 minutos
         
-        # Validar si puede ser usado
-        if not bono.can_be_used(cart_total):
-            estado = bono.get_estado_display()
-            if estado == 'Expirado':
-                message = 'Este código ya expiró'
-            elif estado == 'Agotado':
-                message = 'Este código ya fue usado las veces máximas permitidas'
-            elif estado == 'Desactivado':
-                message = 'Este código está desactivado'
-            elif estado == 'Programado':
-                message = 'Este código aún no está vigente'
-            elif cart_total < bono.valor_minimo_compra:
-                message = f'Compra mínima requerida: ${bono.valor_minimo_compra:,.0f}'
-            else:
-                message = 'Código no válido para esta compra'
-            
-            return JsonResponse({
-                'valid': False,
-                'message': message,
-                'discount_amount': 0,
-                'bono_info': {
-                    'codigo': bono.codigo,
-                    'estado': estado,
-                    'valor_minimo': float(bono.valor_minimo_compra)
-                }
-            })
+        # Obtener SimpleUser
+        simple_user = SimpleUser.objects.get(email=request.user.email)
         
-        # Calcular descuento
-        discount_amount = float(bono.calcular_descuento(cart_total))
+        # Eliminar tokens anteriores del mismo tipo
+        simple_user.verification_tokens.filter(token_type=action, is_used=False).delete()
+        
+        # Crear nuevo token
+        token = VerificationToken.objects.create(
+            user=simple_user,
+            token=code,
+            token_type=action,
+            pending_data=data.get('changes', {}),
+            expires_at=expires_at
+        )
+        
+        # Enviar email
+        subject = 'Código de Verificación - CompuEasys'
+        
+        if action == 'profile_update':
+            email_subject = 'Verificación para actualizar perfil'
+        elif action == 'password_change':
+            email_subject = 'Verificación para cambiar contraseña'
+        else:
+            email_subject = 'Código de verificación'
+        
+        message = f"""
+        Hola {request.user.first_name},
+        
+        Tu código de verificación es: {code}
+        
+        Este código expirará en 10 minutos.
+        Si no solicitaste este cambio, ignora este mensaje.
+        
+        Saludos,
+        Equipo CompuEasys
+        """
+        
+        send_mail(
+            subject,
+            message,
+            'noreply@compueasys.com',
+            [request.user.email],
+            fail_silently=False,
+        )
         
         return JsonResponse({
-            'valid': True,
-            'message': f'¡Código aplicado! Descuento: ${discount_amount:,.0f}',
-            'discount_amount': discount_amount,
-            'bono_info': {
-                'codigo': bono.codigo,
-                'descripcion': bono.descripcion,
-                'tipo': bono.tipo_descuento,
-                'valor': float(bono.valor_descuento),
-                'valor_minimo': float(bono.valor_minimo_compra),
-                'usos_realizados': bono.usos_realizados,
-                'usos_maximos': bono.usos_maximos
+            'success': True,
+            'message': 'Código de verificación enviado exitosamente'
+        })
+        
+    except SimpleUser.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'message': 'Usuario no encontrado'
+        })
+    except Exception as e:
+        logger.error(f"Error sending verification email: {e}")
+        return JsonResponse({
+            'success': False,
+            'message': 'Error al enviar código de verificación'
+        })
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def verify_code(request):
+    """Verificar código y aplicar cambios"""
+    if not request.user.is_authenticated:
+        return JsonResponse({'success': False, 'message': 'Usuario no autenticado'})
+    
+    try:
+        data = json.loads(request.body)
+        code = data.get('code')
+        changes = data.get('changes', {})
+        
+        # Obtener SimpleUser
+        simple_user = SimpleUser.objects.get(email=request.user.email)
+        
+        # Buscar token válido
+        token = simple_user.verification_tokens.filter(
+            token=code,
+            is_used=False
+        ).first()
+        
+        if not token or not token.is_valid():
+            return JsonResponse({
+                'success': False,
+                'message': 'Código de verificación inválido o expirado'
+            })
+        
+        # Aplicar cambios según el tipo de token
+        if token.token_type == 'profile_update':
+            # Actualizar datos del usuario
+            user = request.user
+            if 'first_name' in changes:
+                user.first_name = changes['first_name']
+            if 'last_name' in changes:
+                user.last_name = changes['last_name']
+            user.save()
+            
+            # Actualizar datos del SimpleUser
+            if 'phone' in changes:
+                simple_user.telefono = changes['phone']
+            if 'address' in changes:
+                simple_user.address = changes['address']
+            if 'city' in changes:
+                simple_user.city = changes['city']
+            simple_user.save()
+            
+        elif token.token_type == 'password_change':
+            # Cambiar contraseña
+            current_password = changes.get('current_password')
+            new_password = changes.get('new_password')
+            
+            if not check_password(current_password, request.user.password):
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Contraseña actual incorrecta'
+                })
+            
+            request.user.set_password(new_password)
+            request.user.save()
+            
+            # Mantener la sesión activa
+            update_session_auth_hash(request, request.user)
+        
+        # Marcar token como usado
+        token.is_used = True
+        token.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Cambios aplicados exitosamente'
+        })
+        
+    except SimpleUser.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'message': 'Usuario no encontrado'
+        })
+    except Exception as e:
+        logger.error(f"Error verifying code: {e}")
+        return JsonResponse({
+            'success': False,
+            'message': 'Error al verificar código'
+        })
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def resend_verification_code(request):
+    """Reenviar código de verificación"""
+    if not request.user.is_authenticated:
+        return JsonResponse({'success': False, 'message': 'Usuario no autenticado'})
+    
+    try:
+        # Obtener SimpleUser
+        simple_user = SimpleUser.objects.get(email=request.user.email)
+        
+        # Buscar el último token no usado
+        last_token = simple_user.verification_tokens.filter(is_used=False).last()
+        
+        if not last_token:
+            return JsonResponse({
+                'success': False,
+                'message': 'No hay tokens pendientes para reenviar'
+            })
+        
+        # Generar nuevo código
+        code = ''.join(random.choices(string.digits, k=6))
+        
+        # Actualizar token existente
+        last_token.token = code
+        last_token.expires_at = timezone.now() + timedelta(minutes=10)
+        last_token.save()
+        
+        # Enviar nuevo email
+        subject = 'Nuevo Código de Verificación - CompuEasys'
+        message = f"""
+        Hola {request.user.first_name},
+        
+        Tu nuevo código de verificación es: {code}
+        
+        Este código expirará en 10 minutos.
+        
+        Saludos,
+        Equipo CompuEasys
+        """
+        
+        send_mail(
+            subject,
+            message,
+            'noreply@compueasys.com',
+            [request.user.email],
+            fail_silently=False,
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Nuevo código enviado exitosamente'
+        })
+        
+    except Exception as e:
+        logger.error(f"Error resending code: {e}")
+        return JsonResponse({
+            'success': False,
+            'message': 'Error al reenviar código'
+        })
+
+
+@require_http_methods(["GET"])
+def order_details(request, order_id):
+    """Obtener detalles completos de un pedido"""
+    if not request.user.is_authenticated:
+        return JsonResponse({'success': False, 'message': 'Usuario no autenticado'})
+    
+    try:
+        simple_user = SimpleUser.objects.get(email=request.user.email)
+        pedido = Pedido.objects.get(id=order_id, user=simple_user)
+        
+        # Generar HTML de detalles
+        html = f"""
+        <div class="order-full-details">
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h6>Información del Pedido</h6>
+                    <p><strong>ID:</strong> #{pedido.id}</p>
+                    <p><strong>Fecha:</strong> {pedido.fecha.strftime('%d/%m/%Y %H:%M')}</p>
+                    <p><strong>Estado:</strong> 
+                        <span class="status-badge status-{pedido.estado or 'pending'}">
+                            {pedido.get_estado_display() or 'Pendiente'}
+                        </span>
+                    </p>
+                    <p><strong>Total:</strong> ${pedido.total:,.0f}</p>
+                </div>
+                <div class="col-md-6">
+                    <h6>Información de Entrega</h6>
+                    <p><strong>Cliente:</strong> {request.user.first_name} {request.user.last_name}</p>
+                    <p><strong>Email:</strong> {request.user.email}</p>
+                    <p><strong>Teléfono:</strong> {simple_user.telefono or 'No especificado'}</p>
+                    <p><strong>Dirección:</strong> {simple_user.address or 'No especificada'}</p>
+                </div>
+            </div>
+            
+            <div class="mb-4">
+                <h6>Detalles de Productos</h6>
+                <div class="bg-light p-3 rounded">
+                    <pre>{pedido.detalles}</pre>
+                </div>
+            </div>
+            
+            {f'<div class="mb-4"><h6>Notas del Pedido</h6><div class="alert alert-info">{pedido.nota}</div></div>' if pedido.nota else ''}
+            
+            {f'<div class="mb-4"><h6>Novedades del Pedido</h6><div class="alert alert-warning">{pedido.admin_notes}</div></div>' if hasattr(pedido, 'admin_notes') and pedido.admin_notes else ''}
+        </div>
+        """
+        
+        return JsonResponse({
+            'success': True,
+            'html': html
+        })
+        
+    except (SimpleUser.DoesNotExist, Pedido.DoesNotExist):
+        return JsonResponse({
+            'success': False,
+            'message': 'Pedido no encontrado'
+        })
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def cancel_order(request):
+    """Cancelar un pedido"""
+    if not request.user.is_authenticated:
+        return JsonResponse({'success': False, 'message': 'Usuario no autenticado'})
+    
+    try:
+        data = json.loads(request.body)
+        order_id = data.get('order_id')
+        
+        simple_user = SimpleUser.objects.get(email=request.user.email)
+        pedido = Pedido.objects.get(id=order_id, user=simple_user)
+        
+        # Verificar que el pedido se puede cancelar
+        if hasattr(pedido, 'estado') and pedido.estado not in ['pending', None]:
+            return JsonResponse({
+                'success': False,
+                'message': 'Este pedido no se puede cancelar porque ya está en proceso'
+            })
+        
+        # Actualizar estado del pedido
+        pedido.estado = 'cancelled'
+        pedido.nota = 'Pedido cancelado por el cliente'
+        pedido.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Pedido cancelado exitosamente'
+        })
+        
+    except (SimpleUser.DoesNotExist, Pedido.DoesNotExist):
+        return JsonResponse({
+            'success': False,
+            'message': 'Pedido no encontrado'
+        })
+    except Exception as e:
+        logger.error(f"Error cancelling order: {e}")
+        return JsonResponse({
+            'success': False,
+            'message': 'Error al cancelar pedido'
+        })
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def start_conversation(request):
+    """Iniciar nueva conversación con soporte"""
+    # Verificar autenticación mediante sesión
+    if not request.session.get('simple_user_id'):
+        return JsonResponse({'success': False, 'message': 'Usuario no autenticado'})
+    
+    try:
+        data = json.loads(request.body)
+        subject = data.get('subject')
+        message = data.get('message')
+        
+        if not subject or not message:
+            return JsonResponse({
+                'success': False,
+                'message': 'Asunto y mensaje son requeridos'
+            })
+        
+        # Obtener usuario desde sesión
+        user_id = request.session.get('simple_user_id')
+        try:
+            simple_user = SimpleUser.objects.get(id=user_id)
+        except SimpleUser.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'message': 'Usuario no encontrado'
+            })
+        
+        # Crear conversación
+        conversation = Conversation.objects.create(
+            user=simple_user,
+            subject=f"{subject}: {data.get('order_id', 'Consulta general')}"
+        )
+        
+        # Crear primer mensaje
+        ConversationMessage.objects.create(
+            conversation=conversation,
+            user=simple_user,
+            message=message,
+            is_admin=False
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Consulta enviada exitosamente',
+            'conversation_id': conversation.id
+        })
+        
+    except Exception as e:
+        print(f"Error en start_conversation: {e}")
+        return JsonResponse({
+            'success': False,
+            'message': f'Error al crear conversación: {str(e)}'
+        })
+        return JsonResponse({
+            'success': False,
+            'message': 'Usuario no encontrado'
+        })
+    except Exception as e:
+        logger.error(f"Error starting conversation: {e}")
+        return JsonResponse({
+            'success': False,
+            'message': 'Error al crear conversación'
+        })
+
+
+@require_http_methods(["GET"])
+def get_conversations(request):
+    """Obtener lista de conversaciones del usuario"""
+    if not request.session.get('simple_user_id'):
+        return JsonResponse({'success': False, 'message': 'Usuario no autenticado'})
+    
+    try:
+        user_id = request.session.get('simple_user_id')
+        simple_user = SimpleUser.objects.get(id=user_id)
+        conversations = Conversation.objects.filter(user=simple_user)
+        
+        data = []
+        for conv in conversations:
+            data.append({
+                'id': conv.id,
+                'subject': conv.subject,
+                'last_message': conv.last_message,
+                'unread_count': conv.unread_count,
+                'updated_at': conv.updated_at.strftime('%d/%m/%Y %H:%M'),
+                'status': conv.status
+            })
+        
+        return JsonResponse({
+            'success': True,
+            'conversations': data
+        })
+        
+    except SimpleUser.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'message': 'Usuario no encontrado'
+        })
+
+
+@require_http_methods(["GET"])
+def get_conversation(request, conversation_id):
+    """Obtener mensajes de una conversación específica"""
+    if not request.session.get('simple_user_id'):
+        return JsonResponse({'success': False, 'message': 'Usuario no autenticado'})
+    
+    try:
+        user_id = request.session.get('simple_user_id')
+        simple_user = SimpleUser.objects.get(id=user_id)
+        conversation = Conversation.objects.get(id=conversation_id, user=simple_user)
+        
+        # Marcar mensajes como leídos
+        conversation.messages.filter(is_admin=True, is_read=False).update(is_read=True)
+        
+        messages = []
+        for msg in conversation.messages.all():
+            messages.append({
+                'message': msg.message,
+                'is_admin': msg.is_admin,
+                'created_at': msg.created_at.strftime('%d/%m/%Y %H:%M')
+            })
+        
+        return JsonResponse({
+            'success': True,
+            'conversation': {
+                'id': conversation.id,
+                'subject': conversation.subject,
+                'status': conversation.status,
+                'created_at': conversation.created_at.strftime('%d/%m/%Y'),
+                'messages': messages
             }
         })
         
-    except json.JSONDecodeError:
+    except (SimpleUser.DoesNotExist, Conversation.DoesNotExist):
         return JsonResponse({
-            'valid': False,
-            'message': 'Datos inválidos',
-            'discount_amount': 0
+            'success': False,
+            'message': 'Conversación no encontrada'
+        })
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def send_message(request):
+    """Enviar mensaje en una conversación"""
+    if not request.session.get('simple_user_id'):
+        return JsonResponse({'success': False, 'message': 'Usuario no autenticado'})
+    
+    try:
+        data = json.loads(request.body)
+        conversation_id = data.get('conversation_id')
+        message = data.get('message')
+        
+        if not conversation_id or not message:
+            return JsonResponse({
+                'success': False,
+                'message': 'ID de conversación y mensaje son requeridos'
+            })
+        
+        user_id = request.session.get('simple_user_id')
+        simple_user = SimpleUser.objects.get(id=user_id)
+        conversation = Conversation.objects.get(id=conversation_id, user=simple_user)
+        
+        # Crear mensaje
+        ConversationMessage.objects.create(
+            conversation=conversation,
+            user=simple_user,
+            message=message,
+            is_admin=False
+        )
+        
+        # Actualizar timestamp de la conversación
+        conversation.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Mensaje enviado exitosamente'
+        })
+        
+    except (SimpleUser.DoesNotExist, Conversation.DoesNotExist):
+        return JsonResponse({
+            'success': False,
+            'message': 'Conversación no encontrada'
         })
     except Exception as e:
+        logger.error(f"Error sending message: {e}")
         return JsonResponse({
-            'valid': False,
-            'message': f'Error del servidor: {str(e)}',
-            'discount_amount': 0
+            'success': False,
+            'message': 'Error al enviar mensaje'
         })

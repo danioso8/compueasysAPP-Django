@@ -1,0 +1,1627 @@
+{% load humanize %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Cuenta - CompuEasys</title>
+    
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #f8fafc;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --text-color: #1f2937;
+            --border-color: #e5e7eb;
+            --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        }
+
+        body {
+            background-color: var(--secondary-color);
+            color: var(--text-color);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+
+        .account-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #1d4ed8 100%);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+        }
+
+        .account-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .account-card:hover {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            transform: translateY(-2px);
+        }
+
+        .card-header-custom {
+            background: linear-gradient(90deg, #f8fafc 0%, #f1f5f9 100%);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1.5rem;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .sidebar-nav {
+            background: white;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .nav-pills .nav-link {
+            border-radius: 0;
+            color: var(--text-color);
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+        }
+
+        .nav-pills .nav-link:last-child {
+            border-bottom: none;
+        }
+
+        .nav-pills .nav-link:hover {
+            background-color: #f8fafc;
+            color: var(--primary-color);
+        }
+
+        .nav-pills .nav-link.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .nav-pills .nav-link i {
+            margin-right: 0.75rem;
+            width: 20px;
+        }
+
+        .status-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .status-pendiente, .status-pending {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-confirmado, .status-processing {
+            background-color: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .status-enviado, .status-shipped {
+            background-color: #e0f2fe;
+            color: #0277bd;
+        }
+
+        .status-llegando, .status-arriving {
+            background-color: #f3e8ff;
+            color: #7c3aed;
+        }
+
+        .status-entregado, .status-delivered {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+
+        .status-cancelado, .status-cancelled {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+
+        .order-timeline {
+            position: relative;
+            padding: 1rem 0;
+        }
+
+        .tracking-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .timeline-step {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            position: relative;
+            padding: 0.75rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .timeline-step:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            left: 1.5rem;
+            top: 3rem;
+            width: 2px;
+            height: 1rem;
+            background: #e5e7eb;
+            z-index: 1;
+        }
+
+        .timeline-step.completed::after {
+            background: var(--success-color);
+        }
+
+        .timeline-step.current::after {
+            background: linear-gradient(to bottom, var(--primary-color), #e5e7eb);
+        }
+
+        .step-icon {
+            width: 3rem;
+            height: 3rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            flex-shrink: 0;
+            z-index: 2;
+            position: relative;
+        }
+
+        .timeline-step .step-icon {
+            background: #f3f4f6;
+            color: #9ca3af;
+            border: 3px solid #e5e7eb;
+        }
+
+        .timeline-step.completed .step-icon {
+            background: var(--success-color);
+            color: white;
+            border: 3px solid #dcfce7;
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+        }
+
+        .timeline-step.current .step-icon {
+            background: var(--primary-color);
+            color: white;
+            border: 3px solid #dbeafe;
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+            animation: pulse 2s infinite;
+        }
+
+        .timeline-step.cancelled .step-icon {
+            background: var(--danger-color);
+            color: white;
+            border: 3px solid #fee2e2;
+            box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+            }
+            50% {
+                box-shadow: 0 0 0 8px rgba(37, 99, 235, 0.15);
+            }
+            100% {
+                box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+            }
+        }
+
+        .step-content {
+            flex: 1;
+            padding-top: 0.5rem;
+        }
+
+        .step-content strong {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+            display: block;
+        }
+
+        .timeline-step.completed .step-content strong {
+            color: var(--success-color);
+        }
+
+        .timeline-step.current .step-content strong {
+            color: var(--primary-color);
+        }
+
+        .timeline-step.cancelled .step-content strong {
+            color: var(--danger-color);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .tracking-steps {
+                gap: 0.75rem;
+            }
+
+            .step-icon {
+                width: 2.5rem;
+                height: 2.5rem;
+                font-size: 1rem;
+            }
+
+            .timeline-step:not(:last-child)::after {
+                left: 1.25rem;
+                top: 2.5rem;
+                height: 0.75rem;
+            }
+        }
+
+        .btn-custom {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary-custom {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary-custom:hover {
+            background-color: #1d4ed8;
+            border-color: #1d4ed8;
+            transform: translateY(-1px);
+            color: white;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.25);
+        }
+
+        .chat-container {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            background: #f8fafc;
+        }
+
+        .chat-message {
+            margin-bottom: 1rem;
+            padding: 0.75rem 1rem;
+            border-radius: 12px;
+            max-width: 80%;
+        }
+
+        .chat-message.user {
+            background: var(--primary-color);
+            color: white;
+            margin-left: auto;
+            border-bottom-right-radius: 4px;
+        }
+
+        .chat-message.admin {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-bottom-left-radius: 4px;
+        }
+
+        .stats-card {
+            text-align: center;
+            padding: 2rem 1rem;
+        }
+
+        .stats-card i {
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .stats-card h3 {
+            margin-bottom: 0.5rem;
+            color: var(--text-color);
+        }
+
+        .stats-card p {
+            color: #6b7280;
+            margin: 0;
+        }
+
+        @media (max-width: 768px) {
+            .account-header {
+                padding: 1rem 0;
+            }
+
+            .nav-pills .nav-link {
+                padding: 0.75rem 1rem;
+            }
+
+            .account-card {
+                margin-bottom: 1rem;
+            }
+        }
+
+        .verification-code-input {
+            text-align: center;
+            font-size: 1.5rem;
+            letter-spacing: 0.5rem;
+            padding: 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .verification-code-input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.25);
+        }
+
+        .toast-container {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 1055;
+        }
+    </style>
+</head>
+<body>
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    {% include 'navbarr.html' %}
+
+    <!-- Header -->
+    <div class="account-header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="mb-2">
+                        <i class="bi bi-person-circle me-3"></i>
+                        Mi Cuenta
+                    </h1>
+                    <p class="mb-0 opacity-75">Gestiona tu perfil, pedidos y configuración</p>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    <p class="mb-1"><strong>{{ request.user.first_name }} {{ request.user.last_name }}</strong></p>
+                    <p class="mb-0 opacity-75">{{ request.user.email }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="row">
+            <!-- Sidebar Navigation -->
+            <div class="col-lg-3 col-md-4 mb-4">
+                <div class="sidebar-nav">
+                    <ul class="nav nav-pills flex-column" id="account-tabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <a class="nav-link active" id="dashboard-tab" data-bs-toggle="pill" 
+                               href="#dashboard" role="tab" aria-controls="dashboard" aria-selected="true">
+                                <i class="bi bi-speedometer2"></i>
+                                Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <a class="nav-link" id="orders-tab" data-bs-toggle="pill" 
+                               href="#orders" role="tab" aria-controls="orders" aria-selected="false">
+                                <i class="bi bi-bag-check"></i>
+                                Mis Pedidos
+                                {% if pedidos.count > 0 %}
+                                    <span class="badge bg-primary ms-auto">{{ pedidos.count }}</span>
+                                {% endif %}
+                            </a>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <a class="nav-link" id="profile-tab" data-bs-toggle="pill" 
+                               href="#profile" role="tab" aria-controls="profile" aria-selected="false">
+                                <i class="bi bi-person-gear"></i>
+                                Mi Perfil
+                            </a>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <a class="nav-link" id="security-tab" data-bs-toggle="pill" 
+                               href="#security" role="tab" aria-controls="security" aria-selected="false">
+                                <i class="bi bi-shield-lock"></i>
+                                Seguridad
+                            </a>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <a class="nav-link" id="messages-tab" data-bs-toggle="pill" 
+                               href="#messages" role="tab" aria-controls="messages" aria-selected="false">
+                                <i class="bi bi-chat-dots"></i>
+                                Mensajes
+                                <span class="badge bg-warning ms-auto" id="unread-messages-count" style="display: none;">0</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-lg-9 col-md-8">
+                <div class="tab-content" id="account-content">
+                    
+                    <!-- Dashboard Tab -->
+                    <div class="tab-pane fade show active" id="dashboard" role="tabpanel" aria-labelledby="dashboard-tab">
+                        <div class="row">
+                            <!-- Stats Cards -->
+                            <div class="col-md-4 mb-4">
+                                <div class="account-card">
+                                    <div class="stats-card">
+                                        <i class="bi bi-bag-check"></i>
+                                        <h3>{{ pedidos.count }}</h3>
+                                        <p>Pedidos Totales</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-4">
+                                <div class="account-card">
+                                    <div class="stats-card">
+                                        <i class="bi bi-clock-history"></i>
+                                        <h3>{{ pedidos_pendientes }}</h3>
+                                        <p>Pedidos Pendientes</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-4">
+                                <div class="account-card">
+                                    <div class="stats-card">
+                                        <i class="bi bi-currency-dollar"></i>
+                                        <h3>${{ total_gastado|intcomma }}</h3>
+                                        <p>Total Gastado</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Recent Orders -->
+                        <div class="account-card">
+                            <div class="card-header-custom">
+                                <i class="bi bi-clock-history me-2"></i>
+                                Pedidos Recientes
+                            </div>
+                            <div class="card-body">
+                                {% if pedidos %}
+                                    {% for pedido in pedidos|slice:":3" %}
+                                        <div class="d-flex justify-content-between align-items-center py-3 {% if not forloop.last %}border-bottom{% endif %}">
+                                            <div class="flex-grow-1">
+                                                <h6 class="mb-1">Pedido #{{ pedido.id }}</h6>
+                                                <p class="mb-1 text-muted">{{ pedido.fecha|date:"d/m/Y H:i" }}</p>
+                                                <small class="text-muted">{{ pedido.detalles|truncatechars:50 }}</small>
+                                            </div>
+                                            <div class="text-end">
+                                                <span class="status-badge status-{{ pedido.estado|default:'pending' }}">
+                                                    {{ pedido.get_estado_display|default:"Pendiente" }}
+                                                </span>
+                                                <p class="mb-0 fw-bold">${{ pedido.total|intcomma }}</p>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                    <div class="text-center mt-3">
+                                        <button class="btn btn-primary-custom btn-custom" onclick="showTab('orders')">
+                                            Ver Todos los Pedidos
+                                        </button>
+                                    </div>
+                                {% else %}
+                                    <div class="text-center py-4">
+                                        <i class="bi bi-bag-x display-1 text-muted"></i>
+                                        <h5 class="mt-3">No tienes pedidos aún</h5>
+                                        <p class="text-muted">¡Explora nuestra tienda y haz tu primer pedido!</p>
+                                        <a href="{% url 'store' %}" class="btn btn-primary-custom btn-custom">
+                                            <i class="bi bi-shop me-2"></i>
+                                            Ir a la Tienda
+                                        </a>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Orders Tab -->
+                    <div class="tab-pane fade" id="orders" role="tabpanel" aria-labelledby="orders-tab">
+                        <div class="account-card">
+                            <div class="card-header-custom">
+                                <i class="bi bi-bag-check me-2"></i>
+                                Mis Pedidos
+                                <div class="float-end">
+                                    <select class="form-select form-select-sm" id="order-filter" style="width: auto;">
+                                        <option value="all">Todos los pedidos</option>
+                                        <option value="pendiente">Pendientes</option>
+                                        <option value="confirmado">Confirmados</option>
+                                        <option value="enviado">Enviados</option>
+                                        <option value="llegando">En camino</option>
+                                        <option value="entregado">Entregados</option>
+                                        <option value="cancelado">Cancelados</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="card-body" id="orders-container">
+                                {% if pedidos %}
+                                    {% for pedido in pedidos %}
+                                        <div class="order-item mb-4 p-4 border rounded" data-order-id="{{ pedido.id }}" data-status="{{ pedido.estado|default:'pendiente' }}">
+                                            <div class="row">
+                                                <div class="col-md-8">
+                                                    <div class="d-flex justify-content-between align-items-start mb-3">
+                                                        <div>
+                                                            <h5 class="mb-1">Pedido #{{ pedido.id }}</h5>
+                                                            <p class="text-muted mb-2">{{ pedido.fecha|date:"d/m/Y H:i" }}</p>
+                                                        </div>
+                                                        <span class="status-badge status-{{ pedido.estado|default:'pendiente' }}">
+                                                            {{ pedido.get_estado_display|default:"Pendiente" }}
+                                                        </span>
+                                                    </div>
+                                                    
+                                                    <div class="order-details mb-3">
+                                                        <h6>Detalles del pedido:</h6>
+                                                        <div class="bg-light p-3 rounded">
+                                                            <pre style="margin: 0; font-size: 0.9rem;">{{ pedido.detalles }}</pre>
+                                                        </div>
+                                                    </div>
+
+                                                    {% if pedido.nota %}
+                                                        <div class="order-notes mb-3">
+                                                            <h6>Notas del vendedor:</h6>
+                                                            <div class="alert alert-info">
+                                                                <i class="bi bi-info-circle me-2"></i>
+                                                                {{ pedido.nota }}
+                                                            </div>
+                                                        </div>
+                                                    {% endif %}
+
+                                                    {% if pedido.admin_notes %}
+                                                        <div class="admin-notes mb-3">
+                                                            <h6>Novedades del pedido:</h6>
+                                                            <div class="alert alert-warning">
+                                                                <i class="bi bi-exclamation-triangle me-2"></i>
+                                                                {{ pedido.admin_notes }}
+                                                            </div>
+                                                        </div>
+                                                    {% endif %}
+
+                                                    <!-- Order Timeline - Ruta de Seguimiento -->
+                                                    <div class="order-timeline mt-4">
+                                                        <h6 class="mb-3">
+                                                            <i class="bi bi-truck me-2"></i>Estado del Pedido
+                                                        </h6>
+                                                        <div class="tracking-steps">
+                                                            <!-- Paso 1: Pedido Confirmado -->
+                                                            <div class="timeline-step {% if pedido.estado == 'confirmado' or pedido.estado == 'enviado' or pedido.estado == 'llegando' or pedido.estado == 'entregado' %}completed{% elif pedido.estado == 'pendiente' %}current{% endif %}">
+                                                                <div class="step-icon">
+                                                                    {% if pedido.estado == 'confirmado' or pedido.estado == 'enviado' or pedido.estado == 'llegando' or pedido.estado == 'entregado' %}
+                                                                        <i class="bi bi-check-circle-fill"></i>
+                                                                    {% elif pedido.estado == 'pendiente' %}
+                                                                        <i class="bi bi-clock-fill"></i>
+                                                                    {% else %}
+                                                                        <i class="bi bi-circle"></i>
+                                                                    {% endif %}
+                                                                </div>
+                                                                <div class="step-content">
+                                                                    <strong>Pedido Confirmado</strong>
+                                                                    <small class="d-block text-muted">{{ pedido.fecha|date:"d/m/Y H:i" }}</small>
+                                                                </div>
+                                                            </div>
+
+                                                            <!-- Paso 2: En Proceso -->
+                                                            <div class="timeline-step {% if pedido.estado == 'enviado' or pedido.estado == 'llegando' or pedido.estado == 'entregado' %}completed{% elif pedido.estado == 'confirmado' %}current{% endif %}">
+                                                                <div class="step-icon">
+                                                                    {% if pedido.estado == 'enviado' or pedido.estado == 'llegando' or pedido.estado == 'entregado' %}
+                                                                        <i class="bi bi-check-circle-fill"></i>
+                                                                    {% elif pedido.estado == 'confirmado' %}
+                                                                        <i class="bi bi-arrow-repeat"></i>
+                                                                    {% else %}
+                                                                        <i class="bi bi-circle"></i>
+                                                                    {% endif %}
+                                                                </div>
+                                                                <div class="step-content">
+                                                                    <strong>En Proceso</strong>
+                                                                    <small class="d-block text-muted">
+                                                                        {% if pedido.estado == 'confirmado' %}
+                                                                            Preparando tu pedido...
+                                                                        {% elif pedido.estado == 'enviado' or pedido.estado == 'llegando' or pedido.estado == 'entregado' %}
+                                                                            Pedido preparado
+                                                                        {% else %}
+                                                                            Esperando confirmación
+                                                                        {% endif %}
+                                                                    </small>
+                                                                </div>
+                                                            </div>
+
+                                                            <!-- Paso 3: Enviado -->
+                                                            <div class="timeline-step {% if pedido.estado == 'llegando' or pedido.estado == 'entregado' %}completed{% elif pedido.estado == 'enviado' %}current{% endif %}">
+                                                                <div class="step-icon">
+                                                                    {% if pedido.estado == 'llegando' or pedido.estado == 'entregado' %}
+                                                                        <i class="bi bi-check-circle-fill"></i>
+                                                                    {% elif pedido.estado == 'enviado' %}
+                                                                        <i class="bi bi-truck"></i>
+                                                                    {% else %}
+                                                                        <i class="bi bi-circle"></i>
+                                                                    {% endif %}
+                                                                </div>
+                                                                <div class="step-content">
+                                                                    <strong>Enviado</strong>
+                                                                    <small class="d-block text-muted">
+                                                                        {% if pedido.estado == 'enviado' %}
+                                                                            Tu pedido está en camino
+                                                                        {% elif pedido.fecha_enviado %}
+                                                                            {{ pedido.fecha_enviado|date:"d/m/Y H:i" }}
+                                                                        {% elif pedido.estado == 'llegando' or pedido.estado == 'entregado' %}
+                                                                            Pedido enviado
+                                                                        {% else %}
+                                                                            Esperando envío
+                                                                        {% endif %}
+                                                                    </small>
+                                                                </div>
+                                                            </div>
+
+                                                            <!-- Paso 4: En Camino -->
+                                                            <div class="timeline-step {% if pedido.estado == 'entregado' %}completed{% elif pedido.estado == 'llegando' %}current{% endif %}">
+                                                                <div class="step-icon">
+                                                                    {% if pedido.estado == 'entregado' %}
+                                                                        <i class="bi bi-check-circle-fill"></i>
+                                                                    {% elif pedido.estado == 'llegando' %}
+                                                                        <i class="bi bi-geo-alt-fill"></i>
+                                                                    {% else %}
+                                                                        <i class="bi bi-circle"></i>
+                                                                    {% endif %}
+                                                                </div>
+                                                                <div class="step-content">
+                                                                    <strong>En Camino</strong>
+                                                                    <small class="d-block text-muted">
+                                                                        {% if pedido.estado == 'llegando' %}
+                                                                            Llegando a tu dirección...
+                                                                        {% elif pedido.estado == 'entregado' %}
+                                                                            Llegó a destino
+                                                                        {% else %}
+                                                                            Próximo a salir
+                                                                        {% endif %}
+                                                                    </small>
+                                                                </div>
+                                                            </div>
+
+                                                            <!-- Paso 5: Entregado -->
+                                                            <div class="timeline-step {% if pedido.estado == 'entregado' %}completed{% endif %}">
+                                                                <div class="step-icon">
+                                                                    {% if pedido.estado == 'entregado' %}
+                                                                        <i class="bi bi-check-circle-fill"></i>
+                                                                    {% else %}
+                                                                        <i class="bi bi-circle"></i>
+                                                                    {% endif %}
+                                                                </div>
+                                                                <div class="step-content">
+                                                                    <strong>Entregado</strong>
+                                                                    <small class="d-block text-muted">
+                                                                        {% if pedido.estado == 'entregado' %}
+                                                                            {% if pedido.fecha_entregado %}
+                                                                                {{ pedido.fecha_entregado|date:"d/m/Y H:i" }}
+                                                                            {% else %}
+                                                                                ¡Disfruta tu compra!
+                                                                            {% endif %}
+                                                                        {% else %}
+                                                                            Esperando entrega
+                                                                        {% endif %}
+                                                                    </small>
+                                                                </div>
+                                                            </div>
+
+                                                            <!-- Estado Cancelado (si aplica) -->
+                                                            {% if pedido.estado == 'cancelado' %}
+                                                            <div class="timeline-step cancelled">
+                                                                <div class="step-icon">
+                                                                    <i class="bi bi-x-circle-fill"></i>
+                                                                </div>
+                                                                <div class="step-content">
+                                                                    <strong>Pedido Cancelado</strong>
+                                                                    <small class="d-block text-muted">El pedido fue cancelado</small>
+                                                                </div>
+                                                            </div>
+                                                            {% endif %}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="col-md-4 text-end">
+                                                    <div class="mb-3">
+                                                        <h4 class="text-primary">${{ pedido.total|intcomma }}</h4>
+                                                        <small class="text-muted">Total del pedido</small>
+                                                    </div>
+                                                    
+                                                    <div class="d-grid gap-2">
+                                                        <button class="btn btn-outline-primary btn-sm" onclick="viewOrderDetails({{ pedido.id }})">
+                                                            <i class="bi bi-eye me-1"></i>
+                                                            Ver Detalles
+                                                        </button>
+                                                        
+                                                        {% if pedido.estado == 'pending' %}
+                                                            <button class="btn btn-outline-danger btn-sm" onclick="cancelOrder({{ pedido.id }})">
+                                                                <i class="bi bi-x-circle me-1"></i>
+                                                                Cancelar
+                                                            </button>
+                                                        {% endif %}
+                                                        
+                                                        <button class="btn btn-outline-info btn-sm" onclick="contactSupport({{ pedido.id }})">
+                                                            <i class="bi bi-chat-dots me-1"></i>
+                                                            Contactar
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="text-center py-5">
+                                        <i class="bi bi-bag-x display-1 text-muted"></i>
+                                        <h5 class="mt-3">No tienes pedidos aún</h5>
+                                        <p class="text-muted">¡Explora nuestra tienda y haz tu primer pedido!</p>
+                                        <a href="{% url 'store' %}" class="btn btn-primary-custom btn-custom">
+                                            <i class="bi bi-shop me-2"></i>
+                                            Ir a la Tienda
+                                        </a>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Profile Tab -->
+                    <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
+                        <div class="account-card">
+                            <div class="card-header-custom">
+                                <i class="bi bi-person-gear me-2"></i>
+                                Mi Perfil
+                            </div>
+                            <div class="card-body">
+                                <form id="profile-form">
+                                    {% csrf_token %}
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label for="first_name" class="form-label">Nombres</label>
+                                            <input type="text" class="form-control" id="first_name" name="first_name" 
+                                                   value="{{ request.user.first_name }}" required>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="last_name" class="form-label">Apellidos</label>
+                                            <input type="text" class="form-control" id="last_name" name="last_name" 
+                                                   value="{{ request.user.last_name }}" required>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label for="email" class="form-label">Email</label>
+                                            <input type="email" class="form-control" id="email" name="email" 
+                                                   value="{{ request.user.email }}" readonly>
+                                            <div class="form-text">
+                                                <i class="bi bi-info-circle me-1"></i>
+                                                Para cambiar el email, contacta soporte
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="phone" class="form-label">Teléfono</label>
+                                            <input type="tel" class="form-control" id="phone" name="phone" 
+                                                   value="{{ user_profile.telefono|default:'' }}" placeholder="300 123 4567">
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-8 mb-3">
+                                            <label for="address" class="form-label">Dirección</label>
+                                            <input type="text" class="form-control" id="address" name="address" 
+                                                   value="{{ user_profile.address|default:'' }}" placeholder="Calle 123 # 45-67">
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label for="city" class="form-label">Ciudad</label>
+                                            <input type="text" class="form-control" id="city" name="city" 
+                                                   value="{{ user_profile.city|default:'' }}" placeholder="Bogotá">
+                                        </div>
+                                    </div>
+
+                                    <div class="alert alert-info">
+                                        <i class="bi bi-shield-check me-2"></i>
+                                        <strong>Verificación requerida:</strong> Los cambios en información sensible requieren 
+                                        verificación por email para mayor seguridad.
+                                    </div>
+
+                                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                        <button type="button" class="btn btn-outline-secondary" onclick="resetProfileForm()">
+                                            <i class="bi bi-arrow-clockwise me-1"></i>
+                                            Restaurar
+                                        </button>
+                                        <button type="submit" class="btn btn-primary-custom btn-custom">
+                                            <i class="bi bi-check-lg me-1"></i>
+                                            Guardar Cambios
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Security Tab -->
+                    <div class="tab-pane fade" id="security" role="tabpanel" aria-labelledby="security-tab">
+                        <div class="account-card">
+                            <div class="card-header-custom">
+                                <i class="bi bi-shield-lock me-2"></i>
+                                Seguridad y Contraseña
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6 class="mb-3">Cambiar Contraseña</h6>
+                                        <form id="password-form">
+                                            {% csrf_token %}
+                                            <div class="mb-3">
+                                                <label for="current_password" class="form-label">Contraseña Actual</label>
+                                                <input type="password" class="form-control" id="current_password" 
+                                                       name="current_password" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="new_password" class="form-label">Nueva Contraseña</label>
+                                                <input type="password" class="form-control" id="new_password" 
+                                                       name="new_password" required>
+                                                <div class="form-text">
+                                                    Mínimo 8 caracteres, incluye números y letras
+                                                </div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="confirm_password" class="form-label">Confirmar Nueva Contraseña</label>
+                                                <input type="password" class="form-control" id="confirm_password" 
+                                                       name="confirm_password" required>
+                                            </div>
+                                            <button type="submit" class="btn btn-primary-custom btn-custom">
+                                                <i class="bi bi-shield-check me-1"></i>
+                                                Cambiar Contraseña
+                                            </button>
+                                        </form>
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <h6 class="mb-3">Información de Seguridad</h6>
+                                        <div class="security-info">
+                                            <div class="d-flex align-items-center mb-3 p-3 bg-light rounded">
+                                                <i class="bi bi-shield-check text-success me-3 fs-4"></i>
+                                                <div>
+                                                    <strong>Cuenta Verificada</strong>
+                                                    <small class="d-block text-muted">Tu email está verificado</small>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="d-flex align-items-center mb-3 p-3 bg-light rounded">
+                                                <i class="bi bi-clock-history text-info me-3 fs-4"></i>
+                                                <div>
+                                                    <strong>Último acceso</strong>
+                                                    <small class="d-block text-muted">{{ request.user.last_login|date:"d/m/Y H:i"|default:"No disponible" }}</small>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="d-flex align-items-center mb-3 p-3 bg-light rounded">
+                                                <i class="bi bi-calendar-check text-primary me-3 fs-4"></i>
+                                                <div>
+                                                    <strong>Miembro desde</strong>
+                                                    <small class="d-block text-muted">{{ request.user.date_joined|date:"d/m/Y" }}</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Messages Tab -->
+                    <div class="tab-pane fade" id="messages" role="tabpanel" aria-labelledby="messages-tab">
+                        <div class="account-card">
+                            <div class="card-header-custom">
+                                <i class="bi bi-chat-dots me-2"></i>
+                                Centro de Mensajes
+                                <div class="float-end">
+                                    <button class="btn btn-sm btn-primary-custom" onclick="startNewConversation()">
+                                        <i class="bi bi-plus-circle me-1"></i>
+                                        Nueva Consulta
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <h6 class="mb-3">Conversaciones</h6>
+                                        <div id="conversations-list">
+                                            <!-- Conversations will be loaded here -->
+                                            <div class="text-center py-4 text-muted">
+                                                <i class="bi bi-chat display-4"></i>
+                                                <p class="mt-2">No hay conversaciones aún</p>
+                                                <small>Inicia una nueva consulta para contactar soporte</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-8">
+                                        <div id="chat-area" class="d-none">
+                                            <div class="chat-header p-3 border-bottom bg-light rounded-top">
+                                                <h6 class="mb-1" id="chat-title">Conversación con Soporte</h6>
+                                                <small class="text-muted" id="chat-subtitle">Estamos aquí para ayudarte</small>
+                                            </div>
+                                            
+                                            <div class="chat-container" id="chat-messages">
+                                                <!-- Messages will appear here -->
+                                            </div>
+                                            
+                                            <div class="chat-input p-3 border-top">
+                                                <form id="message-form" class="d-flex">
+                                                    <input type="hidden" id="conversation-id" value="">
+                                                    <input type="text" class="form-control me-2" id="message-input" 
+                                                           placeholder="Escribe tu mensaje..." required>
+                                                    <button type="submit" class="btn btn-primary-custom">
+                                                        <i class="bi bi-send"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                        
+                                        <div id="no-conversation" class="text-center py-5">
+                                            <i class="bi bi-chat-quote display-1 text-muted"></i>
+                                            <h5 class="mt-3">Selecciona una conversación</h5>
+                                            <p class="text-muted">O inicia una nueva consulta para contactar con nuestro equipo</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+
+    <!-- Email Verification Modal -->
+    <div class="modal fade" id="emailVerificationModal" tabindex="-1" aria-labelledby="emailVerificationModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="emailVerificationModalLabel">
+                        <i class="bi bi-shield-check me-2"></i>
+                        Verificación de Seguridad
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <div class="mb-4">
+                        <i class="bi bi-envelope-check display-1 text-primary"></i>
+                    </div>
+                    <h6 class="mb-3">Código de Verificación Enviado</h6>
+                    <p class="text-muted mb-4">
+                        Hemos enviado un código de 6 dígitos a tu email registrado para verificar los cambios.
+                    </p>
+                    <div class="mb-3">
+                        <input type="text" class="form-control verification-code-input" id="verification-code" 
+                               placeholder="000000" maxlength="6" pattern="[0-9]{6}">
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="button" class="btn btn-primary-custom btn-custom" onclick="verifyCode()">
+                            <i class="bi bi-check-lg me-1"></i>
+                            Verificar Código
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" onclick="resendCode()">
+                            <i class="bi bi-arrow-clockwise me-1"></i>
+                            Reenviar Código
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Details Modal -->
+    <div class="modal fade" id="orderDetailsModal" tabindex="-1" aria-labelledby="orderDetailsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="orderDetailsModalLabel">
+                        <i class="bi bi-receipt me-2"></i>
+                        Detalles del Pedido
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="order-details-content">
+                    <!-- Order details will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Conversation Modal -->
+    <div class="modal fade" id="newConversationModal" tabindex="-1" aria-labelledby="newConversationModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="newConversationModalLabel">
+                        <i class="bi bi-chat-dots me-2"></i>
+                        Nueva Consulta
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="new-conversation-form">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="conversation-subject" class="form-label">Asunto</label>
+                            <select class="form-select" id="conversation-subject" name="subject" required>
+                                <option value="">Selecciona un asunto</option>
+                                <option value="order">Consulta sobre pedido</option>
+                                <option value="product">Información de producto</option>
+                                <option value="delivery">Problemas de entrega</option>
+                                <option value="payment">Problemas de pago</option>
+                                <option value="refund">Devolución/Reembolso</option>
+                                <option value="other">Otro</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="conversation-message" class="form-label">Mensaje</label>
+                            <textarea class="form-control" id="conversation-message" name="message" 
+                                      rows="4" placeholder="Describe tu consulta..." required></textarea>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary-custom btn-custom">
+                                <i class="bi bi-send me-1"></i>
+                                Enviar Consulta
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Custom JavaScript -->
+    <script>
+        // Global variables
+        let currentConversation = null;
+        let pendingChanges = null;
+
+        // CSRF token function
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Toast notification system
+        function showToast(message, type = 'info', duration = 5000) {
+            const toastContainer = document.getElementById('toast-container');
+            const toastId = 'toast-' + Date.now();
+            
+            const toastHtml = `
+                <div class="toast align-items-center text-white bg-${type === 'error' ? 'danger' : type === 'success' ? 'success' : 'primary'}" 
+                     role="alert" aria-live="assertive" aria-atomic="true" id="${toastId}">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            <i class="bi bi-${type === 'error' ? 'x-circle' : type === 'success' ? 'check-circle' : 'info-circle'} me-2"></i>
+                            ${message}
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" 
+                                data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                </div>
+            `;
+            
+            toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+            const toastElement = document.getElementById(toastId);
+            const toast = new bootstrap.Toast(toastElement, { delay: duration });
+            toast.show();
+            
+            toastElement.addEventListener('hidden.bs.toast', () => {
+                toastElement.remove();
+            });
+        }
+
+        // Tab navigation functions
+        function showTab(tabName) {
+            const tab = document.getElementById(`${tabName}-tab`);
+            const tabInstance = new bootstrap.Tab(tab);
+            tabInstance.show();
+        }
+
+        // Profile form functions
+        document.getElementById('profile-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            pendingChanges = Object.fromEntries(formData.entries());
+            
+            // Send verification email
+            try {
+                const response = await fetch('/api/send-verification-email/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({
+                        action: 'profile_update',
+                        changes: pendingChanges
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    const modal = new bootstrap.Modal(document.getElementById('emailVerificationModal'));
+                    modal.show();
+                } else {
+                    showToast(data.message || 'Error al enviar código de verificación', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('Error de conexión', 'error');
+            }
+        });
+
+        function resetProfileForm() {
+            document.getElementById('profile-form').reset();
+            showToast('Formulario restaurado', 'info');
+        }
+
+        // Password form functions
+        document.getElementById('password-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const newPassword = document.getElementById('new_password').value;
+            const confirmPassword = document.getElementById('confirm_password').value;
+            
+            if (newPassword !== confirmPassword) {
+                showToast('Las contraseñas no coinciden', 'error');
+                return;
+            }
+            
+            if (newPassword.length < 8) {
+                showToast('La contraseña debe tener al menos 8 caracteres', 'error');
+                return;
+            }
+            
+            const formData = new FormData(this);
+            pendingChanges = Object.fromEntries(formData.entries());
+            pendingChanges.action = 'change_password';
+            
+            // Send verification email
+            try {
+                const response = await fetch('/api/send-verification-email/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({
+                        action: 'password_change',
+                        current_password: pendingChanges.current_password
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    const modal = new bootstrap.Modal(document.getElementById('emailVerificationModal'));
+                    modal.show();
+                } else {
+                    showToast(data.message || 'Error al enviar código de verificación', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('Error de conexión', 'error');
+            }
+        });
+
+        // Email verification functions
+        async function verifyCode() {
+            const code = document.getElementById('verification-code').value;
+            
+            if (code.length !== 6 || !/^\d{6}$/.test(code)) {
+                showToast('Ingresa un código de 6 dígitos válido', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/verify-code/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({
+                        code: code,
+                        changes: pendingChanges
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast('Cambios aplicados exitosamente', 'success');
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('emailVerificationModal'));
+                    modal.hide();
+                    
+                    // Reload page to show updated data
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2000);
+                } else {
+                    showToast(data.message || 'Código de verificación inválido', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('Error de conexión', 'error');
+            }
+        }
+
+        async function resendCode() {
+            try {
+                const response = await fetch('/api/resend-verification-code/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast('Nuevo código enviado', 'success');
+                } else {
+                    showToast(data.message || 'Error al reenviar código', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('Error de conexión', 'error');
+            }
+        }
+
+        // Order functions
+        async function viewOrderDetails(orderId) {
+            try {
+                const response = await fetch(`/api/order-details/${orderId}/`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('order-details-content').innerHTML = data.html;
+                    const modal = new bootstrap.Modal(document.getElementById('orderDetailsModal'));
+                    modal.show();
+                } else {
+                    showToast('Error al cargar detalles del pedido', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('Error de conexión', 'error');
+            }
+        }
+
+        async function cancelOrder(orderId) {
+            const result = await Swal.fire({
+                title: '¿Cancelar pedido?',
+                text: 'Esta acción no se puede deshacer',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Sí, cancelar',
+                cancelButtonText: 'No, mantener'
+            });
+            
+            if (result.isConfirmed) {
+                try {
+                    const response = await fetch('/api/cancel-order/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCookie('csrftoken')
+                        },
+                        body: JSON.stringify({
+                            order_id: orderId
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        showToast('Pedido cancelado exitosamente', 'success');
+                        // Update order status in UI
+                        const orderElement = document.querySelector(`[data-order-id="${orderId}"]`);
+                        if (orderElement) {
+                            const statusBadge = orderElement.querySelector('.status-badge');
+                            statusBadge.className = 'status-badge status-cancelled';
+                            statusBadge.textContent = 'Cancelado';
+                            
+                            // Hide cancel button
+                            const cancelBtn = orderElement.querySelector('button[onclick*="cancelOrder"]');
+                            if (cancelBtn) cancelBtn.remove();
+                        }
+                    } else {
+                        showToast(data.message || 'Error al cancelar pedido', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    showToast('Error de conexión', 'error');
+                }
+            }
+        }
+
+        function contactSupport(orderId) {
+            showTab('messages');
+            // Pre-fill new conversation with order reference
+            setTimeout(() => {
+                startNewConversation(orderId);
+            }, 500);
+        }
+
+        // Order filtering
+        document.getElementById('order-filter').addEventListener('change', function() {
+            const filterValue = this.value;
+            const orderItems = document.querySelectorAll('.order-item');
+            
+            orderItems.forEach(item => {
+                const status = item.getAttribute('data-status');
+                if (filterValue === 'all' || status === filterValue) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+
+        // Messaging functions
+        function startNewConversation(orderId = null) {
+            const modal = new bootstrap.Modal(document.getElementById('newConversationModal'));
+            modal.show();
+            
+            if (orderId) {
+                document.getElementById('conversation-subject').value = 'order';
+                document.getElementById('conversation-message').value = `Consulta sobre el pedido #${orderId}\n\n`;
+            }
+        }
+
+        document.getElementById('new-conversation-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData.entries());
+            
+            try {
+                const response = await fetch('/api/start-conversation/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showToast('Consulta enviada exitosamente', 'success');
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('newConversationModal'));
+                    modal.hide();
+                    
+                    // Reload conversations
+                    loadConversations();
+                    
+                    // Clear form
+                    this.reset();
+                } else {
+                    showToast(result.message || 'Error al enviar consulta', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('Error de conexión', 'error');
+            }
+        });
+
+        async function loadConversations() {
+            try {
+                const response = await fetch('/api/conversations/');
+                const data = await response.json();
+                
+                if (data.success) {
+                    updateConversationsList(data.conversations);
+                }
+            } catch (error) {
+                console.error('Error loading conversations:', error);
+            }
+        }
+
+        function updateConversationsList(conversations) {
+            const container = document.getElementById('conversations-list');
+            
+            if (conversations.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-4 text-muted">
+                        <i class="bi bi-chat display-4"></i>
+                        <p class="mt-2">No hay conversaciones aún</p>
+                        <small>Inicia una nueva consulta para contactar soporte</small>
+                    </div>
+                `;
+                return;
+            }
+            
+            const html = conversations.map(conv => `
+                <div class="conversation-item p-3 border-bottom cursor-pointer" 
+                     onclick="loadConversation(${conv.id})" data-conversation-id="${conv.id}">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1">${conv.subject}</h6>
+                            <p class="mb-1 text-muted small">${conv.last_message}</p>
+                            <small class="text-muted">${conv.updated_at}</small>
+                        </div>
+                        ${conv.unread_count > 0 ? `<span class="badge bg-primary">${conv.unread_count}</span>` : ''}
+                    </div>
+                </div>
+            `).join('');
+            
+            container.innerHTML = html;
+            
+            // Update unread messages count
+            const totalUnread = conversations.reduce((sum, conv) => sum + conv.unread_count, 0);
+            const badge = document.getElementById('unread-messages-count');
+            if (totalUnread > 0) {
+                badge.textContent = totalUnread;
+                badge.style.display = 'inline-block';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        async function loadConversation(conversationId) {
+            try {
+                const response = await fetch(`/api/conversation/${conversationId}/`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentConversation = conversationId;
+                    updateChatArea(data.conversation);
+                }
+            } catch (error) {
+                console.error('Error loading conversation:', error);
+            }
+        }
+
+        function updateChatArea(conversation) {
+            document.getElementById('chat-title').textContent = conversation.subject;
+            document.getElementById('chat-subtitle').textContent = `Iniciado el ${conversation.created_at}`;
+            document.getElementById('conversation-id').value = conversation.id;
+            
+            const messagesContainer = document.getElementById('chat-messages');
+            const html = conversation.messages.map(msg => `
+                <div class="chat-message ${msg.is_admin ? 'admin' : 'user'}">
+                    <div class="message-content">
+                        ${msg.message}
+                    </div>
+                    <small class="text-muted d-block mt-1">
+                        ${msg.is_admin ? 'Soporte' : 'Tú'} • ${msg.created_at}
+                    </small>
+                </div>
+            `).join('');
+            
+            messagesContainer.innerHTML = html;
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            
+            document.getElementById('chat-area').classList.remove('d-none');
+            document.getElementById('no-conversation').classList.add('d-none');
+        }
+
+        document.getElementById('message-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const messageInput = document.getElementById('message-input');
+            const message = messageInput.value.trim();
+            const conversationId = document.getElementById('conversation-id').value;
+            
+            if (!message || !conversationId) return;
+            
+            try {
+                const response = await fetch('/api/send-message/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({
+                        conversation_id: conversationId,
+                        message: message
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Add message to chat immediately
+                    const messagesContainer = document.getElementById('chat-messages');
+                    messagesContainer.insertAdjacentHTML('beforeend', `
+                        <div class="chat-message user">
+                            <div class="message-content">${message}</div>
+                            <small class="text-muted d-block mt-1">Tú • Ahora</small>
+                        </div>
+                    `);
+                    
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                    messageInput.value = '';
+                    
+                    // Update conversation in list
+                    loadConversations();
+                } else {
+                    showToast(data.message || 'Error al enviar mensaje', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('Error de conexión', 'error');
+            }
+        });
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load conversations if on messages tab
+            const messagesTab = document.getElementById('messages-tab');
+            messagesTab.addEventListener('shown.bs.tab', function() {
+                loadConversations();
+            });
+            
+            // Auto-refresh conversations every 30 seconds when on messages tab
+            setInterval(() => {
+                const activeTab = document.querySelector('.tab-pane.active');
+                if (activeTab && activeTab.id === 'messages') {
+                    loadConversations();
+                    
+                    // Reload current conversation if open
+                    if (currentConversation) {
+                        loadConversation(currentConversation);
+                    }
+                }
+            }, 30000);
+            
+            // Initialize verification code input
+            const verificationInput = document.getElementById('verification-code');
+            verificationInput.addEventListener('input', function() {
+                this.value = this.value.replace(/[^0-9]/g, '').slice(0, 6);
+            });
+            
+            // Initialize tooltips
+            const tooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+            tooltips.forEach(tooltip => {
+                new bootstrap.Tooltip(tooltip);
+            });
+        });
+    </script>
+</body>
+</html>

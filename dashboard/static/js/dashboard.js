@@ -1295,4 +1295,454 @@ document.addEventListener('DOMContentLoaded', function() {
   touchElements.forEach(element => {
     element.style.touchAction = 'manipulation';
   });
+
+  // ========== MANEJO DE BONOS DE DESCUENTO ==========
+  
+  // Función auxiliar para formatear fecha
+  function formatDateTime(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  }
+  
+  // Configurar atributos min para todos los inputs de fecha al cargar
+  function configurarFechasMinimas() {
+    const now = new Date();
+    const minDate = new Date(now.getTime() - 5 * 60 * 1000); // 5 minutos atrás
+    const minDateStr = formatDateTime(minDate);
+    
+    // Aplicar a todos los inputs datetime-local en modales de bonos
+    const fechaInputs = document.querySelectorAll('#modalNuevoBono input[type="datetime-local"], #modalEditarBono input[type="datetime-local"]');
+    fechaInputs.forEach(input => {
+      if (input.id === 'fecha_inicio' || input.name === 'fecha_inicio') {
+        input.min = minDateStr;
+        console.log(`📅 Configurado min para ${input.id}:`, minDateStr);
+      }
+    });
+  }
+  
+  // Ejecutar configuración inicial
+  configurarFechasMinimas();
+  
+  // Configurar fechas por defecto cuando se abre el modal de crear bono
+  const modalNuevoBono = document.getElementById('modalNuevoBono');
+  if (modalNuevoBono) {
+    modalNuevoBono.addEventListener('show.bs.modal', function () {
+      console.log('🎯 Abriendo modal de crear bono');
+      
+      // Obtener fecha y hora actual
+      const now = new Date();
+      console.log('⏰ Fecha actual:', now.toLocaleString());
+      
+      // Para fecha de inicio: hora actual
+      const fechaInicio = new Date(now);
+      // Para fecha de fin: una semana después
+      const fechaFin = new Date(now);
+      fechaFin.setDate(fechaFin.getDate() + 7);
+      
+      // Establecer valores por defecto
+      const fechaInicioInput = document.getElementById('fecha_inicio');
+      const fechaFinInput = document.getElementById('fecha_fin');
+      
+      if (fechaInicioInput) {
+        // Configurar valor mínimo para permitir fechas desde 5 minutos atrás
+        const minDate = new Date(now.getTime() - 5 * 60 * 1000); // 5 minutos atrás
+        const minDateStr = formatDateTime(minDate);
+        const fechaInicioStr = formatDateTime(fechaInicio);
+        
+        fechaInicioInput.min = minDateStr;
+        fechaInicioInput.value = fechaInicioStr;
+        
+        console.log('📅 Fecha mínima permitida:', minDate.toLocaleString());
+        console.log('📅 Fecha inicio establecida:', fechaInicio.toLocaleString());
+        console.log('📅 Valor min del input:', fechaInicioInput.min);
+        console.log('📅 Valor del input:', fechaInicioInput.value);
+        console.log('📅 Input es válido:', fechaInicioInput.checkValidity());
+      }
+      
+      if (fechaFinInput) {
+        // Para fecha fin, mínimo debe ser posterior a fecha inicio
+        fechaFinInput.min = formatDateTime(fechaInicio);
+        fechaFinInput.value = formatDateTime(fechaFin);
+        console.log('📅 Fecha fin establecida:', fechaFinInput.value);
+      }
+      
+      // Limpiar otros campos del formulario
+      const form = modalNuevoBono.querySelector('form');
+      if (form) {
+        const inputs = form.querySelectorAll('input:not([type="datetime-local"]), select, textarea');
+        inputs.forEach(input => {
+          if (input.type === 'checkbox') {
+            input.checked = input.getAttribute('checked') !== null;
+          } else if (input.tagName === 'SELECT') {
+            input.selectedIndex = 0;
+          } else {
+            input.value = input.defaultValue || '';
+          }
+        });
+      }
+    });
+    
+    // Validación de fechas en tiempo real
+    const fechaInicioInput = document.getElementById('fecha_inicio');
+    const fechaFinInput = document.getElementById('fecha_fin');
+    
+    if (fechaInicioInput && fechaFinInput) {
+      // Validar cuando cambie fecha de inicio
+      fechaInicioInput.addEventListener('change', function() {
+        const fechaInicio = new Date(this.value);
+        const fechaFinValue = fechaFinInput.value;
+        
+        // Actualizar el mínimo permitido para fecha fin
+        fechaFinInput.min = formatDateTime(fechaInicio);
+        
+        if (fechaFinValue) {
+          const fechaFin = new Date(fechaFinValue);
+          if (fechaFin <= fechaInicio) {
+            // Establecer fecha fin una hora después de fecha inicio
+            const nuevaFechaFin = new Date(fechaInicio);
+            nuevaFechaFin.setHours(nuevaFechaFin.getHours() + 1);
+            fechaFinInput.value = formatDateTime(nuevaFechaFin);
+            
+            showToast('Fecha de fin ajustada automáticamente', 'info');
+          }
+        }
+      });
+      
+      // Validar cuando cambie fecha de fin
+      fechaFinInput.addEventListener('change', function() {
+        const fechaFin = new Date(this.value);
+        const fechaInicioValue = fechaInicioInput.value;
+        
+        if (fechaInicioValue) {
+          const fechaInicio = new Date(fechaInicioValue);
+          if (fechaFin <= fechaInicio) {
+            showToast('La fecha de fin debe ser posterior a la fecha de inicio', 'error');
+            this.focus();
+          }
+        }
+      });
+      
+      // Configurar atributo min inicial para fecha de inicio
+      const now = new Date();
+      const minDate = new Date(now.getTime() - 5 * 60 * 1000); // 5 minutos atrás
+      fechaInicioInput.min = formatDateTime(minDate);
+    }
+    
+    // Función auxiliar disponible globalmente
+    window.formatDateTime = formatDateTime;
+  }
+
+  /* ---------- Gestión de Usuarios ---------- */
+  function initUserManagement() {
+    console.group('🔧 User Management Debug');
+    console.log('Inicializando gestión de usuarios');
+
+    // Verificar que los botones existen
+    const editBtns = document.querySelectorAll('.edit-user-btn');
+    const deleteBtns = document.querySelectorAll('.delete-user-btn');
+    const viewBtns = document.querySelectorAll('.view-user-btn');
+    
+    console.log('Botones encontrados:', {
+      edit: editBtns.length,
+      delete: deleteBtns.length,
+      view: viewBtns.length
+    });
+
+    // Event listeners para botones de usuarios
+    document.addEventListener('click', function(e) {
+      console.log('Click detectado en:', e.target);
+      
+      if (e.target.matches('.edit-user-btn') || e.target.closest('.edit-user-btn')) {
+        e.preventDefault();
+        const btn = e.target.matches('.edit-user-btn') ? e.target : e.target.closest('.edit-user-btn');
+        const userId = btn.dataset.userId;
+        const modelType = btn.dataset.modelType;
+        
+        console.log('Edit user clicked:', { userId, modelType });
+        loadUserForEdit(userId, modelType);
+      }
+
+      if (e.target.matches('.delete-user-btn') || e.target.closest('.delete-user-btn')) {
+        e.preventDefault();
+        const btn = e.target.matches('.delete-user-btn') ? e.target : e.target.closest('.delete-user-btn');
+        const userId = btn.dataset.userId;
+        const modelType = btn.dataset.modelType;
+        const userName = btn.dataset.userName;
+        
+        console.log('Delete user clicked:', { userId, modelType, userName });
+        confirmDeleteUser(userId, modelType, userName);
+      }
+
+      if (e.target.matches('.view-user-btn') || e.target.closest('.view-user-btn')) {
+        e.preventDefault();
+        const btn = e.target.matches('.view-user-btn') ? e.target : e.target.closest('.view-user-btn');
+        const userId = btn.dataset.userId;
+        const modelType = btn.dataset.modelType;
+        
+        console.log('View user clicked:', { userId, modelType });
+        viewUserDetails(userId, modelType);
+      }
+    });
+
+    // Event listener para guardar cambios del usuario
+    const saveUserBtn = safeEl('saveUserChanges');
+    if (saveUserBtn) {
+      saveUserBtn.addEventListener('click', saveUserChanges);
+      console.log('Save user button listener added');
+    } else {
+      console.warn('Save user button not found');
+    }
+
+    console.groupEnd();
+  }
+
+  async function loadUserForEdit(userId, modelType) {
+    console.log('loadUserForEdit called with:', { userId, modelType });
+    
+    try {
+      const response = await fetch(`/dashboard/usuario/${userId}/${modelType}/detalles/`, {
+        method: 'GET',
+        headers: {
+          'X-CSRFToken': getCookie('csrftoken'),
+        }
+      });
+
+      const data = await response.json();
+      console.log('User data received:', data);
+      
+      if (data.success) {
+        const user = data.user;
+        
+        // Verificar que los elementos del formulario existan
+        const elements = {
+          editUserId: safeEl('editUserId'),
+          editUserModelType: safeEl('editUserModelType'),
+          editUserName: safeEl('editUserName'),
+          editUserEmail: safeEl('editUserEmail'),
+          editUserPhone: safeEl('editUserPhone'),
+          editUserAddress: safeEl('editUserAddress'),
+          editUserCity: safeEl('editUserCity'),
+          editUserUsername: safeEl('editUserUsername'),
+          editUserModal: safeEl('editUserModal')
+        };
+        
+        console.log('Form elements found:', elements);
+        
+        // Llenar el formulario de edición
+        if (elements.editUserId) elements.editUserId.value = user.id;
+        if (elements.editUserModelType) elements.editUserModelType.value = user.model_type;
+        if (elements.editUserName) elements.editUserName.value = user.name || '';
+        if (elements.editUserEmail) elements.editUserEmail.value = user.email || '';
+        if (elements.editUserPhone) elements.editUserPhone.value = user.phone || '';
+        if (elements.editUserAddress) elements.editUserAddress.value = user.address || '';
+        if (elements.editUserCity) elements.editUserCity.value = user.city || '';
+        if (elements.editUserUsername) elements.editUserUsername.value = user.username || '';
+        
+        // Mostrar el modal
+        if (elements.editUserModal) {
+          console.log('Showing modal...');
+          const modal = new bootstrap.Modal(elements.editUserModal);
+          modal.show();
+        } else {
+          console.error('Modal element not found');
+        }
+      } else {
+        console.error('Error in response:', data.error);
+        showToast('Error al cargar usuario: ' + data.error, 'error');
+      }
+    } catch (error) {
+      console.error('Error loading user:', error);
+      showToast('Error de conexión al cargar usuario', 'error');
+    }
+  }
+
+  async function saveUserChanges() {
+    const form = safeEl('editUserForm');
+    const formData = new FormData(form);
+    
+    const userData = {
+      user_id: formData.get('user_id'),
+      model_type: formData.get('model_type'),
+      name: formData.get('name'),
+      email: formData.get('email'),
+      phone: formData.get('phone'),
+      address: formData.get('address'),
+      city: formData.get('city'),
+      username: formData.get('username')
+    };
+
+    try {
+      const response = await fetch('/dashboard/usuario/editar/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCookie('csrftoken'),
+        },
+        body: JSON.stringify(userData)
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        showToast(data.message, 'success');
+        
+        // Cerrar el modal
+        const modal = bootstrap.Modal.getInstance(safeEl('editUserModal'));
+        modal.hide();
+        
+        // Recargar la página para mostrar los cambios
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+      } else {
+        showToast('Error: ' + data.error, 'error');
+      }
+    } catch (error) {
+      console.error('Error saving user:', error);
+      showToast('Error de conexión al guardar usuario', 'error');
+    }
+  }
+
+  function confirmDeleteUser(userId, modelType, userName) {
+    const confirmMsg = modelType === 'register_superuser' 
+      ? 'No se pueden eliminar usuarios administradores por seguridad.'
+      : `¿Estás seguro de que quieres eliminar el usuario "${userName}"? Esta acción no se puede deshacer.`;
+    
+    if (modelType === 'register_superuser') {
+      showToast(confirmMsg, 'warning');
+      return;
+    }
+
+    if (confirm(confirmMsg)) {
+      deleteUser(userId, modelType);
+    }
+  }
+
+  async function deleteUser(userId, modelType) {
+    try {
+      const response = await fetch('/dashboard/usuario/eliminar/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCookie('csrftoken'),
+        },
+        body: JSON.stringify({
+          user_id: userId,
+          model_type: modelType
+        })
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        showToast(data.message, 'success');
+        
+        // Recargar la página para mostrar los cambios
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+      } else {
+        showToast('Error: ' + data.error, 'error');
+      }
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      showToast('Error de conexión al eliminar usuario', 'error');
+    }
+  }
+
+  async function viewUserDetails(userId, modelType) {
+    try {
+      const response = await fetch(`/dashboard/usuario/${userId}/${modelType}/detalles/`, {
+        method: 'GET',
+        headers: {
+          'X-CSRFToken': getCookie('csrftoken'),
+        }
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        const user = data.user;
+        
+        // Crear el contenido del modal
+        const detailsContent = `
+          <div class="row">
+            <div class="col-md-6">
+              <h6><i class="fas fa-user me-2"></i>Información Personal</h6>
+              <table class="table table-sm">
+                <tr><td><strong>ID:</strong></td><td>${user.id}</td></tr>
+                <tr><td><strong>Nombre:</strong></td><td>${user.name || 'Sin nombre'}</td></tr>
+                <tr><td><strong>Email:</strong></td><td>${user.email}</td></tr>
+                <tr><td><strong>Teléfono:</strong></td><td>${user.phone || 'Sin teléfono'}</td></tr>
+              </table>
+            </div>
+            <div class="col-md-6">
+              <h6><i class="fas fa-info-circle me-2"></i>Información Adicional</h6>
+              <table class="table table-sm">
+                <tr><td><strong>Username:</strong></td><td>${user.username || 'Sin username'}</td></tr>
+                <tr><td><strong>Ciudad:</strong></td><td>${user.city || 'Sin ciudad'}</td></tr>
+                <tr><td><strong>Dirección:</strong></td><td>${user.address || 'Sin dirección'}</td></tr>
+                <tr><td><strong>Fecha de Registro:</strong></td><td>${user.date_joined || 'Sin fecha'}</td></tr>
+              </table>
+            </div>
+          </div>
+          <div class="row mt-3">
+            <div class="col-12">
+              <h6><i class="fas fa-shield-alt me-2"></i>Permisos</h6>
+              <div class="d-flex gap-2">
+                ${user.is_admin 
+                  ? '<span class="badge bg-danger"><i class="fas fa-crown me-1"></i>Administrador</span>' 
+                  : '<span class="badge bg-primary"><i class="fas fa-user me-1"></i>Usuario Simple</span>'
+                }
+                <span class="badge bg-info">Tipo: ${user.model_type}</span>
+              </div>
+            </div>
+          </div>
+        `;
+        
+        // Mostrar el contenido en el modal
+        safeEl('userDetailsContent').innerHTML = detailsContent;
+        
+        // Mostrar el modal
+        const modal = new bootstrap.Modal(safeEl('viewUserModal'));
+        modal.show();
+      } else {
+        showToast('Error al cargar detalles: ' + data.error, 'error');
+      }
+    } catch (error) {
+      console.error('Error viewing user details:', error);
+      showToast('Error de conexión al cargar detalles', 'error');
+    }
+  }
+
+  // Inicializar gestión de usuarios cuando el documento esté listo
+  document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM Content Loaded - Inicializando gestión de usuarios');
+    initUserManagement();
+  });
+  
+  // También llamar cuando se carga la página
+  window.addEventListener('load', function() {
+    console.log('Window loaded - Verificando gestión de usuarios');
+    initUserManagement();
+  });
+
+  // También inicializar cuando cambie la vista
+  window.addEventListener('popstate', function() {
+    const currentView = new URLSearchParams(window.location.search).get('view');
+    if (currentView === 'usuarios') {
+      console.log('Vista de usuarios detectada en popstate');
+      initUserManagement();
+    }
+  });
+  
+  // Función global para debugging
+  window.debugUserManagement = function() {
+    initUserManagement();
+  };
+
 });

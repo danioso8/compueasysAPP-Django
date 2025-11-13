@@ -9,7 +9,11 @@ from core.views import (
     aboutUs, cart, register_user, login, product_detail, checkout, 
     update_cart, logout_view, search_suggestions, 
     filter_products_ajax, get_categories_ajax,
-    create_wompi_transaction, wompi_webhook, wompi_test, validate_discount_code
+    create_wompi_transaction, wompi_webhook, wompi_test, validate_discount_code,
+    # Nuevas funciones para dashboard de usuario
+    send_verification_email, verify_code, resend_verification_code,
+    order_details, cancel_order, start_conversation, get_conversations,
+    get_conversation, send_message
 )
 
 from django.conf import settings
@@ -27,7 +31,6 @@ urlpatterns = [
     path('checkout/', checkout, name='checkout'),  # URL pattern for checkout view
     path('product_detail/<int:product_id>/', product_detail, name='product_detail'),  # URL pattern for product detail view
     path('update_cart/<int:product_id>/', update_cart, name='update_cart'),  # URL pattern for update cart view
-    path('logout/', include('django.contrib.auth.urls')),  # URL pattern for authentication views
    
     path('add-to-cart/<int:product_id>/', add_to_cart, name='add_to_cart'),
     path('add-to-cart-detail/<int:product_id>/', add_to_cart_detail, name='add_to_cart_detail'),  # URL pattern for adding to cart from product detail view
@@ -53,4 +56,15 @@ urlpatterns = [
     
     # Test de Wompi
     path('wompi-test/', wompi_test, name='wompi_test'),
+    
+    # Endpoints para Dashboard de Usuario
+    path('api/send-verification-email/', send_verification_email, name='send_verification_email'),
+    path('api/verify-code/', verify_code, name='verify_code'),
+    path('api/resend-verification-code/', resend_verification_code, name='resend_verification_code'),
+    path('api/order-details/<int:order_id>/', order_details, name='order_details'),
+    path('api/cancel-order/', cancel_order, name='cancel_order'),
+    path('api/start-conversation/', start_conversation, name='start_conversation'),
+    path('api/conversations/', get_conversations, name='get_conversations'),
+    path('api/conversation/<int:conversation_id>/', get_conversation, name='get_conversation'),
+    path('api/send-message/', send_message, name='send_message'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -321,3 +321,82 @@ class BonoDescuento(models.Model):
             'Desactivado': 'badge-danger',
         }
         return estado_classes.get(estado, 'badge-secondary')
+
+
+class VerificationToken(models.Model):
+    """Modelo para tokens de verificación por email"""
+    user = models.ForeignKey(SimpleUser, on_delete=models.CASCADE, related_name='verification_tokens')
+    token = models.CharField(max_length=6, help_text="Código de 6 dígitos")
+    token_type = models.CharField(max_length=20, choices=[
+        ('profile_update', 'Actualización de Perfil'),
+        ('password_change', 'Cambio de Contraseña'),
+        ('email_change', 'Cambio de Email'),
+    ])
+    pending_data = models.JSONField(help_text="Datos pendientes de aplicar")
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    is_used = models.BooleanField(default=False)
+    
+    class Meta:
+        verbose_name = "Token de Verificación"
+        verbose_name_plural = "Tokens de Verificación"
+        ordering = ['-created_at']
+    
+    def is_valid(self):
+        """Verificar si el token es válido"""
+        from django.utils import timezone
+        return not self.is_used and timezone.now() < self.expires_at
+    
+    def __str__(self):
+        return f"Token {self.token} - {self.get_token_type_display()}"
+
+
+class Conversation(models.Model):
+    """Modelo para conversaciones entre usuarios y soporte"""
+    user = models.ForeignKey(SimpleUser, on_delete=models.CASCADE, related_name='conversations')
+    subject = models.CharField(max_length=200)
+    status = models.CharField(max_length=20, choices=[
+        ('open', 'Abierta'),
+        ('closed', 'Cerrada'),
+        ('waiting_customer', 'Esperando Cliente'),
+        ('waiting_support', 'Esperando Soporte'),
+    ], default='open')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Conversación"
+        verbose_name_plural = "Conversaciones"
+        ordering = ['-updated_at']
+    
+    def __str__(self):
+        return f"Conversación #{self.id} - {self.subject}"
+    
+    @property
+    def last_message(self):
+        last_msg = self.messages.last()
+        return last_msg.message[:50] + "..." if last_msg and len(last_msg.message) > 50 else last_msg.message if last_msg else "No hay mensajes"
+    
+    @property
+    def unread_count(self):
+        return self.messages.filter(is_admin=True, is_read=False).count()
+
+
+class ConversationMessage(models.Model):
+    """Modelo para mensajes dentro de conversaciones"""
+    conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE, related_name='messages')
+    user = models.ForeignKey(SimpleUser, on_delete=models.CASCADE, null=True, blank=True)
+    admin_user = models.ForeignKey('auth.User', on_delete=models.CASCADE, null=True, blank=True)
+    message = models.TextField()
+    is_admin = models.BooleanField(default=False)
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        verbose_name = "Mensaje de Conversación"
+        verbose_name_plural = "Mensajes de Conversación"
+        ordering = ['created_at']
+    
+    def __str__(self):
+        sender = "Admin" if self.is_admin else self.user.email if self.user else "Usuario"
+        return f"{sender}: {self.message[:50]}..."

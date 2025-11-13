@@ -31,7 +31,7 @@ INSTALLED_APPS = [
     'cloudinary',          # Descomentado - listo para usar
     'core',
     'contable.apps.ContableConfig',
-    'bootstrap5',    
+    'django_bootstrap5',    
     'django.contrib.humanize',
     'dashboard',
 ]

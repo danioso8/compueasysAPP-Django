@@ -29,6 +29,14 @@ from .views import (
     pedido_detalle,  # Nueva función para detalles de pedido
     update_pedido_estado,  # Nueva función para actualizar estado
     update_pedido_notes,  # Nueva función para actualizar notas
+    # Nuevas funciones para gestión de usuarios
+    edit_user,
+    delete_user,
+    get_user_details,
+    # Nuevas funciones para gestión de conversaciones
+    conversation_detail,
+    conversation_reply,
+    conversation_update_status,
 )
 
 urlpatterns = [
@@ -67,6 +75,16 @@ urlpatterns = [
     path('pedido/<int:pedido_id>/detalle/', pedido_detalle, name='pedido_detalle'),
     path('pedido/update-estado/', update_pedido_estado, name='update_pedido_estado'),
     path('pedido/update-notes/', update_pedido_notes, name='update_pedido_notes'),
+
+    # Nuevas URLs para gestión de usuarios
+    path('usuario/editar/', edit_user, name='edit_user'),
+    path('usuario/eliminar/', delete_user, name='delete_user'),
+    path('usuario/<int:user_id>/<str:model_type>/detalles/', get_user_details, name='get_user_details'),
+
+    # URLs para gestión de conversaciones (dashboard admin)
+    path('admin/conversation/<int:conversation_id>/', conversation_detail, name='admin_conversation_detail'),
+    path('admin/conversation/reply/', conversation_reply, name='admin_conversation_reply'),
+    path('admin/conversation/update-status/', conversation_update_status, name='admin_conversation_update_status'),
 
 ]
 

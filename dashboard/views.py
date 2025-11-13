@@ -1,5 +1,5 @@
 from django.contrib.auth.decorators import login_required, permission_required
-from core.models import ProductStore, Pedido, SimpleUser, Category, Type, proveedor, Galeria, ProductVariant, PedidoDetalle, BonoDescuento
+from core.models import ProductStore, Pedido, SimpleUser, Category, Type, proveedor, Galeria, ProductVariant, PedidoDetalle, BonoDescuento, Conversation, ConversationMessage
 from django.contrib.auth.models import User
 from dashboard.models import register_superuser
 from django.db.models.signals import post_delete
@@ -7,7 +7,7 @@ from django.dispatch import receiver
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from django.db.models import Sum, Count, Q, F
-from datetime import datetime, timedelta
+from datetime import datetime as dt, timedelta
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from functools import wraps
 from django.shortcuts import redirect, render, get_object_or_404
@@ -41,7 +41,7 @@ def dashboard_home(request):
     page_number = request.GET.get('page', 1)
     
     # Base queryset para productos
-    productos_queryset = ProductStore.objects.select_related('category', 'proveedor', 'type').all()
+    productos_queryset = ProductStore.objects.select_related('category', 'proveedor', 'type').all().order_by('-id')
     
     # Aplicar filtros
     if categoria_filter:
@@ -72,7 +72,47 @@ def dashboard_home(request):
     categorias = Category.objects.all()
     tipos = Type.objects.all()
     proveedores = proveedor.objects.all()
-    userSimples = register_superuser.objects.all()    
+    
+    # Obtener todos los usuarios: SimpleUser y register_superuser combinados
+    simple_users = SimpleUser.objects.all()
+    admin_users = register_superuser.objects.all()
+    
+    # Crear una lista combinada de usuarios con información de tipo
+    all_users = []
+    
+    # Agregar usuarios simples
+    for user in simple_users:
+        all_users.append({
+            'id': user.id,
+            'name': user.name,
+            'email': user.email,
+            'phone': getattr(user, 'telefono', ''),  # Corregido: telefono en lugar de phone
+            'address': getattr(user, 'address', ''),
+            'city': getattr(user, 'city', ''),
+            'date_joined': getattr(user, 'created_at', 'N/A'),
+            'username': getattr(user, 'username', ''),
+            'is_admin': False,
+            'user_type': 'simple',
+            'model_type': 'SimpleUser'
+        })
+    
+    # Agregar usuarios administradores
+    for user in admin_users:
+        all_users.append({
+            'id': user.id,
+            'name': getattr(user, 'username', ''),  # register_superuser usa username como name
+            'email': user.email,
+            'phone': getattr(user, 'phone', ''),
+            'address': getattr(user, 'address', ''),
+            'city': getattr(user, 'city', ''),
+            'date_joined': getattr(user, 'created_at', user.created_at),
+            'username': user.username,
+            'is_admin': True,
+            'user_type': 'admin',
+            'model_type': 'register_superuser'
+        })
+    
+    userSimples = all_users  # Mantenemos el nombre para compatibilidad
     bonos = BonoDescuento.objects.all().order_by('-fecha_creacion')
     
     # Obtener pedidos con filtros
@@ -401,7 +441,6 @@ def dashboard_home(request):
         if action == 'crear_bono':
             try:
                 from django.utils import timezone
-                from datetime import datetime
                 
                 codigo = request.POST.get('codigo', '').strip().upper()
                 descripcion = request.POST.get('descripcion', '').strip()
@@ -425,10 +464,18 @@ def dashboard_home(request):
                 
                 # Parsear fechas
                 try:
-                    fecha_inicio = timezone.make_aware(datetime.strptime(fecha_inicio_str, '%Y-%m-%dT%H:%M'))
-                    fecha_fin = timezone.make_aware(datetime.strptime(fecha_fin_str, '%Y-%m-%dT%H:%M'))
+                    fecha_inicio = timezone.make_aware(dt.strptime(fecha_inicio_str, '%Y-%m-%dT%H:%M'))
+                    fecha_fin = timezone.make_aware(dt.strptime(fecha_fin_str, '%Y-%m-%dT%H:%M'))
                 except ValueError:
                     messages.error(request, 'Formato de fecha inválido')
+                    return redirect(f"{reverse('dashboard_home')}?view=bonos")
+                
+                # Validación flexible de fecha de inicio (permitir hasta 5 minutos en el pasado)
+                now = timezone.now()
+                time_diff = (fecha_inicio - now).total_seconds()
+                
+                if time_diff < -300:  # -300 segundos = -5 minutos
+                    messages.error(request, 'La fecha de inicio no puede ser más de 5 minutos en el pasado')
                     return redirect(f"{reverse('dashboard_home')}?view=bonos")
                 
                 if fecha_fin <= fecha_inicio:
@@ -461,7 +508,6 @@ def dashboard_home(request):
                 bono = get_object_or_404(BonoDescuento, id=bono_id)
                 
                 from django.utils import timezone
-                from datetime import datetime
                 
                 codigo = request.POST.get('codigo', '').strip().upper()
                 descripcion = request.POST.get('descripcion', '').strip()
@@ -479,8 +525,8 @@ def dashboard_home(request):
                     return redirect(f"{reverse('dashboard_home')}?view=bonos")
                 
                 # Parsear fechas
-                fecha_inicio = timezone.make_aware(datetime.strptime(fecha_inicio_str, '%Y-%m-%dT%H:%M'))
-                fecha_fin = timezone.make_aware(datetime.strptime(fecha_fin_str, '%Y-%m-%dT%H:%M'))
+                fecha_inicio = timezone.make_aware(dt.strptime(fecha_inicio_str, '%Y-%m-%dT%H:%M'))
+                fecha_fin = timezone.make_aware(dt.strptime(fecha_fin_str, '%Y-%m-%dT%H:%M'))
                 
                 if fecha_fin <= fecha_inicio:
                     messages.error(request, 'La fecha de fin debe ser posterior a la fecha de inicio')
@@ -595,6 +641,51 @@ def dashboard_home(request):
         'categoria_mayor_ingresos': categoria_mayor_ingresos,
     }
 
+    # Datos para la sección de mensajes
+    conversations = []
+    conversations_stats = {
+        'total_conversations': 0,
+        'pending_conversations': 0,
+        'today_messages': 0,
+        'active_conversations': 0,
+    }
+    
+    if view_param == 'mensajes':
+        # Obtener conversaciones con paginación
+        conversations_queryset = Conversation.objects.select_related('user').prefetch_related(
+            'messages__user',
+            'messages__admin_user'
+        ).order_by('-created_at')
+        
+        # Paginación de conversaciones
+        conversations_paginator = Paginator(conversations_queryset, 10)  # 10 conversaciones por página
+        conversations_page_number = request.GET.get('page', 1)
+        
+        try:
+            conversations = conversations_paginator.page(conversations_page_number)
+        except PageNotAnInteger:
+            conversations = conversations_paginator.page(1)
+        except EmptyPage:
+            conversations = conversations_paginator.page(conversations_paginator.num_pages)
+        
+        # Calcular estadísticas
+        total_conversations = Conversation.objects.count()
+        pending_conversations = Conversation.objects.filter(status='open').count()
+        active_conversations = Conversation.objects.filter(status='in_progress').count()
+        
+        # Mensajes de hoy
+        today = dt.now().date()
+        today_messages = ConversationMessage.objects.filter(
+            created_at__date=today
+        ).count()
+        
+        conversations_stats = {
+            'total_conversations': total_conversations,
+            'pending_conversations': pending_conversations,
+            'today_messages': today_messages,
+            'active_conversations': active_conversations,
+        }
+
 # ...existing code...
     return render(request, 'dashboard/dashboard_home.html', {
         'productos': productos,
@@ -619,6 +710,8 @@ def dashboard_home(request):
         'estadisticas_ventas': estadisticas_ventas,
         'categoria_filter': categoria_filter,
         'search_query': search_query,
+        'conversations': conversations,
+        'conversations_stats': conversations_stats,
 
     })
 # ...existing code...
@@ -1063,19 +1156,52 @@ def pedido_detalle(request, pedido_id):
     try:
         pedido = get_object_or_404(Pedido, id=pedido_id)
         
-        # Obtener detalles de productos
-        detalles = PedidoDetalle.objects.filter(pedido=pedido).select_related('producto', 'variante')
-        
-        # Construir lista de items
+        # Obtener detalles de productos - manejo más robusto
         items = []
-        for detalle in detalles:
-            item = {
-                'nombre': detalle.producto.name,
-                'cantidad': detalle.cantidad,
-                'precio': float(detalle.precio),
-                'variante': detalle.variante.name if detalle.variante else None
-            }
-            items.append(item)
+        try:
+            # Intentar obtener desde PedidoDetalle
+            if hasattr(pedido, 'detalles_pedido'):
+                detalles = pedido.detalles_pedido.all()
+                for detalle in detalles:
+                    item = {
+                        'nombre': detalle.producto.name,
+                        'cantidad': detalle.cantidad,
+                        'precio': float(detalle.precio),
+                        'variante': getattr(detalle, 'variante', None)
+                    }
+                    items.append(item)
+            
+            # Si no hay detalles específicos, usar el campo detalles del pedido
+            if not items and pedido.detalles:
+                try:
+                    import json
+                    detalles_json = json.loads(pedido.detalles)
+                    if isinstance(detalles_json, list):
+                        items = detalles_json
+                    else:
+                        items = [{
+                            'nombre': 'Productos varios',
+                            'cantidad': 1,
+                            'precio': float(pedido.total),
+                            'descripcion': str(pedido.detalles)
+                        }]
+                except:
+                    # Si no es JSON válido, mostrar como texto
+                    items = [{
+                        'nombre': 'Detalles del pedido',
+                        'cantidad': 1,
+                        'precio': float(pedido.total),
+                        'descripcion': str(pedido.detalles)
+                    }]
+        except Exception as e:
+            print(f"Error procesando items del pedido: {e}")
+            # Fallback básico
+            items = [{
+                'nombre': 'Pedido',
+                'cantidad': 1,
+                'precio': float(pedido.total),
+                'descripcion': 'Ver detalles en el campo "detalles" del pedido'
+            }]
         
         # Datos del pedido
         pedido_data = {
@@ -1086,23 +1212,24 @@ def pedido_detalle(request, pedido_id):
             'direccion': pedido.direccion,
             'ciudad': pedido.ciudad,
             'departamento': pedido.departamento,
-            'codigo_postal': pedido.codigo_postal,
-            'nota': pedido.nota,
+            'codigo_postal': getattr(pedido, 'codigo_postal', ''),
+            'nota': pedido.nota or '',
             'nota_admin': getattr(pedido, 'nota_admin', ''),
+            'detalles': pedido.detalles,
             'fecha': pedido.fecha.isoformat(),
             'total': float(pedido.total),
             'subtotal': float(getattr(pedido, 'subtotal', 0)),
             'envio': float(getattr(pedido, 'envio', 0)),
             'descuento': float(getattr(pedido, 'descuento', 0)),
-            'estado': getattr(pedido, 'estado', 'pendiente'),
-            'estado_display': pedido.get_estado_display() if hasattr(pedido, 'get_estado_display') else 'Pendiente',
-            'metodo_pago': getattr(pedido, 'metodo_pago', 'contraentrega'),
-            'metodo_pago_display': pedido.get_metodo_pago_display() if hasattr(pedido, 'get_metodo_pago_display') else 'Contra entrega',
-            'estado_pago': getattr(pedido, 'estado_pago', 'pendiente'),
-            'estado_pago_display': pedido.get_estado_pago_display() if hasattr(pedido, 'get_estado_pago_display') else 'Pendiente',
-            'transaction_id': getattr(pedido, 'transaction_id', None),
-            'payment_reference': getattr(pedido, 'payment_reference', None),
-            'codigo_descuento': getattr(pedido, 'codigo_descuento', None),
+            'estado': pedido.estado,
+            'estado_display': pedido.get_estado_display(),
+            'metodo_pago': pedido.metodo_pago,
+            'metodo_pago_display': pedido.get_metodo_pago_display(),
+            'estado_pago': pedido.estado_pago,
+            'estado_pago_display': pedido.get_estado_pago_display(),
+            'transaction_id': getattr(pedido, 'transaction_id', ''),
+            'payment_reference': getattr(pedido, 'payment_reference', ''),
+            'codigo_descuento': getattr(pedido, 'codigo_descuento', ''),
             'items': items
         }
         
@@ -1112,6 +1239,7 @@ def pedido_detalle(request, pedido_id):
         })
         
     except Exception as e:
+        print(f"Error en pedido_detalle: {e}")
         return JsonResponse({
             'success': False,
             'error': f'Error al obtener detalles: {str(e)}'
@@ -1278,4 +1406,339 @@ def update_pedido_notes(request):
         return JsonResponse({
             'success': False,
             'error': f'Error al actualizar notas: {str(e)}'
+        })
+
+
+@superuser_required
+@csrf_exempt
+def edit_user(request):
+    """Editar datos de usuario (SimpleUser o register_superuser)"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Método no permitido'})
+    
+    try:
+        data = json.loads(request.body)
+        user_id = data.get('user_id')
+        model_type = data.get('model_type')
+        
+        print(f"Debug - Editing user: {user_id}, type: {model_type}, data: {data}")
+        
+        # Determinar qué modelo usar
+        if model_type == 'SimpleUser':
+            User = SimpleUser
+        elif model_type == 'register_superuser':
+            User = register_superuser
+        else:
+            return JsonResponse({'success': False, 'error': 'Tipo de usuario inválido'})
+        
+        # Obtener el usuario
+        user = get_object_or_404(User, id=user_id)
+        
+        # Actualizar campos según el tipo de modelo
+        if model_type == 'SimpleUser':
+            # SimpleUser tiene 'name' y 'telefono'
+            user.name = data.get('name', user.name)
+            user.email = data.get('email', user.email)
+            if hasattr(user, 'telefono'):
+                user.telefono = data.get('phone', getattr(user, 'telefono', ''))
+            
+            # Actualizar estado activo para usuarios simples
+            if 'is_active' in data:
+                user.is_active = data.get('is_active', True)
+                
+        elif model_type == 'register_superuser':
+            # register_superuser tiene 'username' y 'phone'
+            user.username = data.get('name', user.username)  # Usamos name del formulario para username
+            user.email = data.get('email', user.email)
+            if hasattr(user, 'phone'):
+                user.phone = data.get('phone', getattr(user, 'phone', ''))
+            
+            # Actualizar permisos para administradores
+            if 'is_active' in data:
+                user.is_active = data.get('is_active', True)
+            if 'is_staff' in data:
+                user.is_staff = data.get('is_staff', False)
+            if 'is_superuser' in data:
+                user.is_superuser = data.get('is_superuser', False)
+        
+        # Campos comunes
+        if hasattr(user, 'address'):
+            user.address = data.get('address', getattr(user, 'address', ''))
+        if hasattr(user, 'city'):
+            user.city = data.get('city', getattr(user, 'city', ''))
+        if hasattr(user, 'username') and model_type == 'SimpleUser':
+            user.username = data.get('username', getattr(user, 'username', ''))
+        
+        # Actualizar contraseña si se proporcionó
+        new_password = data.get('password')
+        if new_password and new_password.strip():
+            if len(new_password) < 6:
+                return JsonResponse({'success': False, 'error': 'La contraseña debe tener al menos 6 caracteres'})
+            
+            # En producción, aquí deberías usar hash
+            user.password = new_password
+            print(f"Debug - Password updated for user {user_id}")
+            
+        user.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Usuario {getattr(user, "name", getattr(user, "username", ""))} actualizado correctamente'
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'Datos JSON inválidos'})
+    except Exception as e:
+        print(f"Error editing user: {e}")
+        return JsonResponse({'success': False, 'error': f'Error al editar usuario: {str(e)}'})
+
+
+@superuser_required
+@csrf_exempt
+def delete_user(request):
+    """Eliminar usuario (SimpleUser o register_superuser)"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Método no permitido'})
+    
+    try:
+        data = json.loads(request.body)
+        user_id = data.get('user_id')
+        model_type = data.get('model_type')
+        
+        # No permitir eliminar administradores por seguridad
+        if model_type == 'register_superuser':
+            return JsonResponse({
+                'success': False, 
+                'error': 'No se pueden eliminar usuarios administradores por seguridad'
+            })
+        
+        # Determinar qué modelo usar
+        if model_type == 'SimpleUser':
+            User = SimpleUser
+        else:
+            return JsonResponse({'success': False, 'error': 'Tipo de usuario inválido'})
+        
+        # Obtener y eliminar el usuario
+        user = get_object_or_404(User, id=user_id)
+        user_name = user.name
+        user.delete()
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Usuario {user_name} eliminado correctamente'
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'Datos JSON inválidos'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': f'Error al eliminar usuario: {str(e)}'})
+
+
+@superuser_required
+def get_user_details(request, user_id, model_type):
+    """Obtener detalles de un usuario específico"""
+    try:
+        # Determinar qué modelo usar
+        if model_type == 'SimpleUser':
+            User = SimpleUser
+        elif model_type == 'register_superuser':
+            User = register_superuser
+        else:
+            return JsonResponse({'success': False, 'error': 'Tipo de usuario inválido'})
+        
+        user = get_object_or_404(User, id=user_id)
+        
+        # Obtener campos según el modelo
+        phone_field = 'telefono' if model_type == 'SimpleUser' else 'phone'
+        name_field = 'name' if model_type == 'SimpleUser' else 'username'
+        
+        user_data = {
+            'id': user.id,
+            'name': getattr(user, name_field, ''),
+            'email': user.email,
+            'phone': getattr(user, phone_field, ''),
+            'address': getattr(user, 'address', ''),
+            'city': getattr(user, 'city', ''),
+            'username': getattr(user, 'username', ''),
+            'date_joined': str(getattr(user, 'date_joined', getattr(user, 'created_at', ''))),
+            'is_admin': model_type == 'register_superuser',
+            'user_type': 'admin' if model_type == 'register_superuser' else 'simple',
+            'model_type': model_type,
+            # Permisos - incluir para ambos tipos de usuario
+            'is_active': getattr(user, 'is_active', True),
+            'is_staff': getattr(user, 'is_staff', False),
+            'is_superuser': getattr(user, 'is_superuser', False),
+            'can_edit_permissions': model_type == 'register_superuser',  # Solo admins pueden editar permisos
+        }
+        
+        return JsonResponse({'success': True, 'user': user_data})
+        
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': f'Error al obtener usuario: {str(e)}'})
+
+
+import json
+
+
+# ===== VISTAS PARA GESTIÓN DE CONVERSACIONES =====
+
+@superuser_required
+def conversation_detail(request, conversation_id):
+    """Obtener detalles completos de una conversación"""
+    print(f"🔍 conversation_detail called for ID: {conversation_id}")
+    try:
+        conversation = get_object_or_404(
+            Conversation.objects.select_related('user'),
+            id=conversation_id
+        )
+        print(f"✅ Conversación encontrada: {conversation.id} - {conversation.subject}")
+        
+        # Obtener mensajes de la conversación
+        messages = ConversationMessage.objects.filter(
+            conversation=conversation
+        ).order_by('created_at')
+        print(f"📨 Mensajes encontrados: {messages.count()}")
+        
+        # Serializar datos
+        conversation_data = {
+            'id': conversation.id,
+            'subject': conversation.subject,
+            'status': conversation.status,
+            'created_at': conversation.created_at.isoformat(),
+            'user': {
+                'id': conversation.user.id,
+                'username': conversation.user.username,
+                'email': conversation.user.email,
+            },
+            'messages': []
+        }
+        
+        # Agregar mensajes
+        for message in messages:
+            print(f"🔍 Procesando mensaje ID: {message.id}, is_admin: {message.is_admin}")
+            # Determinar el nombre del remitente según si es admin o usuario
+            if message.is_admin:
+                sender_name = message.admin_user.username if message.admin_user else 'Admin'
+            else:
+                sender_name = message.user.username if message.user else 'Usuario'
+                
+            print(f"👤 Sender name determinado: {sender_name}")
+                
+            message_data = {
+                'id': message.id,
+                'message': message.message,
+                'is_admin': message.is_admin,
+                'sender_name': sender_name,
+                'created_at': message.created_at.isoformat(),
+            }
+            conversation_data['messages'].append(message_data)
+        
+        print(f"✅ Datos de respuesta preparados: {len(conversation_data['messages'])} mensajes")
+        return JsonResponse({
+            'success': True,
+            'conversation': conversation_data
+        })
+        
+    except Exception as e:
+        print(f"❌ Error in conversation_detail: {e}")
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({
+            'success': False,
+            'error': f'Error al cargar conversación: {str(e)}'
+        })
+
+
+@superuser_required
+def conversation_reply(request):
+    """Responder a una conversación como administrador"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Método no permitido'})
+    
+    try:
+        data = json.loads(request.body)
+        conversation_id = data.get('conversation_id')
+        message_text = data.get('message', '').strip()
+        mark_resolved = data.get('mark_resolved', False)
+        
+        if not conversation_id or not message_text:
+            return JsonResponse({'success': False, 'error': 'Datos incompletos'})
+        
+        # Obtener la conversación
+        conversation = get_object_or_404(Conversation, id=conversation_id)
+        
+        # Obtener el usuario administrador de la sesión
+        superuser_id = request.session.get('superuser_id')
+        if not superuser_id:
+            return JsonResponse({'success': False, 'error': 'Usuario no autenticado'})
+        
+        admin_user = get_object_or_404(register_superuser, id=superuser_id)
+        
+        # Crear el mensaje de respuesta
+        ConversationMessage.objects.create(
+            conversation=conversation,
+            user=None,  # Mensaje de admin, no viene de SimpleUser
+            admin_user=None,  # Por ahora None, podría mejorarse para usar el admin real
+            message=message_text,
+            is_admin=True
+        )
+        
+        # Actualizar estado si se marca como resuelto
+        if mark_resolved:
+            conversation.status = 'resolved'
+            conversation.save()
+        else:
+            # Si no se marca como resuelto pero estaba abierto, pasar a "en progreso"
+            if conversation.status == 'open':
+                conversation.status = 'in_progress'
+                conversation.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Respuesta enviada correctamente'
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'Datos JSON inválidos'})
+    except Exception as e:
+        print(f"Error in conversation_reply: {e}")
+        return JsonResponse({
+            'success': False,
+            'error': f'Error al enviar respuesta: {str(e)}'
+        })
+
+
+@superuser_required 
+def conversation_update_status(request):
+    """Actualizar estado de una conversación"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Método no permitido'})
+    
+    try:
+        data = json.loads(request.body)
+        conversation_id = data.get('conversation_id')
+        new_status = data.get('new_status')
+        
+        valid_statuses = ['open', 'in_progress', 'resolved', 'closed']
+        
+        if not conversation_id or new_status not in valid_statuses:
+            return JsonResponse({'success': False, 'error': 'Datos inválidos'})
+        
+        # Obtener y actualizar la conversación
+        conversation = get_object_or_404(Conversation, id=conversation_id)
+        conversation.status = new_status
+        conversation.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Estado actualizado a "{new_status}" correctamente'
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'Datos JSON inválidos'})
+    except Exception as e:
+        print(f"Error in conversation_update_status: {e}")
+        return JsonResponse({
+            'success': False,
+            'error': f'Error al actualizar estado: {str(e)}'
         })

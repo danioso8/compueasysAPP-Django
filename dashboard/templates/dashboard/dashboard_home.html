@@ -122,6 +122,13 @@
                             <span class="sidebar-text">Usuarios</span>
                         </a>
                     </li>
+                    
+                    <li class="nav-item">
+                        <a href="?view=mensajes" class="nav-link {% if request.GET.view == 'mensajes' %}active{% endif %}" title="Mensajes de Soporte">
+                            <i class="fas fa-comments nav-icon"></i>
+                            <span class="sidebar-text">Mensajes</span>
+                        </a>
+                    </li>
                 </ul>
             </nav>
             
@@ -141,100 +148,565 @@
         </aside>
         <main class="main-content">
             {% if request.GET.view == "usuarios" %}
-                <h2>Usuarios</h2>
+                <div class="usuarios-dashboard">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2><i class="fas fa-users me-2"></i>Gestión de Usuarios</h2>
+                        <div class="d-flex gap-2">
+                            <span class="badge bg-primary">Total: {{ usuarios|length }}</span>
+                            <span class="badge bg-success">Simples: {{ usuarios|length|add:"-"|add:"0" }}</span>
+                            <span class="badge bg-warning">Admins: {{ usuarios|length|add:"-"|add:"0" }}</span>
+                        </div>
+                    </div>
 
-                 <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}"> 
-                <table>
-                    <tr>
-                        <th>Username</th>
-                        <th>Email</th>
-                        <th>Staff</th>
-                        <th>Super</th>
-                        <th>Activo</th>
-                        <th>Admin</th>
-                        <th>Acciones</th>
-                    </tr>
-                    {% for usuario in usuarios %}
-                    <tr>
-                        <td>{{ usuario.username }}</td>
-                        <td>{{ usuario.email }}</td>
-                        <td>
-                            <select name="is_staff">
-                                <option value="True">Sí</option>
-                                <option value="False">No</option>
-                            </select>
-                        </td>
-                        <td>
-                            <select name="is_superuser">
-                                <option value="True">Sí</option>
-                                <option value="False">No</option>
-                            </select>
-                        </td>
-                        <td>
-                            <select name="is_active">
-                                <option value="True">Sí</option>
-                                <option value="False">No</option>
-                            </select>
-                        </td>
-                        <td>
-                            <select name="is_admin">
-                                <option value="True">Sí</option>
-                                <option value="False">No</option>
-                            </select>
-                        </td>                    
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-striped table-hover">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Nombre</th>
+                                            <th>Email</th>
+                                            <th>Teléfono</th>
+                                            <th>Ciudad</th>
+                                            <th>Username</th>
+                                            <th>Tipo de Usuario</th>
+                                            <th>Fecha de Registro</th>
+                                            <th class="text-center">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for usuario in usuarios %}
+                                        <tr>
+                                            <td>{{ usuario.id }}</td>
+                                            <td>
+                                                <strong>{{ usuario.name|default:"Sin nombre" }}</strong>
+                                            </td>
+                                            <td>
+                                                <a href="mailto:{{ usuario.email }}">{{ usuario.email }}</a>
+                                            </td>
+                                            <td>
+                                                {{ usuario.phone|default:"Sin teléfono" }}
+                                            </td>
+                                            <td>
+                                                {{ usuario.city|default:"Sin ciudad" }}
+                                            </td>
+                                            <td>
+                                                {{ usuario.username|default:"Sin username" }}
+                                            </td>
+                                            <td class="text-center">
+                                                {% if usuario.is_admin %}
+                                                    <span class="badge bg-danger">
+                                                        <i class="fas fa-crown me-1"></i>Administrador
+                                                    </span>
+                                                {% else %}
+                                                    <span class="badge bg-primary">
+                                                        <i class="fas fa-user me-1"></i>Usuario Simple
+                                                    </span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <small class="text-muted">
+                                                    {{ usuario.date_joined|date:"d/m/Y H:i"|default:"Sin fecha" }}
+                                                </small>
+                                            </td>
+                                            <td class="text-center">
+                                                <div class="btn-group" role="group">
+                                                    <button type="button" 
+                                                            class="btn btn-sm btn-outline-primary edit-user-btn" 
+                                                            data-user-id="{{ usuario.id }}"
+                                                            data-model-type="{{ usuario.model_type }}"
+                                                            title="Editar usuario">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
+                                                    {% if not usuario.is_admin %}
+                                                    <button type="button" 
+                                                            class="btn btn-sm btn-outline-danger delete-user-btn" 
+                                                            data-user-id="{{ usuario.id }}"
+                                                            data-model-type="{{ usuario.model_type }}"
+                                                            data-user-name="{{ usuario.name }}"
+                                                            title="Eliminar usuario">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                    {% else %}
+                                                    <button type="button" 
+                                                            class="btn btn-sm btn-outline-secondary" 
+                                                            disabled
+                                                            title="No se pueden eliminar administradores">
+                                                        <i class="fas fa-shield-alt"></i>
+                                                    </button>
+                                                    {% endif %}
+                                                    <button type="button" 
+                                                            class="btn btn-sm btn-outline-info view-user-btn" 
+                                                            data-user-id="{{ usuario.id }}"
+                                                            data-model-type="{{ usuario.model_type }}"
+                                                            title="Ver detalles">
+                                                        <i class="fas fa-eye"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="9" class="text-center">
+                                                <div class="py-4">
+                                                    <i class="fas fa-users text-muted fa-3x mb-3"></i>
+                                                    <h5 class="text-muted">No hay usuarios registrados</h5>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal para editar usuario -->
+                <div class="modal fade" id="editUserModal" tabindex="-1">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">
+                                    <i class="fas fa-user-edit me-2"></i>Editar Usuario
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <form id="editUserForm">
+                                    <input type="hidden" id="editUserId" name="user_id">
+                                    <input type="hidden" id="editUserModelType" name="model_type">
+                                    
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="editUserName" class="form-label">Nombre</label>
+                                                <input type="text" class="form-control" id="editUserName" name="name" required>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="editUserEmail" class="form-label">Email</label>
+                                                <input type="email" class="form-control" id="editUserEmail" name="email" required>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="editUserPhone" class="form-label">Teléfono</label>
+                                                <input type="text" class="form-control" id="editUserPhone" name="phone">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="editUserUsername" class="form-label">Username</label>
+                                                <input type="text" class="form-control" id="editUserUsername" name="username">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="editUserAddress" class="form-label">Dirección</label>
+                                                <input type="text" class="form-control" id="editUserAddress" name="address">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="editUserCity" class="form-label">Ciudad</label>
+                                                <input type="text" class="form-control" id="editUserCity" name="city">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Sección de Seguridad -->
+                                    <hr>
+                                    <h6 class="text-primary"><i class="fas fa-shield-alt me-2"></i>Seguridad y Permisos</h6>
+                                    
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="editUserPassword" class="form-label">
+                                                    <i class="fas fa-key me-1"></i>Nueva Contraseña
+                                                </label>
+                                                <input type="password" class="form-control" id="editUserPassword" name="password" 
+                                                       placeholder="Dejar vacío para mantener actual">
+                                                <div class="form-text">Solo completar si desea cambiar la contraseña</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="editUserConfirmPassword" class="form-label">
+                                                    <i class="fas fa-key me-1"></i>Confirmar Contraseña
+                                                </label>
+                                                <input type="password" class="form-control" id="editUserConfirmPassword" name="confirm_password" 
+                                                       placeholder="Confirmar nueva contraseña">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Permisos (solo para register_superuser) -->
+                                    <div id="permissionsSection" class="permissions-section" style="display: none;">
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <label class="form-label">
+                                                    <i class="fas fa-user-cog me-1"></i>Permisos de Usuario
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <div class="form-check form-switch mb-2">
+                                                    <input class="form-check-input" type="checkbox" id="editUserIsActive" name="is_active">
+                                                    <label class="form-check-label" for="editUserIsActive">
+                                                        <i class="fas fa-user-check me-1"></i>Usuario Activo
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="form-check form-switch mb-2">
+                                                    <input class="form-check-input" type="checkbox" id="editUserIsStaff" name="is_staff">
+                                                    <label class="form-check-label" for="editUserIsStaff">
+                                                        <i class="fas fa-user-tie me-1"></i>Es Staff
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="form-check form-switch mb-2">
+                                                    <input class="form-check-input" type="checkbox" id="editUserIsSuperuser" name="is_superuser">
+                                                    <label class="form-check-label" for="editUserIsSuperuser">
+                                                        <i class="fas fa-crown me-1"></i>Super Usuario
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Estado del Usuario Simple -->
+                                    <div id="simpleUserSection" class="simple-user-section" style="display: none;">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-check form-switch mb-2">
+                                                    <input class="form-check-input" type="checkbox" id="editSimpleUserIsActive" name="simple_is_active">
+                                                    <label class="form-check-label" for="editSimpleUserIsActive">
+                                                        <i class="fas fa-user-check me-1"></i>Usuario Activo
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="alert alert-info alert-sm">
+                                                    <i class="fas fa-info-circle me-1"></i>
+                                                    <small>Los usuarios simples tienen permisos limitados por defecto</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </form>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                <button type="button" class="btn btn-primary" id="saveUserChanges">
+                                    <i class="fas fa-save me-2"></i>Guardar Cambios
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal para ver detalles del usuario -->
+                <div class="modal fade" id="viewUserModal" tabindex="-1">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">
+                                    <i class="fas fa-user-circle me-2"></i>Detalles del Usuario
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body" id="userDetailsContent">
+                                <!-- El contenido se carga dinámicamente -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Script específico para gestión de usuarios -->
+                <script>
+                    // Asegurar que la gestión de usuarios se inicialice
+                    document.addEventListener('DOMContentLoaded', function() {
+                        console.log('Inicializando gestión de usuarios inline...');
+                        
+                        // Event listeners para botones de usuarios
+                        document.addEventListener('click', function(e) {
+                            if (e.target.matches('.edit-user-btn') || e.target.closest('.edit-user-btn')) {
+                                e.preventDefault();
+                                const btn = e.target.matches('.edit-user-btn') ? e.target : e.target.closest('.edit-user-btn');
+                                const userId = btn.dataset.userId;
+                                const modelType = btn.dataset.modelType;
+                                
+                                console.log('Edit user clicked:', { userId, modelType });
+                                loadUserForEditInline(userId, modelType);
+                            }
                             
-                            <td>
-                                <button class="btn btn-primary" onclick="openEditModal('{{ usuario.id }}', '{{ usuario.username }}', '{{ usuario.email }}')">Editar</button>
-                                <button  class="btn btn-danger eliminar-usuario-btn" data-user-id="{{ usuario.id }}">x</button>
-                                <button  class="btn btn-info" href="?view=usuarios&reset_password={{ usuario.id }}">Restablecer contraseña</button>
-                           </td>
-                            {% if usuario.is_staff %}
-                                <span>Admin</span>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                    {% for usuario in usuarios_super %}
-                    <tr>
-                        <td>{{ usuario.username }}</td>
-                        <td>{{ usuario.email }}</td>
-                        <td>
-                            <select name="is_staff">
-                                <option value="True">Sí</option>
-                                <option value="False">No</option>
-                            </select>
-                        </td>
-                        <td>
-                            <select name="is_superuser">
-                                <option value="True">Sí</option>
-                                <option value="False">No</option>
-                            </select>
-                        </td>
-                        <td>
-                            <select name="is_active">
-                                <option value="True">Sí</option>
-                                <option value="False">No</option>
-                            </select>
-                        </td>
-                        <td>
-                            <select name="is_admin">
-                                <option value="True">Sí</option>
-                                <option value="False">No</option>
-                            </select>
-                        </td>
-                        <td>
-                            <td>
-                                <button onclick="openEditModal('{{ usuario.id }}', '{{ usuario.username }}', '{{ usuario.email }}')">Editar</button>
-                            <td>
-                                <button class="btn btn-danger eliminar-usuario-btn" data-user-id="{{ usuario.id }}">Eliminar</button>
-                            </td>
-                            {% if usuario.is_staff %}
-                                <span>Admin</span>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </table>
+                            if (e.target.matches('.view-user-btn') || e.target.closest('.view-user-btn')) {
+                                e.preventDefault();
+                                const btn = e.target.matches('.view-user-btn') ? e.target : e.target.closest('.view-user-btn');
+                                const userId = btn.dataset.userId;
+                                const modelType = btn.dataset.modelType;
+                                
+                                console.log('View user clicked:', { userId, modelType });
+                                viewUserDetailsInline(userId, modelType);
+                            }
+                            
+                            if (e.target.matches('.delete-user-btn') || e.target.closest('.delete-user-btn')) {
+                                e.preventDefault();
+                                const btn = e.target.matches('.delete-user-btn') ? e.target : e.target.closest('.delete-user-btn');
+                                const userId = btn.dataset.userId;
+                                const modelType = btn.dataset.modelType;
+                                const userName = btn.dataset.userName;
+                                
+                                console.log('Delete user clicked:', { userId, modelType, userName });
+                                confirmDeleteUserInline(userId, modelType, userName);
+                            }
+                        });
+                        
+                        // Listener para guardar cambios
+                        const saveBtn = document.getElementById('saveUserChanges');
+                        if (saveBtn) {
+                            saveBtn.addEventListener('click', saveUserChangesInline);
+                        }
+                    });
+                    
+                    // Función para cargar usuario para edición
+                    async function loadUserForEditInline(userId, modelType) {
+                        console.log('loadUserForEditInline called with:', userId, modelType);
+                        try {
+                            const response = await fetch(`/dashboard/usuario/${userId}/${modelType}/detalles/`);
+                            console.log('Response received:', response);
+                            const data = await response.json();
+                            console.log('Data parsed:', data);
+                            
+                            if (data.success) {
+                                const user = data.user;
+                                
+                                // Llenar campos básicos
+                                document.getElementById('editUserId').value = user.id;
+                                document.getElementById('editUserModelType').value = user.model_type;
+                                document.getElementById('editUserName').value = user.name || '';
+                                document.getElementById('editUserEmail').value = user.email || '';
+                                document.getElementById('editUserPhone').value = user.phone || '';
+                                document.getElementById('editUserAddress').value = user.address || '';
+                                document.getElementById('editUserCity').value = user.city || '';
+                                document.getElementById('editUserUsername').value = user.username || '';
+                                
+                                // Limpiar campos de contraseña
+                                document.getElementById('editUserPassword').value = '';
+                                document.getElementById('editUserConfirmPassword').value = '';
+                                
+                                // Mostrar/ocultar secciones según el tipo de usuario
+                                const permissionsSection = document.getElementById('permissionsSection');
+                                const simpleUserSection = document.getElementById('simpleUserSection');
+                                
+                                if (modelType === 'register_superuser') {
+                                    // Mostrar sección de permisos completa para administradores
+                                    permissionsSection.style.display = 'block';
+                                    simpleUserSection.style.display = 'none';
+                                    
+                                    // Llenar campos de permisos usando los nuevos datos
+                                    document.getElementById('editUserIsActive').checked = user.is_active !== false;
+                                    document.getElementById('editUserIsStaff').checked = user.is_staff || false;
+                                    document.getElementById('editUserIsSuperuser').checked = user.is_superuser || false;
+                                } else {
+                                    // Mostrar sección simple para usuarios normales
+                                    permissionsSection.style.display = 'none';
+                                    simpleUserSection.style.display = 'block';
+                                    
+                                    // Llenar campo de estado activo para usuario simple
+                                    document.getElementById('editSimpleUserIsActive').checked = user.is_active !== false;
+                                }
+                                
+                                console.log('About to show modal...');
+                                const modal = new bootstrap.Modal(document.getElementById('editUserModal'));
+                                modal.show();
+                                console.log('Modal show() called');
+                            } else {
+                                console.error('API error:', data.error);
+                                alert('Error al cargar usuario: ' + data.error);
+                            }
+                        } catch (error) {
+                            console.error('Error:', error);
+                            alert('Error de conexión');
+                        }
+                    }
+                    
+                    // Función para ver detalles
+                    async function viewUserDetailsInline(userId, modelType) {
+                        try {
+                            const response = await fetch(`/dashboard/usuario/${userId}/${modelType}/detalles/`);
+                            const data = await response.json();
+                            
+                            if (data.success) {
+                                const user = data.user;
+                                
+                                const detailsContent = `
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <h6><i class="fas fa-user me-2"></i>Información Personal</h6>
+                                            <table class="table table-sm">
+                                                <tr><td><strong>ID:</strong></td><td>${user.id}</td></tr>
+                                                <tr><td><strong>Nombre:</strong></td><td>${user.name || 'Sin nombre'}</td></tr>
+                                                <tr><td><strong>Email:</strong></td><td>${user.email}</td></tr>
+                                                <tr><td><strong>Teléfono:</strong></td><td>${user.phone || 'Sin teléfono'}</td></tr>
+                                            </table>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <h6><i class="fas fa-info-circle me-2"></i>Información Adicional</h6>
+                                            <table class="table table-sm">
+                                                <tr><td><strong>Username:</strong></td><td>${user.username || 'Sin username'}</td></tr>
+                                                <tr><td><strong>Ciudad:</strong></td><td>${user.city || 'Sin ciudad'}</td></tr>
+                                                <tr><td><strong>Dirección:</strong></td><td>${user.address || 'Sin dirección'}</td></tr>
+                                                <tr><td><strong>Fecha:</strong></td><td>${user.date_joined || 'Sin fecha'}</td></tr>
+                                            </table>
+                                        </div>
+                                    </div>
+                                `;
+                                
+                                document.getElementById('userDetailsContent').innerHTML = detailsContent;
+                                const modal = new bootstrap.Modal(document.getElementById('viewUserModal'));
+                                modal.show();
+                            } else {
+                                alert('Error al cargar detalles: ' + data.error);
+                            }
+                        } catch (error) {
+                            console.error('Error:', error);
+                            alert('Error de conexión');
+                        }
+                    }
+                    
+                    // Función para confirmar eliminación
+                    function confirmDeleteUserInline(userId, modelType, userName) {
+                        if (modelType === 'register_superuser') {
+                            alert('No se pueden eliminar usuarios administradores por seguridad.');
+                            return;
+                        }
+                        
+                        if (confirm(`¿Estás seguro de que quieres eliminar el usuario "${userName}"?`)) {
+                            deleteUserInline(userId, modelType);
+                        }
+                    }
+                    
+                    // Función para eliminar usuario
+                    async function deleteUserInline(userId, modelType) {
+                        try {
+                            const response = await fetch('/dashboard/usuario/eliminar/', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRFToken': getCookie('csrftoken')
+                                },
+                                body: JSON.stringify({
+                                    user_id: userId,
+                                    model_type: modelType
+                                })
+                            });
+                            
+                            const data = await response.json();
+                            
+                            if (data.success) {
+                                alert(data.message);
+                                location.reload();
+                            } else {
+                                alert('Error: ' + data.error);
+                            }
+                        } catch (error) {
+                            console.error('Error:', error);
+                            alert('Error de conexión');
+                        }
+                    }
+                    
+                    // Función para guardar cambios
+                    async function saveUserChangesInline() {
+                        const form = document.getElementById('editUserForm');
+                        const formData = new FormData(form);
+                        
+                        // Validar contraseñas
+                        const password = document.getElementById('editUserPassword').value;
+                        const confirmPassword = document.getElementById('editUserConfirmPassword').value;
+                        
+                        if (password && password !== confirmPassword) {
+                            alert('Las contraseñas no coinciden');
+                            return;
+                        }
+                        
+                        if (password && password.length < 6) {
+                            alert('La contraseña debe tener al menos 6 caracteres');
+                            return;
+                        }
+                        
+                        const modelType = formData.get('model_type');
+                        
+                        const userData = {
+                            user_id: formData.get('user_id'),
+                            model_type: modelType,
+                            name: formData.get('name'),
+                            email: formData.get('email'),
+                            phone: formData.get('phone'),
+                            address: formData.get('address'),
+                            city: formData.get('city'),
+                            username: formData.get('username')
+                        };
+                        
+                        // Agregar contraseña si se proporcionó
+                        if (password) {
+                            userData.password = password;
+                        }
+                        
+                        // Agregar permisos según el tipo de usuario
+                        if (modelType === 'register_superuser') {
+                            userData.is_active = document.getElementById('editUserIsActive').checked;
+                            userData.is_staff = document.getElementById('editUserIsStaff').checked;
+                            userData.is_superuser = document.getElementById('editUserIsSuperuser').checked;
+                        } else {
+                            userData.is_active = document.getElementById('editSimpleUserIsActive').checked;
+                        }
+                        
+                        try {
+                            const response = await fetch('/dashboard/usuario/editar/', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRFToken': getCookie('csrftoken')
+                                },
+                                body: JSON.stringify(userData)
+                            });
+                            
+                            const data = await response.json();
+                            
+                            if (data.success) {
+                                alert(data.message);
+                                bootstrap.Modal.getInstance(document.getElementById('editUserModal')).hide();
+                                location.reload();
+                            } else {
+                                alert('Error: ' + data.error);
+                            }
+                        } catch (error) {
+                            console.error('Error:', error);
+                            alert('Error de conexión');
+                        }
+                    }
+                    
+                    // Función para obtener cookie CSRF
+                    function getCookie(name) {
+                        const match = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+                        return match ? match.pop() : '';
+                    }
+                </script>
+
             {% elif request.GET.view == "productos" %}
                 <div class="productos-dashboard">
                     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -1608,6 +2080,249 @@
                 {% else %}
                     <p>No hay proveedores disponibles.</p>
                 {% endif %}
+            {% elif request.GET.view == "mensajes" %}
+                <!-- Vista de Mensajes del Dashboard -->
+                <div class="messages-dashboard">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div>
+                            <h2><i class="fas fa-comments me-2"></i>Centro de Mensajes</h2>
+                            <p class="text-muted mb-0">Gestiona las consultas y conversaciones con los usuarios</p>
+                        </div>
+                        <div>
+                            <button class="btn btn-primary" id="refreshMessages">
+                                <i class="fas fa-sync-alt"></i> Actualizar
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Estadísticas rápidas -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="card bg-info text-white">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <h4>{{ conversations_stats.total_conversations|default:0 }}</h4>
+                                            <p class="mb-0">Total Conversaciones</p>
+                                        </div>
+                                        <div class="align-self-center">
+                                            <i class="fas fa-comments fa-2x"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-warning text-white">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <h4>{{ conversations_stats.pending_conversations|default:0 }}</h4>
+                                            <p class="mb-0">Sin Respuesta</p>
+                                        </div>
+                                        <div class="align-self-center">
+                                            <i class="fas fa-clock fa-2x"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-success text-white">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <h4>{{ conversations_stats.today_messages|default:0 }}</h4>
+                                            <p class="mb-0">Mensajes Hoy</p>
+                                        </div>
+                                        <div class="align-self-center">
+                                            <i class="fas fa-envelope fa-2x"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-primary text-white">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <h4>{{ conversations_stats.active_conversations|default:0 }}</h4>
+                                            <p class="mb-0">Conversaciones Activas</p>
+                                        </div>
+                                        <div class="align-self-center">
+                                            <i class="fas fa-comment-dots fa-2x"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Lista de conversaciones -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0"><i class="fas fa-list me-2"></i>Conversaciones</h5>
+                                <div class="btn-group" role="group">
+                                    <input type="radio" class="btn-check" name="conversation-filter" id="filter-all" checked>
+                                    <label class="btn btn-outline-primary btn-sm" for="filter-all">Todas</label>
+
+                                    <input type="radio" class="btn-check" name="conversation-filter" id="filter-pending">
+                                    <label class="btn btn-outline-warning btn-sm" for="filter-pending">Sin Respuesta</label>
+
+                                    <input type="radio" class="btn-check" name="conversation-filter" id="filter-active">
+                                    <label class="btn btn-outline-success btn-sm" for="filter-active">Activas</label>
+
+                                    <input type="radio" class="btn-check" name="conversation-filter" id="filter-closed">
+                                    <label class="btn btn-outline-secondary btn-sm" for="filter-closed">Cerradas</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            {% if conversations %}
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Usuario</th>
+                                                <th>Asunto</th>
+                                                <th>Estado</th>
+                                                <th>Último Mensaje</th>
+                                                <th>Fecha</th>
+                                                <th>Acciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="conversations-table-body">
+                                            {% for conversation in conversations %}
+                                            <tr class="conversation-row" data-status="{{ conversation.status }}" data-conversation-id="{{ conversation.id }}">
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="avatar-circle me-2">
+                                                            {{ conversation.user.username|first|upper }}
+                                                        </div>
+                                                        <div>
+                                                            <strong>{{ conversation.user.username }}</strong>
+                                                            {% if conversation.user.email %}
+                                                                <br><small class="text-muted">{{ conversation.user.email }}</small>
+                                                            {% endif %}
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <strong>{{ conversation.subject }}</strong>
+                                                    <!-- Referencia a pedido eliminada temporalmente -->
+                                                </td>
+                                                <td>
+                                                    <span class="badge bg-{% if conversation.status == 'open' %}warning{% elif conversation.status == 'in_progress' %}info{% elif conversation.status == 'resolved' %}success{% else %}secondary{% endif %}">
+                                                        {% if conversation.status == 'open' %}Abierta
+                                                        {% elif conversation.status == 'in_progress' %}En Progreso
+                                                        {% elif conversation.status == 'resolved' %}Resuelta
+                                                        {% else %}Cerrada
+                                                        {% endif %}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    {% if conversation.last_message %}
+                                                        <div class="message-preview">
+                                                            {{ conversation.last_message.message|truncatechars:60 }}
+                                                        </div>
+                                                        <small class="text-muted">
+                                                            {% if conversation.last_message.is_admin %}
+                                                                <i class="fas fa-user-shield"></i> Admin
+                                                            {% else %}
+                                                                <i class="fas fa-user"></i> Usuario
+                                                            {% endif %}
+                                                        </small>
+                                                    {% else %}
+                                                        <em class="text-muted">Sin mensajes</em>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    <div class="date-info">
+                                                        {{ conversation.created_at|date:"d/m/Y" }}
+                                                        <br><small class="text-muted">{{ conversation.created_at|time:"H:i" }}</small>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="btn-group" role="group">
+                                                        <button type="button" class="btn btn-sm btn-primary" 
+                                                                onclick="viewConversation({{ conversation.id }})"
+                                                                data-bs-toggle="modal" 
+                                                                data-bs-target="#conversationModal">
+                                                            <i class="fas fa-eye"></i> Ver
+                                                        </button>
+                                                        <div class="btn-group" role="group">
+                                                            <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" 
+                                                                    data-bs-toggle="dropdown" aria-expanded="false">
+                                                                <i class="fas fa-cog"></i>
+                                                            </button>
+                                                            <ul class="dropdown-menu">
+                                                                <li><a class="dropdown-item" href="#" onclick="updateConversationStatus({{ conversation.id }}, 'in_progress')">
+                                                                    <i class="fas fa-play text-info"></i> Marcar en Progreso
+                                                                </a></li>
+                                                                <li><a class="dropdown-item" href="#" onclick="updateConversationStatus({{ conversation.id }}, 'resolved')">
+                                                                    <i class="fas fa-check text-success"></i> Marcar Resuelta
+                                                                </a></li>
+                                                                <li><a class="dropdown-item" href="#" onclick="updateConversationStatus({{ conversation.id }}, 'closed')">
+                                                                    <i class="fas fa-times text-secondary"></i> Cerrar
+                                                                </a></li>
+                                                                <li><hr class="dropdown-divider"></li>
+                                                                <li><a class="dropdown-item" href="#" onclick="updateConversationStatus({{ conversation.id }}, 'open')">
+                                                                    <i class="fas fa-redo text-warning"></i> Reabrir
+                                                                </a></li>
+                                                            </ul>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <!-- Paginación -->
+                                {% if conversations.has_other_pages %}
+                                <nav aria-label="Paginación de conversaciones" class="mt-4">
+                                    <ul class="pagination justify-content-center">
+                                        {% if conversations.has_previous %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?view=mensajes&page={{ conversations.previous_page_number }}">Anterior</a>
+                                            </li>
+                                        {% endif %}
+                                        
+                                        {% for num in conversations.paginator.page_range %}
+                                            {% if conversations.number == num %}
+                                                <li class="page-item active">
+                                                    <span class="page-link">{{ num }}</span>
+                                                </li>
+                                            {% else %}
+                                                <li class="page-item">
+                                                    <a class="page-link" href="?view=mensajes&page={{ num }}">{{ num }}</a>
+                                                </li>
+                                            {% endif %}
+                                        {% endfor %}
+                                        
+                                        {% if conversations.has_next %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?view=mensajes&page={{ conversations.next_page_number }}">Siguiente</a>
+                                            </li>
+                                        {% endif %}
+                                    </ul>
+                                </nav>
+                                {% endif %}
+
+                            {% else %}
+                                <div class="text-center py-5">
+                                    <i class="fas fa-comment-slash text-muted" style="font-size: 4rem;"></i>
+                                    <h4 class="text-muted mt-3">No hay conversaciones</h4>
+                                    <p class="text-muted">Las conversaciones con usuarios aparecerán aquí cuando se registren consultas.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
             {% else %}
                 <!-- Vista de Ventas por Categorías - Home del Dashboard -->
                 <div class="ventas-dashboard">
@@ -2113,6 +2828,7 @@
                                 <div class="mb-3">
                                     <label for="fecha_inicio" class="form-label">Fecha de Inicio <span class="text-danger">*</span></label>
                                     <input type="datetime-local" class="form-control" name="fecha_inicio" id="fecha_inicio" required>
+                                    <div class="form-text">Puede ser desde 5 minutos atrás hasta fechas futuras</div>
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -2176,6 +2892,105 @@
                         </button>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para ver conversaciones completas -->
+    <div class="modal fade" id="conversationModal" tabindex="-1" aria-labelledby="conversationModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="conversationModalLabel">
+                        <i class="fas fa-comments"></i> <span id="conversation-title">Conversación</span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <div id="conversationContent">
+                        <!-- Información de la conversación -->
+                        <div class="conversation-header p-3 bg-light border-bottom">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6 class="mb-1">
+                                        <i class="fas fa-user"></i> <span id="conv-user-name">Usuario</span>
+                                    </h6>
+                                    <p class="mb-0 text-muted small" id="conv-user-email">email@ejemplo.com</p>
+                                </div>
+                                <div class="col-md-6 text-md-end">
+                                    <span class="badge" id="conv-status-badge">Estado</span>
+                                    <br><small class="text-muted" id="conv-created-date">Fecha</small>
+                                </div>
+                            </div>
+                            <div class="row mt-2" id="conv-order-info" style="display: none;">
+                                <div class="col-12">
+                                    <div class="alert alert-info mb-0 py-2">
+                                        <i class="fas fa-shopping-cart"></i> 
+                                        <strong>Relacionado con pedido:</strong> 
+                                        <span id="conv-order-number">#123</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Lista de mensajes -->
+                        <div class="messages-container p-3" style="max-height: 400px; overflow-y: auto;">
+                            <div id="messages-list">
+                                <!-- Los mensajes se cargarán dinámicamente -->
+                                <div class="text-center">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Cargando mensajes...</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Formulario para responder -->
+                        <div class="response-form p-3 bg-light border-top">
+                            <form id="responseForm">
+                                <div class="mb-3">
+                                    <label for="admin-response" class="form-label">
+                                        <i class="fas fa-reply"></i> Tu Respuesta:
+                                    </label>
+                                    <textarea class="form-control" id="admin-response" rows="3" 
+                                              placeholder="Escribe tu respuesta aquí..." required></textarea>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="checkbox" id="mark-resolved">
+                                            <label class="form-check-label" for="mark-resolved">
+                                                Marcar como resuelta después de enviar
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-paper-plane"></i> Enviar Respuesta
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-outline-warning btn-sm" 
+                                onclick="updateConversationStatusInModal('in_progress')">
+                            <i class="fas fa-play"></i> En Progreso
+                        </button>
+                        <button type="button" class="btn btn-outline-success btn-sm" 
+                                onclick="updateConversationStatusInModal('resolved')">
+                            <i class="fas fa-check"></i> Resuelta
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" 
+                                onclick="updateConversationStatusInModal('closed')">
+                            <i class="fas fa-times"></i> Cerrar
+                        </button>
+                    </div>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i> Cerrar
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -2610,6 +3425,499 @@
         return container;
       }
 
+      // FUNCIONES PARA GESTIÓN DE MENSAJES
+      let currentConversationId = null;
+
+      // Ver detalles de una conversación
+      function viewConversation(conversationId) {
+        currentConversationId = conversationId;
+        console.log('👀 Cargando conversación:', conversationId);
+        
+        const modalContent = document.getElementById('conversationContent');
+        const messagesList = document.getElementById('messages-list');
+        
+        // Reset del formulario
+        document.getElementById('responseForm').reset();
+        
+        // Mostrar spinner
+        messagesList.innerHTML = `
+          <div class="text-center">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Cargando mensajes...</span>
+            </div>
+          </div>
+        `;
+
+        // Hacer request para obtener detalles de la conversación
+        fetch(`/dashboard/admin/conversation/${conversationId}/`, {
+          method: 'GET',
+          headers: {
+            'X-CSRFToken': getCsrfToken(),
+            'Content-Type': 'application/json',
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          console.log('🔍 Respuesta del servidor:', data);
+          if (data.success) {
+            console.log('✅ Datos de conversación:', data.conversation);
+            loadConversationData(data.conversation);
+          } else {
+            console.error('❌ Error del servidor:', data.error);
+            messagesList.innerHTML = `
+              <div class="alert alert-danger">
+                <i class="fas fa-exclamation-triangle"></i> 
+                Error al cargar la conversación: ${data.error || 'Error desconocido'}
+              </div>
+            `;
+          }
+        })
+        .catch(error => {
+          console.error('❌ Error de red:', error);
+          messagesList.innerHTML = `
+            <div class="alert alert-danger">
+              <i class="fas fa-exclamation-triangle"></i> 
+              Error de conexión. Por favor intenta de nuevo.
+            </div>
+          `;
+        });
+      }
+
+      // Cargar datos de la conversación en el modal
+      function loadConversationData(conversation) {
+        console.log('📋 Cargando datos de conversación:', conversation);
+        
+        try {
+          // Actualizar título y información básica
+          try {
+            document.getElementById('conversation-title').textContent = conversation.subject || 'Conversación sin título';
+            console.log('✅ Título actualizado');
+          } catch (error) {
+            console.error('❌ Error al actualizar título:', error);
+          }
+          
+          try {
+            document.getElementById('conv-user-name').textContent = conversation.user?.username || 'Usuario desconocido';
+            console.log('✅ Usuario actualizado');
+          } catch (error) {
+            console.error('❌ Error al actualizar usuario:', error);
+          }
+          
+          try {
+            document.getElementById('conv-user-email').textContent = conversation.user?.email || 'No especificado';
+            console.log('✅ Email actualizado');
+          } catch (error) {
+            console.error('❌ Error al actualizar email:', error);
+          }
+          
+          // Debug de fecha
+          try {
+            console.log('🕒 Fecha recibida para conversación:', conversation.created_at);
+            console.log('🕒 Tipo de fecha recibida:', typeof conversation.created_at);
+            const formattedDate = formatDate(conversation.created_at);
+            console.log('🕒 Fecha formateada:', formattedDate);
+            document.getElementById('conv-created-date').textContent = formattedDate;
+            console.log('✅ Fecha actualizada');
+          } catch (error) {
+            console.error('❌ Error al actualizar fecha:', error);
+            document.getElementById('conv-created-date').textContent = 'Fecha no disponible';
+          }
+          
+          // Actualizar badge de estado
+          try {
+            const statusBadge = document.getElementById('conv-status-badge');
+            const statusColor = getConversationStatusColor(conversation.status);
+            const statusText = getConversationStatusText(conversation.status);
+            console.log('🏷️ Status color:', statusColor, 'Status text:', statusText);
+            statusBadge.className = `badge bg-${statusColor}`;
+            statusBadge.textContent = statusText;
+            console.log('✅ Estado actualizado');
+          } catch (error) {
+            console.error('❌ Error al actualizar estado:', error);
+          }
+          
+          // Mostrar información del pedido si existe (temporalmente deshabilitado)
+          try {
+            const orderInfo = document.getElementById('conv-order-info');
+            orderInfo.style.display = 'none';
+            console.log('✅ Info de pedido ocultada');
+          } catch (error) {
+            console.error('❌ Error al ocultar info de pedido:', error);
+          }
+          
+          // Cargar mensajes
+          try {
+            console.log('📨 Mensajes a cargar:', conversation.messages);
+            loadMessages(conversation.messages || []);
+            console.log('✅ Mensajes cargados');
+          } catch (error) {
+            console.error('❌ Error al cargar mensajes:', error);
+            const messagesList = document.getElementById('messages-list');
+            messagesList.innerHTML = `
+              <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle"></i> 
+                Error al cargar mensajes: ${error.message}
+              </div>
+            `;
+          }
+          
+        } catch (error) {
+          console.error('❌ Error general al cargar datos de conversación:', error);
+          const messagesList = document.getElementById('messages-list');
+          messagesList.innerHTML = `
+            <div class="alert alert-danger">
+              <i class="fas fa-exclamation-triangle"></i> 
+              Error al mostrar los datos de la conversación: ${error.message}
+            </div>
+          `;
+        }
+      }
+
+      // Cargar lista de mensajes
+      function loadMessages(messages) {
+        console.log('💬 Cargando mensajes:', messages);
+        const messagesList = document.getElementById('messages-list');
+        
+        if (!messages || messages.length === 0) {
+          console.log('⚠️ No hay mensajes para mostrar');
+          messagesList.innerHTML = `
+            <div class="text-center text-muted py-4">
+              <i class="fas fa-comment-slash fa-2x mb-2"></i>
+              <p>No hay mensajes en esta conversación</p>
+            </div>
+          `;
+          return;
+        }
+
+        try {
+          const messagesHTML = messages.map((message, index) => {
+            console.log(`📝 Procesando mensaje ${index + 1}:`, message);
+            console.log(`🕒 Fecha del mensaje ${index + 1}:`, message.created_at);
+            console.log(`🕒 Tipo de fecha del mensaje ${index + 1}:`, typeof message.created_at);
+            
+            let formattedDateTime;
+            try {
+              formattedDateTime = formatDateTime(message.created_at);
+              console.log(`🕒 Fecha formateada del mensaje ${index + 1}:`, formattedDateTime);
+            } catch (dateError) {
+              console.error(`❌ Error al formatear fecha del mensaje ${index + 1}:`, dateError);
+              formattedDateTime = 'Fecha no disponible';
+            }
+            
+            return `
+            <div class="message-item mb-3 ${message.is_admin ? 'admin-message' : 'user-message'}">
+              <div class="d-flex ${message.is_admin ? 'justify-content-end' : 'justify-content-start'}">
+                <div class="message-bubble ${message.is_admin ? 'bg-primary text-white' : 'bg-light'}" style="max-width: 80%;">
+                  <div class="message-header mb-1">
+                    <small class="fw-bold ${message.is_admin ? 'text-light' : 'text-primary'}">
+                      ${message.is_admin ? '👨‍💼 Admin' : '👤 ' + (message.sender_name || 'Usuario')}
+                    </small>
+                    <small class="ms-2 ${message.is_admin ? 'text-light opacity-75' : 'text-muted'}">
+                      ${formattedDateTime}
+                    </small>
+                  </div>
+                  <div class="message-content">
+                    ${message.message || 'Mensaje sin contenido'}
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+          }).join('');
+          
+          console.log('✅ HTML de mensajes generado correctamente');
+          messagesList.innerHTML = messagesHTML;
+          
+          // Scroll al final de los mensajes
+          setTimeout(() => {
+            try {
+              const messagesContainer = document.querySelector('.messages-container');
+              messagesContainer.scrollTop = messagesContainer.scrollHeight;
+              console.log('✅ Scroll aplicado');
+            } catch (scrollError) {
+              console.error('❌ Error al aplicar scroll:', scrollError);
+            }
+          }, 100);
+          
+        } catch (error) {
+          console.error('❌ Error general al procesar mensajes:', error);
+          messagesList.innerHTML = `
+            <div class="alert alert-danger">
+              <i class="fas fa-exclamation-triangle"></i> 
+              Error al procesar mensajes: ${error.message}
+            </div>
+          `;
+        }
+      }
+
+      // Enviar respuesta del administrador
+      document.getElementById('responseForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        if (!currentConversationId) {
+          showAlert('❌ Error: No hay conversación seleccionada', 'danger');
+          return;
+        }
+
+        const responseText = document.getElementById('admin-response').value.trim();
+        const markResolved = document.getElementById('mark-resolved').checked;
+        
+        if (!responseText) {
+          showAlert('❌ Por favor escribe una respuesta', 'warning');
+          return;
+        }
+
+        console.log('📩 Enviando respuesta a conversación:', currentConversationId);
+
+        // Deshabilitar el botón de envío
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalBtnText = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+
+        fetch('/dashboard/admin/conversation/reply/', {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': getCsrfToken(),
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            conversation_id: currentConversationId,
+            message: responseText,
+            mark_resolved: markResolved
+          })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            showAlert('✅ Respuesta enviada correctamente', 'success');
+            
+            // Limpiar el formulario
+            document.getElementById('admin-response').value = '';
+            document.getElementById('mark-resolved').checked = false;
+            
+            // Recargar la conversación
+            viewConversation(currentConversationId);
+            
+            // Actualizar la tabla si la conversación fue marcada como resuelta
+            if (markResolved) {
+              setTimeout(() => {
+                location.reload();
+              }, 2000);
+            }
+          } else {
+            showAlert('❌ Error al enviar respuesta: ' + (data.error || 'Error desconocido'), 'danger');
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          showAlert('❌ Error de conexión. Intenta de nuevo.', 'danger');
+        })
+        .finally(() => {
+          // Restaurar el botón
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalBtnText;
+        });
+      });
+
+      // Actualizar estado de conversación desde el modal
+      function updateConversationStatusInModal(newStatus) {
+        if (!currentConversationId) {
+          showAlert('❌ Error: No hay conversación seleccionada', 'danger');
+          return;
+        }
+
+        updateConversationStatus(currentConversationId, newStatus);
+      }
+
+      // Actualizar estado de conversación
+      function updateConversationStatus(conversationId, newStatus) {
+        const confirmMessage = `¿Estás seguro de cambiar el estado de esta conversación a "${getConversationStatusText(newStatus)}"?`;
+        
+        if (!confirm(confirmMessage)) {
+          return;
+        }
+
+        console.log('🔄 Actualizando estado de conversación:', conversationId, 'a', newStatus);
+
+        fetch('/dashboard/admin/conversation/update-status/', {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': getCsrfToken(),
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            conversation_id: conversationId,
+            new_status: newStatus
+          })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            showAlert(`✅ Estado actualizado a "${getConversationStatusText(newStatus)}" correctamente`, 'success');
+            
+            // Actualizar el badge en el modal si está abierto
+            if (currentConversationId === conversationId) {
+              const statusBadge = document.getElementById('conv-status-badge');
+              statusBadge.className = `badge bg-${getConversationStatusColor(newStatus)}`;
+              statusBadge.textContent = getConversationStatusText(newStatus);
+            }
+            
+            // Actualizar la fila en la tabla
+            updateConversationRowStatus(conversationId, newStatus);
+            
+            // Recargar estadísticas
+            setTimeout(() => {
+              location.reload();
+            }, 2000);
+          } else {
+            showAlert('❌ Error al actualizar estado: ' + (data.error || 'Error desconocido'), 'danger');
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          showAlert('❌ Error de conexión. Intenta de nuevo.', 'danger');
+        });
+      }
+
+      // Actualizar fila de conversación en la tabla
+      function updateConversationRowStatus(conversationId, newStatus) {
+        const row = document.querySelector(`[data-conversation-id="${conversationId}"]`);
+        if (row) {
+          const statusBadge = row.querySelector('.badge');
+          if (statusBadge) {
+            statusBadge.className = `badge bg-${getConversationStatusColor(newStatus)}`;
+            statusBadge.textContent = getConversationStatusText(newStatus);
+          }
+          
+          // Actualizar el atributo data-status para los filtros
+          row.setAttribute('data-status', newStatus);
+        }
+      }
+
+      // Funciones auxiliares para conversaciones
+      function getConversationStatusColor(status) {
+        const colors = {
+          'open': 'warning',
+          'in_progress': 'info', 
+          'resolved': 'success',
+          'closed': 'secondary'
+        };
+        return colors[status] || 'secondary';
+      }
+
+      function getConversationStatusText(status) {
+        const texts = {
+          'open': 'Abierta',
+          'in_progress': 'En Progreso',
+          'resolved': 'Resuelta', 
+          'closed': 'Cerrada'
+        };
+        return texts[status] || 'Desconocido';
+      }
+
+      // Filtros de conversaciones
+      document.addEventListener('DOMContentLoaded', function() {
+        const filterButtons = document.querySelectorAll('input[name="conversation-filter"]');
+        filterButtons.forEach(button => {
+          button.addEventListener('change', function() {
+            const filterValue = this.id.replace('filter-', '');
+            filterConversations(filterValue);
+          });
+        });
+      });
+
+      function filterConversations(filter) {
+        const rows = document.querySelectorAll('.conversation-row');
+        
+        rows.forEach(row => {
+          const status = row.getAttribute('data-status');
+          let shouldShow = false;
+          
+          switch(filter) {
+            case 'all':
+              shouldShow = true;
+              break;
+            case 'pending':
+              shouldShow = status === 'open';
+              break;
+            case 'active':
+              shouldShow = status === 'in_progress';
+              break;
+            case 'closed':
+              shouldShow = status === 'closed' || status === 'resolved';
+              break;
+          }
+          
+          row.style.display = shouldShow ? '' : 'none';
+        });
+      }
+
+      // Actualizar mensajes automáticamente
+      document.getElementById('refreshMessages').addEventListener('click', function() {
+        location.reload();
+      });
+
+      // Formatear fechas
+      function formatDate(dateString) {
+        console.log('🔍 formatDate llamado con:', dateString, 'tipo:', typeof dateString);
+        try {
+          if (!dateString) {
+            console.log('⚠️ formatDate: dateString está vacío');
+            return 'Fecha no disponible';
+          }
+          console.log('🔍 formatDate: Creando objeto Date...');
+          const date = new Date(dateString);
+          console.log('🔍 formatDate: Date creado:', date);
+          if (isNaN(date.getTime())) {
+            console.error('❌ formatDate: Fecha inválida:', dateString);
+            return 'Fecha inválida';
+          }
+          const result = date.toLocaleDateString('es-CO') + ' ' + date.toLocaleTimeString('es-CO', {hour: '2-digit', minute: '2-digit'});
+          console.log('✅ formatDate: Resultado:', result);
+          return result;
+        } catch (error) {
+          console.error('❌ formatDate: Error al formatear fecha:', error, dateString);
+          console.error('❌ formatDate: Stack trace:', error.stack);
+          return 'Error en fecha';
+        }
+      }
+
+      function formatDateTime(dateString) {
+        console.log('🔍 formatDateTime llamado con:', dateString, 'tipo:', typeof dateString);
+        try {
+          if (!dateString) {
+            console.log('⚠️ formatDateTime: dateString está vacío');
+            return 'Fecha no disponible';
+          }
+          console.log('🔍 formatDateTime: Creando objeto Date...');
+          const date = new Date(dateString);
+          console.log('🔍 formatDateTime: Date creado:', date);
+          if (isNaN(date.getTime())) {
+            console.error('❌ formatDateTime: Fecha/hora inválida:', dateString);
+            return 'Fecha inválida';
+          }
+          const now = new Date();
+          const diffInMs = now - date;
+          const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+          
+          let result;
+          if (diffInDays === 0) {
+            result = 'Hoy ' + date.toLocaleTimeString('es-CO', {hour: '2-digit', minute: '2-digit'});
+          } else if (diffInDays === 1) {
+            result = 'Ayer ' + date.toLocaleTimeString('es-CO', {hour: '2-digit', minute: '2-digit'});
+          } else {
+            result = date.toLocaleDateString('es-CO') + ' ' + date.toLocaleTimeString('es-CO', {hour: '2-digit', minute: '2-digit'});
+          }
+          console.log('✅ formatDateTime: Resultado:', result);
+          return result;
+        } catch (error) {
+          console.error('❌ formatDateTime: Error al formatear fecha/hora:', error, dateString);
+          console.error('❌ formatDateTime: Stack trace:', error.stack);
+          return 'Error en fecha';
+        }
+      }
+
       // FUNCIONES PARA BONOS DE DESCUENTO
       function editarBono(bonoId) {
         // Por ahora, redirigir a la página con parámetros para edición
@@ -2641,6 +3949,134 @@
     </script>
 
     <style>
+      /* Estilos para la sección de mensajes */
+      .messages-dashboard .avatar-circle {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(45deg, #007bff, #0056b3);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 1.1rem;
+      }
+      
+      .message-bubble {
+        border-radius: 18px;
+        padding: 12px 16px;
+        margin: 4px 0;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        word-wrap: break-word;
+      }
+      
+      .message-item.admin-message .message-bubble {
+        background: linear-gradient(135deg, #007bff, #0056b3) !important;
+        border-bottom-right-radius: 4px;
+      }
+      
+      .message-item.user-message .message-bubble {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-bottom-left-radius: 4px;
+      }
+      
+      .message-preview {
+        font-size: 0.9rem;
+        line-height: 1.3;
+        color: #495057;
+      }
+      
+      .conversation-header {
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef) !important;
+      }
+      
+      .messages-container {
+        background: #fafbfc;
+        min-height: 300px;
+      }
+      
+      .response-form {
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef) !important;
+        border-top: 2px solid #dee2e6 !important;
+      }
+      
+      /* Filtros de conversaciones */
+      .btn-check:checked + .btn-outline-primary {
+        background-color: #007bff;
+        border-color: #007bff;
+        color: white;
+      }
+      
+      .btn-check:checked + .btn-outline-warning {
+        background-color: #ffc107;
+        border-color: #ffc107;
+        color: #000;
+      }
+      
+      .btn-check:checked + .btn-outline-success {
+        background-color: #198754;
+        border-color: #198754;
+        color: white;
+      }
+      
+      .btn-check:checked + .btn-outline-secondary {
+        background-color: #6c757d;
+        border-color: #6c757d;
+        color: white;
+      }
+      
+      /* Responsivo para conversaciones */
+      @media (max-width: 768px) {
+        .messages-dashboard .avatar-circle {
+          width: 35px;
+          height: 35px;
+          font-size: 1rem;
+        }
+        
+        .message-bubble {
+          font-size: 0.9rem;
+          padding: 10px 12px;
+        }
+        
+        .btn-group .btn {
+          font-size: 0.8rem;
+          padding: 0.25rem 0.5rem;
+        }
+        
+        .conversation-row td {
+          font-size: 0.85rem;
+        }
+        
+        .conversation-row .date-info {
+          font-size: 0.8rem;
+        }
+      }
+      
+      /* Animaciones para nuevos mensajes */
+      .message-item {
+        animation: slideInMessage 0.3s ease-out;
+      }
+      
+      @keyframes slideInMessage {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      
+      /* Hover effects para conversaciones */
+      .conversation-row:hover {
+        background-color: rgba(0, 123, 255, 0.05);
+        transform: translateX(2px);
+        transition: all 0.2s ease;
+      }
+      
       /* Arreglar z-index de dropdowns en tabla de pedidos */
       .table tbody .dropdown {
         position: static;
@@ -2712,6 +4148,107 @@
       .dropdown-item i.text-primary { color: #0d6efd !important; }
       .dropdown-item i.text-success { color: #198754 !important; }
       .dropdown-item i.text-danger { color: #dc3545 !important; }
+      
+      /* Estilos para el sistema de mensajes */
+      .avatar-circle {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 16px;
+        text-transform: uppercase;
+      }
+      
+      .message-bubble {
+        border-radius: 15px;
+        padding: 10px 15px;
+        margin: 5px 0;
+        word-wrap: break-word;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+      }
+      
+      .admin-message .message-bubble {
+        background: #0d6efd;
+        color: white;
+        margin-left: 20%;
+      }
+      
+      .user-message .message-bubble {
+        background: #f8f9fa;
+        color: #212529;
+        margin-right: 20%;
+        border: 1px solid #dee2e6;
+      }
+      
+      .conversation-row:hover {
+        background-color: #f8f9fa;
+        cursor: pointer;
+      }
+      
+      .message-preview {
+        max-width: 300px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      
+      .date-info {
+        text-align: center;
+        font-size: 0.85rem;
+      }
+      
+      .messages-container {
+        background: #fafafa;
+        border-radius: 10px;
+      }
+      
+      .conversation-header {
+        border-top-left-radius: 10px;
+        border-top-right-radius: 10px;
+      }
+      
+      .response-form {
+        border-bottom-left-radius: 10px;
+        border-bottom-right-radius: 10px;
+      }
+      
+      /* Animaciones suaves */
+      .conversation-row {
+        transition: background-color 0.2s ease;
+      }
+      
+      .message-bubble {
+        animation: fadeIn 0.3s ease-in;
+      }
+      
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      
+      /* Responsive para mensajes */
+      @media (max-width: 768px) {
+        .admin-message .message-bubble,
+        .user-message .message-bubble {
+          margin-left: 10px;
+          margin-right: 10px;
+        }
+        
+        .message-preview {
+          max-width: 200px;
+        }
+        
+        .avatar-circle {
+          width: 35px;
+          height: 35px;
+          font-size: 14px;
+        }
+      }
     </style>
     
 </body>

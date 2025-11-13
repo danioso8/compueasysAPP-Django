@@ -19,6 +19,8 @@
     let checkoutData = {
         subtotal: 0,
         shipping: 0,
+        discount: 0,
+        discountCode: '',
         total: 0,
         paymentMethod: 'contraentrega',
         processing: false
@@ -57,6 +59,178 @@
             }
         }
         return '';
+    }
+
+    // FUNCIONES DE DESCUENTO
+    function validateDiscountCode(code, cartTotal) {
+        console.log('🎫 Validando código de descuento:', { code, cartTotal });
+        
+        return fetch('/api/validate-discount-code/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken()
+            },
+            body: JSON.stringify({
+                codigo: code,
+                cart_total: cartTotal
+            })
+        })
+        .then(response => {
+            console.log('📡 Respuesta del servidor:', response.status);
+            return response.json();
+        })
+        .then(data => {
+            console.log('📋 Datos recibidos:', data);
+            return data;
+        })
+        .catch(error => {
+            console.error('❌ Error validating discount:', error);
+            return { valid: false, message: 'Error de conexión' };
+        });
+    }
+
+    function applyDiscount(code, amount) {
+        console.log('✅ Aplicando descuento:', { code, amount });
+        
+        checkoutData.discountCode = code;
+        checkoutData.discount = amount;
+        
+        // Actualizar campos hidden
+        document.getElementById('discountAppliedValue').value = code;
+        document.getElementById('discountAmountValue').value = amount;
+        
+        // Mostrar fila de descuento
+        const discountRow = document.getElementById('discount_row');
+        const discountCodeEl = document.getElementById('discount_code_applied');
+        const discountAmountEl = document.getElementById('discount_amount_display');
+        
+        if (discountRow && discountCodeEl && discountAmountEl) {
+            discountRow.classList.remove('d-none');
+            discountCodeEl.textContent = code;
+            discountAmountEl.textContent = formatMoney(-amount);
+        }
+        
+        // Recalcular totales
+        calculateTotals();
+    }
+
+    function removeDiscount() {
+        console.log('❌ Removiendo descuento');
+        
+        checkoutData.discountCode = '';
+        checkoutData.discount = 0;
+        
+        // Limpiar campos hidden
+        document.getElementById('discountAppliedValue').value = '';
+        document.getElementById('discountAmountValue').value = '0';
+        
+        // Ocultar fila de descuento
+        const discountRow = document.getElementById('discount_row');
+        if (discountRow) {
+            discountRow.classList.add('d-none');
+        }
+        
+        // Limpiar campo de input
+        const codeInput = document.getElementById('discount_code');
+        if (codeInput) {
+            codeInput.value = '';
+        }
+        
+        // Recalcular totales
+        calculateTotals();
+    }
+
+    function showDiscountFeedback(message, isSuccess) {
+        const feedbackEl = document.getElementById('discount_feedback');
+        if (feedbackEl) {
+            feedbackEl.innerHTML = `
+                <div class="alert alert-${isSuccess ? 'success' : 'danger'} alert-sm mt-2">
+                    <i class="bi bi-${isSuccess ? 'check-circle' : 'exclamation-triangle'}"></i>
+                    ${message}
+                </div>
+            `;
+        }
+    }
+
+    function setupDiscountHandlers() {
+        console.log('🔧 Configurando manejadores de descuento...');
+        
+        const discountInput = document.getElementById('discount_code');
+        const applyBtn = document.getElementById('apply_discount_btn');
+        
+        console.log('🔍 Elementos encontrados:', {
+            input: !!discountInput,
+            button: !!applyBtn
+        });
+        
+        if (!discountInput || !applyBtn) {
+            console.error('⚠️ Elementos de descuento no encontrados');
+            return;
+        }
+        
+        console.log('✅ Event listeners configurados para descuento');
+        
+        // Evento para aplicar descuento
+        applyBtn.addEventListener('click', async function() {
+            console.log('🎯 Click en botón aplicar descuento');
+            
+            const code = discountInput.value.trim().toUpperCase();
+            console.log('📝 Código ingresado:', code);
+            
+            if (!code) {
+                showDiscountFeedback('Por favor ingresa un código de descuento', false);
+                return;
+            }
+            
+            // Mostrar loading
+            const btnText = this.querySelector('.btn-text');
+            const btnSpinner = this.querySelector('.btn-spinner');
+            
+            if (btnText && btnSpinner) {
+                btnText.classList.add('d-none');
+                btnSpinner.classList.remove('d-none');
+            }
+            this.disabled = true;
+            
+            try {
+                const result = await validateDiscountCode(code, checkoutData.subtotal);
+                
+                if (result.valid) {
+                    applyDiscount(code, result.discount_amount);
+                    showDiscountFeedback(result.message, true);
+                } else {
+                    showDiscountFeedback(result.message, false);
+                }
+            } catch (error) {
+                showDiscountFeedback('Error al validar código. Intenta de nuevo.', false);
+            } finally {
+                // Restaurar botón
+                if (btnText && btnSpinner) {
+                    btnText.classList.remove('d-none');
+                    btnSpinner.classList.add('d-none');
+                }
+                this.disabled = false;
+            }
+        });
+        
+        // Evento para remover descuento cuando se modifica el input
+        discountInput.addEventListener('input', function() {
+            if (checkoutData.discountCode && this.value !== checkoutData.discountCode) {
+                removeDiscount();
+                document.getElementById('discount_feedback').innerHTML = '';
+            }
+        });
+        
+        // Permitir aplicar con Enter
+        discountInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                applyBtn.click();
+            }
+        });
+        
+        console.log('✅ Event handlers de descuento configurados');
     }
 
     // Función principal: calcular totales
@@ -100,18 +274,40 @@
             }
         }
 
-        // 5. Calcular total
-        const totalAmount = subtotalNumber + shippingCost;
+        // 5. Aplicar descuento si existe
+        let discountAmount = 0;
+        if (checkoutData.discount && checkoutData.discount.amount) {
+            if (checkoutData.discount.tipo === 'P') {
+                // Porcentaje
+                discountAmount = Math.round((subtotalNumber * checkoutData.discount.amount) / 100);
+            } else {
+                // Monto fijo
+                discountAmount = checkoutData.discount.amount;
+            }
+            // No permitir que el descuento sea mayor al subtotal
+            discountAmount = Math.min(discountAmount, subtotalNumber);
+            console.log('💰 Descuento aplicado:', {
+                codigo: checkoutData.discount.code,
+                tipo: checkoutData.discount.tipo,
+                valor: checkoutData.discount.amount,
+                descuento: discountAmount
+            });
+        }
+
+        // 6. Calcular total
+        const totalAmount = Math.max(0, subtotalNumber + shippingCost - discountAmount);
         
         console.log('🧮 Cálculo final:', {
             subtotal: subtotalNumber,
             shipping: shippingCost,
+            discount: discountAmount,
             total: totalAmount
         });
 
-        // 6. Guardar en estado
+        // 7. Guardar en estado
         checkoutData.subtotal = subtotalNumber;
         checkoutData.shipping = shippingCost;
+        checkoutData.discount_amount = discountAmount;
         checkoutData.total = totalAmount;
         checkoutData.paymentMethod = paymentMethod;
 
@@ -136,6 +332,20 @@
                 shippingEl.textContent = formatMoney(checkoutData.shipping);
             }
             console.log('✅ Envío actualizado:', checkoutData.shipping);
+        }
+
+        // Actualizar descuento
+        const discountEl = document.getElementById('discount_display');
+        if (discountEl && checkoutData.discount_amount > 0) {
+            discountEl.innerHTML = `
+                <div class="d-flex justify-content-between">
+                    <span>Descuento (${checkoutData.discount.code}):</span>
+                    <span class="text-success">-${formatMoney(checkoutData.discount_amount)}</span>
+                </div>
+            `;
+            discountEl.style.display = 'block';
+        } else if (discountEl) {
+            discountEl.style.display = 'none';
         }
 
         // Actualizar total
@@ -337,6 +547,7 @@
 
         // Configurar todo
         setupEventListeners();
+        setupDiscountHandlers();
         calculateTotals();
 
         console.log('✅ Checkout inicializado correctamente');
@@ -355,14 +566,17 @@
         config: CONFIG,
         calculate: calculateTotals,
         process: processOrder,
+        validateDiscount: validateDiscountCode,
         
         // Test simple
         test: function() {
             console.log('🧪 Estado actual del checkout:');
             console.log('- Subtotal:', checkoutData.subtotal);
             console.log('- Envío:', checkoutData.shipping);
+            console.log('- Descuento:', checkoutData.discount_amount || 0);
             console.log('- Total:', checkoutData.total);
             console.log('- Método:', checkoutData.paymentMethod);
+            console.log('- Código descuento:', checkoutData.discount?.code || 'Ninguno');
             
             // Verificar elementos
             const elements = {
@@ -370,7 +584,10 @@
                 'Subtotal': '#subtotal_amount',
                 'Envío': '#shipping_amount',
                 'Total': '#total_final',
-                'Botón': '#checkout_submit_btn'
+                'Botón': '#checkout_submit_btn',
+                'Código descuento': '#discount_code',
+                'Botón aplicar': '#apply_discount',
+                'Área descuento': '#discount_display'
             };
             
             console.log('\n📋 Elementos HTML:');
