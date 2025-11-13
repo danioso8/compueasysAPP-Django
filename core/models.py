@@ -192,3 +192,132 @@ class PedidoDetalle(models.Model):
     variante = models.ForeignKey('ProductVariant', on_delete=models.SET_NULL, null=True, blank=True)
     cantidad = models.PositiveIntegerField()
     precio = models.DecimalField(max_digits=10, decimal_places=2)
+
+
+class BonoDescuento(models.Model):
+    """Modelo para gestionar bonos de descuento con códigos promocionales"""
+    
+    TIPO_DESCUENTO_CHOICES = [
+        ('porcentaje', 'Porcentaje'),
+        ('fijo', 'Valor Fijo'),
+    ]
+    
+    codigo = models.CharField(
+        max_length=50, 
+        unique=True, 
+        help_text="Código único del bono (ej: DESCUENTO50, NAVIDAD2025)"
+    )
+    descripcion = models.CharField(
+        max_length=200, 
+        help_text="Descripción del bono para uso interno"
+    )
+    tipo_descuento = models.CharField(
+        max_length=10, 
+        choices=TIPO_DESCUENTO_CHOICES, 
+        default='porcentaje'
+    )
+    valor_descuento = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2,
+        help_text="Porcentaje (0-100) o valor fijo en pesos"
+    )
+    valor_minimo_compra = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2,
+        default=0,
+        help_text="Valor mínimo de compra para aplicar el descuento"
+    )
+    fecha_inicio = models.DateTimeField(
+        help_text="Fecha y hora desde cuando es válido el bono"
+    )
+    fecha_fin = models.DateTimeField(
+        help_text="Fecha y hora hasta cuando es válido el bono"
+    )
+    usos_maximos = models.PositiveIntegerField(
+        default=1,
+        help_text="Número máximo de veces que se puede usar este código"
+    )
+    usos_realizados = models.PositiveIntegerField(
+        default=0,
+        help_text="Número de veces que ya se ha usado este código"
+    )
+    activo = models.BooleanField(
+        default=True,
+        help_text="Si el bono está activo o desactivado"
+    )
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    fecha_actualizacion = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Bono de Descuento"
+        verbose_name_plural = "Bonos de Descuento"
+        ordering = ['-fecha_creacion']
+    
+    def __str__(self):
+        tipo_display = "%" if self.tipo_descuento == 'porcentaje' else "$"
+        return f"{self.codigo} - {self.valor_descuento}{tipo_display}"
+    
+    def is_valid(self):
+        """Verificar si el bono es válido actualmente"""
+        from django.utils import timezone
+        now = timezone.now()
+        
+        return (
+            self.activo and
+            self.fecha_inicio <= now <= self.fecha_fin and
+            self.usos_realizados < self.usos_maximos
+        )
+    
+    def can_be_used(self, total_compra):
+        """Verificar si el bono puede ser usado para una compra específica"""
+        return self.is_valid() and total_compra >= self.valor_minimo_compra
+    
+    def calcular_descuento(self, total_compra):
+        """Calcular el monto de descuento para un total específico"""
+        if not self.can_be_used(total_compra):
+            return 0
+        
+        if self.tipo_descuento == 'porcentaje':
+            descuento = (total_compra * self.valor_descuento) / 100
+        else:  # 'fijo'
+            descuento = self.valor_descuento
+        
+        # No permitir descuento mayor al total
+        return min(descuento, total_compra)
+    
+    def usar_bono(self):
+        """Registrar un uso del bono"""
+        if self.usos_realizados < self.usos_maximos:
+            self.usos_realizados += 1
+            self.save()
+            return True
+        return False
+    
+    def get_estado_display(self):
+        """Obtener el estado actual del bono para mostrar en UI"""
+        if not self.activo:
+            return "Desactivado"
+        
+        from django.utils import timezone
+        now = timezone.now()
+        
+        if now < self.fecha_inicio:
+            return "Programado"
+        elif now > self.fecha_fin:
+            return "Expirado"
+        elif self.usos_realizados >= self.usos_maximos:
+            return "Agotado"
+        else:
+            return "Activo"
+    
+    def get_estado_badge_class(self):
+        """Obtener clase CSS para el badge del estado"""
+        estado = self.get_estado_display()
+        estado_classes = {
+            'Activo': 'badge-success',
+            'Programado': 'badge-info', 
+            'Expirado': 'badge-secondary',
+            'Agotado': 'badge-warning',
+            'Desactivado': 'badge-danger',
+        }
+        return estado_classes.get(estado, 'badge-secondary')

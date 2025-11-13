@@ -1,5 +1,5 @@
 from django.contrib.auth.decorators import login_required, permission_required
-from core.models import ProductStore, Pedido, SimpleUser, Category, Type, proveedor, Galeria, ProductVariant, PedidoDetalle
+from core.models import ProductStore, Pedido, SimpleUser, Category, Type, proveedor, Galeria, ProductVariant, PedidoDetalle, BonoDescuento
 from django.contrib.auth.models import User
 from dashboard.models import register_superuser
 from django.db.models.signals import post_delete
@@ -73,6 +73,7 @@ def dashboard_home(request):
     tipos = Type.objects.all()
     proveedores = proveedor.objects.all()
     userSimples = register_superuser.objects.all()    
+    bonos = BonoDescuento.objects.all().order_by('-fecha_creacion')
     
     # Obtener pedidos con filtros
     pedidos_queryset = Pedido.objects.select_related('user').all().order_by('-fecha')
@@ -393,6 +394,130 @@ def dashboard_home(request):
             # tras crear, redirigir a la lista sin abrir el form crear
             return redirect(f"{reverse('dashboard_home')}?view=productos")
 
+    # MANEJO DE BONOS DE DESCUENTO
+    if request.method == 'POST' and view_param == 'bonos':
+        action = request.POST.get('action')
+        
+        if action == 'crear_bono':
+            try:
+                from django.utils import timezone
+                from datetime import datetime
+                
+                codigo = request.POST.get('codigo', '').strip().upper()
+                descripcion = request.POST.get('descripcion', '').strip()
+                tipo_descuento = request.POST.get('tipo_descuento')
+                valor_descuento = float(request.POST.get('valor_descuento', 0))
+                valor_minimo_compra = float(request.POST.get('valor_minimo_compra', 0))
+                fecha_inicio_str = request.POST.get('fecha_inicio')
+                fecha_fin_str = request.POST.get('fecha_fin')
+                usos_maximos = int(request.POST.get('usos_maximos', 1))
+                activo = request.POST.get('activo') == 'on'
+                
+                # Validaciones
+                if not codigo:
+                    messages.error(request, 'El código del bono es requerido')
+                    return redirect(f"{reverse('dashboard_home')}?view=bonos")
+                
+                # Verificar que el código no exista
+                if BonoDescuento.objects.filter(codigo=codigo).exists():
+                    messages.error(request, f'Ya existe un bono con el código "{codigo}"')
+                    return redirect(f"{reverse('dashboard_home')}?view=bonos")
+                
+                # Parsear fechas
+                try:
+                    fecha_inicio = timezone.make_aware(datetime.strptime(fecha_inicio_str, '%Y-%m-%dT%H:%M'))
+                    fecha_fin = timezone.make_aware(datetime.strptime(fecha_fin_str, '%Y-%m-%dT%H:%M'))
+                except ValueError:
+                    messages.error(request, 'Formato de fecha inválido')
+                    return redirect(f"{reverse('dashboard_home')}?view=bonos")
+                
+                if fecha_fin <= fecha_inicio:
+                    messages.error(request, 'La fecha de fin debe ser posterior a la fecha de inicio')
+                    return redirect(f"{reverse('dashboard_home')}?view=bonos")
+                
+                # Crear bono
+                bono = BonoDescuento.objects.create(
+                    codigo=codigo,
+                    descripcion=descripcion,
+                    tipo_descuento=tipo_descuento,
+                    valor_descuento=valor_descuento,
+                    valor_minimo_compra=valor_minimo_compra,
+                    fecha_inicio=fecha_inicio,
+                    fecha_fin=fecha_fin,
+                    usos_maximos=usos_maximos,
+                    activo=activo
+                )
+                
+                messages.success(request, f'Bono "{codigo}" creado exitosamente')
+                return redirect(f"{reverse('dashboard_home')}?view=bonos")
+                
+            except Exception as e:
+                messages.error(request, f'Error al crear bono: {str(e)}')
+                return redirect(f"{reverse('dashboard_home')}?view=bonos")
+        
+        elif action == 'editar_bono':
+            try:
+                bono_id = request.POST.get('bono_id')
+                bono = get_object_or_404(BonoDescuento, id=bono_id)
+                
+                from django.utils import timezone
+                from datetime import datetime
+                
+                codigo = request.POST.get('codigo', '').strip().upper()
+                descripcion = request.POST.get('descripcion', '').strip()
+                tipo_descuento = request.POST.get('tipo_descuento')
+                valor_descuento = float(request.POST.get('valor_descuento', 0))
+                valor_minimo_compra = float(request.POST.get('valor_minimo_compra', 0))
+                fecha_inicio_str = request.POST.get('fecha_inicio')
+                fecha_fin_str = request.POST.get('fecha_fin')
+                usos_maximos = int(request.POST.get('usos_maximos', 1))
+                activo = request.POST.get('activo') == 'on'
+                
+                # Verificar código único (excluyendo el actual)
+                if BonoDescuento.objects.filter(codigo=codigo).exclude(id=bono_id).exists():
+                    messages.error(request, f'Ya existe otro bono con el código "{codigo}"')
+                    return redirect(f"{reverse('dashboard_home')}?view=bonos")
+                
+                # Parsear fechas
+                fecha_inicio = timezone.make_aware(datetime.strptime(fecha_inicio_str, '%Y-%m-%dT%H:%M'))
+                fecha_fin = timezone.make_aware(datetime.strptime(fecha_fin_str, '%Y-%m-%dT%H:%M'))
+                
+                if fecha_fin <= fecha_inicio:
+                    messages.error(request, 'La fecha de fin debe ser posterior a la fecha de inicio')
+                    return redirect(f"{reverse('dashboard_home')}?view=bonos")
+                
+                # Actualizar bono
+                bono.codigo = codigo
+                bono.descripcion = descripcion
+                bono.tipo_descuento = tipo_descuento
+                bono.valor_descuento = valor_descuento
+                bono.valor_minimo_compra = valor_minimo_compra
+                bono.fecha_inicio = fecha_inicio
+                bono.fecha_fin = fecha_fin
+                bono.usos_maximos = usos_maximos
+                bono.activo = activo
+                bono.save()
+                
+                messages.success(request, f'Bono "{codigo}" actualizado exitosamente')
+                return redirect(f"{reverse('dashboard_home')}?view=bonos")
+                
+            except Exception as e:
+                messages.error(request, f'Error al editar bono: {str(e)}')
+                return redirect(f"{reverse('dashboard_home')}?view=bonos")
+        
+        elif action == 'eliminar_bono':
+            try:
+                bono_id = request.POST.get('bono_id')
+                bono = get_object_or_404(BonoDescuento, id=bono_id)
+                codigo = bono.codigo
+                bono.delete()
+                messages.success(request, f'Bono "{codigo}" eliminado exitosamente')
+                return redirect(f"{reverse('dashboard_home')}?view=bonos")
+                
+            except Exception as e:
+                messages.error(request, f'Error al eliminar bono: {str(e)}')
+                return redirect(f"{reverse('dashboard_home')}?view=bonos")
+
     # Calcular estadísticas de ventas por categorías (siempre, para usar en home)
     view_param = request.GET.get('view', 'ventas')  # 'ventas' por defecto
     
@@ -478,6 +603,7 @@ def dashboard_home(request):
         'tipos': tipos,
         'proveedores': proveedores,
         'usuarios': userSimples,
+        'bonos': bonos,
         'show_create_product_form': show_create_product_form,
         'show_edit_product_form': show_edit_product_form,
         'producto_to_edit': producto_to_edit,       

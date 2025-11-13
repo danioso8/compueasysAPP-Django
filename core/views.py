@@ -10,7 +10,7 @@ from django.contrib.auth import authenticate, login, logout
 import urllib.parse
 from django.http import JsonResponse, HttpResponseRedirect
 from dashboard.models import register_superuser
-from .models import Category, Type, Galeria, SimpleUser, Pedido, ProductVariant, ProductStore as Product, PedidoDetalle
+from .models import Category, Type, Galeria, SimpleUser, Pedido, ProductVariant, ProductStore as Product, PedidoDetalle, BonoDescuento
 from decimal import Decimal
 
 from django.conf import settings
@@ -367,7 +367,45 @@ def pago_exitoso(request):
         
         # Obtener información de descuento y pago
         discount_code = request.POST.get('discount_applied', '').strip()
-        discount_amount = Decimal(str(request.POST.get('discount_amount', 0)))
+        discount_amount_frontend = Decimal(str(request.POST.get('discount_amount', 0)))
+        
+        # VALIDAR BONO DE DESCUENTO EN BACKEND
+        discount_amount = Decimal('0')
+        bono_aplicado = None
+        
+        if discount_code:
+            try:
+                # Buscar el bono por código
+                bono = BonoDescuento.objects.get(codigo__iexact=discount_code)
+                
+                # Calcular total del carrito sin descuento
+                cart_subtotal = sum(
+                    Decimal(str(item['variant'].precio if item['variant'] else item['product'].price)) * int(item['quantity'])
+                    for item in cart_items
+                )
+                
+                # Validar si el bono puede ser usado
+                if bono.can_be_used(cart_subtotal):
+                    # Calcular descuento real
+                    discount_amount = Decimal(str(bono.calcular_descuento(cart_subtotal)))
+                    bono_aplicado = bono
+                    print(f"✅ Bono {discount_code} aplicado: ${discount_amount}")
+                else:
+                    print(f"❌ Bono {discount_code} no válido para esta compra")
+                    discount_code = ''  # Limpiar código inválido
+            
+            except BonoDescuento.DoesNotExist:
+                print(f"❌ Bono {discount_code} no encontrado")
+                discount_code = ''  # Limpiar código inexistente
+            except Exception as e:
+                print(f"❌ Error validando bono {discount_code}: {e}")
+                discount_code = ''
+        
+        # Verificar que el descuento del frontend coincida (seguridad)
+        if abs(discount_amount - discount_amount_frontend) > Decimal('0.01'):
+            print(f"⚠️ Descrepancia en descuento: Frontend=${discount_amount_frontend}, Backend=${discount_amount}")
+            # Usar el cálculo del backend por seguridad
+            
         transaction_id = request.POST.get('transaction_id', '').strip()
         metodo_pago = request.POST.get('metodo_pago', 'contraentrega')
 
@@ -479,6 +517,14 @@ def pago_exitoso(request):
             transaction_id=transaction_id if transaction_id else None,  # Transaction ID
             codigo_descuento=discount_code if discount_code else None,  # Código descuento
         )
+
+        # USAR EL BONO SI FUE APLICADO EXITOSAMENTE
+        if bono_aplicado and discount_amount > 0:
+            try:
+                bono_aplicado.usar_bono()
+                print(f"✅ Bono {bono_aplicado.codigo} usado exitosamente. Usos: {bono_aplicado.usos_realizados}/{bono_aplicado.usos_maximos}")
+            except Exception as e:
+                print(f"❌ Error al usar bono {bono_aplicado.codigo}: {e}")
 
         # Guardar cada item en el detalle del pedido y descontar stock (¡DENTRO DEL CICLO!)
         for item in cart_items:
@@ -1237,6 +1283,98 @@ def wompi_webhook(request):
             logger.info(f"Evento no manejado: {data.get('event')}")
         
         return JsonResponse({'status': 'success'})
+
+    except json.JSONDecodeError:
+        logger.error("Error parsing webhook JSON")
+        return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
+    except Exception as e:
+        logger.error(f"Error processing webhook: {e}")
+        return JsonResponse({'status': 'error'}, status=500)
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def validate_discount_code(request):
+    """Validar código de descuento via AJAX"""
+    try:
+        data = json.loads(request.body)
+        codigo = data.get('codigo', '').strip().upper()
+        cart_total = Decimal(str(data.get('cart_total', 0)))
+        
+        if not codigo:
+            return JsonResponse({
+                'valid': False,
+                'message': 'Código de descuento requerido',
+                'discount_amount': 0
+            })
+        
+        # Buscar el bono
+        try:
+            bono = BonoDescuento.objects.get(codigo__iexact=codigo)
+        except BonoDescuento.DoesNotExist:
+            return JsonResponse({
+                'valid': False,
+                'message': 'Código de descuento no válido',
+                'discount_amount': 0
+            })
+        
+        # Validar si puede ser usado
+        if not bono.can_be_used(cart_total):
+            estado = bono.get_estado_display()
+            if estado == 'Expirado':
+                message = 'Este código ya expiró'
+            elif estado == 'Agotado':
+                message = 'Este código ya fue usado las veces máximas permitidas'
+            elif estado == 'Desactivado':
+                message = 'Este código está desactivado'
+            elif estado == 'Programado':
+                message = 'Este código aún no está vigente'
+            elif cart_total < bono.valor_minimo_compra:
+                message = f'Compra mínima requerida: ${bono.valor_minimo_compra:,.0f}'
+            else:
+                message = 'Código no válido para esta compra'
+            
+            return JsonResponse({
+                'valid': False,
+                'message': message,
+                'discount_amount': 0,
+                'bono_info': {
+                    'codigo': bono.codigo,
+                    'estado': estado,
+                    'valor_minimo': float(bono.valor_minimo_compra)
+                }
+            })
+        
+        # Calcular descuento
+        discount_amount = float(bono.calcular_descuento(cart_total))
+        
+        return JsonResponse({
+            'valid': True,
+            'message': f'¡Código aplicado! Descuento: ${discount_amount:,.0f}',
+            'discount_amount': discount_amount,
+            'bono_info': {
+                'codigo': bono.codigo,
+                'descripcion': bono.descripcion,
+                'tipo': bono.tipo_descuento,
+                'valor': float(bono.valor_descuento),
+                'valor_minimo': float(bono.valor_minimo_compra),
+                'usos_realizados': bono.usos_realizados,
+                'usos_maximos': bono.usos_maximos
+            }
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'valid': False,
+            'message': 'Datos inválidos',
+            'discount_amount': 0
+        })
+    except Exception as e:
+        return JsonResponse({
+            'valid': False,
+            'message': f'Error del servidor: {str(e)}',
+            'discount_amount': 0
+        })
         
     except json.JSONDecodeError as e:
         logger.error(f"Invalid JSON payload: {e}")
@@ -1245,3 +1383,88 @@ def wompi_webhook(request):
     except Exception as e:
         logger.error(f"Error en webhook de Wompi: {str(e)}")
         return JsonResponse({'error': str(e)}, status=400)
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def validate_discount_code(request):
+    """Validar código de descuento via AJAX"""
+    try:
+        data = json.loads(request.body)
+        codigo = data.get('codigo', '').strip().upper()
+        cart_total = Decimal(str(data.get('cart_total', 0)))
+        
+        if not codigo:
+            return JsonResponse({
+                'valid': False,
+                'message': 'Código de descuento requerido',
+                'discount_amount': 0
+            })
+        
+        # Buscar el bono
+        try:
+            bono = BonoDescuento.objects.get(codigo__iexact=codigo)
+        except BonoDescuento.DoesNotExist:
+            return JsonResponse({
+                'valid': False,
+                'message': 'Código de descuento no válido',
+                'discount_amount': 0
+            })
+        
+        # Validar si puede ser usado
+        if not bono.can_be_used(cart_total):
+            estado = bono.get_estado_display()
+            if estado == 'Expirado':
+                message = 'Este código ya expiró'
+            elif estado == 'Agotado':
+                message = 'Este código ya fue usado las veces máximas permitidas'
+            elif estado == 'Desactivado':
+                message = 'Este código está desactivado'
+            elif estado == 'Programado':
+                message = 'Este código aún no está vigente'
+            elif cart_total < bono.valor_minimo_compra:
+                message = f'Compra mínima requerida: ${bono.valor_minimo_compra:,.0f}'
+            else:
+                message = 'Código no válido para esta compra'
+            
+            return JsonResponse({
+                'valid': False,
+                'message': message,
+                'discount_amount': 0,
+                'bono_info': {
+                    'codigo': bono.codigo,
+                    'estado': estado,
+                    'valor_minimo': float(bono.valor_minimo_compra)
+                }
+            })
+        
+        # Calcular descuento
+        discount_amount = float(bono.calcular_descuento(cart_total))
+        
+        return JsonResponse({
+            'valid': True,
+            'message': f'¡Código aplicado! Descuento: ${discount_amount:,.0f}',
+            'discount_amount': discount_amount,
+            'bono_info': {
+                'codigo': bono.codigo,
+                'descripcion': bono.descripcion,
+                'tipo': bono.tipo_descuento,
+                'valor': float(bono.valor_descuento),
+                'valor_minimo': float(bono.valor_minimo_compra),
+                'usos_realizados': bono.usos_realizados,
+                'usos_maximos': bono.usos_maximos
+            }
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'valid': False,
+            'message': 'Datos inválidos',
+            'discount_amount': 0
+        })
+    except Exception as e:
+        return JsonResponse({
+            'valid': False,
+            'message': f'Error del servidor: {str(e)}',
+            'discount_amount': 0
+        })

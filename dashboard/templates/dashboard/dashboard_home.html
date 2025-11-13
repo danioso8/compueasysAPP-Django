@@ -84,6 +84,13 @@
                         </a>
                     </li>
                     
+                    <li class="nav-item">
+                        <a href="?view=bonos" class="nav-link {% if request.GET.view == 'bonos' %}active{% endif %}" title="Gestión de Bonos de Descuento">
+                            <i class="fas fa-percentage nav-icon"></i>
+                            <span class="sidebar-text">Bonos Descuento</span>
+                        </a>
+                    </li>
+                    
                     <li class="nav-separator"></li>
                     
                     <li class="nav-item">
@@ -985,6 +992,151 @@
         <p>No hay productos en inventario para la categoría seleccionada.</p>
       {% endif %}
     
+            {% elif request.GET.view == "bonos" %}
+                <!-- SECCIÓN DE BONOS DE DESCUENTO -->
+                <div class="bonos-section">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2><i class="fas fa-percentage me-2"></i>Bonos de Descuento</h2>
+                        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalNuevoBono">
+                            <i class="fas fa-plus me-2"></i>Crear Nuevo Bono
+                        </button>
+                    </div>
+                    
+                    <!-- Estadísticas de Bonos -->
+                    {% if bonos %}
+                        <div class="row mb-4">
+                            <div class="col-md-3">
+                                <div class="card text-center bg-light">
+                                    <div class="card-body">
+                                        <h5 class="text-success">{{ bonos|length }}</h5>
+                                        <small>Total Bonos</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card text-center bg-light">
+                                    <div class="card-body">
+                                        <h5 class="text-primary">{% for bono in bonos %}{% if bono.is_valid %}1{% endif %}{% empty %}0{% endfor %}</h5>
+                                        <small>Bonos Activos</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card text-center bg-light">
+                                    <div class="card-body">
+                                        <h5 class="text-warning">{% for bono in bonos %}{% if bono.get_estado_display == 'Expirado' %}1{% endif %}{% empty %}0{% endfor %}</h5>
+                                        <small>Bonos Expirados</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card text-center bg-light">
+                                    <div class="card-body">
+                                        <h5 class="text-info">{% for bono in bonos %}{{ bono.usos_realizados|add:0 }}{% empty %}0{% endfor %}</h5>
+                                        <small>Total Usos</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Tabla de Bonos -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-list me-2"></i>Lista de Bonos
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            {% if bonos %}
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Código</th>
+                                                <th>Descripción</th>
+                                                <th>Tipo</th>
+                                                <th>Descuento</th>
+                                                <th>Compra Mín.</th>
+                                                <th>Vigencia</th>
+                                                <th>Usos</th>
+                                                <th>Estado</th>
+                                                <th>Acciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for bono in bonos %}
+                                                <tr>
+                                                    <td>
+                                                        <code class="bg-light px-2 py-1 rounded">{{ bono.codigo }}</code>
+                                                    </td>
+                                                    <td>{{ bono.descripcion|truncatechars:50 }}</td>
+                                                    <td>
+                                                        <span class="badge {% if bono.tipo_descuento == 'porcentaje' %}bg-info{% else %}bg-warning{% endif %}">
+                                                            {% if bono.tipo_descuento == 'porcentaje' %}Porcentaje{% else %}Valor Fijo{% endif %}
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <strong>
+                                                            {% if bono.tipo_descuento == 'porcentaje' %}
+                                                                {{ bono.valor_descuento }}%
+                                                            {% else %}
+                                                                ${{ bono.valor_descuento|floatformat:0 }}
+                                                            {% endif %}
+                                                        </strong>
+                                                    </td>
+                                                    <td>${{ bono.valor_minimo_compra|floatformat:0 }}</td>
+                                                    <td>
+                                                        <small>
+                                                            {{ bono.fecha_inicio|date:"d/m/Y H:i" }}<br>
+                                                            {{ bono.fecha_fin|date:"d/m/Y H:i" }}
+                                                        </small>
+                                                    </td>
+                                                    <td>
+                                                        <span class="badge bg-secondary">
+                                                            {{ bono.usos_realizados }}/{{ bono.usos_maximos }}
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <span class="badge bg-{{ bono.get_estado_badge_class|slice:"6:" }}">
+                                                            {{ bono.get_estado_display }}
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <div class="d-flex gap-1">
+                                                            <button type="button" class="btn btn-outline-primary btn-sm" 
+                                                                    onclick="editarBono({{ bono.id }})"
+                                                                    title="Editar bono">
+                                                                <i class="fas fa-edit"></i>
+                                                            </button>
+                                                            <form method="post" style="display: inline;" 
+                                                                  onsubmit="return confirm('¿Estás seguro de eliminar el bono {{ bono.codigo }}?')">
+                                                                {% csrf_token %}
+                                                                <input type="hidden" name="action" value="eliminar_bono">
+                                                                <input type="hidden" name="bono_id" value="{{ bono.id }}">
+                                                                <button type="submit" class="btn btn-outline-danger btn-sm" 
+                                                                        title="Eliminar bono">
+                                                                    <i class="fas fa-trash"></i>
+                                                                </button>
+                                                            </form>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <div class="text-center py-5">
+                                    <i class="fas fa-percentage text-muted" style="font-size: 4rem;"></i>
+                                    <h4 class="text-muted mt-3">No hay bonos creados</h4>
+                                    <p class="text-muted">Crea tu primer bono de descuento para incentivar las ventas.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+    
             {% elif request.GET.view == "categoria" %}
                 <h2>Categorías</h2>
                 <button type="button" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#modalNuevaCategoria">
@@ -1882,6 +2034,152 @@
         </div>
     </div>
 
+    <!-- MODALES DE BONOS DE DESCUENTO -->
+    <!-- Modal para crear nuevo bono -->
+    <div class="modal fade" id="modalNuevoBono" tabindex="-1" aria-labelledby="modalNuevoBonoLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <form method="post" id="formNuevoBono">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="crear_bono">
+                    
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalNuevoBonoLabel">
+                            <i class="fas fa-plus me-2"></i>Crear Nuevo Bono de Descuento
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="codigo" class="form-label">Código del Bono <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="codigo" id="codigo" 
+                                           placeholder="ej: DESCUENTO50, NAVIDAD2025" required>
+                                    <div class="form-text">Código único que usarán los clientes</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="descripcion" class="form-label">Descripción <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="descripcion" id="descripcion" 
+                                           placeholder="Descripción interna del bono" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="tipo_descuento" class="form-label">Tipo de Descuento <span class="text-danger">*</span></label>
+                                    <select class="form-select" name="tipo_descuento" id="tipo_descuento" required>
+                                        <option value="porcentaje">Porcentaje (%)</option>
+                                        <option value="fijo">Valor Fijo ($)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="valor_descuento" class="form-label">Valor del Descuento <span class="text-danger">*</span></label>
+                                    <input type="number" class="form-control" name="valor_descuento" id="valor_descuento" 
+                                           min="0" step="0.01" placeholder="ej: 50 o 10000" required>
+                                    <div class="form-text" id="descuentoHelp">Ingresa el porcentaje (0-100) o valor fijo</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="valor_minimo_compra" class="form-label">Compra Mínima</label>
+                                    <input type="number" class="form-control" name="valor_minimo_compra" id="valor_minimo_compra" 
+                                           min="0" step="0.01" value="0" placeholder="0">
+                                    <div class="form-text">Valor mínimo para aplicar el descuento</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="usos_maximos" class="form-label">Usos Máximos <span class="text-danger">*</span></label>
+                                    <input type="number" class="form-control" name="usos_maximos" id="usos_maximos" 
+                                           min="1" value="1" required>
+                                    <div class="form-text">Número máximo de veces que se puede usar</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="fecha_inicio" class="form-label">Fecha de Inicio <span class="text-danger">*</span></label>
+                                    <input type="datetime-local" class="form-control" name="fecha_inicio" id="fecha_inicio" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="fecha_fin" class="form-label">Fecha de Fin <span class="text-danger">*</span></label>
+                                    <input type="datetime-local" class="form-control" name="fecha_fin" id="fecha_fin" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="activo" id="activo" checked>
+                                <label class="form-check-label" for="activo">
+                                    Bono activo
+                                </label>
+                                <div class="form-text">Si está desactivado, no se podrá usar aunque esté dentro de vigencia</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times"></i> Cancelar
+                        </button>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save"></i> Crear Bono
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para editar bono -->
+    <div class="modal fade" id="modalEditarBono" tabindex="-1" aria-labelledby="modalEditarBonoLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <form method="post" id="formEditarBono">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="editar_bono">
+                    <input type="hidden" name="bono_id" id="edit_bono_id">
+                    
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalEditarBonoLabel">
+                            <i class="fas fa-edit me-2"></i>Editar Bono de Descuento
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    
+                    <div class="modal-body" id="editBonoModalBody">
+                        <!-- Se llenará dinámicamente con JavaScript -->
+                    </div>
+                    
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times"></i> Cancelar
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Guardar Cambios
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- Bootstrap JS primero -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
     
@@ -2311,6 +2609,35 @@
         document.body.appendChild(container);
         return container;
       }
+
+      // FUNCIONES PARA BONOS DE DESCUENTO
+      function editarBono(bonoId) {
+        // Por ahora, redirigir a la página con parámetros para edición
+        // En una implementación más avanzada, se podría cargar via AJAX
+        alert('Funcionalidad de edición en desarrollo. Por ahora puedes eliminar y crear nuevamente el bono.');
+      }
+
+      // Validación de formularios de bonos
+      document.addEventListener('DOMContentLoaded', function() {
+        // Actualizar fecha mínima al cargar
+        const now = new Date();
+        const minDate = now.toISOString().slice(0, 16);
+        
+        const fechaInicioInput = document.getElementById('fecha_inicio');
+        const fechaFinInput = document.getElementById('fecha_fin');
+        
+        if (fechaInicioInput) {
+          fechaInicioInput.min = minDate;
+          fechaInicioInput.value = minDate;
+        }
+        
+        if (fechaFinInput) {
+          fechaFinInput.min = minDate;
+          // Establecer fecha fin como 1 semana después
+          const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+          fechaFinInput.value = nextWeek.toISOString().slice(0, 16);
+        }
+      });
     </script>
 
     <style>

@@ -9,7 +9,7 @@ from core.views import (
     aboutUs, cart, register_user, login, product_detail, checkout, 
     update_cart, logout_view, search_suggestions, 
     filter_products_ajax, get_categories_ajax,
-    create_wompi_transaction, wompi_webhook, wompi_test
+    create_wompi_transaction, wompi_webhook, wompi_test, validate_discount_code
 )
 
 from django.conf import settings
@@ -45,6 +45,7 @@ urlpatterns = [
     path('api/search-suggestions/', search_suggestions, name='search_suggestions'),
     path('api/filter-products/', filter_products_ajax, name='filter_products_ajax'),
     path('api/categories/', get_categories_ajax, name='get_categories_ajax'),
+    path('api/validate-discount-code/', validate_discount_code, name='validate_discount_code'),
     
     # Endpoints de Wompi para pagos
     path('api/create-wompi-transaction/', create_wompi_transaction, name='create_wompi_transaction'),
