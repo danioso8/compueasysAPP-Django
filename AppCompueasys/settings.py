@@ -180,14 +180,8 @@ else:
     MEDIA_URL = '/media_files/'
     MEDIA_ROOT = os.path.join(BASE_DIR, 'media_files')
 
-# ===== STRIPE CONFIGURATION =====
-# Stripe keys para procesar pagos
-STRIPE_PUBLISHABLE_KEY = os.getenv('STRIPE_PUBLISHABLE_KEY', 'pk_test_51...')  # Clave pública de prueba
-STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY', 'sk_test_51...')  # Clave secreta de prueba
-STRIPE_WEBHOOK_SECRET = os.getenv('STRIPE_WEBHOOK_SECRET', 'whsec_...')  # Webhook secret
-
-# Configuración de pagos
-# Configuración de Wompi (Reemplaza Stripe)
+# ===== WOMPI CONFIGURATION =====
+# Configuración de pagos con Wompi Colombia
 WOMPI_PUBLIC_KEY = os.getenv('WOMPI_PUBLIC_KEY', 'pub_test_AcFLWqPJHeGBBFxy3nyjJT25WjWgLKVa')
 WOMPI_PRIVATE_KEY = os.getenv('WOMPI_PRIVATE_KEY', 'prv_test_AsyPjPPqCzvs5tJGg5RqFvKvATrbXE7N') 
 WOMPI_ENVIRONMENT = os.getenv('WOMPI_ENVIRONMENT', 'test')

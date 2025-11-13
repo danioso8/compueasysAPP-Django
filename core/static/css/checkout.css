@@ -1373,3 +1373,22 @@ a:hover {
         transform: translateY(0);
     }
 }
+
+/* Recoger en tienda styles */
+.payment-option:has(input[value="recoger_tienda"]) .payment-label {
+    border: 2px solid var(--success-color);
+    background: linear-gradient(135deg, rgba(40, 167, 69, 0.1) 0%, rgba(40, 167, 69, 0.05) 100%);
+}
+
+.payment-option:has(input[value="recoger_tienda"]:checked) .payment-label {
+    background: linear-gradient(135deg, rgba(40, 167, 69, 0.2) 0%, rgba(40, 167, 69, 0.1) 100%);
+    box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.2);
+}
+
+.badge.bg-success {
+    background-color: var(--success-color) !important;
+    color: white;
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+}

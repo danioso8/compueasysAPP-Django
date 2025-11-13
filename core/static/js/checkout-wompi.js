@@ -1,600 +1,384 @@
 /**
- * CompuEasys Checkout con Wompi Integration
- * Versión: 2.0 - Optimizada para Wompi Colombia
+ * CompuEasys Checkout - Versión Reconstruida
+ * Versión: 3.0 - Simple y Funcional
  */
 
-(function () {
-  "use strict";
+(function() {
+    "use strict";
 
-  // Configuración global
-  console.log('🔧 Configuración inicial:', window.checkout_config);
-  const CONFIG = {
-    wompi_public_key: window.checkout_config?.wompi_public_key || '',
-    urls: {
-      create_transaction: window.checkout_config?.create_transaction_url || '/api/create-wompi-transaction/',
-      pago_exitoso: '/pago_exitoso/'
-    }
-  };
-  
-  console.log('🔧 CONFIG final:', CONFIG);
-
-  // Estado global del checkout
-  let checkoutState = {
-    selectedPayment: 'contraentrega',
-    discountApplied: false,
-    discountCode: '',
-    discountAmount: 0,
-    cartTotal: 0,
-    finalTotal: 0,
-    shipping: 0,
-    subtotal: 0,
-    isProcessing: false
-  };
-
-  // Utilidades
-  function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== "") {
-      const cookies = document.cookie.split(";");
-      for (let i = 0; i < cookies.length; i++) {
-        const cookie = cookies[i].trim();
-        if (cookie.substring(0, name.length + 1) === name + "=") {
-          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-          break;
+    // Configuración
+    const CONFIG = {
+        wompi_public_key: window.checkout_config?.wompi_public_key || '',
+        urls: {
+            create_transaction: window.checkout_config?.create_transaction_url || '/api/create-wompi-transaction/',
+            pago_exitoso: '/pago_exitoso/'
         }
-      }
-    }
-    return cookieValue;
-  }
-
-  function safeEl(selector) {
-    const element = document.querySelector(selector);
-    if (!element) {
-      console.warn(`🚨 Elemento no encontrado: ${selector}`);
-    }
-    return element;
-  }
-
-  function formatCurrency(amount) {
-    return new Intl.NumberFormat("es-CO", {
-      style: "currency",
-      currency: "COP",
-      minimumFractionDigits: 0,
-    }).format(amount);
-  }
-
-  function showToast(message, type = 'info') {
-    const toastConfig = {
-      icon: type,
-      title: message,
-      toast: true,
-      position: 'top-end',
-      showConfirmButton: false,
-      timer: 3000,
-      timerProgressBar: true,
     };
 
-    if (type === 'success') {
-      toastConfig.iconColor = '#28a745';
-    } else if (type === 'error') {
-      toastConfig.iconColor = '#dc3545';
-    }
-
-    Swal.fire(toastConfig);
-  }
-
-  function showLoading(show = true) {
-    const overlay = safeEl('#loading-overlay');
-    if (overlay) {
-      overlay.style.display = show ? 'flex' : 'none';
-    }
-  }
-
-  // Validación de formularios
-  function validateCheckoutForm() {
-    const requiredFields = [
-      { id: 'nombre', name: 'Nombre completo' },
-      { id: 'email', name: 'Email' },
-      { id: 'telefono', name: 'Teléfono' },
-      { id: 'direccion', name: 'Dirección' },
-      { id: 'ciudad', name: 'Ciudad' },
-      { id: 'departament', name: 'Departamento' }
-    ];
-
-    for (const field of requiredFields) {
-      const element = safeEl(`#${field.id}`);
-      if (!element || !element.value.trim()) {
-        showToast(`Por favor completa el campo: ${field.name}`, 'error');
-        if (element) element.focus();
-        return false;
-      }
-    }
-
-    // Validar email
-    const email = safeEl('#email')?.value;
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      showToast('Por favor ingresa un email válido', 'error');
-      safeEl('#email')?.focus();
-      return false;
-    }
-
-    // Validar teléfono (Colombia)
-    const telefono = safeEl('#telefono')?.value;
-    const phoneRegex = /^[0-9]{10}$/;
-    if (!phoneRegex.test(telefono.replace(/\s+/g, ''))) {
-      showToast('Por favor ingresa un número de teléfono válido (10 dígitos)', 'error');
-      safeEl('#telefono')?.focus();
-      return false;
-    }
-
-    return true;
-  }
-
-  // Cálculos de totales
-  function calculateTotals() {
-    try {
-      const subtotalElement = safeEl('.cart-subtotal');
-      if (!subtotalElement) return;
-
-      // Obtener subtotal del carrito
-      const subtotalText = subtotalElement.textContent || '0';
-      checkoutState.subtotal = parseFloat(subtotalText.replace(/[^0-9]/g, ''));
-
-      // Aplicar descuento
-      let discountAmount = 0;
-      if (checkoutState.discountApplied) {
-        discountAmount = checkoutState.discountAmount;
-      }
-
-      // Calcular envío
-      const shippingCost = checkoutState.subtotal >= 100000 ? 0 : 15000;
-      checkoutState.shipping = shippingCost;
-
-      // Calcular total final
-      checkoutState.finalTotal = checkoutState.subtotal - discountAmount + shippingCost;
-      checkoutState.cartTotal = checkoutState.finalTotal;
-
-      // Actualizar UI
-      updateTotalsDisplay();
-
-    } catch (error) {
-      console.error('Error calculating totals:', error);
-    }
-  }
-
-  function updateTotalsDisplay() {
-    // Actualizar subtotal
-    const subtotalEl = safeEl('.total-subtotal');
-    if (subtotalEl) {
-      subtotalEl.textContent = formatCurrency(checkoutState.subtotal);
-    }
-
-    // Actualizar descuento
-    const discountEl = safeEl('.total-discount');
-    if (discountEl) {
-      if (checkoutState.discountApplied && checkoutState.discountAmount > 0) {
-        discountEl.textContent = `-${formatCurrency(checkoutState.discountAmount)}`;
-        discountEl.closest('.discount-row')?.style.setProperty('display', 'flex');
-      } else {
-        discountEl.closest('.discount-row')?.style.setProperty('display', 'none');
-      }
-    }
-
-    // Actualizar envío
-    const shippingEl = safeEl('.total-shipping');
-    if (shippingEl) {
-      shippingEl.textContent = checkoutState.shipping > 0 ? formatCurrency(checkoutState.shipping) : 'GRATIS';
-    }
-
-    // Actualizar total final
-    const totalEl = safeEl('.total-amount');
-    if (totalEl) {
-      totalEl.textContent = formatCurrency(checkoutState.finalTotal);
-    }
-  }
-
-  // Manejo de códigos de descuento
-  function applyDiscount() {
-    const codeInput = safeEl('#discount-code');
-    if (!codeInput) return;
-
-    const code = codeInput.value.trim().toUpperCase();
-    
-    if (!code) {
-      showToast('Por favor ingresa un código de descuento', 'error');
-      return;
-    }
-
-    // Códigos válidos (puedes cambiarlos según tus necesidades)
-    const validCodes = {
-      'COMPUEASYS10': { type: 'percentage', value: 10 },
-      'DESCUENTO15': { type: 'percentage', value: 15 },
-      'WELCOME20': { type: 'percentage', value: 20 },
-      'FIRST5000': { type: 'fixed', value: 5000 },
-      'SAVE10000': { type: 'fixed', value: 10000 }
+    // Estado del checkout
+    let checkoutData = {
+        subtotal: 0,
+        shipping: 0,
+        total: 0,
+        paymentMethod: 'contraentrega',
+        processing: false
     };
 
-    if (validCodes[code]) {
-      const discount = validCodes[code];
-      let discountAmount = 0;
-
-      if (discount.type === 'percentage') {
-        discountAmount = Math.round(checkoutState.subtotal * (discount.value / 100));
-      } else if (discount.type === 'fixed') {
-        discountAmount = Math.min(discount.value, checkoutState.subtotal);
-      }
-
-      checkoutState.discountApplied = true;
-      checkoutState.discountCode = code;
-      checkoutState.discountAmount = discountAmount;
-
-      // Actualizar UI del código
-      const discountSection = safeEl('.discount-input-section');
-      const appliedSection = safeEl('.discount-applied-section');
-      
-      if (discountSection && appliedSection) {
-        discountSection.style.display = 'none';
-        appliedSection.style.display = 'flex';
-        
-        const appliedCodeEl = safeEl('.applied-discount-code');
-        const appliedAmountEl = safeEl('.applied-discount-amount');
-        
-        if (appliedCodeEl) appliedCodeEl.textContent = code;
-        if (appliedAmountEl) {
-          appliedAmountEl.textContent = discount.type === 'percentage' 
-            ? `-${discount.value}%` 
-            : `-${formatCurrency(discountAmount)}`;
-        }
-      }
-
-      calculateTotals();
-      showToast(`¡Descuento aplicado! ${formatCurrency(discountAmount)} de descuento`, 'success');
-
-    } else {
-      showToast('Código de descuento inválido', 'error');
-    }
-  }
-
-  function removeDiscount() {
-    checkoutState.discountApplied = false;
-    checkoutState.discountCode = '';
-    checkoutState.discountAmount = 0;
-
-    // Restaurar UI
-    const discountSection = safeEl('.discount-input-section');
-    const appliedSection = safeEl('.discount-applied-section');
-    
-    if (discountSection && appliedSection) {
-      discountSection.style.display = 'flex';
-      appliedSection.style.display = 'none';
+    // Utilidades básicas
+    function formatMoney(amount) {
+        return new Intl.NumberFormat('es-CO', {
+            style: 'currency',
+            currency: 'COP',
+            minimumFractionDigits: 0
+        }).format(amount);
     }
 
-    const codeInput = safeEl('#discount-code');
-    if (codeInput) codeInput.value = '';
-
-    calculateTotals();
-    showToast('Descuento removido', 'info');
-  }
-
-  // Wompi Integration
-  function initializeWompi(transactionData) {
-    if (!window.WidgetCheckout) {
-      console.error('Wompi Widget no está disponible');
-      showToast('Error: Widget de pagos no disponible', 'error');
-      return;
-    }
-
-    const checkout = new WidgetCheckout({
-      currency: 'COP',
-      amountInCents: transactionData.amount_in_cents,
-      reference: transactionData.reference,
-      publicKey: CONFIG.wompi_public_key,
-      customerData: {
-        email: transactionData.customer_email,
-        fullName: safeEl('#nombre')?.value || '',
-        phoneNumber: safeEl('#telefono')?.value || '',
-      },
-      shippingAddress: {
-        addressLine1: safeEl('#direccion')?.value || '',
-        city: safeEl('#ciudad')?.value || '',
-        region: safeEl('#departament')?.value || '',
-        postalCode: safeEl('#codigo_postal')?.value || '',
-        country: 'CO'
-      },
-      redirectUrl: `${window.location.origin}${CONFIG.urls.pago_exitoso}`,
-      taxInCents: 0
-    });
-
-    checkout.open(function (result) {
-      console.log('Wompi Result:', result);
-      
-      if (result.transaction && result.transaction.status === 'APPROVED') {
-        // Pago exitoso - procesar pedido
-        processSuccessfulPayment(result.transaction);
-      } else if (result.transaction && result.transaction.status === 'DECLINED') {
-        showToast('El pago fue declinado. Por favor intenta con otro método de pago.', 'error');
-        checkoutState.isProcessing = false;
-      } else if (result.transaction && result.transaction.status === 'ERROR') {
-        showToast('Ocurrió un error durante el proceso de pago.', 'error');
-        checkoutState.isProcessing = false;
-      } else {
-        // Usuario cerró el widget
-        showToast('Pago cancelado', 'info');
-        checkoutState.isProcessing = false;
-      }
-    });
-  }
-
-  function processSuccessfulPayment(transaction) {
-    // Crear formulario para enviar datos del pago exitoso
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = CONFIG.urls.pago_exitoso;
-
-    // Agregar CSRF token
-    const csrfInput = document.createElement('input');
-    csrfInput.type = 'hidden';
-    csrfInput.name = 'csrfmiddlewaretoken';
-    csrfInput.value = getCookie('csrftoken');
-    form.appendChild(csrfInput);
-
-    // Datos del cliente
-    const formData = {
-      'nombre': safeEl('#nombre')?.value || '',
-      'email': safeEl('#email')?.value || '',
-      'telefono': safeEl('#telefono')?.value || '',
-      'direccion': safeEl('#direccion')?.value || '',
-      'ciudad': safeEl('#ciudad')?.value || '',
-      'departament': safeEl('#departament')?.value || '',
-      'codigo_postal': safeEl('#codigo_postal')?.value || '',
-      'note': safeEl('#note')?.value || '',
-      'metodo_pago': 'wompi',
-      'transaction_id': transaction.id,
-      'discount_applied': checkoutState.discountCode,
-      'discount_amount': checkoutState.discountAmount
-    };
-
-    // Agregar campos al formulario
-    Object.keys(formData).forEach(key => {
-      const input = document.createElement('input');
-      input.type = 'hidden';
-      input.name = key;
-      input.value = formData[key];
-      form.appendChild(input);
-    });
-
-    // Enviar formulario
-    document.body.appendChild(form);
-    form.submit();
-  }
-
-  // Procesamiento de pagos
-  function processPayment() {
-    if (checkoutState.isProcessing) {
-      return;
-    }
-
-    if (!validateCheckoutForm()) {
-      return;
-    }
-
-    const paymentMethod = document.querySelector('input[name="metodo_pago"]:checked')?.value;
-    
-    if (!paymentMethod) {
-      showToast('Por favor selecciona un método de pago', 'error');
-      return;
-    }
-
-    checkoutState.isProcessing = true;
-    checkoutState.selectedPayment = paymentMethod;
-
-    if (paymentMethod === 'tarjeta') {
-      processWompiPayment();
-    } else {
-      processStandardPayment();
-    }
-  }
-
-  function processWompiPayment() {
-    showLoading(true);
-    
-    // Preparar datos para crear transacción
-    const transactionData = {
-      amount: checkoutState.finalTotal,
-      customer_email: safeEl('#email')?.value || '',
-      discount_code: checkoutState.discountCode,
-      discount_amount: checkoutState.discountAmount
-    };
-
-    // Crear transacción en el backend
-    fetch(CONFIG.urls.create_transaction, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken': getCookie('csrftoken')
-      },
-      body: JSON.stringify(transactionData)
-    })
-    .then(response => response.json())
-    .then(data => {
-      showLoading(false);
-      
-      if (data.success) {
-        // Inicializar widget de Wompi
-        initializeWompi(data);
-      } else {
-        showToast(data.error || 'Error creando transacción', 'error');
-        checkoutState.isProcessing = false;
-      }
-    })
-    .catch(error => {
-      showLoading(false);
-      console.error('Error:', error);
-      showToast('Error de conexión. Por favor intenta de nuevo.', 'error');
-      checkoutState.isProcessing = false;
-    });
-  }
-
-  function processStandardPayment() {
-    // Procesar pago contra entrega (método existente)
-    const form = safeEl('#checkout-form');
-    if (!form) {
-      showToast('Error: formulario no encontrado', 'error');
-      checkoutState.isProcessing = false;
-      return;
-    }
-
-    // Agregar datos de descuento al formulario
-    if (checkoutState.discountApplied) {
-      addHiddenInput(form, 'discount_applied', checkoutState.discountCode);
-      addHiddenInput(form, 'discount_amount', checkoutState.discountAmount);
-    }
-
-    addHiddenInput(form, 'metodo_pago', 'contraentrega');
-    
-    // Enviar formulario
-    form.submit();
-  }
-
-  function addHiddenInput(form, name, value) {
-    // Remover input existente si existe
-    const existing = form.querySelector(`input[name="${name}"]`);
-    if (existing) {
-      existing.remove();
-    }
-
-    // Crear nuevo input
-    const input = document.createElement('input');
-    input.type = 'hidden';
-    input.name = name;
-    input.value = value;
-    form.appendChild(input);
-  }
-
-  // Manejo de métodos de pago
-  function handlePaymentMethodChange() {
-    const paymentMethods = document.querySelectorAll('input[name="metodo_pago"]');
-    const cardSection = safeEl('#cardPaymentSection');
-
-    console.log('🔧 Configurando manejo de métodos de pago...');
-    console.log('🔧 Payment methods encontrados:', paymentMethods.length);
-    console.log('🔧 Card section encontrada:', !!cardSection);
-
-    paymentMethods.forEach(method => {
-      method.addEventListener('change', function() {
-        console.log('🔧 Método de pago cambiado a:', this.value);
-        
-        if (this.value === 'tarjeta') {
-          if (cardSection) {
-            cardSection.classList.remove('d-none');
-            cardSection.style.display = 'block';
-            console.log('✅ Sección de tarjeta mostrada');
-          } else {
-            console.error('❌ No se encontró la sección de tarjeta');
-          }
+    function showMessage(text, type = 'info') {
+        if (window.Swal) {
+            Swal.fire({
+                icon: type,
+                title: text,
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000
+            });
         } else {
-          if (cardSection) {
-            cardSection.classList.add('d-none');
-            cardSection.style.display = 'none';
-            console.log('✅ Sección de tarjeta ocultada');
-          }
+            alert(text);
         }
-      });
-    });
-
-    // Verificar estado inicial
-    const selectedMethod = document.querySelector('input[name="metodo_pago"]:checked');
-    if (selectedMethod) {
-      console.log('🔧 Método inicial seleccionado:', selectedMethod.value);
-      if (selectedMethod.value === 'tarjeta' && cardSection) {
-        cardSection.classList.remove('d-none');
-        cardSection.style.display = 'block';
-      }
-    }
-  }
-
-  // Event Listeners
-  function setupEventListeners() {
-    console.log('🔧 Configurando event listeners para Wompi Checkout...');
-
-    // Botón de confirmar pago
-    const confirmBtn = safeEl('#confirm-payment');
-    if (confirmBtn) {
-      confirmBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-        processPayment();
-      });
     }
 
-    // Aplicar descuento
-    const applyDiscountBtn = safeEl('#apply-discount');
-    if (applyDiscountBtn) {
-      applyDiscountBtn.addEventListener('click', applyDiscount);
-    }
-
-    // Remover descuento
-    const removeDiscountBtn = safeEl('#remove-discount');
-    if (removeDiscountBtn) {
-      removeDiscountBtn.addEventListener('click', removeDiscount);
-    }
-
-    // Enter en input de descuento
-    const discountInput = safeEl('#discount-code');
-    if (discountInput) {
-      discountInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          applyDiscount();
+    function getCsrfToken() {
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+            const [name, value] = cookie.trim().split('=');
+            if (name === 'csrftoken') {
+                return decodeURIComponent(value);
+            }
         }
-      });
+        return '';
     }
 
-    // Cambios en métodos de pago
-    handlePaymentMethodChange();
+    // Función principal: calcular totales
+    function calculateTotals() {
+        console.log('💰 Calculando totales...');
 
-    console.log('✅ Event listeners configurados');
-  }
+        // 1. Obtener subtotal del HTML
+        const subtotalEl = document.getElementById('subtotal_amount');
+        if (!subtotalEl) {
+            console.error('❌ No se encontró #subtotal_amount');
+            return;
+        }
 
-  // Inicialización
-  function init() {
-    console.log('🚀 Inicializando Wompi Checkout...');
-    
-    // Verificar configuración
-    if (!CONFIG.wompi_public_key) {
-      console.error('🚨 Wompi public key no configurada');
-      console.error('🔧 CONFIG actual:', CONFIG);
-      console.error('🔧 window.checkout_config:', window.checkout_config);
-      showToast('Error de configuración: clave pública de Wompi no encontrada', 'error');
-      return;
+        // 2. Extraer número del subtotal
+        const subtotalText = subtotalEl.textContent || '0';
+        const subtotalNumber = parseFloat(subtotalText.replace(/[^0-9]/g, '')) || 0;
+        
+        console.log('📊 Subtotal:', subtotalNumber);
+
+        // 3. Determinar método de pago
+        const paymentRadio = document.querySelector('input[name="metodo_pago"]:checked');
+        const paymentMethod = paymentRadio ? paymentRadio.value : 'contraentrega';
+        
+        console.log('🎯 Método de pago:', paymentMethod);
+
+        // 4. Calcular envío
+        let shippingCost = 0;
+        
+        if (paymentMethod === 'recoger_tienda') {
+            // Recoger en tienda = SIEMPRE gratis
+            shippingCost = 0;
+            console.log('🏪 Recoger en tienda: Envío GRATIS');
+        } else {
+            // Para entrega a domicilio
+            if (subtotalNumber < 100000) {
+                shippingCost = 15000;
+                console.log('📦 Envío: $15,000 (compra menor a $100,000)');
+            } else {
+                shippingCost = 0;
+                console.log('📦 Envío GRATIS (compra mayor o igual a $100,000)');
+            }
+        }
+
+        // 5. Calcular total
+        const totalAmount = subtotalNumber + shippingCost;
+        
+        console.log('🧮 Cálculo final:', {
+            subtotal: subtotalNumber,
+            shipping: shippingCost,
+            total: totalAmount
+        });
+
+        // 6. Guardar en estado
+        checkoutData.subtotal = subtotalNumber;
+        checkoutData.shipping = shippingCost;
+        checkoutData.total = totalAmount;
+        checkoutData.paymentMethod = paymentMethod;
+
+        // 7. Actualizar UI
+        updateUI();
     }
 
-    console.log('✅ Wompi configurado con clave:', CONFIG.wompi_public_key.substring(0, 20) + '...');
-    
-    // Calcular totales iniciales
-    calculateTotals();
+    // Actualizar interfaz de usuario
+    function updateUI() {
+        console.log('🖥️ Actualizando UI...');
+
+        // Actualizar envío
+        const shippingEl = document.getElementById('shipping_amount');
+        if (shippingEl) {
+            if (checkoutData.shipping === 0) {
+                if (checkoutData.paymentMethod === 'recoger_tienda') {
+                    shippingEl.innerHTML = '<span class="text-success">GRATIS <small>(Recoger en tienda)</small></span>';
+                } else {
+                    shippingEl.innerHTML = '<span class="text-success">GRATIS <small>(Compra mayor a $100,000)</small></span>';
+                }
+            } else {
+                shippingEl.textContent = formatMoney(checkoutData.shipping);
+            }
+            console.log('✅ Envío actualizado:', checkoutData.shipping);
+        }
+
+        // Actualizar total
+        const totalEl = document.getElementById('total_final');
+        if (totalEl) {
+            totalEl.textContent = formatMoney(checkoutData.total);
+            console.log('✅ Total actualizado:', checkoutData.total);
+        }
+    }
+
+    // Manejar cambio de método de pago
+    function handlePaymentMethodChange() {
+        console.log('🔄 Cambio de método de pago detectado');
+        
+        // Mostrar/ocultar sección de tarjeta
+        const cardSection = document.getElementById('cardPaymentSection');
+        const selectedMethod = document.querySelector('input[name="metodo_pago"]:checked');
+        
+        if (selectedMethod && cardSection) {
+            if (selectedMethod.value === 'tarjeta') {
+                cardSection.style.display = 'block';
+                cardSection.classList.remove('d-none');
+                showMessage('💳 Complete la información para pagar con tarjeta', 'info');
+            } else {
+                cardSection.style.display = 'none';
+                cardSection.classList.add('d-none');
+                
+                if (selectedMethod.value === 'recoger_tienda') {
+                    showMessage('🏪 Recoger en tienda - Pago en efectivo o transferencia', 'success');
+                } else if (selectedMethod.value === 'contraentrega') {
+                    showMessage('📦 Pago contra entrega - Efectivo al recibir', 'info');
+                }
+            }
+        }
+
+        // Recalcular totales
+        calculateTotals();
+    }
+
+    // Procesar el pedido
+    function processOrder() {
+        if (checkoutData.processing) {
+            return;
+        }
+
+        console.log('🚀 Procesando pedido...');
+
+        // Validar formulario básico
+        const requiredFields = ['nombre', 'email', 'telefono', 'direccion', 'ciudad'];
+        for (let fieldId of requiredFields) {
+            const field = document.getElementById(fieldId);
+            if (!field || !field.value.trim()) {
+                showMessage(`Por favor completa el campo: ${fieldId}`, 'error');
+                field?.focus();
+                return;
+            }
+        }
+
+        checkoutData.processing = true;
+
+        // Procesar según método de pago
+        const paymentMethod = document.querySelector('input[name="metodo_pago"]:checked')?.value;
+
+        if (paymentMethod === 'tarjeta') {
+            processCardPayment();
+        } else {
+            processStandardPayment();
+        }
+    }
+
+    // Procesar pago con tarjeta (Wompi)
+    function processCardPayment() {
+        console.log('💳 Procesando pago con tarjeta...');
+
+        if (!window.WidgetCheckout) {
+            showMessage('Error: Widget de pagos no disponible', 'error');
+            checkoutData.processing = false;
+            return;
+        }
+
+        // Crear transacción
+        const transactionData = {
+            amount: checkoutData.total,
+            customer_email: document.getElementById('email')?.value || ''
+        };
+
+        fetch(CONFIG.urls.create_transaction, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken()
+            },
+            body: JSON.stringify(transactionData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                openWompiWidget(data);
+            } else {
+                showMessage('Error creando transacción: ' + (data.error || 'Error desconocido'), 'error');
+                checkoutData.processing = false;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showMessage('Error de conexión. Intenta de nuevo.', 'error');
+            checkoutData.processing = false;
+        });
+    }
+
+    // Abrir widget de Wompi
+    function openWompiWidget(transactionData) {
+        const checkout = new WidgetCheckout({
+            currency: 'COP',
+            amountInCents: transactionData.amount_in_cents,
+            reference: transactionData.reference,
+            publicKey: CONFIG.wompi_public_key,
+            customerData: {
+                email: transactionData.customer_email,
+                fullName: document.getElementById('nombre')?.value || '',
+                phoneNumber: document.getElementById('telefono')?.value || ''
+            },
+            redirectUrl: `${window.location.origin}${CONFIG.urls.pago_exitoso}`
+        });
+
+        checkout.open(function(result) {
+            if (result.transaction && result.transaction.status === 'APPROVED') {
+                // Pago exitoso
+                window.location.href = CONFIG.urls.pago_exitoso + '?transaction_id=' + result.transaction.id;
+            } else {
+                showMessage('Pago cancelado o falló', 'error');
+                checkoutData.processing = false;
+            }
+        });
+    }
+
+    // Procesar pago estándar (contra entrega / recoger en tienda)
+    function processStandardPayment() {
+        console.log('📦 Procesando pago estándar...');
+
+        const form = document.getElementById('checkoutForm');
+        if (!form) {
+            showMessage('Error: formulario no encontrado', 'error');
+            checkoutData.processing = false;
+            return;
+        }
+
+        // Agregar método de pago al formulario
+        let methodInput = form.querySelector('input[name="metodo_pago"]');
+        if (!methodInput) {
+            methodInput = document.createElement('input');
+            methodInput.type = 'hidden';
+            methodInput.name = 'metodo_pago';
+            form.appendChild(methodInput);
+        }
+        methodInput.value = checkoutData.paymentMethod;
+
+        // Enviar formulario
+        showMessage('¡Pedido confirmado! Serás redirigido...', 'success');
+        setTimeout(() => {
+            form.submit();
+        }, 1000);
+    }
 
     // Configurar event listeners
-    setupEventListeners();
+    function setupEventListeners() {
+        console.log('🎯 Configurando event listeners...');
 
-    console.log('✅ Wompi Checkout inicializado correctamente');
-  }
+        // Métodos de pago
+        const paymentMethods = document.querySelectorAll('input[name="metodo_pago"]');
+        paymentMethods.forEach(method => {
+            method.addEventListener('change', handlePaymentMethodChange);
+        });
 
-  // Auto-inicialización cuando el DOM está listo
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
+        // Botón de confirmar
+        const submitBtn = document.getElementById('checkout_submit_btn');
+        if (submitBtn) {
+            submitBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                processOrder();
+            });
+        }
 
-  // Exponer funciones globales para debugging
-  window.WompiCheckout = {
-    state: checkoutState,
-    config: CONFIG,
-    applyDiscount,
-    removeDiscount,
-    calculateTotals,
-    processPayment
-  };
+        console.log('✅ Event listeners configurados');
+    }
+
+    // Inicialización
+    function init() {
+        console.log('🚀 Iniciando CompuEasys Checkout v3.0...');
+
+        // Verificar elementos esenciales
+        const form = document.getElementById('checkoutForm');
+        const subtotal = document.getElementById('subtotal_amount');
+        const methods = document.querySelectorAll('input[name="metodo_pago"]');
+
+        if (!form) console.error('❌ Formulario #checkoutForm no encontrado');
+        if (!subtotal) console.error('❌ Elemento #subtotal_amount no encontrado');
+        if (methods.length === 0) console.error('❌ Métodos de pago no encontrados');
+
+        // Configurar todo
+        setupEventListeners();
+        calculateTotals();
+
+        console.log('✅ Checkout inicializado correctamente');
+    }
+
+    // Inicializar cuando el DOM esté listo
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+
+    // Exponer funciones para debugging
+    window.CheckoutDebug = {
+        state: checkoutData,
+        config: CONFIG,
+        calculate: calculateTotals,
+        process: processOrder,
+        
+        // Test simple
+        test: function() {
+            console.log('🧪 Estado actual del checkout:');
+            console.log('- Subtotal:', checkoutData.subtotal);
+            console.log('- Envío:', checkoutData.shipping);
+            console.log('- Total:', checkoutData.total);
+            console.log('- Método:', checkoutData.paymentMethod);
+            
+            // Verificar elementos
+            const elements = {
+                'Formulario': '#checkoutForm',
+                'Subtotal': '#subtotal_amount',
+                'Envío': '#shipping_amount',
+                'Total': '#total_final',
+                'Botón': '#checkout_submit_btn'
+            };
+            
+            console.log('\n📋 Elementos HTML:');
+            Object.entries(elements).forEach(([name, selector]) => {
+                const el = document.querySelector(selector);
+                console.log(`- ${name}:`, el ? '✅ Encontrado' : '❌ No encontrado');
+            });
+        }
+    };
 
 })();
