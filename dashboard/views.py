@@ -73,7 +73,34 @@ def dashboard_home(request):
     tipos = Type.objects.all()
     proveedores = proveedor.objects.all()
     userSimples = register_superuser.objects.all()    
-    Pedidos = Pedido.objects.all()
+    
+    # Obtener pedidos con filtros
+    pedidos_queryset = Pedido.objects.select_related('user').all().order_by('-fecha')
+    
+    # Aplicar filtros para pedidos
+    if view_param == 'pedidos':
+        estado_filter = request.GET.get('estado_filter', '')
+        metodo_filter = request.GET.get('metodo_filter', '')
+        search_pedidos = request.GET.get('search', '')
+        
+        if estado_filter:
+            pedidos_queryset = pedidos_queryset.filter(estado=estado_filter)
+        if metodo_filter:
+            pedidos_queryset = pedidos_queryset.filter(metodo_pago=metodo_filter)
+        if search_pedidos:
+            pedidos_queryset = pedidos_queryset.filter(
+                Q(nombre__icontains=search_pedidos) |
+                Q(user__email__icontains=search_pedidos) |
+                Q(id__icontains=search_pedidos) |
+                Q(transaction_id__icontains=search_pedidos)
+            )
+    
+    Pedidos = pedidos_queryset
+    
+    # Estadísticas de pedidos
+    pedidos_pendientes_count = Pedidos.filter(estado='pendiente').count() if view_param == 'pedidos' else 0
+    pedidos_enviados_count = Pedidos.filter(estado__in=['enviado', 'llegando']).count() if view_param == 'pedidos' else 0
+    pedidos_entregados_count = Pedidos.filter(estado='entregado').count() if view_param == 'pedidos' else 0
     show_create_product_form = request.GET.get('view') == 'productos' and request.GET.get('crear') == '1'
     editar_id = request.GET.get('editar')
     show_edit_product_form = request.GET.get('view') == 'productos' and bool(editar_id)
@@ -369,8 +396,12 @@ def dashboard_home(request):
     # Calcular estadísticas de ventas por categorías (siempre, para usar en home)
     view_param = request.GET.get('view', 'ventas')  # 'ventas' por defecto
     
-    # Obtener todas las ventas (pedidos confirmados)
-    ventas_detalles = PedidoDetalle.objects.select_related('producto', 'producto__category', 'pedido').all()
+    # Obtener todas las ventas (pedidos confirmados) - EXCLUIR CANCELADOS
+    ventas_detalles = PedidoDetalle.objects.select_related(
+        'producto', 'producto__category', 'pedido'
+    ).exclude(
+        pedido__estado='cancelado'
+    ).all()
     
     # Calcular ventas por categoría
     ventas_por_categoria_dict = {}
@@ -418,8 +449,8 @@ def dashboard_home(request):
     # Ordenar por total de ingresos descendente
     ventas_por_categoria.sort(key=lambda x: x['total_ingresos'], reverse=True)
     
-    # Calcular estadísticas generales
-    pedidos_totales = Pedido.objects.count()
+    # Calcular estadísticas generales - EXCLUIR PEDIDOS CANCELADOS
+    pedidos_totales = Pedido.objects.exclude(estado='cancelado').count()
     promedio_por_pedido = total_ventas_general / pedidos_totales if pedidos_totales > 0 else 0
     
     categoria_mas_vendida = None
@@ -454,6 +485,9 @@ def dashboard_home(request):
         'inventario_by_category': inventario_by_category,
         'resumen_inventario': resumen_inventario,
         'pedidos': Pedidos,
+        'pedidos_pendientes_count': pedidos_pendientes_count,
+        'pedidos_enviados_count': pedidos_enviados_count,
+        'pedidos_entregados_count': pedidos_entregados_count,
         'ventas_por_categoria': ventas_por_categoria,
         'total_ventas_general': total_ventas_general,
         'estadisticas_ventas': estadisticas_ventas,
@@ -895,3 +929,227 @@ def eliminar_categoria(request, categoria_id):
             })
     
     return JsonResponse({'success': False, 'message': 'Método no permitido'})
+
+
+@superuser_required
+def pedido_detalle(request, pedido_id):
+    """Obtener detalles completos de un pedido"""
+    try:
+        pedido = get_object_or_404(Pedido, id=pedido_id)
+        
+        # Obtener detalles de productos
+        detalles = PedidoDetalle.objects.filter(pedido=pedido).select_related('producto', 'variante')
+        
+        # Construir lista de items
+        items = []
+        for detalle in detalles:
+            item = {
+                'nombre': detalle.producto.name,
+                'cantidad': detalle.cantidad,
+                'precio': float(detalle.precio),
+                'variante': detalle.variante.name if detalle.variante else None
+            }
+            items.append(item)
+        
+        # Datos del pedido
+        pedido_data = {
+            'id': pedido.id,
+            'nombre': pedido.nombre,
+            'email': pedido.email or pedido.user.email,
+            'telefono': pedido.telefono,
+            'direccion': pedido.direccion,
+            'ciudad': pedido.ciudad,
+            'departamento': pedido.departamento,
+            'codigo_postal': pedido.codigo_postal,
+            'nota': pedido.nota,
+            'nota_admin': getattr(pedido, 'nota_admin', ''),
+            'fecha': pedido.fecha.isoformat(),
+            'total': float(pedido.total),
+            'subtotal': float(getattr(pedido, 'subtotal', 0)),
+            'envio': float(getattr(pedido, 'envio', 0)),
+            'descuento': float(getattr(pedido, 'descuento', 0)),
+            'estado': getattr(pedido, 'estado', 'pendiente'),
+            'estado_display': pedido.get_estado_display() if hasattr(pedido, 'get_estado_display') else 'Pendiente',
+            'metodo_pago': getattr(pedido, 'metodo_pago', 'contraentrega'),
+            'metodo_pago_display': pedido.get_metodo_pago_display() if hasattr(pedido, 'get_metodo_pago_display') else 'Contra entrega',
+            'estado_pago': getattr(pedido, 'estado_pago', 'pendiente'),
+            'estado_pago_display': pedido.get_estado_pago_display() if hasattr(pedido, 'get_estado_pago_display') else 'Pendiente',
+            'transaction_id': getattr(pedido, 'transaction_id', None),
+            'payment_reference': getattr(pedido, 'payment_reference', None),
+            'codigo_descuento': getattr(pedido, 'codigo_descuento', None),
+            'items': items
+        }
+        
+        return JsonResponse({
+            'success': True,
+            'pedido': pedido_data
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'Error al obtener detalles: {str(e)}'
+        })
+
+
+@superuser_required  
+@csrf_exempt
+def update_pedido_estado(request):
+    """Actualizar el estado de un pedido"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Método no permitido'})
+    
+    try:
+        import json
+        data = json.loads(request.body)
+        pedido_id = data.get('pedido_id')
+        nuevo_estado = data.get('nuevo_estado')
+        
+        if not pedido_id or not nuevo_estado:
+            return JsonResponse({
+                'success': False, 
+                'error': 'Faltan datos requeridos'
+            })
+        
+        pedido = get_object_or_404(Pedido, id=pedido_id)
+        
+        # Validar estado
+        estados_validos = ['pendiente', 'confirmado', 'enviado', 'llegando', 'entregado', 'cancelado']
+        if nuevo_estado not in estados_validos:
+            return JsonResponse({
+                'success': False,
+                'error': 'Estado no válido'
+            })
+        
+        # Obtener estado anterior
+        old_estado = getattr(pedido, 'estado', 'pendiente')
+        
+        # MANEJAR CANCELACIÓN DE PEDIDO - DEVOLVER STOCK
+        if nuevo_estado == 'cancelado' and old_estado != 'cancelado':
+            # Importar modelos necesarios
+            from core.models import PedidoDetalle, ProductStore, ProductVariant
+            
+            # Obtener todos los detalles del pedido
+            detalles = PedidoDetalle.objects.filter(pedido=pedido)
+            
+            # Devolver stock para cada producto
+            for detalle in detalles:
+                try:
+                    if detalle.variante:
+                        # Si es una variante, devolver stock a la variante
+                        variante = detalle.variante
+                        variante.stock += detalle.cantidad
+                        variante.save()
+                        print(f"✅ Stock devuelto - Variante {variante.id}: +{detalle.cantidad} unidades")
+                    else:
+                        # Si es producto principal, devolver stock al producto
+                        producto = detalle.producto
+                        producto.stock += detalle.cantidad
+                        producto.save()
+                        print(f"✅ Stock devuelto - Producto {producto.name}: +{detalle.cantidad} unidades")
+                        
+                except Exception as e:
+                    print(f"❌ Error devolviendo stock para detalle {detalle.id}: {str(e)}")
+                    # Continuar con los demás productos aunque uno falle
+                    
+            print(f"🔄 Pedido #{pedido.id} cancelado - Stock devuelto al inventario")
+        
+        # Actualizar estado
+        # Si el campo estado no existe, crearlo dinámicamente
+        if hasattr(pedido, 'estado'):
+            pedido.estado = nuevo_estado
+        else:
+            # Para compatibilidad con modelos antiguos
+            setattr(pedido, 'estado', nuevo_estado)
+        
+        # Actualizar fechas especiales
+        from django.utils import timezone
+        if nuevo_estado == 'enviado' and not getattr(pedido, 'fecha_enviado', None):
+            if hasattr(pedido, 'fecha_enviado'):
+                pedido.fecha_enviado = timezone.now()
+            else:
+                setattr(pedido, 'fecha_enviado', timezone.now())
+                
+        elif nuevo_estado == 'entregado' and not getattr(pedido, 'fecha_entregado', None):
+            if hasattr(pedido, 'fecha_entregado'):
+                pedido.fecha_entregado = timezone.now()
+            else:
+                setattr(pedido, 'fecha_entregado', timezone.now())
+        
+        # Actualizar estado de pago si es necesario
+        if nuevo_estado == 'entregado' and getattr(pedido, 'metodo_pago', 'contraentrega') == 'contraentrega':
+            if hasattr(pedido, 'estado_pago'):
+                pedido.estado_pago = 'completado'
+            else:
+                setattr(pedido, 'estado_pago', 'completado')
+        
+        pedido.save()
+        
+        # Mensaje personalizado según el estado
+        if nuevo_estado == 'cancelado':
+            message = f'Pedido cancelado - Stock devuelto al inventario'
+        else:
+            message = f'Estado cambiado de "{old_estado}" a "{nuevo_estado}"'
+        
+        return JsonResponse({
+            'success': True,
+            'message': message,
+            'nuevo_estado': nuevo_estado
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'success': False,
+            'error': 'Datos JSON inválidos'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'Error al actualizar estado: {str(e)}'
+        })
+
+
+@superuser_required  
+@csrf_exempt
+def update_pedido_notes(request):
+    """Actualizar las notas administrativas de un pedido"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Método no permitido'})
+    
+    try:
+        import json
+        data = json.loads(request.body)
+        pedido_id = data.get('pedido_id')
+        notas_admin = data.get('notas_admin', '')
+        
+        if not pedido_id:
+            return JsonResponse({
+                'success': False, 
+                'error': 'ID de pedido requerido'
+            })
+        
+        pedido = get_object_or_404(Pedido, id=pedido_id)
+        
+        # Actualizar notas administrativas
+        if hasattr(pedido, 'nota_admin'):
+            pedido.nota_admin = notas_admin
+        else:
+            setattr(pedido, 'nota_admin', notas_admin)
+        
+        pedido.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Notas administrativas actualizadas correctamente'
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'success': False,
+            'error': 'Datos JSON inválidos'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'Error al actualizar notas: {str(e)}'
+        })

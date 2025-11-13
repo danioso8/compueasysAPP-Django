@@ -648,24 +648,275 @@
 
 <!-- ...existing code... -->
             {% elif request.GET.view == "pedidos" %}
-                <h2>Pedidos</h2>
-                <table>
-                    <tr>
-                       
-                        <th>Nombre</th>
-                        <th>Email</th>
-                        <th>Total</th>
-                        <th>Fecha</th>
-                    </tr>
-                    {% for pedido in pedidos %}
-                    <tr>
-                        <td>{{ pedido.nombre }}</td>
-                        <td>{{ pedido.user }}</td>
-                        <td>${{ pedido.total }}</td>
-                        <td>{{ pedido.created_at }}</td>
-                    </tr>
-                    {% endfor %}
-                </table>
+                <!-- Header de Pedidos -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h2><i class="fas fa-shopping-cart me-2"></i>Gestión de Pedidos</h2>
+                        <p class="text-muted mb-0">Administra y da seguimiento a todos los pedidos</p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-primary btn-sm" onclick="location.reload()">
+                            <i class="fas fa-sync"></i> Actualizar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Filtros y estadísticas rápidas -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="card border-primary">
+                            <div class="card-body text-center">
+                                <h4 class="text-primary">{{ pedidos|length }}</h4>
+                                <small class="text-muted">Total Pedidos</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card border-warning">
+                            <div class="card-body text-center">
+                                <h4 class="text-warning">{{ pedidos_pendientes_count|default:0 }}</h4>
+                                <small class="text-muted">Pendientes</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card border-info">
+                            <div class="card-body text-center">
+                                <h4 class="text-info">{{ pedidos_enviados_count|default:0 }}</h4>
+                                <small class="text-muted">En camino</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card border-success">
+                            <div class="card-body text-center">
+                                <h4 class="text-success">{{ pedidos_entregados_count|default:0 }}</h4>
+                                <small class="text-muted">Entregados</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filtros -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <form method="get" class="row g-3">
+                            <input type="hidden" name="view" value="pedidos">
+                            <div class="col-md-3">
+                                <label class="form-label">Estado:</label>
+                                <select name="estado_filter" class="form-select form-select-sm">
+                                    <option value="">Todos los estados</option>
+                                    <option value="pendiente" {% if request.GET.estado_filter == 'pendiente' %}selected{% endif %}>Pendiente</option>
+                                    <option value="confirmado" {% if request.GET.estado_filter == 'confirmado' %}selected{% endif %}>Confirmado</option>
+                                    <option value="enviado" {% if request.GET.estado_filter == 'enviado' %}selected{% endif %}>Enviado</option>
+                                    <option value="llegando" {% if request.GET.estado_filter == 'llegando' %}selected{% endif %}>En camino</option>
+                                    <option value="entregado" {% if request.GET.estado_filter == 'entregado' %}selected{% endif %}>Entregado</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Método de pago:</label>
+                                <select name="metodo_filter" class="form-select form-select-sm">
+                                    <option value="">Todos los métodos</option>
+                                    <option value="contraentrega" {% if request.GET.metodo_filter == 'contraentrega' %}selected{% endif %}>Contra entrega</option>
+                                    <option value="recoger_tienda" {% if request.GET.metodo_filter == 'recoger_tienda' %}selected{% endif %}>Recoger en tienda</option>
+                                    <option value="tarjeta" {% if request.GET.metodo_filter == 'tarjeta' %}selected{% endif %}>Tarjeta</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Buscar:</label>
+                                <input type="text" name="search" class="form-control form-control-sm" 
+                                       placeholder="Buscar por nombre, email, ID..." 
+                                       value="{{ request.GET.search }}">
+                            </div>
+                            <div class="col-md-2 d-flex align-items-end">
+                                <button type="submit" class="btn btn-primary btn-sm me-2">
+                                    <i class="fas fa-search"></i> Filtrar
+                                </button>
+                                <a href="?view=pedidos" class="btn btn-outline-secondary btn-sm">Limpiar</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Tabla de Pedidos -->
+                <div class="card shadow-sm">
+                    <div class="card-body p-0">
+                        {% if pedidos %}
+                            <div class="table-responsive">
+                                <table class="table table-hover table-striped mb-0">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Cliente</th>
+                                            <th>Contacto</th>
+                                            <th>Total</th>
+                                            <th>Método Pago</th>
+                                            <th>Estado</th>
+                                            <th>Estado Pago</th>
+                                            <th>Fecha</th>
+                                            <th class="text-center">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for pedido in pedidos %}
+                                        <tr>
+                                            <td>
+                                                <strong class="text-primary">#{{ pedido.id }}</strong>
+                                                {% if pedido.transaction_id %}
+                                                    <br><small class="text-muted">{{ pedido.transaction_id|slice:":8" }}...</small>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <div>
+                                                    <strong>{{ pedido.nombre }}</strong><br>
+                                                    <small class="text-muted">{{ pedido.user.email }}</small>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                {% if pedido.telefono %}
+                                                    <small><i class="fas fa-phone"></i> {{ pedido.telefono }}</small><br>
+                                                {% endif %}
+                                                <small class="text-muted">
+                                                    <i class="fas fa-map-marker-alt"></i> {{ pedido.ciudad }}, {{ pedido.departamento }}
+                                                </small>
+                                            </td>
+                                            <td>
+                                                <strong class="text-success">${{ pedido.total|floatformat:0 }}</strong>
+                                                {% if pedido.subtotal and pedido.envio %}
+                                                    <br>
+                                                    <small class="text-muted">
+                                                        Sub: ${{ pedido.subtotal|floatformat:0 }}
+                                                        {% if pedido.envio > 0 %} + Envío: ${{ pedido.envio|floatformat:0 }}{% endif %}
+                                                    </small>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if pedido.metodo_pago == 'contraentrega' %}
+                                                    <span class="badge bg-warning text-dark">
+                                                        <i class="fas fa-money-bill"></i> Contra entrega
+                                                    </span>
+                                                {% elif pedido.metodo_pago == 'recoger_tienda' %}
+                                                    <span class="badge bg-info">
+                                                        <i class="fas fa-store"></i> Recoger en tienda
+                                                    </span>
+                                                {% elif pedido.metodo_pago == 'tarjeta' or pedido.metodo_pago == 'wompi' %}
+                                                    <span class="badge bg-primary">
+                                                        <i class="fas fa-credit-card"></i> Tarjeta
+                                                    </span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">{{ pedido.get_metodo_pago_display }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-{{ pedido.get_estado_badge_class|slice:"6:" }}">
+                                                    {% if pedido.estado == 'pendiente' %}
+                                                        <i class="fas fa-clock"></i>
+                                                    {% elif pedido.estado == 'confirmado' %}
+                                                        <i class="fas fa-check"></i>
+                                                    {% elif pedido.estado == 'enviado' %}
+                                                        <i class="fas fa-shipping-fast"></i>
+                                                    {% elif pedido.estado == 'llegando' %}
+                                                        <i class="fas fa-truck"></i>
+                                                    {% elif pedido.estado == 'entregado' %}
+                                                        <i class="fas fa-check-circle"></i>
+                                                    {% endif %}
+                                                    {{ pedido.get_estado_display }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-{{ pedido.get_pago_badge_class|slice:"6:" }}">
+                                                    {% if pedido.estado_pago == 'completado' %}
+                                                        <i class="fas fa-check-circle"></i>
+                                                    {% elif pedido.estado_pago == 'fallido' %}
+                                                        <i class="fas fa-times-circle"></i>
+                                                    {% elif pedido.estado_pago == 'procesando' %}
+                                                        <i class="fas fa-spinner"></i>
+                                                    {% else %}
+                                                        <i class="fas fa-clock"></i>
+                                                    {% endif %}
+                                                    {{ pedido.get_estado_pago_display }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <small>{{ pedido.fecha|date:"d/m/Y H:i" }}</small>
+                                                {% if pedido.fecha_entregado %}
+                                                    <br><small class="text-success">Entregado: {{ pedido.fecha_entregado|date:"d/m" }}</small>
+                                                {% endif %}
+                                            </td>
+                                            <td class="text-center">
+                                                <div class="d-flex flex-column gap-1">
+                                                    <button type="button" class="btn btn-outline-primary btn-sm" 
+                                                            data-bs-toggle="modal" data-bs-target="#pedidoModal"
+                                                            onclick="viewPedidoDetails({{ pedido.id }})"
+                                                            title="Ver detalles del pedido">
+                                                        <i class="fas fa-eye me-1"></i> Ver
+                                                    </button>
+                                                    <div class="dropdown">
+                                                        <button class="btn btn-outline-secondary btn-sm dropdown-toggle w-100" 
+                                                                type="button" data-bs-toggle="dropdown"
+                                                                title="Cambiar estado del pedido">
+                                                            <i class="fas fa-edit me-1"></i> Estado
+                                                        </button>
+                                                        <ul class="dropdown-menu">
+                                                            <li><a class="dropdown-item" href="#" onclick="updateEstado({{ pedido.id }}, 'pendiente')">
+                                                                <i class="fas fa-clock me-2 text-warning"></i>Pendiente
+                                                            </a></li>
+                                                            <li><a class="dropdown-item" href="#" onclick="updateEstado({{ pedido.id }}, 'confirmado')">
+                                                                <i class="fas fa-check me-2 text-info"></i>Confirmar
+                                                            </a></li>
+                                                            <li><a class="dropdown-item" href="#" onclick="updateEstado({{ pedido.id }}, 'enviado')">
+                                                                <i class="fas fa-shipping-fast me-2 text-primary"></i>Enviar
+                                                            </a></li>
+                                                            <li><a class="dropdown-item" href="#" onclick="updateEstado({{ pedido.id }}, 'llegando')">
+                                                                <i class="fas fa-truck me-2 text-info"></i>En camino
+                                                            </a></li>
+                                                            <li><a class="dropdown-item" href="#" onclick="updateEstado({{ pedido.id }}, 'entregado')">
+                                                                <i class="fas fa-check-circle me-2 text-success"></i>Entregar
+                                                            </a></li>
+                                                            <li><hr class="dropdown-divider"></li>
+                                                            <li><a class="dropdown-item text-danger" href="#" onclick="updateEstado({{ pedido.id }}, 'cancelado')">
+                                                                <i class="fas fa-times-circle me-2"></i>Cancelar
+                                                            </a></li>
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-5">
+                                <i class="fas fa-shopping-cart text-muted" style="font-size: 4rem;"></i>
+                                <h4 class="text-muted mt-3">No hay pedidos</h4>
+                                <p class="text-muted">Los pedidos aparecerán aquí cuando los clientes realicen compras.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Modal para ver detalles del pedido -->
+                <div class="modal fade" id="pedidoModal" tabindex="-1" aria-labelledby="pedidoModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="pedidoModalLabel">
+                                    <i class="fas fa-shopping-cart"></i> Detalles del Pedido
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body" id="pedidoModalContent">
+                                <!-- El contenido se carga dinámicamente -->
+                                <div class="text-center">
+                                    <div class="spinner-border" role="status">
+                                        <span class="visually-hidden">Cargando...</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
              {% elif request.GET.view == "inventario" %}
       <div class="inventory-filters">
         <h2>Inventario</h2>
@@ -1675,8 +1926,466 @@
             window.location.href = url.toString();
           });
         }
+
+        // Script para gestión de pedidos
+        console.log('🛒 Inicializando gestión de pedidos...');
       });
+
+      // Funciones para gestión de pedidos
+      function getCsrfToken() {
+        return document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
+               document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ||
+               getCookie('csrftoken');
+      }
+
+      function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+          const cookies = document.cookie.split(';');
+          for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+              cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+              break;
+            }
+          }
+        }
+        return cookieValue;
+      }
+
+      // Ver detalles de un pedido
+      function viewPedidoDetails(pedidoId) {
+        console.log('👁️ Cargando detalles del pedido:', pedidoId);
+        
+        const modalContent = document.getElementById('pedidoModalContent');
+        modalContent.innerHTML = `
+          <div class="text-center">
+            <div class="spinner-border" role="status">
+              <span class="visually-hidden">Cargando...</span>
+            </div>
+          </div>
+        `;
+
+        // Hacer request para obtener detalles
+        fetch(`/dashboard/pedido/${pedidoId}/detalle/`, {
+          method: 'GET',
+          headers: {
+            'X-CSRFToken': getCsrfToken(),
+            'Content-Type': 'application/json',
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            modalContent.innerHTML = buildPedidoDetailHTML(data.pedido);
+          } else {
+            modalContent.innerHTML = `
+              <div class="alert alert-danger">
+                <i class="fas fa-exclamation-triangle"></i> 
+                Error al cargar los detalles: ${data.error || 'Error desconocido'}
+              </div>
+            `;
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          modalContent.innerHTML = `
+            <div class="alert alert-danger">
+              <i class="fas fa-exclamation-triangle"></i> 
+              Error de conexión. Por favor intenta de nuevo.
+            </div>
+          `;
+        });
+      }
+
+      // Construir HTML para detalles del pedido
+      function buildPedidoDetailHTML(pedido) {
+        const formatCurrency = (amount) => {
+          return new Intl.NumberFormat('es-CO', {
+            style: 'currency',
+            currency: 'COP',
+            minimumFractionDigits: 0
+          }).format(amount);
+        };
+
+        return `
+          <div class="row">
+            <!-- Información del cliente -->
+            <div class="col-md-6">
+              <div class="card mb-3">
+                <div class="card-header">
+                  <h6 class="mb-0"><i class="fas fa-user"></i> Información del Cliente</h6>
+                </div>
+                <div class="card-body">
+                  <p><strong>Nombre:</strong> ${pedido.nombre}</p>
+                  <p><strong>Email:</strong> ${pedido.email || 'No proporcionado'}</p>
+                  <p><strong>Teléfono:</strong> ${pedido.telefono || 'No proporcionado'}</p>
+                  <p class="mb-0"><strong>Fecha del pedido:</strong> ${new Date(pedido.fecha).toLocaleString()}</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Información de entrega -->
+            <div class="col-md-6">
+              <div class="card mb-3">
+                <div class="card-header">
+                  <h6 class="mb-0"><i class="fas fa-map-marker-alt"></i> Información de Entrega</h6>
+                </div>
+                <div class="card-body">
+                  <p><strong>Dirección:</strong> ${pedido.direccion}</p>
+                  <p><strong>Ciudad:</strong> ${pedido.ciudad}</p>
+                  <p><strong>Departamento:</strong> ${pedido.departamento}</p>
+                  ${pedido.codigo_postal ? `<p><strong>Código Postal:</strong> ${pedido.codigo_postal}</p>` : ''}
+                  ${pedido.nota ? `<p><strong>Nota del cliente:</strong> ${pedido.nota}</p>` : ''}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Notas Administrativas -->
+          <div class="row mb-3">
+            <div class="col-12">
+              <div class="card border-info">
+                <div class="card-header">
+                  <h6 class="mb-0"><i class="fas fa-clipboard"></i> Notas Administrativas</h6>
+                </div>
+                <div class="card-body">
+                  <div class="mb-2">
+                    <textarea id="nota_admin_${pedido.id}" class="form-control" rows="3" 
+                              placeholder="Agregar notas internas sobre el pedido...">${pedido.nota_admin || ''}</textarea>
+                  </div>
+                  <button type="button" class="btn btn-sm btn-primary" onclick="updateAdminNotes(${pedido.id})">
+                    <i class="fas fa-save"></i> Guardar Notas
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Estados y pago -->
+          <div class="row mb-3">
+            <div class="col-md-4">
+              <div class="card border-primary">
+                <div class="card-body text-center">
+                  <h6 class="text-primary">Estado del Pedido</h6>
+                  <span class="badge bg-${getEstadoBadgeColor(pedido.estado)} fs-6">
+                    ${pedido.estado_display}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="card border-info">
+                <div class="card-body text-center">
+                  <h6 class="text-info">Método de Pago</h6>
+                  <span class="badge bg-${getMetodoPagoBadgeColor(pedido.metodo_pago)} fs-6">
+                    ${pedido.metodo_pago_display}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="card border-success">
+                <div class="card-body text-center">
+                  <h6 class="text-success">Estado del Pago</h6>
+                  <span class="badge bg-${getPagoBadgeColor(pedido.estado_pago)} fs-6">
+                    ${pedido.estado_pago_display}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          ${pedido.transaction_id ? `
+            <div class="alert alert-info mb-3">
+              <h6><i class="fas fa-credit-card"></i> Información de Pago Digital</h6>
+              <p class="mb-1"><strong>ID de Transacción:</strong> ${pedido.transaction_id}</p>
+              ${pedido.payment_reference ? `<p class="mb-0"><strong>Referencia:</strong> ${pedido.payment_reference}</p>` : ''}
+            </div>
+          ` : ''}
+
+          <!-- Productos -->
+          <div class="card">
+            <div class="card-header">
+              <h6 class="mb-0"><i class="fas fa-shopping-bag"></i> Productos del Pedido</h6>
+            </div>
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table class="table table-sm mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th>Producto</th>
+                      <th class="text-center">Cantidad</th>
+                      <th class="text-end">Precio Unit.</th>
+                      <th class="text-end">Subtotal</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${pedido.items ? pedido.items.map(item => `
+                      <tr>
+                        <td>
+                          <strong>${item.nombre}</strong>
+                          ${item.variante ? `<br><small class="text-muted">Variante: ${item.variante}</small>` : ''}
+                        </td>
+                        <td class="text-center">${item.cantidad}</td>
+                        <td class="text-end">${formatCurrency(item.precio)}</td>
+                        <td class="text-end">${formatCurrency(item.precio * item.cantidad)}</td>
+                      </tr>
+                    `).join('') : '<tr><td colspan="4" class="text-center">No hay productos registrados</td></tr>'}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div class="card-footer">
+              <div class="row text-end">
+                <div class="col-md-8"></div>
+                <div class="col-md-4">
+                  ${pedido.subtotal ? `<p class="mb-1">Subtotal: <strong>${formatCurrency(pedido.subtotal)}</strong></p>` : ''}
+                  ${pedido.codigo_descuento ? `<p class="mb-1 text-success">Descuento (${pedido.codigo_descuento}): <strong>-${formatCurrency(pedido.descuento)}</strong></p>` : ''}
+                  ${pedido.envio > 0 ? `<p class="mb-1">Envío: <strong>${formatCurrency(pedido.envio)}</strong></p>` : 
+                    `<p class="mb-1 text-success">Envío: <strong>GRATIS</strong></p>`}
+                  <h5 class="mb-0">Total: <strong class="text-success">${formatCurrency(pedido.total)}</strong></h5>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      // Funciones auxiliares para badges
+      function getEstadoBadgeColor(estado) {
+        const colors = {
+          'pendiente': 'warning',
+          'confirmado': 'info',
+          'enviado': 'primary',
+          'llegando': 'primary',
+          'entregado': 'success',
+          'cancelado': 'danger'
+        };
+        return colors[estado] || 'secondary';
+      }
+
+      function getMetodoPagoBadgeColor(metodo) {
+        const colors = {
+          'contraentrega': 'warning',
+          'recoger_tienda': 'info',
+          'tarjeta': 'primary',
+          'wompi': 'primary'
+        };
+        return colors[metodo] || 'secondary';
+      }
+
+      function getPagoBadgeColor(estado) {
+        const colors = {
+          'pendiente': 'warning',
+          'procesando': 'info',
+          'completado': 'success',
+          'fallido': 'danger',
+          'reembolsado': 'secondary'
+        };
+        return colors[estado] || 'secondary';
+      }
+
+      // Actualizar estado del pedido
+      function updateEstado(pedidoId, nuevoEstado) {
+        // Confirmación especial para cancelación
+        let confirmMessage;
+        if (nuevoEstado === 'cancelado') {
+          confirmMessage = `⚠️ ¿Estás seguro de CANCELAR el pedido #${pedidoId}?\n\n` +
+                          `Esta acción:\n` +
+                          `• Devolverá el stock de todos los productos al inventario\n` +
+                          `• Excluirá este pedido de las estadísticas de ventas\n` +
+                          `• No podrá deshacerse una vez confirmada`;
+        } else {
+          confirmMessage = `¿Estás seguro de cambiar el estado del pedido #${pedidoId} a "${nuevoEstado}"?`;
+        }
+        
+        if (!confirm(confirmMessage)) {
+          return;
+        }
+
+        console.log('🔄 Actualizando estado del pedido:', pedidoId, 'a', nuevoEstado);
+
+        fetch('/dashboard/pedido/update-estado/', {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': getCsrfToken(),
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            pedido_id: pedidoId,
+            nuevo_estado: nuevoEstado
+          })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            // Mostrar mensaje específico según el estado
+            let successMessage;
+            if (nuevoEstado === 'cancelado') {
+              successMessage = '✅ Pedido cancelado - Stock devuelto al inventario';
+            } else {
+              successMessage = `✅ Estado actualizado a "${nuevoEstado}" correctamente`;
+            }
+            
+            showAlert(successMessage, 'success');
+            
+            // Recargar la página para mostrar los cambios
+            setTimeout(() => {
+              location.reload();
+            }, 1000);
+          } else {
+            showAlert('❌ Error al actualizar: ' + (data.error || 'Error desconocido'), 'danger');
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          showAlert('❌ Error de conexión. Intenta de nuevo.', 'danger');
+        });
+      }
+
+      // Actualizar notas administrativas
+      function updateAdminNotes(pedidoId) {
+        const notasTextarea = document.getElementById(`nota_admin_${pedidoId}`);
+        if (!notasTextarea) {
+          showAlert('❌ No se encontró el campo de notas', 'danger');
+          return;
+        }
+
+        const notas = notasTextarea.value.trim();
+
+        console.log('📝 Actualizando notas del pedido:', pedidoId);
+
+        fetch('/dashboard/pedido/update-notes/', {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': getCsrfToken(),
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            pedido_id: pedidoId,
+            notas_admin: notas
+          })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            showAlert('✅ Notas administrativas guardadas correctamente', 'success');
+          } else {
+            showAlert('❌ Error al guardar notas: ' + (data.error || 'Error desconocido'), 'danger');
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          showAlert('❌ Error de conexión. Intenta de nuevo.', 'danger');
+        });
+      }
+
+      // Mostrar alertas
+      function showAlert(message, type = 'info') {
+        const alertContainer = document.getElementById('alert-container') || createAlertContainer();
+        
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+        alertDiv.innerHTML = `
+          ${message}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        
+        alertContainer.appendChild(alertDiv);
+        
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+          alertDiv.remove();
+        }, 5000);
+      }
+
+      function createAlertContainer() {
+        const container = document.createElement('div');
+        container.id = 'alert-container';
+        container.style.position = 'fixed';
+        container.style.top = '20px';
+        container.style.right = '20px';
+        container.style.zIndex = '9999';
+        container.style.maxWidth = '400px';
+        document.body.appendChild(container);
+        return container;
+      }
     </script>
+
+    <style>
+      /* Arreglar z-index de dropdowns en tabla de pedidos */
+      .table tbody .dropdown {
+        position: static;
+      }
+      
+      .table tbody .dropdown-menu {
+        position: absolute !important;
+        z-index: 1050 !important;
+        transform: translate3d(0px, 0px, 0px) !important;
+        will-change: transform;
+      }
+      
+      /* Asegurar que la tabla no tenga overflow que oculte los dropdowns */
+      .table-responsive {
+        overflow: visible !important;
+      }
+      
+      /* Estilo mejorado para el dropdown de estado */
+      .btn-group-vertical .dropdown-menu {
+        min-width: 140px;
+        border: 1px solid rgba(0,0,0,.15);
+        border-radius: 0.375rem;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+      }
+      
+      .dropdown-item {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.875rem;
+        display: flex;
+        align-items: center;
+      }
+      
+      .dropdown-item:hover {
+        background-color: #f8f9fa;
+      }
+      
+      /* Mejorar espaciado de botones de acción */
+      .d-flex.flex-column.gap-1 {
+        gap: 0.25rem !important;
+        min-width: 120px;
+      }
+      
+      .d-flex.flex-column.gap-1 .btn {
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        overflow: hidden;
+      }
+      
+      /* Asegurar que los dropdowns aparezcan correctamente en móvil */
+      @media (max-width: 768px) {
+        .table tbody .dropdown-menu {
+          position: fixed !important;
+          z-index: 1055 !important;
+        }
+        
+        .d-flex.flex-column.gap-1 {
+          min-width: 100px;
+        }
+        
+        .d-flex.flex-column.gap-1 .btn {
+          font-size: 0.75rem;
+          padding: 0.25rem 0.5rem;
+        }
+      }
+      
+      /* Colores para los iconos en el dropdown */
+      .dropdown-item i.text-warning { color: #ffc107 !important; }
+      .dropdown-item i.text-info { color: #0dcaf0 !important; }
+      .dropdown-item i.text-primary { color: #0d6efd !important; }
+      .dropdown-item i.text-success { color: #198754 !important; }
+      .dropdown-item i.text-danger { color: #dc3545 !important; }
+    </style>
     
 </body>
 </html>

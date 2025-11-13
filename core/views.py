@@ -420,8 +420,12 @@ def pago_exitoso(request):
             cart_items.append({'product': product, 'variant': variant, 'quantity': quantity, 'subtotal': subtotal})
             cart_subtotal += subtotal
 
-        # Calcular total final con descuento
-        shipping_cost = Decimal(15000) if cart_subtotal < Decimal(100000) else Decimal(0)
+        # Calcular envío según método de pago
+        if metodo_pago == 'recoger_tienda':
+            shipping_cost = Decimal(0)  # Siempre gratis para recoger en tienda
+        else:
+            shipping_cost = Decimal(15000) if cart_subtotal < Decimal(100000) else Decimal(0)
+        
         cart_total = cart_subtotal - discount_amount + shipping_cost
 
         # Organiza el detalle de productos para WhatsApp/email
@@ -441,30 +445,39 @@ def pago_exitoso(request):
             detalles += f"\n🎁 Descuento aplicado ({discount_code}): -${discount_amount:,.0f}\n"
         
         # Agregar información de envío
-        if shipping_cost > 0:
+        if metodo_pago == 'recoger_tienda':
+            detalles += f"🏪 Método: Recoger en tienda - Envío GRATIS\n"
+        elif shipping_cost > 0:
             detalles += f"📦 Costo de envío: ${shipping_cost:,.0f}\n"
         else:
             detalles += f"📦 Envío: GRATIS\n"
 
-        # Guardar pedido con información de descuento y pago
-        pedido_nota = nota
-        if discount_code:
-            pedido_nota += f" | Descuento: {discount_code} (-${discount_amount:,.0f})"
-        if transaction_id:
-            pedido_nota += f" | TransactionID: {transaction_id} | Método: {metodo_pago}"
-        elif metodo_pago == 'contraentrega':
-            pedido_nota += f" | Método: Contra entrega"
-            
+        # Determinar estado inicial del pago
+        estado_pago_inicial = 'pendiente'
+        if metodo_pago in ['tarjeta', 'wompi'] and transaction_id:
+            estado_pago_inicial = 'completado'
+
+        # Guardar pedido con toda la información nueva
         pedido = Pedido.objects.create(
             user=user,
             nombre=nombre,
+            email=email,  # Agregar email
+            telefono=telefono,  # Agregar teléfono
             direccion=direccion,
             ciudad=ciudad,
             departamento=departamento,
             codigo_postal=codigo_postal,
+            subtotal=cart_subtotal,  # Agregar subtotal
+            envio=shipping_cost,  # Agregar envío
+            descuento=discount_amount,  # Agregar descuento
             total=cart_total,
             detalles=detalles,
-            nota=pedido_nota
+            nota=nota,  # Usar nota original sin modificar
+            estado='pendiente',  # Estado inicial
+            metodo_pago=metodo_pago,  # Método de pago correcto
+            estado_pago=estado_pago_inicial,  # Estado de pago
+            transaction_id=transaction_id if transaction_id else None,  # Transaction ID
+            codigo_descuento=discount_code if discount_code else None,  # Código descuento
         )
 
         # Guardar cada item en el detalle del pedido y descontar stock (¡DENTRO DEL CICLO!)
@@ -569,8 +582,8 @@ def pago_exitoso(request):
             f"Código Postal: {codigo_postal}\n"
             f"Teléfono: {telefono}\n"
         )
-        if pedido_nota:
-            mensaje += f"\n*Nota:* {pedido_nota}\n"
+        if nota:
+            mensaje += f"\n*Nota:* {nota}\n"
 
         mensaje_encoded = urllib.parse.quote(mensaje)
         whatsapp_url = f"https://wa.me/57{telefono}?text={mensaje_encoded}"

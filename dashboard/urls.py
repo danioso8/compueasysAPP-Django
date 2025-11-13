@@ -26,7 +26,9 @@ from .views import (
     crear_tipo,
     edit_tipo,
     delete_tipo,
-   
+    pedido_detalle,  # Nueva función para detalles de pedido
+    update_pedido_estado,  # Nueva función para actualizar estado
+    update_pedido_notes,  # Nueva función para actualizar notas
 )
 
 urlpatterns = [
@@ -60,6 +62,11 @@ urlpatterns = [
     path('crear/tipo/', crear_tipo, name='crear_tipo'),
     path('tipo/<int:tipo_id>/editar/', edit_tipo, name='edit_tipo'),
     path('tipo/<int:tipo_id>/eliminar/', delete_tipo, name='delete_tipo'),
+
+    # URLs para gestión de pedidos
+    path('pedido/<int:pedido_id>/detalle/', pedido_detalle, name='pedido_detalle'),
+    path('pedido/update-estado/', update_pedido_estado, name='update_pedido_estado'),
+    path('pedido/update-notes/', update_pedido_notes, name='update_pedido_notes'),
 
 ]
 
