@@ -1,58 +1,431 @@
 {% load static %}
-<link rel="stylesheet" href="{% static 'css/footer.css' %}">
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">`
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<footer class="modern-footer">
+    <div class="container">
+        <div class="footer-main">
+            <!-- Brand Section -->
+            <div class="footer-brand">
+                <div class="brand-logo">
+                    <h3 class="brand-name">CompuEasys</h3>
+                    <span class="brand-tagline">Soluciones Tecnológicas Innovadoras</span>
+                </div>
+                <p class="brand-description">
+                    Desde 2006 transformando ideas en realidad digital con desarrollo de software, 
+                    reparación de equipos y consultoría tecnológica.
+                </p>
+            </div>
 
-<footer>
-    <div class="footer-container">
+            <!-- Navigation Links -->
+            <div class="footer-nav">
+                <div class="nav-section">
+                    <h5>Servicios</h5>
+                    <ul>
+                        <li><a href="{% url 'services' %}">Desarrollo de Software</a></li>
+                        <li><a href="{% url 'services' %}">Reparación de Equipos</a></li>
+                        <li><a href="{% url 'services' %}">Soporte Técnico</a></li>
+                        <li><a href="{% url 'store' %}">Tienda Online</a></li>
+                    </ul>
+                </div>
+                
+                <div class="nav-section">
+                    <h5>Empresa</h5>
+                    <ul>
+                        <li><a href="{% url 'aboutUs' %}">Sobre Nosotros</a></li>
+                        <li><a href="{% url 'contactUs' %}">Contáctanos</a></li>
+                        <li><a href="{% url 'home' %}">Inicio</a></li>
+                    </ul>
+                </div>
+            </div>
 
-        <div class="contacto-us-footer">
-            <div class="footer-logo">
-                <h2>CompuEasys</h2>
-            </div>   
-           <div class="footer-about">
-               <h2>Contáctanos</h2>
-               <p>¿Tienes alguna pregunta o necesitas más información? ¡Estamos aquí para ayudarte!</p>
-               
-               <div class="social-media-icons">
-                <a href="https://www.facebook.com/compueasys" target="_blank">
-                    <i class="bi bi-facebook"></i>                
-                </a>
-                <a href="https://www.twitter.com/compueasys" target="_blank">
-                    <i class="bi bi-twitter"></i>
-                </a>
-                <a href="https://www.instagram.com/compueasys" target="_blank">
-                    <i class="bi bi-instagram"></i>
-                </a>
-                <a href="https://www.linkedin.com/company/compueasys" target="_blank">
-                    <i class="bi bi-whatsapp "></i>
-                </a> 
-               </div>
+            <!-- Social Media -->
+            <div class="footer-social">
+                <h5>Síguenos</h5>
+                <div class="social-links">
+                    <a href="https://www.facebook.com/compueasys" target="_blank" aria-label="Facebook">
+                        <i class="bi bi-facebook"></i>
+                    </a>
+                    <a href="https://www.twitter.com/compueasys" target="_blank" aria-label="Twitter">
+                        <i class="bi bi-twitter"></i>
+                    </a>
+                    <a href="https://www.instagram.com/compueasys" target="_blank" aria-label="Instagram">
+                        <i class="bi bi-instagram"></i>
+                    </a>
+                    <a href="https://wa.me/573007915262" target="_blank" aria-label="WhatsApp">
+                        <i class="bi bi-whatsapp"></i>
+                    </a>
+                    <a href="https://www.linkedin.com/company/compueasys" target="_blank" aria-label="LinkedIn">
+                        <i class="bi bi-linkedin"></i>
+                    </a>
+                </div>
+                <div class="contact-quick">
+                    <a href="{% url 'contactUs' %}" class="contact-btn">
+                        <i class="bi bi-chat-dots"></i>
+                        Contáctanos
+                    </a>
+                </div>
             </div>
         </div>
-        
-        <div class="footer-content">
-                    
-            <div class="linea">
-                <i class="bi bi-envelope"></i>
-                <p>Correo:</p>
-                <p>compueasys@gmail.com</p>
-            </div>
-            <div class="linea">
-                <i class="bi bi-telephone"></i>
-                <p>Celular</p>
-                <p>+57 300 791 5262</p>
-            </div>
-             <div class="linea">
-                <i class="bi bi-geo-alt"></i>
-                <p> direccion</p>
-                <p>Calle 47A # 100 -34 Medellin. Colombia</p>
+
+        <!-- Footer Bottom -->
+        <div class="footer-bottom">
+            <div class="footer-bottom-content">
+                <div class="copyright">
+                    <p>&copy; {{ current_year|default:"2024" }} CompuEasys. Todos los derechos reservados.</p>
+                </div>
+                <div class="footer-links">
+                    <a href="#" class="footer-link">Términos de Uso</a>
+                    <a href="#" class="footer-link">Política de Privacidad</a>
+                    <a href="{% url 'contactUs' %}" class="footer-link">Soporte</a>
+                </div>
             </div>
         </div>
     </div>
-   <div class="footer-copyright">
-       <p>&copy; 2024 CompuEasys. All rights reserved.</p>
-   </div>
+
+    <!-- Floating elements for visual interest -->
+    <div class="footer-decoration">
+        <div class="decoration-element"></div>
+        <div class="decoration-element"></div>
+        <div class="decoration-element"></div>
+    </div>
 </footer>
+
+<style>
+.modern-footer {
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    color: #ffffff;
+    padding: 50px 0 0;
+    position: relative;
+    overflow: hidden;
+    margin-top: auto;
+}
+
+.modern-footer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M 20 0 L 0 0 0 20" fill="none" stroke="%23ffffff" stroke-width="0.5" opacity="0.05"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+}
+
+.footer-main {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 40px;
+    padding-bottom: 40px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+    z-index: 2;
+}
+
+.footer-brand {
+    max-width: 400px;
+}
+
+.brand-logo {
+    margin-bottom: 20px;
+}
+
+.brand-name {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0;
+    background: linear-gradient(135deg, #ffffff 0%, #e3f2fd 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 5px;
+}
+
+.brand-tagline {
+    font-size: 0.9rem;
+    color: #b3d9ff;
+    font-weight: 500;
+}
+
+.brand-description {
+    color: #e1ecf7;
+    line-height: 1.6;
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+.footer-nav {
+    display: flex;
+    gap: 40px;
+}
+
+.nav-section h5 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: #ffffff;
+}
+
+.nav-section ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.nav-section ul li {
+    margin-bottom: 12px;
+}
+
+.nav-section ul li a {
+    color: #e1ecf7;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    display: inline-block;
+}
+
+.nav-section ul li a:hover {
+    color: #ffffff;
+    transform: translateX(5px);
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+
+.footer-social h5 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: #ffffff;
+}
+
+.social-links {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.social-links a {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    font-size: 1.2rem;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.social-links a:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-3px) scale(1.1);
+    box-shadow: 0 10px 25px rgba(255, 255, 255, 0.1);
+}
+
+.contact-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    color: #ffffff;
+    padding: 12px 20px;
+    border-radius: 25px;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    border: none;
+    box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3);
+}
+
+.contact-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(79, 172, 254, 0.4);
+    color: #ffffff;
+}
+
+.footer-bottom {
+    padding: 25px 0;
+    position: relative;
+    z-index: 2;
+}
+
+.footer-bottom-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.copyright p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: #b3d9ff;
+}
+
+.footer-links {
+    display: flex;
+    gap: 25px;
+}
+
+.footer-link {
+    color: #e1ecf7;
+    text-decoration: none;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+}
+
+.footer-link:hover {
+    color: #ffffff;
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+}
+
+.footer-decoration {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.decoration-element {
+    position: absolute;
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.02) 0%, transparent 70%);
+    animation: float 20s ease-in-out infinite;
+}
+
+.decoration-element:nth-child(1) {
+    top: -100px;
+    right: -100px;
+    animation-delay: 0s;
+}
+
+.decoration-element:nth-child(2) {
+    bottom: -100px;
+    left: -100px;
+    animation-delay: -7s;
+}
+
+.decoration-element:nth-child(3) {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    animation-delay: -14s;
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translate(0, 0) rotate(0deg);
+        opacity: 0.5;
+    }
+    33% {
+        transform: translate(-30px, -30px) rotate(120deg);
+        opacity: 0.3;
+    }
+    66% {
+        transform: translate(30px, -20px) rotate(240deg);
+        opacity: 0.7;
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 992px) {
+    .footer-main {
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+    }
+    
+    .footer-nav {
+        gap: 30px;
+    }
+}
+
+@media (max-width: 768px) {
+    .modern-footer {
+        padding: 40px 0 0;
+    }
+    
+    .footer-main {
+        grid-template-columns: 1fr;
+        gap: 35px;
+    }
+    
+    .footer-nav {
+        flex-direction: row;
+        gap: 40px;
+    }
+    
+    .footer-bottom-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 20px;
+    }
+    
+    .footer-links {
+        justify-content: center;
+    }
+    
+    .brand-name {
+        font-size: 1.8rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .footer-nav {
+        flex-direction: column;
+        gap: 25px;
+    }
+    
+    .social-links {
+        justify-content: center;
+    }
+    
+    .footer-links {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .brand-name {
+        font-size: 1.6rem;
+    }
+}
+
+/* Dark mode compatibility */
+@media (prefers-color-scheme: dark) {
+    .modern-footer {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    }
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+    .decoration-element {
+        animation: none;
+    }
+    
+    .nav-section ul li a:hover,
+    .social-links a:hover,
+    .contact-btn:hover {
+        transform: none;
+    }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+    .modern-footer {
+        background: #000000;
+        border-top: 2px solid #ffffff;
+    }
+    
+    .brand-name {
+        -webkit-text-fill-color: #ffffff;
+    }
+}
+</style>

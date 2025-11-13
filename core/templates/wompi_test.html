@@ -1,0 +1,70 @@
+<!-- Test page para verificar configuración de Wompi -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Wompi Config</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .success { color: green; }
+        .error { color: red; }
+        .info { background: #f0f0f0; padding: 10px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test de Configuración Wompi</h1>
+    
+    <div class="info">
+        <h3>Variables del Template:</h3>
+        <p><strong>WOMPI_PUBLIC_KEY:</strong> {{ wompi_public_key }}</p>
+        <p><strong>WOMPI_ENVIRONMENT:</strong> {{ wompi_environment }}</p>
+    </div>
+    
+    <div id="debug-info"></div>
+    
+    <script>
+        // Configuración que viene del template
+        console.log('=== DEBUG WOMPI CONFIG ===');
+        
+        const templateConfig = {
+            wompi_public_key: '{{ wompi_public_key }}',
+            wompi_environment: '{{ wompi_environment }}',
+        };
+        
+        console.log('Template config:', templateConfig);
+        
+        // Simular window.checkout_config
+        window.checkout_config = {
+            wompi_public_key: '{{ wompi_public_key }}',
+            cart_total: 50000,
+            csrf_token: '{{ csrf_token }}'
+        };
+        
+        console.log('checkout_config:', window.checkout_config);
+        
+        // Verificar como en checkout-wompi.js
+        const CONFIG = {
+            wompi_public_key: window.checkout_config?.wompi_public_key || '',
+        };
+        
+        console.log('CONFIG (como en checkout-wompi.js):', CONFIG);
+        
+        // Mostrar resultados en la página
+        document.getElementById('debug-info').innerHTML = `
+            <h3>Resultados:</h3>
+            <p><strong>Template wompi_public_key:</strong> <span class="${templateConfig.wompi_public_key ? 'success' : 'error'}">${templateConfig.wompi_public_key || 'NO CONFIGURADA'}</span></p>
+            <p><strong>window.checkout_config.wompi_public_key:</strong> <span class="${window.checkout_config?.wompi_public_key ? 'success' : 'error'}">${window.checkout_config?.wompi_public_key || 'NO CONFIGURADA'}</span></p>
+            <p><strong>CONFIG.wompi_public_key:</strong> <span class="${CONFIG.wompi_public_key ? 'success' : 'error'}">${CONFIG.wompi_public_key || 'NO CONFIGURADA'}</span></p>
+            <p><strong>Estado final:</strong> <span class="${CONFIG.wompi_public_key ? 'success' : 'error'}">${CONFIG.wompi_public_key ? '✅ Configurada correctamente' : '❌ Error de configuración'}</span></p>
+        `;
+        
+        // Test de validación como en checkout-wompi.js
+        if (!CONFIG.wompi_public_key) {
+            console.error('🚨 Wompi public key no configurada');
+            document.getElementById('debug-info').innerHTML += '<p class="error"><strong>❌ ERROR:</strong> Misma condición que genera el error en checkout-wompi.js</p>';
+        } else {
+            console.log('✅ Wompi public key configurada correctamente');
+            document.getElementById('debug-info').innerHTML += '<p class="success"><strong>✅ ÉXITO:</strong> Configuración correcta</p>';
+        }
+    </script>
+</body>
+</html>

@@ -1,17 +1,684 @@
 {% load static %}
-<link rel="stylesheet" href="{% static 'css/main.css' %}">
-<link rel="stylesheet" href="{% static 'css/navbarr.css' %}">
-{% include "navbarr.html" %}
- <div class="sobre-AppCompueasys">
-        <div class="card">
-            <div class="title">Sobre CompuEasys</div>
-            <div class="subtitle">CompuEasys es una empresa que inicio en el 2006 y desde entonces se dedicada al desarrollo de software y reparación de computadores, tambien pose un software contable con el objetivo de brindar soluciones tecnológicas innovadoras y eficientes a nuestros clientes.</div>
-            <a href="https://danioso8.github.io/hdvCV/" class="btn" type="button">Leer mas</a>
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sobre Nosotros - CompuEasys</title>
+    
+    <!-- Bootstrap & Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    
+    <!-- AOS Animation -->
+    <link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    <link rel="stylesheet" href="{% static 'css/navbarr.css' %}">
+    <link rel="stylesheet" href="{% static 'css/footer.css' %}">
+    
+    <!-- Meta SEO -->
+    <meta name="description" content="Conoce la historia de CompuEasys - 19 años brindando soluciones tecnológicas innovadoras en desarrollo de software y reparación de equipos.">
+    
+    <style>
+        /* Custom Styles para About Us */
+        .hero-about {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 120px 0 100px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero-about::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="circuit" width="50" height="50" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="2" fill="%23ffffff" opacity="0.1"/><path d="M25,5 L25,45 M5,25 L45,25" stroke="%23ffffff" stroke-width="1" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23circuit)"/></svg>');
+            animation: slide 30s linear infinite;
+        }
+        
+        .story-section {
+            padding: 100px 0;
+            background: #f8f9fa;
+        }
+        
+        .timeline {
+            position: relative;
+            padding: 60px 0;
+        }
+        
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transform: translateX(-50%);
+        }
+        
+        .timeline-item {
+            position: relative;
+            margin: 50px 0;
+            width: 50%;
+        }
+        
+        .timeline-item.left {
+            left: 0;
+            text-align: right;
+            padding-right: 60px;
+        }
+        
+        .timeline-item.right {
+            left: 50%;
+            text-align: left;
+            padding-left: 60px;
+        }
+        
+        .timeline-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            position: relative;
+            transition: all 0.4s ease;
+        }
+        
+        .timeline-content:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+        
+        .timeline-marker {
+            position: absolute;
+            top: 50%;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: 4px solid white;
+            box-shadow: 0 0 0 4px #667eea30;
+            transform: translateY(-50%);
+        }
+        
+        .timeline-item.left .timeline-marker {
+            right: -70px;
+        }
+        
+        .timeline-item.right .timeline-marker {
+            left: -70px;
+        }
+        
+        .team-section {
+            padding: 100px 0;
+            background: white;
+        }
+        
+        .team-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.1);
+            border: none;
+            transition: all 0.4s ease;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .team-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .team-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 25px 60px rgba(0,0,0,0.15);
+        }
+        
+        .team-photo {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            margin: 0 auto 25px;
+            border: 5px solid #667eea20;
+            transition: all 0.3s ease;
+        }
+        
+        .team-card:hover .team-photo {
+            transform: scale(1.05);
+            border-color: #667eea;
+        }
+        
+        .values-section {
+            padding: 100px 0;
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+        }
+        
+        .value-card {
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: all 0.4s ease;
+            height: 100%;
+            backdrop-filter: blur(10px);
+        }
+        
+        .value-card:hover {
+            background: rgba(255,255,255,0.15);
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+        
+        .value-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 25px;
+            font-size: 2rem;
+            color: white;
+            transition: all 0.3s ease;
+        }
+        
+        .value-card:hover .value-icon {
+            transform: rotate(360deg) scale(1.1);
+        }
+        
+        .stats-grid {
+            background: white;
+            padding: 80px 0;
+        }
+        
+        .stat-card {
+            text-align: center;
+            padding: 40px 20px;
+            border-radius: 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            background: #f8f9fa;
+            transform: translateY(-5px);
+        }
+        
+        .stat-number {
+            font-size: 3.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 15px;
+        }
+        
+        .whatsapp-float {
+            position: fixed;
+            width: 65px;
+            height: 65px;
+            bottom: 30px;
+            right: 30px;
+            z-index: 1000;
+            background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+            border-radius: 50%;
+            box-shadow: 0 8px 25px rgba(37, 211, 102, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            animation: pulse 2s infinite;
+        }
+        
+        .whatsapp-float:hover {
+            transform: translateY(-5px) scale(1.1);
+            box-shadow: 0 15px 35px rgba(37, 211, 102, 0.4);
+        }
+        
+        .whatsapp-float i {
+            font-size: 28px;
+            color: white;
+        }
+        
+        .cta-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 80px 0;
+            text-align: center;
+        }
+        
+        .btn-cta {
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            margin: 0 10px;
+        }
+        
+        .btn-cta:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(255,255,255,0.2);
+            color: #5a6fd8;
+        }
+        
+        @keyframes slide {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50px); }
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 8px 25px rgba(37, 211, 102, 0.3); }
+            50% { box-shadow: 0 8px 25px rgba(37, 211, 102, 0.5), 0 0 0 10px rgba(37, 211, 102, 0.1); }
+            100% { box-shadow: 0 8px 25px rgba(37, 211, 102, 0.3); }
+        }
+        
+        @media (max-width: 768px) {
+            .hero-about { padding: 80px 0 60px; }
+            .timeline::before { left: 30px; }
+            .timeline-item { width: 100%; left: 0 !important; text-align: left !important; padding: 0 0 0 80px; }
+            .timeline-item .timeline-marker { left: 20px !important; right: auto !important; }
+            .team-card, .value-card { padding: 25px; }
+            .whatsapp-float { width: 55px; height: 55px; bottom: 20px; right: 20px; }
+            .whatsapp-float i { font-size: 24px; }
+        }
+        
+        .mission-vision {
+            background: #f8f9fa;
+            padding: 100px 0;
+        }
+        
+        .mission-card, .vision-card {
+            background: white;
+            border-radius: 20px;
+            padding: 50px;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.1);
+            height: 100%;
+            transition: all 0.4s ease;
+        }
+        
+        .mission-card:hover, .vision-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 25px 60px rgba(0,0,0,0.15);
+        }
+        
+        .section-icon {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 30px;
+            font-size: 2.5rem;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navegación -->
+    {% include "navbarr.html" %}
+    
+    <!-- Botón flotante de WhatsApp -->
+    <a href="#" id="whatsapp-about-float" class="whatsapp-float" title="Contáctanos por WhatsApp" target="_blank">
+        <i class="bi bi-whatsapp"></i>
+    </a>
+    
+    <!-- Hero Section -->
+    <section class="hero-about">
+        <div class="container text-center">
+            <h1 class="display-3 fw-bold mb-4" data-aos="fade-up">Nuestra Historia</h1>
+            <p class="lead mb-5" data-aos="fade-up" data-aos-delay="100">
+                Desde 2006, CompuEasys ha sido pionera en soluciones tecnológicas innovadoras, <br>
+                combinando experiencia, pasión y compromiso para transformar ideas en realidad digital.
+            </p>
+            <div data-aos="fade-up" data-aos-delay="200">
+                <a href="#story" class="btn btn-cta me-3">
+                    <i class="bi bi-book me-2"></i>Nuestra Historia
+                </a>
+                <a href="#team" class="btn btn-cta">
+                    <i class="bi bi-people me-2"></i>Nuestro Equipo
+                </a>
+            </div>
         </div>
-        <div class="card">
-            <img src="{% static 'img/daniel.png' %}" alt="Sobre AppCompueasys">
-            <div class="title1">Daniel Osorio</div>
-            <div class="subtitle2">Daniel es un experto en desarrollo de software con más de 20 años de experiencia en la industria.</div>
+    </section>
+    
+    <!-- Historia/Timeline -->
+    <section id="story" class="story-section">
+        <div class="container">
+            <div class="text-center mb-5" data-aos="fade-up">
+                <h2 class="display-5 fw-bold mb-3">19 Años de Innovación</h2>
+                <p class="lead text-muted">Un recorrido por los hitos más importantes de CompuEasys</p>
+            </div>
+            
+            <div class="timeline">
+                <div class="timeline-item left" data-aos="fade-right">
+                    <div class="timeline-content">
+                        <div class="timeline-marker"></div>
+                        <h4 class="fw-bold text-primary">2006 - Fundación</h4>
+                        <p>Nace CompuEasys con la visión de democratizar la tecnología y brindar soluciones innovadoras a empresas y particulares en Medellin, Colombia.</p>
+                    </div>
+                </div>
+                
+                <div class="timeline-item right" data-aos="fade-left">
+                    <div class="timeline-content">
+                        <div class="timeline-marker"></div>
+                        <h4 class="fw-bold text-primary">2010 - Expansión de Servicios</h4>
+                        <p>Incorporamos el desarrollo de software personalizado y creamos nuestro primer sistema contable, marcando el inicio de nuestra línea de productos propios.</p>
+                    </div>
+                </div>
+                
+                <div class="timeline-item left" data-aos="fade-right">
+                    <div class="timeline-content">
+                        <div class="timeline-marker"></div>
+                        <h4 class="fw-bold text-primary">2015 - Era Digital</h4>
+                        <p>Lanzamos nuestra plataforma e-commerce y modernizamos todos nuestros procesos, adaptándonos a las nuevas demandas del mercado digital.</p>
+                    </div>
+                </div>
+                
+                <div class="timeline-item right" data-aos="fade-left">
+                    <div class="timeline-content">
+                        <div class="timeline-marker"></div>
+                        <h4 class="fw-bold text-primary">2020 - Transformación Digital</h4>
+                        <p>Implementamos tecnologías cloud y servicios remotos, permitiendo a nuestros clientes acceder a soporte técnico desde cualquier lugar.</p>
+                    </div>
+                </div>
+                
+                <div class="timeline-item left" data-aos="fade-right">
+                    <div class="timeline-content">
+                        <div class="timeline-marker"></div>
+                        <h4 class="fw-bold text-primary">2025 - Presente</h4>
+                        <p>Continuamos innovando con tecnologías emergentes, IA y automatización, manteniendo nuestro compromiso con la excelencia y la satisfacción del cliente.</p>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
- {% include "footer.html" %}
+    </section>
+    
+    <!-- Misión y Visión -->
+    <section class="mission-vision">
+        <div class="container">
+            <div class="row g-5">
+                <div class="col-lg-6" data-aos="fade-up">
+                    <div class="mission-card">
+                        <div class="section-icon">
+                            <i class="bi bi-target"></i>
+                        </div>
+                        <h3 class="fw-bold mb-4 text-center">Nuestra Misión</h3>
+                        <p class="text-muted">Proporcionar soluciones tecnológicas innovadoras y personalizadas que impulsen el crecimiento y la eficiencia de nuestros clientes, combinando experiencia técnica, atención personalizada y compromiso con la calidad en cada proyecto.</p>
+                    </div>
+                </div>
+                
+                <div class="col-lg-6" data-aos="fade-up" data-aos-delay="200">
+                    <div class="vision-card">
+                        <div class="section-icon">
+                            <i class="bi bi-eye"></i>
+                        </div>
+                        <h3 class="fw-bold mb-4 text-center">Nuestra Visión</h3>
+                        <p class="text-muted">Ser la empresa líder en soluciones tecnológicas integrales en Colombia, reconocida por nuestra innovación, confiabilidad y capacidad de transformar las necesidades de nuestros clientes en éxito empresarial.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Equipo -->
+    <section id="team" class="team-section">
+        <div class="container">
+            <div class="text-center mb-5" data-aos="fade-up">
+                <h2 class="display-5 fw-bold mb-3">Nuestro Equipo</h2>
+                <p class="lead text-muted">Conoce a las personas que hacen posible la magia tecnológica de CompuEasys</p>
+            </div>
+            
+            <div class="row justify-content-center">
+                <div class="col-lg-6 col-md-8" data-aos="fade-up">
+                    <div class="team-card">
+                        <img src="{% static 'img/daniel.png' %}" alt="Daniel Osorio" class="team-photo">
+                        <h4 class="fw-bold mb-2">Daniel Osorio</h4>
+                        <p class="text-primary mb-3">Fundador & CEO</p>
+                        <p class="text-muted mb-4">Ingeniero de sistemas con más de 19 años de experiencia en desarrollo de software y gestión empresarial. Visionario y líder técnico que ha guiado CompuEasys desde sus inicios.</p>
+                        
+                        <div class="row text-center mt-4">
+                            <div class="col">
+                                <div class="fw-bold text-primary">19+</div>
+                                <small class="text-muted">Años de Experiencia</small>
+                            </div>
+                            <div class="col">
+                                <div class="fw-bold text-primary">500+</div>
+                                <small class="text-muted">Proyectos Completados</small>
+                            </div>
+                            <div class="col">
+                                <div class="fw-bold text-primary">100+</div>
+                                <small class="text-muted">Clientes Satisfechos</small>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <a href="https://danioso8.github.io/hdvCV/" target="_blank" class="btn btn-outline-primary">
+                                <i class="bi bi-person-vcard me-2"></i>Ver CV Completo
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Valores -->
+    <section class="values-section">
+        <div class="container">
+            <div class="text-center mb-5" data-aos="fade-up">
+                <h2 class="display-5 fw-bold mb-3">Nuestros Valores</h2>
+                <p class="lead opacity-75">Los principios que guían cada decisión y acción en CompuEasys</p>
+            </div>
+            
+            <div class="row g-4">
+                <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="100">
+                    <div class="value-card">
+                        <div class="value-icon">
+                            <i class="bi bi-lightbulb"></i>
+                        </div>
+                        <h5 class="fw-bold mb-3">Innovación</h5>
+                        <p>Buscamos constantemente nuevas formas de resolver problemas y mejorar procesos con tecnología de vanguardia.</p>
+                    </div>
+                </div>
+                
+                <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="200">
+                    <div class="value-card">
+                        <div class="value-icon">
+                            <i class="bi bi-shield-check"></i>
+                        </div>
+                        <h5 class="fw-bold mb-3">Confiabilidad</h5>
+                        <p>Cumplimos nuestros compromisos y entregamos soluciones robustas que nuestros clientes pueden contar.</p>
+                    </div>
+                </div>
+                
+                <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="300">
+                    <div class="value-card">
+                        <div class="value-icon">
+                            <i class="bi bi-people-fill"></i>
+                        </div>
+                        <h5 class="fw-bold mb-3">Cercanía</h5>
+                        <p>Mantenemos una relación cercana y personalizada con cada cliente, entendiendo sus necesidades específicas.</p>
+                    </div>
+                </div>
+                
+                <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="400">
+                    <div class="value-card">
+                        <div class="value-icon">
+                            <i class="bi bi-gem"></i>
+                        </div>
+                        <h5 class="fw-bold mb-3">Calidad</h5>
+                        <p>Nos comprometemos con la excelencia en cada línea de código, cada reparación y cada interacción.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Estadísticas -->
+    <section class="stats-grid">
+        <div class="container">
+            <div class="text-center mb-5" data-aos="fade-up">
+                <h2 class="display-5 fw-bold mb-3">Nuestros Logros</h2>
+                <p class="lead text-muted">Números que reflejan nuestro compromiso y crecimiento</p>
+            </div>
+            
+            <div class="row">
+                <div class="col-lg-3 col-md-6">
+                    <div class="stat-card" data-aos="fade-up">
+                        <div class="stat-number" data-count="19">0</div>
+                        <h5 class="fw-bold">Años de Experiencia</h5>
+                        <p class="text-muted">Desde 2006 innovando en el sector tecnológico</p>
+                    </div>
+                </div>
+                
+                <div class="col-lg-3 col-md-6">
+                    <div class="stat-card" data-aos="fade-up" data-aos-delay="100">
+                        <div class="stat-number" data-count="500">0</div>
+                        <h5 class="fw-bold">Proyectos Completados</h5>
+                        <p class="text-muted">Software desarrollado y reparaciones realizadas</p>
+                    </div>
+                </div>
+                
+                <div class="col-lg-3 col-md-6">
+                    <div class="stat-card" data-aos="fade-up" data-aos-delay="200">
+                        <div class="stat-number" data-count="98">0</div>
+                        <h5 class="fw-bold">% Satisfacción</h5>
+                        <p class="text-muted">Clientes satisfechos con nuestros servicios</p>
+                    </div>
+                </div>
+                
+                <div class="col-lg-3 col-md-6">
+                    <div class="stat-card" data-aos="fade-up" data-aos-delay="300">
+                        <div class="stat-number" data-count="24">0</div>
+                        <h5 class="fw-bold">Horas Soporte</h5>
+                        <p class="text-muted">Disponibilidad para resolver tus necesidades</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Call to Action -->
+    <section class="cta-section">
+        <div class="container text-center" data-aos="fade-up">
+            <h2 class="display-5 fw-bold mb-4">¿Listo para transformar tu negocio?</h2>
+            <p class="lead mb-5">Únete a más de 500 clientes que han confiado en CompuEasys para impulsar su crecimiento tecnológico</p>
+            <div>
+                <a href="{% url 'contactUs' %}" class="btn btn-cta me-3">
+                    <i class="bi bi-chat-dots me-2"></i>Contáctanos
+                </a>
+                <a href="{% url 'services' %}" class="btn btn-cta">
+                    <i class="bi bi-gear me-2"></i>Ver Servicios
+                </a>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Footer -->
+    {% include "footer.html" %}
+    
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    
+    <script>
+        // Inicializar AOS
+        AOS.init({
+            duration: 800,
+            easing: 'ease-in-out',
+            once: true,
+            offset: 100
+        });
+        
+        // WhatsApp Integration - Información sobre la empresa
+        document.getElementById('whatsapp-about-float').addEventListener('click', function(e) {
+            e.preventDefault();
+            var numero = "573007915262"; // Tu número de WhatsApp
+            var mensaje = "Hola! Me interesa conocer más sobre CompuEasys y sus servicios. ¿Podrían brindarme más información?";
+            var url = "https://wa.me/" + numero + "?text=" + encodeURIComponent(mensaje);
+            window.open(url, "_blank");
+        });
+        
+        // Contador animado para estadísticas
+        function animateCounters() {
+            const counters = document.querySelectorAll('[data-count]');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const counter = entry.target;
+                        const target = parseInt(counter.getAttribute('data-count'));
+                        const duration = 2000; // 2 segundos
+                        const increment = target / (duration / 16); // 60fps
+                        let current = 0;
+                        
+                        const updateCounter = () => {
+                            current += increment;
+                            if (current < target) {
+                                counter.textContent = Math.floor(current);
+                                requestAnimationFrame(updateCounter);
+                            } else {
+                                counter.textContent = target;
+                            }
+                        };
+                        updateCounter();
+                        observer.unobserve(counter);
+                    }
+                });
+            });
+            
+            counters.forEach(counter => observer.observe(counter));
+        }
+        
+        // Inicializar contadores cuando la página cargue
+        document.addEventListener('DOMContentLoaded', animateCounters);
+        
+        // Smooth scroll para enlaces internos
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+        
+        // Parallax effect para el hero
+        window.addEventListener('scroll', function() {
+            const scrolled = window.pageYOffset;
+            const hero = document.querySelector('.hero-about::before');
+            if (hero) {
+                const rate = scrolled * -0.5;
+                hero.style.transform = 'translateY(' + rate + 'px)';
+            }
+        });
+    </script>
+</body>
+</html>

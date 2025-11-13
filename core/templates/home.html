@@ -435,11 +435,63 @@
                 transform: none;
             }
         }
+        
+        /* WhatsApp Float Button */
+        .whatsapp-float {
+            position: fixed;
+            width: 65px;
+            height: 65px;
+            bottom: 30px;
+            right: 30px;
+            z-index: 1000;
+            background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+            border-radius: 50%;
+            box-shadow: 0 8px 25px rgba(37, 211, 102, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            animation: pulse 2s infinite;
+        }
+        
+        .whatsapp-float:hover {
+            transform: translateY(-5px) scale(1.1);
+            box-shadow: 0 15px 35px rgba(37, 211, 102, 0.4);
+        }
+        
+        .whatsapp-float i {
+            font-size: 28px;
+            color: white;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 8px 25px rgba(37, 211, 102, 0.3); }
+            50% { box-shadow: 0 8px 25px rgba(37, 211, 102, 0.5), 0 0 0 10px rgba(37, 211, 102, 0.1); }
+            100% { box-shadow: 0 8px 25px rgba(37, 211, 102, 0.3); }
+        }
+        
+        @media (max-width: 768px) {
+            .whatsapp-float { 
+                width: 55px; 
+                height: 55px; 
+                bottom: 20px; 
+                right: 20px; 
+            }
+            .whatsapp-float i { 
+                font-size: 24px; 
+            }
+        }
     </style>
 </head>
 <body>
     <!-- Navegación moderna -->
     {% include "navbarr.html" %}
+    
+    <!-- Botón flotante de WhatsApp -->
+    <a href="#" id="whatsapp-home-float" class="whatsapp-float" title="Chatea por WhatsApp" target="_blank">
+        <i class="bi bi-whatsapp"></i>
+    </a>
     
     <!-- Hero Section con animaciones -->
     <section class="hero-section">
@@ -872,9 +924,6 @@
             </div>
         </div>
     </div>
- <!-- Footer -->
-   
-        {% include "footer.html" %}
 
 
     <!-- Scripts -->
@@ -954,6 +1003,15 @@
 
         // Inicializar partículas
         createParticles();
+        
+        // WhatsApp Integration - Información general
+        document.getElementById('whatsapp-home-float').addEventListener('click', function(e) {
+            e.preventDefault();
+            var numero = "573007915262"; // Tu número de WhatsApp
+            var mensaje = "¡Hola! Estoy interesado en los servicios de CompuEasys. ¿Podrían ayudarme con más información?";
+            var url = "https://wa.me/" + numero + "?text=" + encodeURIComponent(mensaje);
+            window.open(url, "_blank");
+        });
 
         // Smooth scroll para enlaces
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {

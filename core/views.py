@@ -3,6 +3,7 @@ from django.http import HttpResponse
 from django.db.models import Q
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
 from django.core.mail import send_mail  
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
@@ -10,13 +11,28 @@ import urllib.parse
 from django.http import JsonResponse, HttpResponseRedirect
 from dashboard.models import register_superuser
 from .models import Category, Type, Galeria, SimpleUser, Pedido, ProductVariant, ProductStore as Product, PedidoDetalle
+from decimal import Decimal
 
 from django.conf import settings
 import json
+import requests
+import logging
+import time
+from .wompi_client import WompiClient
+
+logger = logging.getLogger(__name__)
 
 # Create your views here.
 def home(request):
     return render(request, 'home.html')
+
+def wompi_test(request):
+    """Vista de test para verificar configuración de Wompi"""
+    context = {
+        'wompi_public_key': settings.WOMPI_PUBLIC_KEY,
+        'wompi_environment': settings.WOMPI_ENVIRONMENT,
+    }
+    return render(request, 'wompi_test.html', context)
 
 def login_user(request):
     if request.method == 'POST':
@@ -280,7 +296,7 @@ def checkout(request, note=None):
     nota = request.GET.get('note', '') 
     cart = request.session.get('cart', {})
     cart_items = []
-    cart_total = 0
+    cart_total = Decimal(0)
     for key, item in cart.items():
         # Soporta claves tipo "17-1" o solo "17"
         if '-' in str(key):
@@ -333,7 +349,8 @@ def checkout(request, note=None):
         'departamentos': DEPARTAMENTOS_CIUDADES,
         'ciudades': ciudades,
         'cart_count': sum([item['quantity'] if isinstance(item, dict) else item for item in cart.values()]),
-        'saved': saved
+        'saved': saved,
+        'wompi_public_key': settings.WOMPI_PUBLIC_KEY
     }
     return render(request, 'checkout.html', context)
 
@@ -347,6 +364,12 @@ def pago_exitoso(request):
         ciudad = request.POST.get('ciudad')
         departamento = request.POST.get('departament')
         codigo_postal = request.POST.get('codigo_postal')
+        
+        # Obtener información de descuento y pago
+        discount_code = request.POST.get('discount_applied', '').strip()
+        discount_amount = Decimal(str(request.POST.get('discount_amount', 0)))
+        transaction_id = request.POST.get('transaction_id', '').strip()
+        metodo_pago = request.POST.get('metodo_pago', 'contraentrega')
 
         # Crear o actualizar SimpleUser
         user, created = SimpleUser.objects.get_or_create(email=email, defaults={'telefono': telefono})
@@ -368,7 +391,7 @@ def pago_exitoso(request):
         # Obtener carrito y calcular total
         cart = request.session.get('cart', {})
         cart_items = []
-        cart_total = 0
+        cart_subtotal = Decimal(0)
         detalles = ""
         for key, item in cart.items():
             # Soporta claves tipo "17-1" o solo "17"
@@ -395,9 +418,13 @@ def pago_exitoso(request):
             price = variant.precio if variant else product.price
             subtotal = price * quantity
             cart_items.append({'product': product, 'variant': variant, 'quantity': quantity, 'subtotal': subtotal})
-            cart_total += subtotal
+            cart_subtotal += subtotal
 
-        # Organiza el detalle de productos para WhatsApp
+        # Calcular total final con descuento
+        shipping_cost = Decimal(15000) if cart_subtotal < Decimal(100000) else Decimal(0)
+        cart_total = cart_subtotal - discount_amount + shipping_cost
+
+        # Organiza el detalle de productos para WhatsApp/email
         detalles = ""
         for item in cart_items:
             linea = f"- {item['product'].name}"
@@ -408,8 +435,26 @@ def pago_exitoso(request):
                     linea += f" | Talla: {item['variant'].talla}"
             linea += f" | Cantidad: {item['quantity']} | Subtotal: ${item['subtotal']}\n"
             detalles += linea
+        
+        # Agregar información de descuento al detalle si aplica
+        if discount_code and discount_amount > 0:
+            detalles += f"\n🎁 Descuento aplicado ({discount_code}): -${discount_amount:,.0f}\n"
+        
+        # Agregar información de envío
+        if shipping_cost > 0:
+            detalles += f"📦 Costo de envío: ${shipping_cost:,.0f}\n"
+        else:
+            detalles += f"📦 Envío: GRATIS\n"
 
-        # Guardar pedido
+        # Guardar pedido con información de descuento y pago
+        pedido_nota = nota
+        if discount_code:
+            pedido_nota += f" | Descuento: {discount_code} (-${discount_amount:,.0f})"
+        if transaction_id:
+            pedido_nota += f" | TransactionID: {transaction_id} | Método: {metodo_pago}"
+        elif metodo_pago == 'contraentrega':
+            pedido_nota += f" | Método: Contra entrega"
+            
         pedido = Pedido.objects.create(
             user=user,
             nombre=nombre,
@@ -419,7 +464,7 @@ def pago_exitoso(request):
             codigo_postal=codigo_postal,
             total=cart_total,
             detalles=detalles,
-            nota=nota
+            nota=pedido_nota
         )
 
         # Guardar cada item en el detalle del pedido y descontar stock (¡DENTRO DEL CICLO!)
@@ -465,14 +510,25 @@ def pago_exitoso(request):
             del request.session['cart']
             request.session.modified = True
 
-        # Enviar correo al usuario
+        # Enviar correo al usuario con información de descuento
         subject = "Confirmación de tu compra en CompuEasys"
+        
+        # Construir resumen de totales
+        total_summary = f"Subtotal: ${cart_subtotal:,.0f}\n"
+        if discount_code and discount_amount > 0:
+            total_summary += f"Descuento ({discount_code}): -${discount_amount:,.0f}\n"
+        if shipping_cost > 0:
+            total_summary += f"Envío: ${shipping_cost:,.0f}\n"
+        else:
+            total_summary += f"Envío: GRATIS\n"
+        total_summary += f"TOTAL: ${cart_total:,.0f}\n"
+        
         message = (
             f"¡Hola {nombre}!\n\n"
             f"Gracias por tu compra en CompuEasys.\n\n"
             f"Resumen de tu pedido:\n{detalles}\n"
-            f"Total: ${cart_total}\n"
-            f"Dirección: {direccion}, {ciudad}, {departamento}, CP: {codigo_postal}\n\n"
+            f"--- TOTALES ---\n{total_summary}\n"
+            f"Dirección de envío: {direccion}, {ciudad}, {departamento}, CP: {codigo_postal}\n\n"
             f"Se ha creado una cuenta para ti con el email: {email}\n"
             f"Tu contraseña temporal es tu número de celular: {telefono}\n"
             f"Puedes cambiarla cuando quieras desde la tienda.\n\n"
@@ -489,12 +545,22 @@ def pago_exitoso(request):
                 logger.exception("Error enviando correo de confirmación: %s", e)
                 # no interrumpir flujo, solo loggear; opcionalmente notificar al admin
 
-        # Generar link de WhatsApp ORDENADO
+        # Generar link de WhatsApp ORDENADO con información de descuento
+        total_line = f"*Subtotal:* ${cart_subtotal:,.0f}\n"
+        if discount_code and discount_amount > 0:
+            total_line += f"*Descuento ({discount_code}):* -${discount_amount:,.0f}\n"
+        if shipping_cost > 0:
+            total_line += f"*Envío:* ${shipping_cost:,.0f}\n"
+        else:
+            total_line += f"*Envío:* GRATIS\n"
+        total_line += f"*TOTAL:* ${cart_total:,.0f}\n"
+        
         mensaje = (
             f"🛒 *Nuevo pedido de {nombre}*\n\n"
             f"*Productos:*\n"
             f"{detalles}\n"
-            f"*Total:* ${cart_total}\n\n"
+            f"--- TOTALES ---\n"
+            f"{total_line}\n"
             f"*Datos de envío:*\n"
             f"Nombre: {nombre}\n"
             f"Dirección: {direccion}\n"
@@ -503,15 +569,18 @@ def pago_exitoso(request):
             f"Código Postal: {codigo_postal}\n"
             f"Teléfono: {telefono}\n"
         )
-        if nota:
-            mensaje += f"\n*Nota:* {nota}\n"
+        if pedido_nota:
+            mensaje += f"\n*Nota:* {pedido_nota}\n"
 
         mensaje_encoded = urllib.parse.quote(mensaje)
         whatsapp_url = f"https://wa.me/57{telefono}?text={mensaje_encoded}"
 
         return render(request, 'pago_exitoso.html', {
             'nombre': nombre,
-            'whatsapp_url': whatsapp_url
+            'whatsapp_url': whatsapp_url,
+            'cart_total': cart_total,
+            'discount_code': discount_code,
+            'discount_amount': discount_amount
         })
     return HttpResponse("Invalid request", status=400)
 
@@ -565,7 +634,7 @@ def index(request):
 def cart(request):
     cart = request.session.get('cart', {})
     cart_items = []
-    cart_total = 0
+    cart_total = Decimal(0)
     removed_keys = []
 
     for key, item in list(cart.items()):
@@ -660,7 +729,7 @@ def update_cart(request, product_id):
             subtotal = price * quantity            
          
             # Calcula total del carrito y cantidad total
-            cart_total = 0
+            cart_total = Decimal(0)
             cart_count = 0
             for k, v in cart.items():
                 if isinstance(v, dict):
@@ -1040,3 +1109,126 @@ def get_categories_ajax(request):
             'success': False,
             'error': str(e)
         }, status=500)
+
+# ===== WOMPI PAYMENT VIEWS =====
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def create_wompi_transaction(request):
+    """
+    Crear una transacción de Wompi para procesar el pago
+    """
+    try:
+        data = json.loads(request.body)
+        amount = int(data.get('amount', 0))
+        customer_email = data.get('customer_email', '')
+        discount_code = data.get('discount_code', '')
+        discount_amount = float(data.get('discount_amount', 0))
+        
+        # Validar datos
+        if amount <= 0:
+            return JsonResponse({
+                'error': 'Monto inválido'
+            }, status=400)
+            
+        if not customer_email:
+            return JsonResponse({
+                'error': 'Email requerido'
+            }, status=400)
+        
+        # Crear cliente Wompi
+        wompi_client = WompiClient()
+        
+        # Obtener token de aceptación
+        acceptance_token = wompi_client.get_acceptance_token()
+        
+        # Convertir a centavos para Wompi
+        amount_in_cents = int(amount * 100)
+        reference = f"compueasys-{int(time.time())}"
+        
+        return JsonResponse({
+            'success': True,
+            'amount_in_cents': amount_in_cents,
+            'reference': reference,
+            'customer_email': customer_email,
+            'acceptance_token': acceptance_token,
+            'public_key': settings.WOMPI_PUBLIC_KEY,
+            'currency': 'COP',
+            'discount_code': discount_code,
+            'discount_amount': discount_amount
+        })
+        
+    except Exception as e:
+        logger.error(f"Error creating Wompi transaction: {str(e)}")
+        return JsonResponse({
+            'error': 'Error interno del servidor'
+        }, status=500)
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def wompi_webhook(request):
+    """
+    Webhook para manejar eventos de Wompi
+    """
+    try:
+        payload = request.body
+        data = json.loads(payload)
+        
+        # Log del evento recibido
+        logger.info(f"Wompi webhook received: {data}")
+        
+        # Verificar que es un evento de transacción
+        if data.get('event') == 'transaction.updated':
+            transaction_data = data.get('data', {}).get('transaction', {})
+            transaction_id = transaction_data.get('id')
+            status = transaction_data.get('status')
+            reference = transaction_data.get('reference')
+            amount_in_cents = transaction_data.get('amount_in_cents')
+            
+            logger.info(f"Transaction {transaction_id} status: {status}")
+            
+            if status == 'APPROVED':
+                # Buscar el pedido por referencia
+                try:
+                    # La referencia debería ser algo como "compueasys-1234567890"
+                    if reference and reference.startswith('compueasys-'):
+                        # Buscar pedido que contenga la referencia en la nota o por ID
+                        pedidos = Pedido.objects.filter(
+                            nota__icontains=reference
+                        )
+                        
+                        if not pedidos.exists():
+                            # Intentar buscar por timestamp en la referencia
+                            timestamp = reference.replace('compueasys-', '')
+                            pedidos = Pedido.objects.filter(
+                                nota__icontains=timestamp
+                            )
+                        
+                        for pedido in pedidos:
+                            # Actualizar estado del pedido a pagado
+                            if 'PAGADO' not in pedido.nota:
+                                pedido.nota += f" | PAGADO - Wompi Transaction: {transaction_id}"
+                                pedido.save()
+                                logger.info(f"Pedido {pedido.id} marcado como pagado con transacción {transaction_id}")
+                        
+                        if not pedidos.exists():
+                            logger.warning(f"No se encontró pedido para referencia: {reference}")
+                            
+                except Exception as e:
+                    logger.error(f"Error actualizando estado del pedido: {e}")
+                    
+            elif status == 'DECLINED' or status == 'ERROR':
+                logger.warning(f"Transaction {transaction_id} fue {status}")
+                
+        else:
+            logger.info(f"Evento no manejado: {data.get('event')}")
+        
+        return JsonResponse({'status': 'success'})
+        
+    except json.JSONDecodeError as e:
+        logger.error(f"Invalid JSON payload: {e}")
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+        
+    except Exception as e:
+        logger.error(f"Error en webhook de Wompi: {str(e)}")
+        return JsonResponse({'error': str(e)}, status=400)
