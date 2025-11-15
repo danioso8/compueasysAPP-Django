@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Precio Reducido - CompuEasys</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+        .content { background: #f8fafc; padding: 30px; border: 1px solid #e2e8f0; }
+        .product-card { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #e2e8f0; }
+        .price-section { display: flex; align-items: center; gap: 15px; margin: 20px 0; }
+        .old-price { font-size: 18px; text-decoration: line-through; color: #6b7280; }
+        .new-price { font-size: 28px; font-weight: bold; color: #dc2626; }
+        .discount { background: #dc2626; color: white; padding: 5px 10px; border-radius: 20px; font-size: 14px; }
+        .btn { display: inline-block; background: #dc2626; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; }
+        .footer { background: #334155; color: white; padding: 20px; text-align: center; border-radius: 0 0 10px 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔥 ¡Precio Reducido!</h1>
+            <p>El producto que sigues ahora tiene un mejor precio</p>
+        </div>
+        
+        <div class="content">
+            <div class="product-card">
+                <h2>{{ product.name }}</h2>
+                <p>{{ product.description|truncatechars:150 }}</p>
+                
+                <div class="price-section">
+                    {% if notification.target_price %}
+                        <span class="old-price">${{ notification.target_price|floatformat:0 }}</span>
+                    {% endif %}
+                    <span class="new-price">${{ product.price|floatformat:0 }} COP</span>
+                    <span class="discount">¡OFERTA!</span>
+                </div>
+                
+                {% if product.stock > 0 %}
+                    <p style="color: #10b981; font-weight: bold;">✅ Disponible ({{ product.stock }} unidades)</p>
+                {% else %}
+                    <p style="color: #ef4444; font-weight: bold;">❌ Agotado</p>
+                {% endif %}
+                
+                <div style="margin-top: 25px;">
+                    <a href="{{ product_url }}" class="btn">Aprovechar Oferta</a>
+                </div>
+            </div>
+            
+            <div style="background: #fee2e2; border: 1px solid #dc2626; padding: 15px; border-radius: 6px; margin: 20px 0;">
+                <p style="margin: 0;"><strong>⏰ Oferta por tiempo limitado</strong> - ¡No dejes pasar esta oportunidad!</p>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><strong>CompuEasys</strong> - Tu tienda tecnológica de confianza</p>
+            <p style="font-size: 12px; opacity: 0.8;">Recibes este email porque te registraste para recibir notificaciones de precio</p>
+        </div>
+    </div>
+</body>
+</html>

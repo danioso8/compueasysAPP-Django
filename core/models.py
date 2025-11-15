@@ -98,10 +98,14 @@ class Pedido(models.Model):
     
     # Métodos de pago
     METODO_PAGO_CHOICES = [
-        ('contraentrega', 'Contra entrega'),
-        ('recoger_tienda', 'Recoger en tienda'),
+        ('efectivo', 'Pago en Efectivo'),
         ('tarjeta', 'Tarjeta de crédito/débito'),
-        ('wompi', 'Pago Wompi'),
+    ]
+    
+    # Forma de entrega
+    FORMA_ENTREGA_CHOICES = [
+        ('domicilio', 'Entrega a Domicilio'),
+        ('tienda', 'Recoger en Tienda'),
     ]
     
     # Estado de pago
@@ -138,7 +142,8 @@ class Pedido(models.Model):
     
     # Estados y seguimiento
     estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='pendiente')
-    metodo_pago = models.CharField(max_length=20, choices=METODO_PAGO_CHOICES, default='contraentrega')
+    metodo_pago = models.CharField(max_length=20, choices=METODO_PAGO_CHOICES, default='efectivo')
+    forma_entrega = models.CharField(max_length=20, choices=FORMA_ENTREGA_CHOICES, default='domicilio')
     estado_pago = models.CharField(max_length=20, choices=ESTADO_PAGO_CHOICES, default='pendiente')
     
     # Información de pago Wompi
@@ -400,3 +405,63 @@ class ConversationMessage(models.Model):
     def __str__(self):
         sender = "Admin" if self.is_admin else self.user.email if self.user else "Usuario"
         return f"{sender}: {self.message[:50]}..."
+
+class StockNotification(models.Model):
+    """
+    Modelo para notificaciones de stock
+    Permite a los usuarios registrarse para recibir alertas cuando un producto esté disponible
+    """
+    NOTIFICATION_TYPES = [
+        ('stock_available', 'Producto Disponible'),
+        ('price_drop', 'Bajada de Precio'),
+        ('back_in_stock', 'Regreso en Stock'),
+        ('low_stock', 'Stock Bajo'),
+    ]
+    
+    STATUS_CHOICES = [
+        ('pending', 'Pendiente'),
+        ('sent', 'Enviada'),
+        ('failed', 'Falló'),
+    ]
+    
+    product = models.ForeignKey(ProductStore, on_delete=models.CASCADE, related_name='stock_notifications')
+    email = models.EmailField()
+    notification_type = models.CharField(max_length=20, choices=NOTIFICATION_TYPES, default='stock_available')
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+    sent_at = models.DateTimeField(null=True, blank=True)
+    user = models.ForeignKey(SimpleUser, on_delete=models.CASCADE, null=True, blank=True)
+    
+    # Opciones adicionales de notificación
+    notify_price_drop = models.BooleanField(default=False)
+    target_price = models.DecimalField(max_digits=10, decimal_places=0, null=True, blank=True)
+    notify_low_stock = models.BooleanField(default=False)
+    low_stock_threshold = models.PositiveIntegerField(default=5)
+    
+    class Meta:
+        unique_together = ['product', 'email', 'notification_type']
+        verbose_name = "Notificación de Stock"
+        verbose_name_plural = "Notificaciones de Stock"
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.get_notification_type_display()} - {self.product.name} para {self.email}"
+
+class NotificationLog(models.Model):
+    """
+    Registro de todas las notificaciones enviadas
+    """
+    stock_notification = models.ForeignKey(StockNotification, on_delete=models.CASCADE)
+    sent_at = models.DateTimeField(auto_now_add=True)
+    success = models.BooleanField(default=True)
+    error_message = models.TextField(blank=True)
+    email_subject = models.CharField(max_length=200)
+    
+    class Meta:
+        verbose_name = "Log de Notificación"
+        verbose_name_plural = "Logs de Notificaciones"
+        ordering = ['-sent_at']
+    
+    def __str__(self):
+        status = "✅" if self.success else "❌"
+        return f"{status} {self.email_subject} - {self.sent_at.strftime('%d/%m/%Y %H:%M')}"

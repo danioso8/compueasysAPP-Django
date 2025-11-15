@@ -1,0 +1,68 @@
+# CONFIGURACIÓN DE EMAIL PARA COMPUEASYS
+# =====================================
+# Copia este archivo como .env en la raíz del proyecto
+# y configura tus credenciales de email
+
+# ===========================================
+# GMAIL (Recomendado para desarrollo)
+# ===========================================
+# 1. Activa 2FA en tu cuenta Gmail
+# 2. Ve a: https://myaccount.google.com/apppasswords
+# 3. Genera una "App Password" para Django
+# 4. Usa esa contraseña aquí (NO tu contraseña normal)
+
+EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USE_TLS=True
+EMAIL_USE_SSL=False
+EMAIL_HOST_USER=tu-email@gmail.com
+EMAIL_HOST_PASSWORD=tu-app-password-de-16-caracteres
+DEFAULT_FROM_EMAIL=CompuEasys <tu-email@gmail.com>
+
+# ===========================================
+# OUTLOOK/HOTMAIL
+# ===========================================
+# EMAIL_HOST=smtp-mail.outlook.com
+# EMAIL_PORT=587
+# EMAIL_USE_TLS=True
+# EMAIL_HOST_USER=tu-email@outlook.com
+# EMAIL_HOST_PASSWORD=tu-contraseña
+
+# ===========================================
+# YAHOO
+# ===========================================
+# EMAIL_HOST=smtp.mail.yahoo.com
+# EMAIL_PORT=587
+# EMAIL_USE_TLS=True
+# EMAIL_HOST_USER=tu-email@yahoo.com
+# EMAIL_HOST_PASSWORD=tu-app-password
+
+# ===========================================
+# CONFIGURACIÓN PARA PRODUCCIÓN
+# ===========================================
+# Para producción, considera usar servicios especializados:
+# - SendGrid: https://sendgrid.com/
+# - Mailgun: https://www.mailgun.com/
+# - Amazon SES: https://aws.amazon.com/ses/
+
+# Ejemplo SendGrid:
+# EMAIL_HOST=smtp.sendgrid.net
+# EMAIL_HOST_USER=apikey
+# EMAIL_HOST_PASSWORD=tu-api-key-de-sendgrid
+# EMAIL_PORT=587
+# EMAIL_USE_TLS=True
+
+# ===========================================
+# VARIABLES ADICIONALES
+# ===========================================
+BASE_URL=https://tu-dominio.com  # En producción
+# BASE_URL=http://127.0.0.1:8000  # En desarrollo
+
+# ===========================================
+# INSTRUCCIONES DE USO
+# ===========================================
+# 1. Renombra este archivo a ".env"
+# 2. Configura tus credenciales reales
+# 3. Ejecuta: python test_email_config.py
+# 4. Si funciona, el sistema enviará emails automáticamente

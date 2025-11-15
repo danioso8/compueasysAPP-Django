@@ -18,6 +18,10 @@
     <!-- AOS Animation -->
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
     
+    <!-- Meta tags para configuración -->
+    <meta name="wompi-public-key" content="{{ wompi_public_key }}">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{% static 'css/checkout.css' %}?v=3.0" />
 </head>
@@ -80,6 +84,7 @@
                 <input type="hidden" name="note" value="{{ nota|default_if_none:'' }}">
                 <input type="hidden" name="discount_applied" id="discountAppliedValue" value="">
                 <input type="hidden" name="discount_amount" id="discountAmountValue" value="0">
+                <input type="hidden" name="forma_entrega" id="formaEntregaValue" value="domicilio">
                 
                 <div class="row g-4">
                     <!-- Información de Entrega -->
@@ -191,119 +196,209 @@
                             </div>
                         </div>
 
-                        <!-- Método de Pago -->
+                        <!-- Opciones de Pago y Entrega -->
                         <div class="checkout-section mt-4" data-aos="fade-up" data-aos-delay="100">
                             <div class="section-header">
-                                <h3><i class="bi bi-credit-card"></i> Método de Pago</h3>
-                                <p class="text-muted">Selecciona tu forma de pago preferida</p>
+                                <h3><i class="bi bi-credit-card"></i> Forma de Pago y Entrega</h3>
+                                <p class="text-muted">¿Cómo quieres pagar y recibir tu pedido?</p>
                             </div>
                             
                             <div class="section-content">
-                                <div class="payment-options">
-                                    <!-- Pago Contra Entrega -->
-                                    <div class="payment-option">
-                                        <input type="radio" id="pago_contraentrega" name="metodo_pago" 
-                                               value="contraentrega" checked class="payment-radio">
-                                        <label for="pago_contraentrega" class="payment-label">
+                                <div class="payment-delivery-options">
+                                    <!-- Opción 1: Contra Entrega -->
+                                    <div class="option-card">
+                                        <input type="radio" id="contra_entrega" name="pago_entrega" 
+                                               value="contra_entrega" checked class="option-radio">
+                                        <label for="contra_entrega" class="option-label">
                                             <div class="option-content">
-                                                <i class="bi bi-cash-coin"></i>
-                                                <div>
-                                                    <strong>Pago Contra Entrega</strong>
-                                                    <p class="mb-0">Paga cuando recibas tu pedido</p>
-                                                    <p> Envio gratis en compras mayores a $100.000</p>
-                                                    <small class="text-muted">Efectivo o transferencia al momento de la entrega</small>
+                                                <div class="option-icon">
+                                                    <i class="bi bi-house-door-fill"></i>
                                                 </div>
-                                                <div class="option-badge">
-                                                    <i class="bi bi-shield-check text-success"></i>
+                                                <div class="option-details">
+                                                    <h5>Contra Entrega</h5>
+                                                    <p class="mb-1">Entrega a domicilio + Pago en efectivo al recibir</p>
+                                                    <small class="text-muted">Envío gratis en compras mayores a $100.000</small>
+                                                </div>
+                                                <div class="option-price" id="contra_entrega_price">
+                                                    <span class="shipping-cost">+ $15.000</span>
+                                                    <small>envío</small>
                                                 </div>
                                             </div>
                                         </label>
                                     </div>
                                     
-                                    <!-- Recoger en Tienda -->
-                                    <div class="payment-option">
-                                        <input type="radio" id="recoger_tienda" name="metodo_pago" 
-                                               value="recoger_tienda" class="payment-radio">
-                                        <label for="recoger_tienda" class="payment-label">
+                                    <!-- Opción 2: Tarjeta + Domicilio -->
+                                    <div class="option-card">
+                                        <input type="radio" id="tarjeta_domicilio" name="pago_entrega" 
+                                               value="tarjeta_domicilio" class="option-radio">
+                                        <label for="tarjeta_domicilio" class="option-label">
                                             <div class="option-content">
-                                                <i class="bi bi-shop"></i>
-                                                <div>
-                                                    <strong>Recoger en Tienda</strong>
-                                                    <p class="mb-0">Paga al recoger tu pedido</p>
-                                                   
+                                                <div class="option-icon">
+                                                    <i class="bi bi-credit-card-2-front"></i>
                                                 </div>
-                                                
+                                                <div class="option-details">
+                                                    <h5>Tarjeta + Domicilio</h5>
+                                                    <p class="mb-1">Pago seguro con tarjeta + Entrega a domicilio</p>
+                                                    <small class="text-success">Procesado por Wompi - Envío gratis >$100k</small>
+                                                </div>
+                                                <div class="option-price" id="tarjeta_domicilio_price">
+                                                    <span class="shipping-cost">+ $15.000</span>
+                                                    <small>envío</small>
+                                                </div>
                                             </div>
                                         </label>
                                     </div>
                                     
-                                    <!-- Pago con Tarjeta -->
-                                    <div class="payment-option">
-                                        <input type="radio" id="pago_tarjeta" name="metodo_pago" 
-                                               value="tarjeta" class="payment-radio">
-                                        <label for="pago_tarjeta" class="payment-label">
+                                    <!-- Opción 3: Recoger en Tienda + Efectivo -->
+                                    <div class="option-card">
+                                        <input type="radio" id="recoger_efectivo" name="pago_entrega" 
+                                               value="recoger_efectivo" class="option-radio">
+                                        <label for="recoger_efectivo" class="option-label">
                                             <div class="option-content">
-                                                <i class="bi bi-credit-card-2-front"></i>
-                                                <div>
-                                                    <strong>Tarjeta de Crédito/Débito</strong>
-                                                    <p class="mb-0">Pago seguro con tu tarjeta</p>
-                                                    <small class="text-success">Procesado por Wompi</small>
+                                                <div class="option-icon">
+                                                    <i class="bi bi-shop"></i>
                                                 </div>
-                                                <div class="option-badge">
-                                                    <div class="card-logos">
-                                                        <i class="bi bi-credit-card text-primary"></i>
-                                                        <small>Visa • Mastercard</small>
-                                                    </div>
+                                                <div class="option-details">
+                                                    <h5>Recoger en Tienda</h5>
+                                                    <p class="mb-1">Retira en nuestro punto + Pago en efectivo</p>
+                                                    <small class="text-success">¡Sin costo de envío!</small>
+                                                </div>
+                                                <div class="option-price">
+                                                    <span class="shipping-cost free">GRATIS</span>
+                                                    <small>envío</small>
+                                                </div>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    
+                                    <!-- Opción 4: Recoger en Tienda + Tarjeta -->
+                                    <div class="option-card">
+                                        <input type="radio" id="recoger_tarjeta" name="pago_entrega" 
+                                               value="recoger_tarjeta" class="option-radio">
+                                        <label for="recoger_tarjeta" class="option-label">
+                                            <div class="option-content">
+                                                <div class="option-icon">
+                                                    <i class="bi bi-credit-card"></i>
+                                                </div>
+                                                <div class="option-details">
+                                                    <h5>Recoger + Tarjeta</h5>
+                                                    <p class="mb-1">Pago seguro con tarjeta + Retira en tienda</p>
+                                                    <small class="text-success">Wompi + Sin envío</small>
+                                                </div>
+                                                <div class="option-price">
+                                                    <span class="shipping-cost free">GRATIS</span>
+                                                    <small>envío</small>
                                                 </div>
                                             </div>
                                         </label>
                                     </div>
                                 </div>
-                                
-                                <!-- Formulario de Tarjeta (solo información) -->
-                                <div class="card-payment-section d-none" id="cardPaymentSection">
-                                    <div class="card-form-container">
-                                        <h6 class="mb-3">
-                                            <i class="bi bi-lock"></i>
-                                            Pago con Tarjeta - Wompi
-                                        </h6>
+                            </div>
+                        </div>
+
+                        <!-- Información del Punto de Recogida (oculta por defecto) -->
+                        <div class="checkout-section mt-4 d-none" id="pickupInfoSection" data-aos="fade-up" data-aos-delay="300">
+                            <div class="section-header">
+                                <h3><i class="bi bi-geo-alt-fill"></i> Punto de Recogida</h3>
+                                <p class="text-muted">Información del lugar donde recogerás tu pedido</p>
+                            </div>
+                            
+                            <div class="section-content">
+                                <div class="pickup-location">
+                                    <div class="location-card">
+                                        <div class="location-header">
+                                            <h5><i class="bi bi-shop"></i> CompuEasys - Tienda Principal</h5>
+                                            <span class="badge bg-success">Abierto</span>
+                                        </div>
                                         
-                                        <!-- Información sobre Wompi -->
-                                        <div class="wompi-info-container">
-                                            <div class="alert alert-info">
-                                                <i class="bi bi-info-circle"></i>
-                                                <strong>¿Cómo funciona?</strong>
-                                                <p class="mb-2">Al confirmar tu pedido, se abrirá una ventana segura de Wompi donde podrás ingresar los datos de tu tarjeta.</p>
-                                                <p class="mb-0">Este proceso es 100% seguro y tus datos están protegidos.</p>
+                                        <div class="location-details">
+                                            <div class="detail-item">
+                                                <i class="bi bi-geo-alt"></i>
+                                                <div>
+                                                    <strong>Dirección:</strong>
+                                                    <p class="mb-0">Calle 123 #45-67, Centro Comercial TechPlaza, Local 201</p>
+                                                    <small class="text-muted">Bogotá, Colombia</small>
+                                                </div>
                                             </div>
                                             
-                                            <!-- Tarjetas Aceptadas -->
-                                            <div class="accepted-cards">
-                                                <strong>Tarjetas Aceptadas:</strong>
-                                                <div class="card-icons">
-                                                    <i class="bi bi-credit-card-2-front text-primary"></i>
-                                                    <span>Visa</span>
-                                                    <i class="bi bi-credit-card text-warning"></i>
-                                                    <span>Mastercard</span>
+                                            <div class="detail-item">
+                                                <i class="bi bi-clock"></i>
+                                                <div>
+                                                    <strong>Horarios de Atención:</strong>
+                                                    <p class="mb-1">Lunes a Viernes: 8:00 AM - 6:00 PM</p>
+                                                    <p class="mb-0">Sábados: 9:00 AM - 4:00 PM</p>
+                                                    <small class="text-muted">Domingos cerrado</small>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="detail-item">
+                                                <i class="bi bi-telephone"></i>
+                                                <div>
+                                                    <strong>Teléfono:</strong>
+                                                    <p class="mb-0">(+57) 601-234-5678</p>
+                                                    <small class="text-muted">WhatsApp disponible</small>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="detail-item">
+                                                <i class="bi bi-info-circle"></i>
+                                                <div>
+                                                    <strong>Instrucciones:</strong>
+                                                    <p class="mb-0">Presenta tu cédula y el número de pedido. Tu pedido estará listo en 2-4 horas hábiles después de la confirmación.</p>
                                                 </div>
                                             </div>
                                         </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Información de Pago con Tarjeta (oculta por defecto) -->
+                        <div class="checkout-section mt-4 d-none" id="cardPaymentSection" data-aos="fade-up" data-aos-delay="400">
+                            <div class="section-header">
+                                <h3><i class="bi bi-credit-card"></i> Pago con Tarjeta</h3>
+                                <p class="text-muted">Información sobre el proceso de pago seguro</p>
+                            </div>
+                            
+                            <div class="section-content">
+                                <div class="card-form-container">
+                                    <!-- Información sobre Wompi -->
+                                    <div class="wompi-info-container">
+                                        <div class="alert alert-info">
+                                            <i class="bi bi-info-circle"></i>
+                                            <strong>¿Cómo funciona?</strong>
+                                            <p class="mb-2">Al confirmar tu pedido, se abrirá una ventana segura de Wompi donde podrás ingresar los datos de tu tarjeta.</p>
+                                            <p class="mb-0">Este proceso es 100% seguro y tus datos están protegidos.</p>
+                                        </div>
                                         
-                                        <!-- Información de Seguridad -->
-                                        <div class="payment-security">
-                                            <div class="security-info">
-                                                <div class="security-item">
-                                                    <i class="bi bi-shield-lock-fill text-success"></i>
-                                                    <span>Encriptación SSL</span>
-                                                </div>
-                                                <div class="security-item">
-                                                    <i class="bi bi-check-circle-fill text-success"></i>
-                                                    <span>PCI DSS Compliant</span>
-                                                </div>
-                                                <div class="security-item">
-                                                    <i class="bi bi-shield-check text-success"></i>
-                                                    <span>Powered by Wompi</span>
-                                                </div>
+                                        <!-- Tarjetas Aceptadas -->
+                                        <div class="accepted-cards">
+                                            <strong>Tarjetas Aceptadas:</strong>
+                                            <div class="card-icons">
+                                                <i class="bi bi-credit-card-2-front text-primary"></i>
+                                                <span>Visa</span>
+                                                <i class="bi bi-credit-card text-warning"></i>
+                                                <span>Mastercard</span>
+                                                <i class="bi bi-credit-card text-info"></i>
+                                                <span>American Express</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Información de Seguridad -->
+                                    <div class="payment-security">
+                                        <div class="security-info">
+                                            <div class="security-item">
+                                                <i class="bi bi-shield-lock-fill text-success"></i>
+                                                <span>Encriptación SSL</span>
+                                            </div>
+                                            <div class="security-item">
+                                                <i class="bi bi-check-circle-fill text-success"></i>
+                                                <span>PCI DSS Compliant</span>
+                                            </div>
+                                            <div class="security-item">
+                                                <i class="bi bi-shield-check text-success"></i>
+                                                <span>Powered by Wompi</span>
                                             </div>
                                         </div>
                                     </div>
@@ -404,11 +499,12 @@
 
                                 <!-- Botones de Acción -->
                                 <div class="action-buttons">
-                                    <button type="submit" class="btn btn-checkout" id="checkout_submit_btn">
+                                    <button type="button" class="btn btn-checkout" id="checkout_submit_btn">
                                         <i class="bi bi-shield-check"></i>
-                                        <span>Confirmar Pedido</span>
+                                        <span class="submit-text">Confirmar Pedido</span>
                                         <span class="btn-spinner d-none">
                                             <span class="spinner-border spinner-border-sm"></span>
+                                            Procesando...
                                         </span>
                                     </button>
                                     
@@ -442,62 +538,178 @@
     </main>
 
     <!-- Scripts -->
-    <!-- Wompi JS -->
-    <script src="https://checkout.wompi.co/widget.js"></script>
+    <!-- Wompi JS - DEBE cargar ANTES que nuestro script -->
+    <script src="https://checkout.wompi.co/widget.js" async defer></script>
+    
+    <!-- Debug inicial -->
+    <script>
+        console.log('🔍 Verificación inicial de Wompi:');
+        console.log('WidgetCheckout disponible:', typeof window.WidgetCheckout !== 'undefined');
+        console.log('Timestamp:', new Date().toISOString());
+        
+        // Verificar periódicamente hasta que Wompi esté disponible
+        let checkCount = 0;
+        const checkInterval = setInterval(() => {
+            checkCount++;
+            console.log(`⏳ Check ${checkCount}: WidgetCheckout = ${typeof window.WidgetCheckout}`);
+            
+            if (typeof window.WidgetCheckout !== 'undefined') {
+                console.log('✅ Wompi Widget finalmente disponible!');
+                clearInterval(checkInterval);
+            } else if (checkCount >= 20) {
+                console.error('❌ Wompi Widget no se cargó después de 10 segundos');
+                clearInterval(checkInterval);
+            }
+        }, 500);
+    </script>
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-    <script src="{% static 'js/checkout-wompi.js' %}?v=1.0"></script>
-    
-    
     
     <script>
+        // ⚠️ CONFIGURACIÓN GLOBAL - DEBE IR ANTES DEL CHECKOUT SCRIPT
+        console.log('🔧 Configurando variables globales...');
+        
         // Configuración departamentos/ciudades
         const departamentosCiudades = {{ departamentos|safe }};
-        const depSelect = document.getElementById('departament');
-        const ciudadSelect = document.getElementById('ciudad');
-        const ciudadSeleccionada = "{{ city_selected|escapejs }}";
-
-        function actualizarCiudades() {
-            const dep = depSelect.value;
-            ciudadSelect.innerHTML = '<option value="">Seleccione una ciudad</option>';
-            if (departamentosCiudades[dep]) {
-                departamentosCiudades[dep].forEach(function(ciudad) {
-                    const selected = ciudad === ciudadSeleccionada ? 'selected' : '';
-                    ciudadSelect.innerHTML += `<option value="${ciudad}" ${selected}>${ciudad}</option>`;
-                });
-            }
-        }
-
-        // Inicializar ciudades si hay departamento seleccionado
-        if(depSelect.value) {
-            actualizarCiudades();
-        }
-
-        depSelect.addEventListener('change', function() {
-            actualizarCiudades();
-        });
-
-        // Inicializar AOS
-        AOS.init({
-            duration: 800,
-            once: true
-        });
-
+        
         // Configuración para checkout
         console.log('🔧 Template variables:', {
             wompi_public_key: '{{ wompi_public_key }}',
-            cart_total: {{ cart_total }}
+            cart_total: {{ cart_total }},
+            csrf_token: '{{ csrf_token }}'
         });
         
+        // Configuración global para el checkout
         window.checkout_config = {
             cart_total: {{ cart_total }},
             csrf_token: '{{ csrf_token }}',
             shipping_cost: 15000,
             free_shipping_threshold: 100000,
             wompi_public_key: '{{ wompi_public_key }}',
-            create_transaction_url: '{% url "create_wompi_transaction" %}'
+            create_transaction_url: '{% url "create_wompi_transaction" %}',
+            success_url: '{{ request.scheme }}://{{ request.get_host }}{% url "pago_exitoso" %}',
+            cart_url: '{% url "cart" %}'
         };
+        
+        // Debug: Verificar que la configuración esté disponible
+        console.log('✅ window.checkout_config configurado:', window.checkout_config);
+        console.log('🔗 URL de éxito configurada:', window.checkout_config.success_url);
+        console.log('🌐 Origin actual:', window.location.origin);
+        
+        // Funciones de departamentos/ciudades
+        function initializeDepartments() {
+            const depSelect = document.getElementById('departament');
+            const ciudadSelect = document.getElementById('ciudad');
+            const ciudadSeleccionada = "{{ city_selected|escapejs }}";
+
+            function actualizarCiudades() {
+                const dep = depSelect.value;
+                ciudadSelect.innerHTML = '<option value="">Seleccione una ciudad</option>';
+                if (departamentosCiudades[dep]) {
+                    departamentosCiudades[dep].forEach(function(ciudad) {
+                        const selected = ciudad === ciudadSeleccionada ? 'selected' : '';
+                        ciudadSelect.innerHTML += `<option value="${ciudad}" ${selected}>${ciudad}</option>`;
+                    });
+                }
+            }
+
+            // Inicializar ciudades si hay departamento seleccionado
+            if(depSelect && depSelect.value) {
+                actualizarCiudades();
+            }
+
+            if(depSelect) {
+                depSelect.addEventListener('change', function() {
+                    actualizarCiudades();
+                });
+            }
+        }
+
+        // Inicializar AOS
+        AOS.init({
+            duration: 800,
+            once: true
+        });
+        
+        // Inicializar departamentos cuando el DOM esté listo
+        document.addEventListener('DOMContentLoaded', initializeDepartments);
+    </script>
+    
+    <!-- CHECKOUT SCRIPT - DEBE IR DESPUÉS DE LA CONFIGURACIÓN -->
+        <!-- Nuestro script de checkout - DESPUÉS de Wompi -->
+    <script>
+        // Esperar a que Wompi esté disponible antes de cargar nuestro script
+        function loadCheckoutScript() {
+            const script = document.createElement('script');
+            script.src = "{% static 'js/checkout-wompi.js' %}?v=2.1";
+            script.onload = () => {
+                console.log('✅ Script de checkout cargado exitosamente');
+            };
+            script.onerror = () => {
+                console.error('❌ Error cargando script de checkout');
+            };
+            document.head.appendChild(script);
+        }
+        
+        // Verificar si Wompi ya está disponible
+        if (typeof window.WidgetCheckout !== 'undefined') {
+            console.log('✅ Wompi ya disponible, cargando checkout script');
+            loadCheckoutScript();
+        } else {
+            console.log('⏳ Esperando a que Wompi esté disponible...');
+            
+            // Esperar hasta que Wompi esté disponible
+            let attempts = 0;
+            const waitForWompi = setInterval(() => {
+                attempts++;
+                if (typeof window.WidgetCheckout !== 'undefined') {
+                    console.log('✅ Wompi disponible, cargando checkout script');
+                    clearInterval(waitForWompi);
+                    loadCheckoutScript();
+                } else if (attempts >= 30) { // 15 segundos máximo
+                    console.error('❌ Timeout esperando Wompi, cargando checkout de todas formas');
+                    clearInterval(waitForWompi);
+                    loadCheckoutScript();
+                }
+            }, 500);
+        }
+    </script>
+    
+    <!-- DEBUGGING SCRIPT - Verificar conectividad -->
+    <script>
+        console.log('🔍 DEBUGGING - Script inline ejecutándose');
+        console.log('🔍 DEBUGGING - DOM Ready:', document.readyState);
+        console.log('🔍 DEBUGGING - window.checkout_config existe:', !!window.checkout_config);
+        
+        // Verificar si el script checkout-wompi.js se cargó
+        setTimeout(() => {
+            console.log('🔍 DEBUGGING (después de 1s) - window.CheckoutDebug:', !!window.CheckoutDebug);
+            console.log('🔍 DEBUGGING (después de 1s) - Elementos encontrados:');
+            console.log('  - checkoutForm:', !!document.getElementById('checkoutForm'));
+            console.log('  - checkout_submit_btn:', !!document.getElementById('checkout_submit_btn'));
+            console.log('  - pago_tarjeta:', !!document.getElementById('pago_tarjeta'));
+            console.log('  - metodo_pago radios:', document.querySelectorAll('input[name="metodo_pago"]').length);
+        }, 1000);
+        
+        // Test de click en tarjeta
+        document.addEventListener('DOMContentLoaded', () => {
+            const tarjetaRadio = document.getElementById('pago_tarjeta');
+            if (tarjetaRadio) {
+                console.log('✅ DEBUGGING - Radio tarjeta encontrado, agregando listener de prueba');
+                tarjetaRadio.addEventListener('change', () => {
+                    console.log('🎯 DEBUGGING - Radio tarjeta clickeado!');
+                });
+            }
+            
+            const submitBtn = document.getElementById('checkout_submit_btn');
+            if (submitBtn) {
+                console.log('✅ DEBUGGING - Botón submit encontrado, agregando listener de prueba');
+                submitBtn.addEventListener('click', (e) => {
+                    console.log('🎯 DEBUGGING - Botón submit clickeado!');
+                });
+            }
+        });
     </script>
 </body>
 </html>

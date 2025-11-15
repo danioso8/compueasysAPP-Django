@@ -141,14 +141,19 @@ STATICFILES_DIRS = [
      join(BASE_DIR, 'contable', 'static'),
 ]
 
-EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
+EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')  # Cambiado para email real
 EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
 EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
 EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
+EMAIL_USE_SSL = os.getenv('EMAIL_USE_SSL', 'False') == 'True'  # Para algunos proveedores
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', 'compueasys@gmail.com')
-EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')  # app password de Gmail
-DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER)
-CONTACT_EMAIL = os.getenv('CONTACT_EMAIL', DEFAULT_FROM_EMAIL)
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', 'hucewtoa stbqrcnk')  # App Password sin espacios
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', f'CompuEasys <{EMAIL_HOST_USER}>')
+CONTACT_EMAIL = os.getenv('CONTACT_EMAIL', EMAIL_HOST_USER)
+EMAIL_TIMEOUT = 30  # Timeout en segundos
+
+# Base URL para enlaces en emails
+BASE_URL = os.getenv('BASE_URL', 'http://127.0.0.1:8000')
 
 # ====== Cloudinary Configuration ======
 # Configuración condicional para producción vs desarrollo
@@ -181,11 +186,16 @@ else:
     MEDIA_ROOT = os.path.join(BASE_DIR, 'media_files')
 
 # ===== WOMPI CONFIGURATION =====
-# Configuración de pagos con Wompi Colombia
-WOMPI_PUBLIC_KEY = os.getenv('WOMPI_PUBLIC_KEY', 'pub_test_AcFLWqPJHeGBBFxy3nyjJT25WjWgLKVa')
+# Configuración completa de Wompi Colombia
+WOMPI_PUBLIC_KEY = os.getenv('WOMPI_PUBLIC_KEY', 'pub_test_g5Oj3xwKyvchLmBswlrLsDsFjqiUK1Hn')
 WOMPI_PRIVATE_KEY = os.getenv('WOMPI_PRIVATE_KEY', 'prv_test_AsyPjPPqCzvs5tJGg5RqFvKvATrbXE7N') 
+WOMPI_EVENTS_SECRET = os.getenv('WOMPI_EVENTS_SECRET', 'test_events_Y5xgnMtxikUVSnqAIIErboQwcRSD0gvW')
+WOMPI_INTEGRITY_SECRET = os.getenv('WOMPI_INTEGRITY_SECRET', 'test_integrity_Fl8y2n78WWzrwRJwfEPduMxa3IweHi08')
 WOMPI_ENVIRONMENT = os.getenv('WOMPI_ENVIRONMENT', 'test')
 WOMPI_BASE_URL = os.getenv('WOMPI_BASE_URL', 'https://sandbox.wompi.co/v1')
+
+# URL para eventos de Wompi
+WOMPI_EVENTS_URL = f"{WOMPI_BASE_URL}/merchants/events"
 
 PAYMENT_SETTINGS = {
     'currency': 'COP',  # Pesos colombianos

@@ -8,10 +8,11 @@ from django.views.decorators.http import require_http_methods
 from django.core.mail import send_mail  
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
+from django.contrib import messages
 import urllib.parse
 from django.http import JsonResponse, HttpResponseRedirect
 from dashboard.models import register_superuser
-from .models import Category, Type, Galeria, SimpleUser, Pedido, ProductVariant, ProductStore as Product, PedidoDetalle, BonoDescuento, Conversation, ConversationMessage
+from .models import Category, Type, Galeria, SimpleUser, Pedido, ProductVariant, ProductStore as Product, PedidoDetalle, BonoDescuento, Conversation, ConversationMessage, StockNotification, NotificationLog
 
 # Importar modelos temporalmente definidos en views hasta que se haga la migración
 class VerificationToken:
@@ -57,6 +58,15 @@ def wompi_test(request):
         'wompi_environment': settings.WOMPI_ENVIRONMENT,
     }
     return render(request, 'wompi_test.html', context)
+
+def wompi_widget_test(request):
+    """Vista de test específica para el widget de Wompi"""
+    context = {
+        'wompi_public_key': settings.WOMPI_PUBLIC_KEY,
+        'wompi_environment': settings.WOMPI_ENVIRONMENT,
+        'wompi_base_url': settings.WOMPI_BASE_URL,
+    }
+    return render(request, 'wompi_widget_test.html', context)
 
 def login_user(request):
     if request.method == 'POST':
@@ -451,7 +461,8 @@ def pago_exitoso(request):
             # Usar el cálculo del backend por seguridad
             
         transaction_id = request.POST.get('transaction_id', '').strip()
-        metodo_pago = request.POST.get('metodo_pago', 'contraentrega')
+        metodo_pago = request.POST.get('metodo_pago', 'efectivo')
+        forma_entrega = request.POST.get('forma_entrega', 'domicilio')
 
         # Crear o actualizar SimpleUser
         user, created = SimpleUser.objects.get_or_create(email=email, defaults={'telefono': telefono})
@@ -502,9 +513,9 @@ def pago_exitoso(request):
             cart_items.append({'product': product, 'variant': variant, 'quantity': quantity, 'subtotal': subtotal})
             cart_subtotal += subtotal
 
-        # Calcular envío según método de pago
-        if metodo_pago == 'recoger_tienda':
-            shipping_cost = Decimal(0)  # Siempre gratis para recoger en tienda
+        # Calcular envío según forma de entrega
+        if forma_entrega == 'tienda':
+            shipping_cost = Decimal(0)  # Gratis para recoger en tienda
         else:
             shipping_cost = Decimal(15000) if cart_subtotal < Decimal(100000) else Decimal(0)
         
@@ -527,12 +538,15 @@ def pago_exitoso(request):
             detalles += f"\n🎁 Descuento aplicado ({discount_code}): -${discount_amount:,.0f}\n"
         
         # Agregar información de envío
-        if metodo_pago == 'recoger_tienda':
-            detalles += f"🏪 Método: Recoger en tienda - Envío GRATIS\n"
+        if forma_entrega == 'tienda':
+            detalles += f"🏪 Entrega: Recoger en tienda - Envío GRATIS\n"
+            detalles += f"💰 Método de pago: {metodo_pago.title()}\n"
         elif shipping_cost > 0:
-            detalles += f"📦 Costo de envío: ${shipping_cost:,.0f}\n"
+            detalles += f"📦 Entrega: Domicilio - Costo de envío: ${shipping_cost:,.0f}\n"
+            detalles += f"💰 Método de pago: {metodo_pago.title()}\n"
         else:
-            detalles += f"📦 Envío: GRATIS\n"
+            detalles += f"📦 Entrega: Domicilio - Envío GRATIS\n"
+            detalles += f"💰 Método de pago: {metodo_pago.title()}\n"
 
         # Determinar estado inicial del pago
         estado_pago_inicial = 'pendiente'
@@ -557,6 +571,7 @@ def pago_exitoso(request):
             nota=nota,  # Usar nota original sin modificar
             estado='pendiente',  # Estado inicial
             metodo_pago=metodo_pago,  # Método de pago correcto
+            forma_entrega=forma_entrega,  # Forma de entrega
             estado_pago=estado_pago_inicial,  # Estado de pago
             transaction_id=transaction_id if transaction_id else None,  # Transaction ID
             codigo_descuento=discount_code if discount_code else None,  # Código descuento
@@ -700,6 +715,64 @@ def aboutUs(request):
     return render(request, 'aboutUs.html')
 
 
+def send_welcome_email(email, username):
+    """
+    Envía email de bienvenida a usuarios recién registrados
+    """
+    try:
+        from django.template.loader import render_to_string
+        from django.core.mail import EmailMultiAlternatives
+        from django.conf import settings
+        import datetime
+        
+        # Contexto para la plantilla
+        context = {
+            'username': username,
+            'email': email,
+            'site_name': 'CompuEasys',
+            'year': datetime.datetime.now().year,
+            'base_url': getattr(settings, 'BASE_URL', 'http://127.0.0.1:8000')
+        }
+        
+        # Renderizar plantilla HTML
+        html_content = render_to_string('emails/welcome.html', context)
+        
+        # Crear mensaje
+        subject = f'¡Bienvenido a CompuEasys, {username}! 🎉'
+        
+        # Mensaje de texto plano como fallback
+        text_content = f"""
+        ¡Hola {username}!
+        
+        ¡Bienvenido a CompuEasys! Tu cuenta ha sido creada exitosamente.
+        
+        Ahora puedes:
+        • Explorar nuestros productos tecnológicos
+        • Recibir notificaciones cuando los productos estén disponibles
+        • Realizar compras de forma segura
+        • Acceder a ofertas exclusivas
+        
+        ¡Gracias por unirte a nuestra comunidad!
+        
+        El equipo de CompuEasys
+        """
+        
+        msg = EmailMultiAlternatives(
+            subject=subject,
+            body=text_content,
+            from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@compueasys.com'),
+            to=[email]
+        )
+        msg.attach_alternative(html_content, "text/html")
+        
+        # Enviar email
+        msg.send()
+        
+        logger.info(f"✅ Welcome email sent to {email}")
+        
+    except Exception as e:
+        logger.error(f"❌ Error sending welcome email to {email}: {e}")
+
 def register_user(request):
     if request.method == 'POST':       
         username = request.POST.get('username')
@@ -713,9 +786,23 @@ def register_user(request):
             return render(request, 'register_user.html', {'error': 'El nombre de usuario ya está en uso'})
         if User.objects.filter(email=email).exists():
             return render(request, 'register_user.html', {'error': 'El correo electrónico ya está en uso'})
+        
+        # Crear usuario Django
         user = User.objects.create_user(username=username, email=email, password=password)
-       
+        user.first_name = username  # Usar username como nombre
         user.save()
+        
+        # Crear SimpleUser para el e-commerce
+        simple_user, created = SimpleUser.objects.get_or_create(
+            email=email,
+            defaults={
+                'telefono': phone,
+                'address': address,
+                'city': '',  # Se puede llenar después
+                'username': username
+            }
+        )
+        
         # Guarda info adicional en tu modelo register_superuser si lo necesitas
         register_superuser.objects.create(
             username=username,
@@ -727,7 +814,27 @@ def register_user(request):
             is_staff=True,
             is_active=True
         )
-        return redirect('login_user')
+        
+        # INICIAR SESIÓN AUTOMÁTICAMENTE
+        user_authenticated = authenticate(request, username=username, password=password)
+        if user_authenticated:
+            login(request, user_authenticated)
+            
+            # Guardar información del usuario en la sesión
+            request.session['user_info'] = {
+                'user_id': simple_user.id,
+                'email': email,
+                'username': username,
+                'phone': phone
+            }
+            
+        # ENVIAR EMAIL DE BIENVENIDA
+        send_welcome_email(email, username)
+        
+        # Redirigir al store con mensaje de bienvenida
+        messages.success(request, f'¡Bienvenido {username}! Tu cuenta ha sido creada exitosamente.')
+        return redirect('store')  # Cambiar de login_user a store
+        
     return render(request, 'register_user.html')
 
 def index(request):
@@ -834,6 +941,7 @@ def update_cart(request, product_id):
             # Calcula total del carrito y cantidad total
             cart_total = Decimal(0)
             cart_count = 0
+            
             for k, v in cart.items():
                 if isinstance(v, dict):
                     q = v['quantity']
@@ -854,14 +962,16 @@ def update_cart(request, product_id):
                         p = Product.objects.get(id=k).price
                     except:
                         p = 0
-                cart_total += p * q
+                
+                item_total = p * q
+                cart_total += item_total
                 cart_count += q
 
             return JsonResponse({
                 'success': True,
-                'subtotal': subtotal,      # sin formato
-                'quantity': quantity,      # 🔄 Agregar cantidad actualizada
-                'cart_total': cart_total,  # sin formato
+                'item_subtotal': subtotal,   # Cambiar de 'subtotal' a 'item_subtotal'
+                'quantity': quantity,        
+                'cart_total': cart_total,    
                 'cart_count': cart_count
             })
                
@@ -959,16 +1069,75 @@ def remove_from_cart(request, product_id):
     cart = request.session.get('cart', {})
     variant_id = request.GET.get('variant_id')
     key = f"{product_id}-{variant_id}" if variant_id else str(product_id)
+    
     if key in cart:
         del cart[key]
         request.session['cart'] = cart
         request.session.modified = True
+        
+        # Si es una petición AJAX, devolver JSON
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            # Calcular nuevo total del carrito
+            cart_total = Decimal(0)
+            cart_count = 0
+            for k, v in cart.items():
+                if isinstance(v, dict):
+                    quantity = v['quantity']
+                    if v.get('variant_id'):
+                        try:
+                            variant = ProductVariant.objects.get(id=v['variant_id'])
+                            price = variant.precio
+                        except ProductVariant.DoesNotExist:
+                            price = 0
+                    else:
+                        try:
+                            product = Product.objects.get(id=v['product_id'])
+                            price = product.price
+                        except Product.DoesNotExist:
+                            price = 0
+                else:
+                    quantity = v
+                    try:
+                        product = Product.objects.get(id=k)
+                        price = product.price
+                    except Product.DoesNotExist:
+                        price = 0
+                
+                cart_total += price * quantity
+                cart_count += quantity
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Producto eliminado correctamente',
+                'cart_total': cart_total,
+                'cart_count': cart_count
+            })
+    
+    # Si es petición AJAX pero el producto no estaba en el carrito
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return JsonResponse({
+            'success': False,
+            'message': 'El producto no estaba en el carrito'
+        })
+    
+    # Si no es AJAX, hacer redirect normal
     return redirect('cart')
 
 def clear_cart(request):
     if 'cart' in request.session:
         del request.session['cart']
         request.session.modified = True
+    
+    # Si es una petición AJAX, devolver JSON
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return JsonResponse({
+            'success': True,
+            'message': 'Carrito vaciado correctamente',
+            'cart_total': 0,
+            'cart_count': 0
+        })
+    
+    # Si no es AJAX, hacer redirect normal
     return redirect('cart')
 
 # ...existing code...
@@ -1197,13 +1366,19 @@ def filter_products_ajax(request):
             except (ValueError, TypeError):
                 pass
         
-        # Filtro de stock
-        if in_stock and not out_of_stock:
+        # Filtro de stock - Respetar selecciones del usuario
+        if in_stock and out_of_stock:
+            # Mostrar ambos: productos con stock y sin stock
+            pass  # No aplicar filtro, mostrar todos
+        elif in_stock and not out_of_stock:
+            # Solo productos con stock
             products = products.filter(stock__gt=0)
-        elif out_of_stock and not in_stock:
+        elif not in_stock and out_of_stock:
+            # Solo productos sin stock (agotados)
             products = products.filter(stock=0)
         elif not in_stock and not out_of_stock:
-            products = products.none()  # No mostrar nada si ambos están desactivados
+            # Usuario desmarcó ambos - no mostrar productos
+            products = products.none()
         
         # Ordenamiento
         if sort_by == 'price_asc':
@@ -1248,6 +1423,267 @@ def filter_products_ajax(request):
             'error': 'Error interno del servidor'
         }, status=500)
 
+def cart_count_api(request):
+    """
+    Endpoint AJAX para obtener el número de items en el carrito
+    """
+    try:
+        cart = request.session.get('cart', {})
+        cart_count = sum([item['quantity'] if isinstance(item, dict) else item for item in cart.values()])
+        
+        return JsonResponse({
+            'success': True,
+            'count': cart_count
+        })
+    except Exception as e:
+        print(f"Error in cart_count_api: {e}")
+        return JsonResponse({
+            'success': False,
+            'count': 0
+        })
+
+def register_stock_notification(request):
+    """
+    Registrar notificación de stock para un producto
+    """
+    if request.method == 'POST':
+        try:
+            import json
+            data = json.loads(request.body)
+            
+            product_id = data.get('product_id')
+            email = data.get('email')
+            notification_type = data.get('notification_type', 'stock_available')
+            notify_price_drop = data.get('notify_price_drop', False)
+            target_price = data.get('target_price')
+            notify_low_stock = data.get('notify_low_stock', False)
+            
+            if not product_id or not email:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Producto y email son requeridos'
+                })
+            
+            # Validar email
+            from django.core.validators import validate_email
+            from django.core.exceptions import ValidationError
+            try:
+                validate_email(email)
+            except ValidationError:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Email inválido'
+                })
+            
+            # Obtener producto
+            try:
+                product = ProductStore.objects.get(id=product_id)
+            except ProductStore.DoesNotExist:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Producto no encontrado'
+                })
+            
+            # Obtener usuario si está logueado
+            user = None
+            if request.session.get('simple_user_id'):
+                try:
+                    user = SimpleUser.objects.get(id=request.session['simple_user_id'])
+                except SimpleUser.DoesNotExist:
+                    pass
+            
+            # Crear o actualizar notificación
+            notification, created = StockNotification.objects.get_or_create(
+                product=product,
+                email=email,
+                notification_type=notification_type,
+                defaults={
+                    'user': user,
+                    'notify_price_drop': notify_price_drop,
+                    'target_price': target_price if target_price else None,
+                    'notify_low_stock': notify_low_stock,
+                }
+            )
+            
+            if not created:
+                # Actualizar notificación existente
+                notification.status = 'pending'
+                notification.notify_price_drop = notify_price_drop
+                notification.target_price = target_price if target_price else None
+                notification.notify_low_stock = notify_low_stock
+                notification.save()
+            
+            # Mensaje de respuesta
+            message = {
+                'stock_available': f'Te notificaremos cuando "{product.name}" esté disponible',
+                'price_drop': f'Te notificaremos si el precio de "{product.name}" baja',
+                'back_in_stock': f'Te notificaremos cuando "{product.name}" regrese al stock',
+            }.get(notification_type, 'Notificación registrada exitosamente')
+            
+            return JsonResponse({
+                'success': True,
+                'message': message,
+                'notification_id': notification.id
+            })
+            
+        except json.JSONDecodeError:
+            return JsonResponse({
+                'success': False,
+                'message': 'Datos JSON inválidos'
+            })
+        except Exception as e:
+            print(f"Error in register_stock_notification: {e}")
+            return JsonResponse({
+                'success': False,
+                'message': 'Error interno del servidor'
+            })
+    
+    return JsonResponse({
+        'success': False,
+        'message': 'Método no permitido'
+    })
+
+def send_stock_notifications(product_id, notification_type='stock_available'):
+    """
+    Enviar notificaciones automáticas cuando un producto vuelve a estar en stock
+    """
+    try:
+        from django.core.mail import send_mail
+        from django.template.loader import render_to_string
+        from django.utils import timezone
+        
+        product = ProductStore.objects.get(id=product_id)
+        
+        # Obtener notificaciones pendientes
+        notifications = StockNotification.objects.filter(
+            product=product,
+            notification_type=notification_type,
+            status='pending'
+        )
+        
+        sent_count = 0
+        failed_count = 0
+        
+        for notification in notifications:
+            try:
+                # Personalizar mensaje según tipo de notificación
+                if notification_type == 'stock_available':
+                    subject = f'¡{product.name} ya está disponible! - CompuEasys'
+                    template = 'emails/stock_available.html'
+                elif notification_type == 'price_drop':
+                    subject = f'¡Precio reducido en {product.name}! - CompuEasys'
+                    template = 'emails/price_drop.html'
+                elif notification_type == 'back_in_stock':
+                    subject = f'¡{product.name} regresó al stock! - CompuEasys'
+                    template = 'emails/back_in_stock.html'
+                else:
+                    subject = f'Notificación de {product.name} - CompuEasys'
+                    template = 'emails/generic_notification.html'
+                
+                # Renderizar email HTML
+                html_message = render_to_string(template, {
+                    'product': product,
+                    'notification': notification,
+                    'product_url': f'https://tu-dominio.com/product/{product.id}/'
+                })
+                
+                # Mensaje de texto plano como fallback
+                text_message = f"""
+¡Hola!
+
+Te notificamos que {product.name} ya está disponible.
+
+Precio: ${product.price:,.0f} COP
+Stock: {product.stock} unidades
+
+Ver producto: https://tu-dominio.com/product/{product.id}/
+
+¡No te lo pierdas!
+
+Equipo CompuEasys
+                """.strip()
+                
+                # Enviar email
+                send_mail(
+                    subject=subject,
+                    message=text_message,
+                    from_email='notificaciones@compueasys.com',
+                    recipient_list=[notification.email],
+                    html_message=html_message,
+                    fail_silently=False,
+                )
+                
+                # Marcar como enviada
+                notification.status = 'sent'
+                notification.sent_at = timezone.now()
+                notification.save()
+                
+                # Crear log exitoso
+                NotificationLog.objects.create(
+                    stock_notification=notification,
+                    success=True,
+                    email_subject=subject
+                )
+                
+                sent_count += 1
+                
+            except Exception as email_error:
+                # Marcar como fallida
+                notification.status = 'failed'
+                notification.save()
+                
+                # Crear log de error
+                NotificationLog.objects.create(
+                    stock_notification=notification,
+                    success=False,
+                    error_message=str(email_error),
+                    email_subject=subject
+                )
+                
+                failed_count += 1
+                print(f"Error enviando notificación a {notification.email}: {email_error}")
+        
+        print(f"Notificaciones enviadas: {sent_count}, Fallidas: {failed_count}")
+        return {'sent': sent_count, 'failed': failed_count}
+        
+    except Exception as e:
+        print(f"Error in send_stock_notifications: {e}")
+        return {'sent': 0, 'failed': 0, 'error': str(e)}
+
+def check_and_send_price_drop_notifications(product_id, old_price, new_price):
+    """
+    Verificar y enviar notificaciones de bajada de precio
+    """
+    try:
+        product = ProductStore.objects.get(id=product_id)
+        
+        # Buscar notificaciones de precio
+        price_notifications = StockNotification.objects.filter(
+            product=product,
+            notification_type='price_drop',
+            status='pending',
+            notify_price_drop=True
+        )
+        
+        notifications_to_send = []
+        
+        for notification in price_notifications:
+            # Si tiene precio objetivo y el nuevo precio es menor o igual
+            if notification.target_price and new_price <= notification.target_price:
+                notifications_to_send.append(notification)
+            # Si no tiene precio objetivo pero el precio bajó
+            elif not notification.target_price and new_price < old_price:
+                notifications_to_send.append(notification)
+        
+        if notifications_to_send:
+            return send_stock_notifications(product_id, 'price_drop')
+        
+        return {'sent': 0, 'failed': 0}
+        
+    except Exception as e:
+        print(f"Error in check_and_send_price_drop_notifications: {e}")
+        return {'sent': 0, 'failed': 0, 'error': str(e)}
+
 def get_categories_ajax(request):
     """
     Endpoint para obtener categorías con conteo de productos
@@ -1285,34 +1721,95 @@ def create_wompi_transaction(request):
     Crear una transacción de Wompi para procesar el pago
     """
     try:
+        # Log de la petición
+        print(f"🔵 WOMPI Transaction Request - Body: {request.body.decode('utf-8')}")
+        
         data = json.loads(request.body)
-        amount = int(data.get('amount', 0))
-        customer_email = data.get('customer_email', '')
+        amount = float(data.get('amount', 0))
+        customer_email = data.get('customer_email', '').strip()
         discount_code = data.get('discount_code', '')
         discount_amount = float(data.get('discount_amount', 0))
         
+        print(f"📊 WOMPI Data - Amount: {amount}, Email: {customer_email}")
+        
         # Validar datos
         if amount <= 0:
+            print("❌ WOMPI Error: Monto inválido")
             return JsonResponse({
-                'error': 'Monto inválido'
+                'error': 'Monto inválido',
+                'details': f'Amount received: {amount}'
             }, status=400)
             
         if not customer_email:
+            print("❌ WOMPI Error: Email requerido")
             return JsonResponse({
                 'error': 'Email requerido'
             }, status=400)
         
-        # Crear cliente Wompi
-        wompi_client = WompiClient()
+        # Crear cliente Wompi con manejo de errores
+        try:
+            wompi_client = WompiClient()
+            print("✅ WOMPI Client creado exitosamente")
+        except Exception as e:
+            print(f"❌ WOMPI Error creando cliente: {str(e)}")
+            return JsonResponse({
+                'error': 'Error de configuración de Wompi',
+                'details': str(e)
+            }, status=500)
         
         # Obtener token de aceptación
+        print("🔍 WOMPI Obteniendo acceptance token...")
         acceptance_token = wompi_client.get_acceptance_token()
+        
+        # Manejar errores del WompiClient mejorado
+        if isinstance(acceptance_token, dict) and 'error' in acceptance_token:
+            error_type = acceptance_token.get('error')
+            error_message = acceptance_token.get('message', 'Error desconocido')
+            
+            print(f"❌ WOMPI Error ({error_type}): {error_message}")
+            
+            # Mensajes específicos según el tipo de error
+            if error_type == 'timeout':
+                return JsonResponse({
+                    'error': 'Timeout de conexión con el sistema de pagos. Intenta nuevamente.',
+                    'error_type': 'timeout',
+                    'details': error_message
+                }, status=504)
+            elif error_type == 'connection':
+                return JsonResponse({
+                    'error': 'No se pudo conectar con el sistema de pagos. Verifica tu conexión.',
+                    'error_type': 'connection',
+                    'details': error_message
+                }, status=503)
+            elif error_type == 'max_retries_exceeded':
+                return JsonResponse({
+                    'error': 'El sistema de pagos no está disponible temporalmente. Intenta más tarde.',
+                    'error_type': 'service_unavailable',
+                    'details': error_message
+                }, status=503)
+            else:
+                return JsonResponse({
+                    'error': 'Error obteniendo términos de aceptación del sistema de pagos',
+                    'error_type': error_type,
+                    'details': error_message
+                }, status=500)
+        
+        if not acceptance_token:
+            print("❌ WOMPI Error: No se pudo obtener acceptance token")
+            return JsonResponse({
+                'error': 'Error obteniendo términos de aceptación',
+                'details': 'No se pudo obtener el acceptance token de Wompi'
+            }, status=500)
+        
+        print(f"✅ WOMPI Acceptance token obtenido: {acceptance_token.get('acceptance_token', 'N/A')[:20]}...")
         
         # Convertir a centavos para Wompi
         amount_in_cents = int(amount * 100)
         reference = f"compueasys-{int(time.time())}"
         
-        return JsonResponse({
+        print(f"💰 WOMPI Final data - Cents: {amount_in_cents}, Reference: {reference}")
+        
+        response_data = {
             'success': True,
             'amount_in_cents': amount_in_cents,
             'reference': reference,
@@ -1321,13 +1818,30 @@ def create_wompi_transaction(request):
             'public_key': settings.WOMPI_PUBLIC_KEY,
             'currency': 'COP',
             'discount_code': discount_code,
-            'discount_amount': discount_amount
-        })
+            'discount_amount': discount_amount,
+            'environment': settings.WOMPI_ENVIRONMENT
+        }
+        
+        print(f"🚀 WOMPI Response: {json.dumps(response_data, indent=2, default=str)}")
+        
+        return JsonResponse(response_data)
+        
+    except json.JSONDecodeError as e:
+        print(f"❌ WOMPI JSON Error: {str(e)}")
+        return JsonResponse({
+            'error': 'Datos JSON inválidos',
+            'details': str(e)
+        }, status=400)
         
     except Exception as e:
-        logger.error(f"Error creating Wompi transaction: {str(e)}")
+        print(f"❌ WOMPI Exception: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        
         return JsonResponse({
-            'error': 'Error interno del servidor'
+            'error': 'Error interno del servidor',
+            'details': str(e),
+            'type': type(e).__name__
         }, status=500)
 
 @csrf_exempt
@@ -2016,3 +2530,270 @@ def send_message(request):
             'success': False,
             'message': 'Error al enviar mensaje'
         })
+
+# ========================================
+# STOCK NOTIFICATION SYSTEM
+# ========================================
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def register_stock_notification(request):
+    """
+    Registrar notificación de stock para un producto
+    """
+    try:
+        data = json.loads(request.body)
+        
+        # Validar datos requeridos
+        product_id = data.get('product_id')
+        email = data.get('email')
+        notification_type = data.get('notification_type', 'stock_available')
+        
+        if not product_id or not email:
+            return JsonResponse({
+                'success': False,
+                'message': 'Product ID y email son requeridos'
+            })
+        
+        # Validar email
+        import re
+        if not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email):
+            return JsonResponse({
+                'success': False,
+                'message': 'Por favor ingresa un email válido'
+            })
+        
+        # Verificar que el producto existe
+        try:
+            product = Product.objects.get(id=product_id)
+        except Product.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'message': 'Producto no encontrado'
+            })
+        
+        # Verificar que el producto esté sin stock
+        if product.stock > 0 and notification_type == 'stock_available':
+            return JsonResponse({
+                'success': False,
+                'message': 'El producto ya está disponible. ¡Agrégalo al carrito!'
+            })
+        
+        # Buscar si ya existe una notificación activa (pendiente)
+        existing_notification = StockNotification.objects.filter(
+            product=product,
+            email=email,
+            notification_type=notification_type,
+            status='pending'  # Cambiado de is_active=True a status='pending'
+        ).first()
+        
+        if existing_notification:
+            return JsonResponse({
+                'success': True,
+                'message': '¡Ya tienes una notificación activa para este producto!'
+            })
+        
+        # Crear nueva notificación
+        notification_data = {
+            'product': product,
+            'email': email,
+            'notification_type': notification_type,
+            'status': 'pending'  # Cambiado de is_active=True a status='pending'
+        }
+        
+        # Agregar configuraciones adicionales
+        if data.get('notify_price_drop'):
+            notification_data['notify_price_drop'] = True
+            if data.get('target_price'):
+                try:
+                    notification_data['target_price'] = Decimal(str(data['target_price']))
+                except Exception as e:
+                    pass  # Si no se puede convertir, simplemente ignorar
+        
+        if data.get('notify_low_stock'):
+            notification_data['notify_low_stock'] = True
+        
+        notification = StockNotification.objects.create(**notification_data)
+        
+        # Respuesta de éxito
+        message = f'¡Perfecto! Te notificaremos a {email} cuando "{product.name}" esté disponible.'
+        
+        if notification_data.get('notify_price_drop'):
+            message += ' También te avisaremos si baja de precio.'
+        
+        if notification_data.get('notify_low_stock'):
+            message += ' Y cuando quede poco stock.'
+        
+        return JsonResponse({
+            'success': True,
+            'message': message
+        })
+        
+    except json.JSONDecodeError as e:
+        return JsonResponse({
+            'success': False,
+            'message': 'Datos JSON inválidos'
+        })
+    except Exception as e:
+        logger.error(f"Error in register_stock_notification: {e}")
+        return JsonResponse({
+            'success': False,
+            'message': f'Error interno del servidor: {str(e)}'
+        })
+
+def send_stock_notifications():
+    """
+    Función para enviar notificaciones de stock
+    Se puede llamar desde un cron job o tarea programada
+    """
+    from django.template.loader import render_to_string
+    from django.core.mail import EmailMultiAlternatives
+    import datetime
+    
+    try:
+        # Buscar productos que ahora tienen stock y tienen notificaciones pendientes
+        notifications_to_send = StockNotification.objects.filter(
+            status='pending',
+            notification_type='stock_available',
+            product__stock__gt=0
+        )
+        
+        sent_count = 0
+        
+        for notification in notifications_to_send:
+            try:
+                # Renderizar email HTML
+                context = {
+                    'product': notification.product,
+                    'email': notification.email,
+                    'site_name': 'CompuEasys',
+                    'year': datetime.datetime.now().year
+                }
+                
+                html_content = render_to_string('emails/stock_available.html', context)
+                
+                # Crear email
+                subject = f'¡{notification.product.name} ya está disponible!'
+                
+                msg = EmailMultiAlternatives(
+                    subject=subject,
+                    body=f'El producto {notification.product.name} ya está disponible en CompuEasys.',
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    to=[notification.email]
+                )
+                msg.attach_alternative(html_content, "text/html")
+                
+                # Enviar email
+                msg.send()
+                
+                # Marcar notificación como enviada
+                notification.status = 'sent'
+                notification.sent_at = datetime.datetime.now()
+                notification.save()
+                
+                # Registrar en log
+                NotificationLog.objects.create(
+                    stock_notification=notification,
+                    success=True,
+                    email_subject=subject
+                )
+                
+                sent_count += 1
+                
+            except Exception as e:
+                # Registrar error en log
+                NotificationLog.objects.create(
+                    stock_notification=notification,
+                    success=False,
+                    error_message=str(e),
+                    email_subject=f'Error: {notification.product.name}'
+                )
+                
+                logger.error(f"Error sending notification for {notification.product.name}: {e}")
+        
+        logger.info(f"Stock notifications sent: {sent_count}")
+        return sent_count
+        
+    except Exception as e:
+        logger.error(f"Error in send_stock_notifications: {e}")
+        return 0
+
+def check_price_drops():
+    """
+    Verificar y notificar bajadas de precio
+    """
+    from django.template.loader import render_to_string
+    from django.core.mail import EmailMultiAlternatives
+    import datetime
+    
+    try:
+        # Buscar notificaciones de precio activas
+        price_notifications = StockNotification.objects.filter(
+            status='pending',
+            notify_price_drop=True,
+            product__stock__gt=0
+        ).exclude(target_price__isnull=True)
+        
+        sent_count = 0
+        
+        for notification in price_notifications:
+            # Verificar si el precio actual es menor al objetivo
+            if notification.product.price <= notification.target_price:
+                try:
+                    # Renderizar email HTML
+                    context = {
+                        'product': notification.product,
+                        'target_price': notification.target_price,
+                        'current_price': notification.product.price,
+                        'email': notification.email,
+                        'site_name': 'CompuEasys',
+                        'year': datetime.datetime.now().year
+                    }
+                    
+                    html_content = render_to_string('emails/price_drop.html', context)
+                    
+                    # Crear email
+                    subject = f'¡{notification.product.name} bajó de precio!'
+                    
+                    msg = EmailMultiAlternatives(
+                        subject=subject,
+                        body=f'{notification.product.name} ahora cuesta ${notification.product.price:,.0f}',
+                        from_email=settings.DEFAULT_FROM_EMAIL,
+                        to=[notification.email]
+                    )
+                    msg.attach_alternative(html_content, "text/html")
+                    
+                    # Enviar email
+                    msg.send()
+                    
+                    # Marcar notificación como enviada (solo para precio)
+                    notification.notify_price_drop = False
+                    notification.target_price = None
+                    notification.save()
+                    
+                    # Registrar en log
+                    NotificationLog.objects.create(
+                        stock_notification=notification,
+                        success=True,
+                        email_subject=subject
+                    )
+                    
+                    sent_count += 1
+                    
+                except Exception as e:
+                    # Registrar error en log
+                    NotificationLog.objects.create(
+                        stock_notification=notification,
+                        success=False,
+                        error_message=str(e),
+                        email_subject=f'Error precio: {notification.product.name}'
+                    )
+                    
+                    logger.error(f"Error sending price notification for {notification.product.name}: {e}")
+        
+        logger.info(f"Price drop notifications sent: {sent_count}")
+        return sent_count
+        
+    except Exception as e:
+        logger.error(f"Error in check_price_drops: {e}")
+        return 0

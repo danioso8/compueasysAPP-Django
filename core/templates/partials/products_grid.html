@@ -1,103 +1,93 @@
 {% load static %}
+{% load humanize %}
 
 <!-- Grid de productos para carga AJAX -->
 {% if products %}
   {% for product in products %}
-    <div class="product-card" data-product-id="{{ product.id }}" data-category="{{ product.category.nombre|default:'Sin categoría' }}">>
-      <!-- Imagen del producto -->
+    <article class="product-card" data-product-id="{{ product.id }}">
       <div class="card-image-container">
-        {% if product.imagen %}
-          <img class="card-image" src="{{ product.imagen.url }}" alt="{{ product.name }}" loading="lazy">
-        {% else %}
-          <img class="card-image" src="{% static 'img/no-image.png' %}" alt="{{ product.name }}" loading="lazy">
-        {% endif %}
+        <a href="{% url 'product_detail' product.id %}" class="card-image-link">
+          {% if product.imagen and product.imagen.name %}
+          <img 
+              src="{{ product.imagen.url }}" 
+              alt="{{ product.name }}"
+              class="card-image"
+              loading="lazy"
+          >
+          {% else %}
+          <div class="card-image-placeholder">
+              <i class="bi bi-image"></i>
+              <span>Sin imagen</span>
+          </div>
+          {% endif %}
+        </a>
         
-        <!-- Badge de stock -->
+        <!-- Quick Actions -->
+        <div class="card-actions">
+            <button class="action-btn favorite-btn" data-product="{{ product.id }}">
+                <i class="bi bi-heart"></i>
+            </button>
+            <button class="action-btn quick-view-btn" data-product="{{ product.id }}">
+                <i class="bi bi-eye"></i>
+            </button>
+        </div>
+        
+        <!-- Stock Badge -->
         {% if product.stock > 0 %}
-          <span class="stock-badge in-stock">
+        <div class="stock-badge in-stock">
             <i class="bi bi-check-circle"></i>
-            Disponible
-          </span>
+           Disponible ({{ product.stock }})
+        </div>
         {% else %}
-          <span class="stock-badge out-of-stock">
+        <div class="stock-badge out-of-stock">
             <i class="bi bi-x-circle"></i>
             Agotado
-          </span>
-        {% endif %}
-        
-        <!-- Overlay de acciones rápidas -->
-        <div class="card-overlay">
-          <a href="/product/{{ product.id }}/" class="quick-action-btn view-btn" title="Ver detalles">
-            <i class="bi bi-eye"></i>
-          </a>
-          <button class="quick-action-btn favorite-btn" title="Agregar a favoritos">
-            <i class="bi bi-heart"></i>
-          </button>
         </div>
+        {% endif %}
       </div>
       
-      <!-- Contenido de la tarjeta -->
       <div class="card-content">
-        <!-- Categoría -->
-        {% if product.category %}
-          <div class="card-category">{{ product.category.nombre }}</div>
-        {% endif %}
-        
-        <!-- Título -->
-        <h3 class="card-title">
-          <a href="/product/{{ product.id }}/">{{ product.name|truncatechars:50 }}</a>
-        </h3>
-        
-        <!-- Descripción -->
-        {% if product.description %}
-          <p class="card-description">{{ product.description|truncatechars:80 }}</p>
-        {% endif %}
-        
-        <!-- Precio -->
-        <div class="price-section">
-          {% if product.price_original and product.price_original > product.price %}
-            <span class="price-original">${{ product.price_original|floatformat:0 }}</span>
-            <span class="price-current">${{ product.price|floatformat:0 }}</span>
-            <span class="discount-badge">
-              ¡Oferta!
-            </span>
-          {% else %}
-            <span class="price-current">${{ product.price|floatformat:0 }}</span>
-          {% endif %}
-        </div>
-        
-        <!-- Stock info -->
-        {% if product.stock > 0 %}
-          <div class="stock-info">
-            <i class="bi bi-box-seam"></i>
-            <span>{{ product.stock }} disponible{{ product.stock|pluralize }}</span>
+          <div class="card-header">
+              <h3 class="card-title">
+                  <a href="{% url 'product_detail' product.id %}">
+                      {{ product.name }}
+                  </a>
+              </h3>
+              {% if product.category %}
+              <span class="card-category">{{ product.category.nombre }}</span>
+              {% endif %}
           </div>
-        {% endif %}
-        
-        <!-- Acciones -->
-        <div class="card-actions">
-          {% if product.stock > 0 %}
-            <form class="add-to-cart-form" data-product="{{ product.id }}">
-              {% csrf_token %}
-              <button type="submit" class="btn-add-cart">
-                <i class="bi bi-cart-plus"></i>
-                <span>Agregar al carrito</span>
-              </button>
-            </form>
-          {% else %}
-            <button class="btn-notify-stock" disabled>
-              <i class="bi bi-bell"></i>
-              <span>Notificar disponibilidad</span>
-            </button>
-          {% endif %}
           
-          <a href="/product/{{ product.id }}/" class="btn-view-details">
-            <i class="bi bi-eye"></i>
-            <span>Ver detalles</span>
-          </a>
-        </div>
+          <p class="card-description">
+              {{ product.description|truncatechars:80 }}
+          </p>
+          
+          <div class="card-footer">
+              <div class="price-section">
+                  <span class="price-current">${{ product.price|intcomma }}</span>
+                  <span class="price-currency">COP</span>
+              </div>
+              
+              <div class="card-actions-footer">
+                  {% if product.stock > 0 %}
+                  <form class="add-to-cart-form" data-product="{{ product.id }}">
+                      {% csrf_token %}
+                      <input type="hidden" name="quantity" value="1">
+                      <button type="submit" class="btn-add-cart">
+                          <i class="bi bi-cart-plus"></i>
+                          <span>Agregar</span>
+                      </button>
+                  </form>
+                  {% else %}
+                  <button class="btn-notify-stock" data-product="{{ product.id }}">
+                      <i class="bi bi-bell"></i>
+                      <span>Notificar</span>
+                  </button>
+                  {% endif %}
+              </div>
+          </div>
       </div>
-    </div>
+    </article>
   {% endfor %}
 {% else %}
   <!-- Estado vacío -->

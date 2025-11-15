@@ -18,319 +18,413 @@
     {% include "navbarr.html" %}
     
     <main class="cart-main">
-      <div class="cart-container">
-        <!-- Header moderno -->
-        <header class="cart-header">
+      <!-- Header moderno mejorado -->
+      <header class="cart-header-modern">
+        <div class="container-fluid">
           <div class="cart-header-content">
             <div class="cart-title-section">
-              <i class="bi bi-cart3 cart-icon"></i>
-              <h1 class="cart-title">Mi Carrito</h1>
-              <span class="cart-badge">{{ cart_count }} {% if cart_count == 1 %}producto{% else %}productos{% endif %}</span>
+              <div class="cart-icon-wrapper">
+                <i class="bi bi-cart-fill"></i>
+              </div>
+              <div class="cart-title-info">
+                <h1 class="cart-title">Mi Carrito de Compras</h1>
+                <p class="cart-subtitle">{{ cart_count }} {% if cart_count == 1 %}artículo{% else %}artículos{% endif %} {% if cart_count > 0 %}en tu carrito{% else %}agregado{% endif %}</p>
+              </div>
             </div>
             
+            {% if cart_items %}
             <div class="cart-header-actions">
-              <a href="{% url 'clear_cart' %}" class="btn-clear" onclick="return confirm('¿Vaciar todo el carrito?')">
-                <i class="bi bi-trash3"></i>
-                <span>Vaciar</span>
-              </a>
+              <button class="btn-select-all" id="toggleSelectAll">
+                <i class="bi bi-check-all"></i>
+                <span>Seleccionar todo</span>
+              </button>
+              <button class="btn-clear-modern" id="btn-clear-cart">
+                <i class="bi bi-trash3-fill"></i>
+                <span>Vaciar carrito</span>
+              </button>
             </div>
+            {% endif %}
           </div>
-        </header>
-        
-        <!-- Contenido del carrito -->
-        <div class="cart-content">
+        </div>
+      </header>
+
+      <!-- Layout Flex Principal -->
+      <div class="cart-layout-flex">
+        <!-- Contenido principal del carrito (lado izquierdo) -->
+        <div class="cart-content-main">
           {% if cart_items %}
-            <!-- Vista de escritorio: tabla -->
-            <div class="cart-desktop-view">
-              <div class="cart-table-wrapper">
-                <table class="cart-table">
-                  <thead>
-                    <tr>
-                      <th class="th-select">
-                        <input type="checkbox" id="select-all" class="checkbox-modern" checked>
-                      </th>
-                      <th class="th-image">Imagen</th>
-                      <th class="th-product">Producto</th>
-                      <th class="th-quantity">Cantidad</th>
-                      <th class="th-price">Precio</th>
-                      <th class="th-subtotal">Subtotal</th>
-                      <th class="th-actions">Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {% for item in cart_items %}
-                    <tr class="cart-row" data-index="{{ forloop.counter0 }}">
-                      <td>
-                        <input type="checkbox" class="cart-checkbox checkbox-modern" 
-                               name="selected_products" value="{{ forloop.counter0 }}" checked>
-                      </td>
-                      <td class="td-image">
-                        <div class="product-image-container">
-                          {% if item.variant and item.variant.imagen %}
-                            <img src="{{ item.variant.imagen.url }}" alt="Variante {{ item.product.name }}" 
-                                 class="product-image" loading="lazy" />
-                          {% elif item.product.imagen %}
-                            <img src="{{ item.product.imagen.url }}" alt="{{ item.product.name }}" 
-                                 class="product-image" loading="lazy" />
-                          {% else %}
-                            <div class="product-image-placeholder">
-                              <i class="bi bi-image"></i>
-                            </div>
+            <!-- Productos en el carrito -->
+            <div class="cart-products-section">
+              <!-- Vista de escritorio: cards modernas -->
+              <div class="cart-desktop-view">
+                {% for item in cart_items %}
+                <div class="cart-item-modern" data-index="{{ forloop.counter0 }}">
+                  <div class="cart-item-selection">
+                    <input type="checkbox" class="cart-checkbox-modern" 
+                           id="item-{{ forloop.counter0 }}"
+                           name="selected_products" value="{{ forloop.counter0 }}" checked>
+                    <label for="item-{{ forloop.counter0 }}" class="checkbox-label"></label>
+                  </div>
+                  
+                  <div class="cart-item-image">
+                    {% if item.variant and item.variant.imagen %}
+                      <img src="{{ item.variant.imagen.url }}" alt="Variante {{ item.product.name }}" 
+                           class="product-image-modern" loading="lazy" />
+                    {% elif item.product.imagen %}
+                      <img src="{{ item.product.imagen.url }}" alt="{{ item.product.name }}" 
+                           class="product-image-modern" loading="lazy" />
+                    {% else %}
+                      <div class="product-image-placeholder-modern">
+                        <i class="bi bi-image"></i>
+                      </div>
+                    {% endif %}
+                  </div>
+                  
+                  <div class="cart-item-details">
+                    <div class="product-info-modern">
+                      <h3 class="product-name-modern">
+                        <a href="{% url 'product_detail' item.product.id %}">{{ item.product.name }}</a>
+                      </h3>
+                      
+                      {% if item.variant %}
+                        <div class="product-variants-modern">
+                          <span class="variant-tag color-tag">
+                            <i class="bi bi-palette-fill"></i> 
+                            <span>{{ item.variant.color }}</span>
+                          </span>
+                          {% if item.variant.talla %}
+                            <span class="variant-tag size-tag">
+                              <i class="bi bi-rulers"></i> 
+                              <span>{{ item.variant.talla }}</span>
+                            </span>
                           {% endif %}
                         </div>
-                      </td>
-                      <td class="td-product">
-                        <div class="product-info">
-                          <a href="{% url 'product_detail' item.product.id %}" class="product-name">
-                            {{ item.product.name }}
-                          </a>
-                          {% if item.variant %}
-                            <div class="variant-details">
-                              <span class="variant-color">
-                                <i class="bi bi-palette"></i> {{ item.variant.color }}
-                              </span>
-                              {% if item.variant.talla %}
-                                <span class="variant-size">
-                                  <i class="bi bi-rulers"></i> {{ item.variant.talla }}
-                                </span>
-                              {% endif %}
-                            </div>
-                          {% endif %}
-                        </div>
-                      </td>
-                      <td class="td-quantity">
-                        <div class="quantity-controls">
-                          <button type="button" class="qty-btn qty-decrease" 
-                                  data-product="{{ item.product.id }}" 
-                                  data-variant="{% if item.variant %}{{ item.variant.id }}{% endif %}">
-                            <i class="bi bi-dash"></i>
-                          </button>
-                          <input type="number" min="1" 
-                                 max="{% if item.variant %}{{ item.variant.stock }}{% else %}{{ item.product.stock }}{% endif %}" 
-                                 class="qty-input" value="{{ item.quantity }}" 
-                                 data-product="{{ item.product.id }}" 
-                                 data-variant="{% if item.variant %}{{ item.variant.id }}{% endif %}" />
-                          <button type="button" class="qty-btn qty-increase" 
-                                  data-product="{{ item.product.id }}" 
-                                  data-variant="{% if item.variant %}{{ item.variant.id }}{% endif %}">
-                            <i class="bi bi-plus"></i>
-                          </button>
-                        </div>
-                      </td>
-                      <td class="td-price">
-                        <span class="item-price">
+                      {% endif %}
+                      
+                      <div class="product-price-info">
+                        <span class="price-per-unit">
                           {% if item.variant %}
                             ${{ item.variant.precio|intcomma }}
                           {% else %}
                             ${{ item.product.price|intcomma }}
                           {% endif %}
                         </span>
-                      </td>
-                      <td class="td-subtotal">
-                        <span class="item-subtotal">${{ item.subtotal|intcomma }}</span>
-                      </td>
-                      <td class="td-actions">
-                        <a href="{% url 'remove_from_cart' item.product.id %}{% if item.variant %}?variant_id={{ item.variant.id }}{% endif %}" 
-                           class="btn-remove" 
-                           onclick="return confirm('¿Eliminar este producto del carrito?')">
-                          <i class="bi bi-trash3"></i>
-                        </a>
-                      </td>
-                    </tr>
-                    {% endfor %}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <!-- Vista móvil: cards -->
-            <div class="cart-mobile-view">
-              {% for item in cart_items %}
-              <div class="cart-item-card" data-index="{{ forloop.counter0 }}">
-                <div class="cart-item-header">
-                  <input type="checkbox" class="cart-checkbox checkbox-modern" 
-                         name="selected_products" value="{{ forloop.counter0 }}" checked>
-                  <a href="{% url 'remove_from_cart' item.product.id %}{% if item.variant %}?variant_id={{ item.variant.id }}{% endif %}" 
-                     class="btn-remove" 
-                     onclick="return confirm('¿Eliminar este producto del carrito?')">
-                    <i class="bi bi-trash3"></i>
-                  </a>
-                </div>
-                
-                <div class="cart-item-content">
-                  <div class="item-image-section">
-                    {% if item.variant and item.variant.imagen %}
-                      <img src="{{ item.variant.imagen.url }}" alt="Variante {{ item.product.name }}" 
-                           class="item-image" loading="lazy" />
-                    {% elif item.product.imagen %}
-                      <img src="{{ item.product.imagen.url }}" alt="{{ item.product.name }}" 
-                           class="item-image" loading="lazy" />
-                    {% else %}
-                      <div class="item-image-placeholder">
-                        <i class="bi bi-image"></i>
+                        <span class="price-label">por unidad</span>
                       </div>
-                    {% endif %}
+                    </div>
                   </div>
                   
-                  <div class="item-details-section">
-                    <div class="item-info">
-                      <a href="{% url 'product_detail' item.product.id %}" class="item-name">
-                        {{ item.product.name }}
-                      </a>
+                  <div class="cart-item-quantity">
+                    <div class="quantity-label">Cantidad</div>
+                    <div class="quantity-controls-modern">
+                      <button type="button" class="qty-btn-modern qty-decrease" 
+                              data-product="{{ item.product.id }}" 
+                              data-variant="{% if item.variant %}{{ item.variant.id }}{% endif %}">
+                        <i class="bi bi-dash-lg"></i>
+                      </button>
+                      <div class="qty-display-modern">
+                        <input type="number" min="1" 
+                               max="{% if item.variant %}{{ item.variant.stock }}{% else %}{{ item.product.stock }}{% endif %}" 
+                               class="qty-input-modern" value="{{ item.quantity }}" 
+                               data-product="{{ item.product.id }}" 
+                               data-variant="{% if item.variant %}{{ item.variant.id }}{% endif %}" />
+                      </div>
+                      <button type="button" class="qty-btn-modern qty-increase" 
+                              data-product="{{ item.product.id }}" 
+                              data-variant="{% if item.variant %}{{ item.variant.id }}{% endif %}">
+                        <i class="bi bi-plus-lg"></i>
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div class="cart-item-price">
+                    <div class="price-label">Total</div>
+                    <div class="item-total-price">${{ item.subtotal|intcomma }}</div>
+                  </div>
+                  
+                  <div class="cart-item-actions">
+                    <button type="button" class="btn-remove-modern" 
+                            data-product="{{ item.product.id }}"
+                            data-variant="{% if item.variant %}{{ item.variant.id }}{% endif %}"
+                            title="Eliminar producto">
+                      <i class="bi bi-trash3-fill"></i>
+                    </button>
+                  </div>
+                </div>
+                {% endfor %}
+              </div>
+
+              <!-- Vista móvil: cards compactas -->
+              <div class="cart-mobile-view">
+                {% for item in cart_items %}
+                <div class="cart-item-mobile" data-index="{{ forloop.counter0 }}">
+                  <div class="cart-item-mobile-header">
+                    <input type="checkbox" class="cart-checkbox-modern" 
+                           id="mobile-item-{{ forloop.counter0 }}"
+                           name="selected_products" value="{{ forloop.counter0 }}" checked>
+                    <label for="mobile-item-{{ forloop.counter0 }}" class="checkbox-label"></label>
+                    
+                    <button type="button" class="btn-remove-mobile" 
+                            data-product="{{ item.product.id }}"
+                            data-variant="{% if item.variant %}{{ item.variant.id }}{% endif %}">
+                      <i class="bi bi-x-lg"></i>
+                    </button>
+                  </div>
+                  
+                  <div class="cart-item-mobile-content">
+                    <div class="mobile-product-image">
+                      {% if item.variant and item.variant.imagen %}
+                        <img src="{{ item.variant.imagen.url }}" alt="Variante {{ item.product.name }}" 
+                             class="mobile-image" loading="lazy" />
+                      {% elif item.product.imagen %}
+                        <img src="{{ item.product.imagen.url }}" alt="{{ item.product.name }}" 
+                             class="mobile-image" loading="lazy" />
+                      {% else %}
+                        <div class="mobile-image-placeholder">
+                          <i class="bi bi-image"></i>
+                        </div>
+                      {% endif %}
+                    </div>
+                    
+                    <div class="mobile-product-info">
+                      <h4 class="mobile-product-name">
+                        <a href="{% url 'product_detail' item.product.id %}">{{ item.product.name }}</a>
+                      </h4>
+                      
                       {% if item.variant %}
-                        <div class="item-variants">
-                          <span class="variant-chip color-chip">
+                        <div class="mobile-variants">
+                          <span class="mobile-variant color-variant">
                             <i class="bi bi-palette"></i> {{ item.variant.color }}
                           </span>
                           {% if item.variant.talla %}
-                            <span class="variant-chip size-chip">
+                            <span class="mobile-variant size-variant">
                               <i class="bi bi-rulers"></i> {{ item.variant.talla }}
                             </span>
                           {% endif %}
                         </div>
                       {% endif %}
-                    </div>
-                    
-                    <div class="item-pricing">
-                      <div class="price-per-unit">
-                        {% if item.variant %}
-                          ${{ item.variant.precio|intcomma }}
-                        {% else %}
-                          ${{ item.product.price|intcomma }}
-                        {% endif %}
-                        <span class="price-label">c/u</span>
+                      
+                      <div class="mobile-pricing">
+                        <div class="mobile-unit-price">
+                          {% if item.variant %}
+                            ${{ item.variant.precio|intcomma }}
+                          {% else %}
+                            ${{ item.product.price|intcomma }}
+                          {% endif %}
+                          <span> c/u</span>
+                        </div>
+                        <div class="mobile-total-price">${{ item.subtotal|intcomma }}</div>
                       </div>
-                      <div class="total-price">${{ item.subtotal|intcomma }}</div>
+                      
+                      <div class="mobile-quantity-controls">
+                        <button type="button" class="mobile-qty-btn qty-decrease" 
+                                data-product="{{ item.product.id }}" 
+                                data-variant="{% if item.variant %}{{ item.variant.id }}{% endif %}">
+                          <i class="bi bi-dash"></i>
+                        </button>
+                        <span class="mobile-qty-display">{{ item.quantity }}</span>
+                        <button type="button" class="mobile-qty-btn qty-increase" 
+                                data-product="{{ item.product.id }}" 
+                                data-variant="{% if item.variant %}{{ item.variant.id }}{% endif %}">
+                          <i class="bi bi-plus"></i>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
-                
-                <div class="cart-item-actions">
-                  <div class="quantity-controls-mobile">
-                    <button type="button" class="qty-btn-mobile qty-decrease" 
-                            data-product="{{ item.product.id }}" 
-                            data-variant="{% if item.variant %}{{ item.variant.id }}{% endif %}"
-                            data-max="{% if item.variant %}{{ item.variant.stock }}{% else %}{{ item.product.stock }}{% endif %}">
-                      <i class="bi bi-dash-lg"></i>
-                    </button>
-                    <span class="qty-display">{{ item.quantity }}</span>
-                    <button type="button" class="qty-btn-mobile qty-increase" 
-                            data-product="{{ item.product.id }}" 
-                            data-variant="{% if item.variant %}{{ item.variant.id }}{% endif %}"
-                            data-max="{% if item.variant %}{{ item.variant.stock }}{% else %}{{ item.product.stock }}{% endif %}">
-                      <i class="bi bi-plus-lg"></i>
-                    </button>
-                  </div>
-                </div>
+                {% endfor %}
               </div>
-              {% endfor %}
             </div>
-          {% else %}
-            <!-- Estado vacío moderno -->
-            <div class="cart-empty-state">
-              <div class="empty-icon">
-                <i class="bi bi-cart-x"></i>
-              </div>
-              <h3 class="empty-title">Tu carrito está vacío</h3>
-              <p class="empty-subtitle">Agrega algunos productos para comenzar tu compra</p>
-              <a href="{% url 'store' %}" class="btn-shop-now">
-                <i class="bi bi-bag-plus"></i>
-                Explorar productos
+            
+            <!-- Continuar comprando -->
+            <div class="continue-shopping-section">
+              <a href="{% url 'store' %}" class="btn-continue-shopping-modern">
+                <i class="bi bi-arrow-left-circle-fill"></i>
+                <span>Continuar comprando</span>
               </a>
             </div>
-          {% endif %}
-          
-          <!-- Continuar comprando -->
-          {% if cart_items %}
-          <div class="continue-shopping">
-            <a href="{% url 'store' %}" class="btn-continue-shopping">
-              <i class="bi bi-arrow-left"></i>
-              Continuar comprando
-            </a>
-          </div>
+            
+            <!-- Nota del pedido mejorada -->
+            <div class="order-note-section-modern">
+              <div class="order-note-header-modern">
+                <i class="bi bi-chat-left-text-fill"></i>
+                <h3>Instrucciones especiales</h3>
+                <span class="optional-badge">Opcional</span>
+              </div>
+              <div class="order-note-content-modern">
+                <textarea class="order-note-textarea-modern" 
+                          id="cart-note" 
+                          placeholder="¿Alguna instrucción especial para tu pedido? Por ejemplo: entrega en horario específico, empacar como regalo, etc."
+                          rows="3"></textarea>
+                <div class="textarea-counter">
+                  <span id="note-counter">0</span>/500 caracteres
+                </div>
+              </div>
+            </div>
+          {% else %}
+            <!-- Estado vacío mejorado -->
+            <div class="cart-empty-state-modern">
+              <div class="empty-illustration">
+                <div class="empty-cart-icon">
+                  <i class="bi bi-cart-x-fill"></i>
+                </div>
+              </div>
+              <div class="empty-content">
+                <h2 class="empty-title">Tu carrito está vacío</h2>
+                <p class="empty-subtitle">¡Es hora de llenarlo! Explora nuestros productos y encuentra algo que te guste.</p>
+                <div class="empty-actions">
+                  <a href="{% url 'store' %}" class="btn-shop-now-modern">
+                    <i class="bi bi-bag-plus-fill"></i>
+                    <span>Explorar productos</span>
+                  </a>
+                  <a href="{% url 'home' %}" class="btn-go-home">
+                    <i class="bi bi-house-fill"></i>
+                    <span>Ir al inicio</span>
+                  </a>
+                </div>
+              </div>
+            </div>
           {% endif %}
         </div>
-        
-        <!-- Nota del pedido -->
+
+        <!-- Resumen del pedido (lado derecho) -->
         {% if cart_items %}
-        <div class="order-note-section">
-          <div class="order-note-header">
-            <i class="bi bi-sticky"></i>
-            <h3>Instrucciones especiales</h3>
+        <div class="cart-summary-sidebar">
+          <div class="summary-card-modern">
+            <div class="summary-header-modern">
+              <div class="summary-icon">
+                <i class="bi bi-receipt-cutoff"></i>
+              </div>
+              <h3 class="summary-title-modern">Resumen del pedido</h3>
+            </div>
+            
+            <div class="summary-products-preview">
+              <div class="summary-products-count">
+                <i class="bi bi-box"></i>
+                <span>{{ cart_count }} {% if cart_count == 1 %}producto{% else %}productos{% endif %} seleccionados</span>
+              </div>
+              
+              <div class="summary-products-list">
+                {% for item in cart_items|slice:":3" %}
+                <div class="summary-product-item">
+                  <div class="summary-product-image">
+                    {% if item.variant and item.variant.imagen %}
+                      <img src="{{ item.variant.imagen.url }}" alt="{{ item.product.name }}" />
+                    {% elif item.product.imagen %}
+                      <img src="{{ item.product.imagen.url }}" alt="{{ item.product.name }}" />
+                    {% else %}
+                      <div class="summary-product-placeholder">
+                        <i class="bi bi-image"></i>
+                      </div>
+                    {% endif %}
+                  </div>
+                  <div class="summary-product-info">
+                    <span class="summary-product-name">{{ item.product.name|truncatechars:25 }}</span>
+                    <span class="summary-product-qty">× {{ item.quantity }}</span>
+                  </div>
+                  <div class="summary-product-price">${{ item.subtotal|intcomma }}</div>
+                </div>
+                {% endfor %}
+                
+                {% if cart_count > 3 %}
+                <div class="summary-more-products">
+                  <i class="bi bi-three-dots"></i>
+                  <span>y {{ cart_count|add:"-3" }} producto{{ cart_count|add:"-3"|pluralize }} más</span>
+                </div>
+                {% endif %}
+              </div>
+            </div>
+            
+            <div class="summary-calculations">
+              <div class="calculation-line">
+                <span class="calculation-label">Subtotal</span>
+                <span class="calculation-value" id="selected-subtotal">${{ cart_total|intcomma }}</span>
+              </div>
+              
+              <div class="calculation-line shipping-calculation">
+                <span class="calculation-label">
+                  <i class="bi bi-truck"></i>
+                  <span>Envío</span>
+                </span>
+                <span class="calculation-value shipping-free">
+                  <span class="original-price">$15.000</span>
+                  <span class="free-badge">¡GRATIS!</span>
+                </span>
+              </div>
+              
+              <div class="calculation-line discount-calculation" style="display: none;">
+                <span class="calculation-label">
+                  <i class="bi bi-percent"></i>
+                  <span>Descuento</span>
+                </span>
+                <span class="calculation-value discount-value">-$0</span>
+              </div>
+              
+              <hr class="calculation-divider">
+              
+              <div class="total-calculation">
+                <span class="total-label">Total a pagar</span>
+                <span class="total-amount" id="cart-total-amount">${{ cart_total|intcomma }}</span>
+              </div>
+              
+              <div class="savings-info">
+                <i class="bi bi-piggy-bank-fill"></i>
+                <span>Ahorras $15.000 en envío</span>
+              </div>
+            </div>
+            
+            <div class="summary-actions">
+              <button class="btn-checkout-modern" id="finalizar-pedido-modern">
+                <span class="btn-content">
+                  <i class="bi bi-credit-card-fill"></i>
+                  <span>Continuar</span>
+                </span>
+                <div class="btn-shine"></div>
+              </button>
+              
+              <div class="checkout-guarantees">
+                <div class="guarantee-item">
+                  <i class="bi bi-shield-fill-check"></i>
+                  <span>Compra 100% segura</span>
+                </div>
+                <div class="guarantee-item">
+                  <i class="bi bi-arrow-clockwise"></i>
+                  <span>30 días para cambios</span>
+                </div>
+                <div class="guarantee-item">
+                  <i class="bi bi-truck"></i>
+                  <span>Envío gratuito</span>
+                </div>
+              </div>
+              
+              <div class="payment-methods">
+                <span class="payment-label">Métodos de pago</span>
+                <div class="payment-icons">
+                  <i class="bi bi-credit-card" title="Tarjeta de crédito"></i>
+                  <i class="bi bi-credit-card-2-front" title="Tarjeta débito"></i>
+                  <i class="bi bi-bank" title="Transferencia bancaria"></i>
+                  <i class="bi bi-wallet" title="Billetera digital"></i>
+                </div>
+              </div>
+            </div>
           </div>
-          <div class="order-note-content">
-            <textarea class="order-note-textarea" 
-                      id="cart-note" 
-                      placeholder="Agrega cualquier instrucción especial para tu pedido..."
-                      rows="3"></textarea>
-            <div class="order-note-footer">
-              <small class="note-hint">
-                <i class="bi bi-info-circle"></i>
-                Ejemplo: Entrega en horario de mañana, empacar como regalo, etc.
-              </small>
+          
+          <!-- Cupón de descuento -->
+          <div class="coupon-section-modern">
+            <div class="coupon-header">
+              <i class="bi bi-ticket-perforated-fill"></i>
+              <span>¿Tienes un cupón?</span>
+            </div>
+            <div class="coupon-input-group">
+              <input type="text" class="coupon-input" placeholder="Código de descuento" id="coupon-code">
+              <button type="button" class="coupon-apply-btn" id="apply-coupon">
+                <i class="bi bi-check-lg"></i>
+              </button>
             </div>
           </div>
         </div>
         {% endif %}
       </div>
-
-      <!-- Resumen y checkout -->
-      {% if cart_items %}
-      <aside class="cart-sidebar">
-        <div class="cart-summary-card">
-          <div class="summary-header">
-            <h3 class="summary-title">
-              <i class="bi bi-receipt"></i>
-              Resumen del pedido
-            </h3>
-          </div>
-          
-          <div class="summary-content">
-            <div class="summary-line">
-              <span class="summary-label">Productos ({{ cart_count }})</span>
-              <span class="summary-value" id="selected-total">${{ cart_total|intcomma }}</span>
-            </div>
-            
-            <div class="summary-line shipping-line">
-              <span class="summary-label">
-                <i class="bi bi-truck"></i>
-                Envío
-              </span>
-              <span class="summary-value shipping-free">Gratis</span>
-            </div>
-            
-            <hr class="summary-divider">
-            
-            <div class="summary-total">
-              <span class="total-label">Total a pagar</span>
-              <span class="total-value" id="cart-total">${{ cart_total|intcomma }}</span>
-            </div>
-          </div>
-          
-          <div class="summary-actions">
-            <button class="btn-checkout" id="finalizar-pedido">
-              <i class="bi bi-credit-card"></i>
-              Finalizar pedido
-            </button>
-            
-            <div class="checkout-benefits">
-              <div class="benefit-item">
-                <i class="bi bi-shield-check text-success"></i>
-                <span>Compra segura</span>
-              </div>
-              <div class="benefit-item">
-                <i class="bi bi-arrow-return-left text-primary"></i>
-                <span>30 días de garantía</span>
-              </div>
-              <div class="benefit-item">
-                <i class="bi bi-truck text-warning"></i>
-                <span>Envío gratuito</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </aside>
-      {% endif %}
     </main>
 
     <!-- Confirmación de eliminación -->
@@ -360,6 +454,7 @@
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="{% static 'js/cart.js' %}"></script>
+      <!-- Scripts específicos del carrito moderno -->
+  <script src="{% static 'js/cart-modern.js' %}"></script>
   </body>
 </html>

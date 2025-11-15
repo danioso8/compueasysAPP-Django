@@ -1,0 +1,134 @@
+body {
+    background: #f6f8fa;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+h1 {
+    color: #181c24;
+    font-weight: bold;
+    margin-bottom: 24px;
+    text-align: center;
+}
+
+a.btn, a.btn-primary {
+    display: inline-block;
+    margin-bottom: 20px;
+    font-weight: 600;
+    border-radius: 8px;
+    padding: 10px 28px;
+    background: #007bff;
+    color: #fff !important;
+    text-decoration: none;
+    transition: background 0.2s, color 0.2s;
+}
+
+a.btn:hover, a.btn-primary:hover {
+    background: #0056b3;
+    color: #fff !important;
+}
+
+.table-responsive {
+    margin: 0 auto;
+    max-width: 1100px;
+}
+
+.table {
+    background: #fff;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+}
+
+.table th, .table td {
+    vertical-align: middle !important;
+    text-align: center;
+}
+
+.table thead.table-dark th {
+    background: #181c24;
+    color: #fff;
+    border: none;
+}
+
+.table-striped > tbody > tr:nth-of-type(odd) {
+    background-color: #f2f6fc;
+}
+
+.table-hover tbody tr:hover {
+    background-color: #e6f0fa;
+}
+
+.divider hr {
+    border: 0;
+    border-top: 1px solid #e0e0e0;
+    margin: 16px 0;
+}
+
+.mt-4 {
+    margin-top: 2rem !important;
+}
+
+
+/* Modern modal styles */
+.modal-content {
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+    border: none;
+}
+
+.modal-header {
+    border-bottom: 1px solid #e0e0e0;
+    background: #f6f8fa;
+    border-radius: 16px 16px 0 0;
+}
+
+.modal-title {
+    font-weight: bold;
+    color: #181c24;
+}
+
+.modal-footer {
+    border-top: 1px solid #e0e0e0;
+    background: #f6f8fa;
+    border-radius: 0 0 16px 16px;
+}
+
+.btn-primary {
+    background: #007bff;
+    border: none;
+    font-weight: 600;
+    border-radius: 8px;
+    transition: background 0.2s;
+}
+
+.btn-primary:hover {
+    background: #0056b3;
+}
+
+.btn-success {
+    border-radius: 8px;
+    font-weight: 600;
+}
+
+@media (max-width: 900px) {
+    .table-responsive {
+        max-width: 98vw;
+        padding: 0 5px;
+    }
+    .table th, .table td {
+        font-size: 0.95rem;
+        padding: 8px;
+    }
+}
+
+@media (max-width: 600px) {
+    h1 {
+        font-size: 1.5rem;
+    }
+    .table th, .table td {
+        font-size: 0.85rem;
+        padding: 6px;
+    }
+}

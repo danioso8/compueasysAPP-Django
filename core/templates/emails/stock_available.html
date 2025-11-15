@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Producto Disponible - CompuEasys</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+        .content { background: #f8fafc; padding: 30px; border: 1px solid #e2e8f0; }
+        .product-card { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #e2e8f0; }
+        .price { font-size: 24px; font-weight: bold; color: #10b981; }
+        .btn { display: inline-block; background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; }
+        .footer { background: #334155; color: white; padding: 20px; text-align: center; border-radius: 0 0 10px 10px; }
+        .stock-badge { background: #10b981; color: white; padding: 5px 10px; border-radius: 20px; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎉 ¡Tu producto ya está disponible!</h1>
+            <p>Te notificamos que el producto que esperabas ya está en stock</p>
+        </div>
+        
+        <div class="content">
+            <div class="product-card">
+                <h2>{{ product.name }}</h2>
+                <p>{{ product.description|truncatechars:150 }}</p>
+                
+                <div style="margin: 20px 0;">
+                    <span class="price">${{ product.price|floatformat:0 }} COP</span>
+                    <span class="stock-badge">{{ product.stock }} disponible{{ product.stock|pluralize }}</span>
+                </div>
+                
+                {% if product.category %}
+                <p><strong>Categoría:</strong> {{ product.category.nombre }}</p>
+                {% endif %}
+                
+                <div style="margin-top: 25px;">
+                    <a href="{{ product_url }}" class="btn">Ver Producto Ahora</a>
+                </div>
+            </div>
+            
+            <div style="background: #fef3c7; border: 1px solid #f59e0b; padding: 15px; border-radius: 6px; margin: 20px 0;">
+                <p style="margin: 0;"><strong>⚡ ¡Actúa rápido!</strong> El stock es limitado y otros clientes también están interesados en este producto.</p>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><strong>CompuEasys</strong> - Tu tienda tecnológica de confianza</p>
+            <p style="font-size: 12px; opacity: 0.8;">Recibes este email porque te registraste para recibir notificaciones de stock</p>
+        </div>
+    </div>
+</body>
+</html>

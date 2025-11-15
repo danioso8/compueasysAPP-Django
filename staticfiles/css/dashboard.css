@@ -1,0 +1,1018 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+}
+.admin-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+   
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 20px;
+}  
+.admin-container h1 {
+    margin: 0;
+    font-size: 1.8em;
+    color: #222;
+} 
+.admin-container .btn {
+   
+   color: #111111;
+   border-radius: 10px;
+   
+    padding: 10px 20px;
+    border-radius: 4px;
+    transition: background 0.2s ease;
+}
+.admin-container .btn:hover {
+    background: #444;
+    color: white;
+    transition: background 0.2s ease;
+}
+.dashboard-container {
+    display: flex;
+    min-height: 100vh;
+}
+
+.sidebar {
+    width: 280px;
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    color: #fff;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 2px 0 15px rgba(0,0,0,0.1);
+    position: relative;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.sidebar.collapsed {
+    width: 70px;
+}
+
+/* Header del Sidebar */
+.sidebar-header {
+    padding: 20px 15px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(0, 0, 0, 0.1);
+    min-height: 70px;
+}
+
+.logo-area {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.sidebar-logo-icon {
+    font-size: 24px;
+    color: #64b5f6;
+    flex-shrink: 0;
+}
+
+.logo-text {
+    font-size: 18px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -0.5px;
+}
+
+.sidebar-toggle {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: #fff;
+    padding: 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+
+.sidebar-toggle:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.05);
+}
+
+.sidebar.collapsed .sidebar-toggle i {
+    transform: rotate(180deg);
+}
+
+/* Navegación */
+.sidebar-nav {
+    flex: 1;
+    padding: 20px 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.nav-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.nav-item {
+    margin: 0;
+    padding: 0 15px;
+}
+
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 14px 20px;
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    border-radius: 12px;
+    margin: 4px 0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.nav-link:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    transform: translateX(5px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.nav-link.active {
+    background: linear-gradient(45deg, #64b5f6, #42a5f5);
+    color: #fff;
+    font-weight: 600;
+    box-shadow: 0 6px 20px rgba(100, 181, 246, 0.4);
+    transform: translateX(5px);
+}
+
+.nav-link.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 4px;
+    background: #fff;
+    border-radius: 0 4px 4px 0;
+}
+
+.nav-icon {
+    font-size: 18px;
+    flex-shrink: 0;
+    width: 20px;
+    text-align: center;
+    transition: all 0.3s ease;
+    display: inline-block;
+    font-family: "Font Awesome 6 Free", "Font Awesome 6 Pro", FontAwesome;
+    font-weight: 900;
+}
+
+.nav-link:hover .nav-icon {
+    transform: scale(1.1);
+}
+
+.nav-link.active .nav-icon {
+    color: #fff;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.sidebar-logo-icon {
+    font-size: 24px;
+    color: #64b5f6;
+    flex-shrink: 0;
+    display: inline-block;
+    font-family: "Font Awesome 6 Free", "Font Awesome 6 Pro", FontAwesome;
+    font-weight: 900;
+}
+
+/* Separador */
+.nav-separator {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.1);
+    margin: 15px 20px;
+    padding: 0;
+}
+
+/* Footer del Sidebar */
+.sidebar-footer {
+    padding: 20px 15px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 14px;
+}
+
+/* Estados colapsado */
+.sidebar.collapsed .sidebar-text {
+    opacity: 0;
+    width: 0;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.sidebar.collapsed .nav-link {
+    justify-content: center;
+    gap: 0;
+    padding: 14px 0;
+}
+
+.sidebar.collapsed .sidebar-header {
+    justify-content: center;
+}
+
+.sidebar.collapsed .logo-area {
+    gap: 0;
+}
+
+.sidebar.collapsed .sidebar-footer {
+    text-align: center;
+}
+
+.sidebar.collapsed .user-info {
+    justify-content: center;
+    gap: 0;
+}
+
+/* Tooltips para modo colapsado */
+.sidebar.collapsed .nav-link {
+    position: relative;
+}
+
+.sidebar.collapsed .nav-link::after {
+    content: attr(title);
+    position: absolute;
+    left: 70px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #333;
+    color: #fff;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.sidebar.collapsed .nav-link:hover::after {
+    opacity: 1;
+    visibility: visible;
+    left: 75px;
+}
+
+/* Animaciones adicionales */
+@keyframes slideIn {
+    from {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.sidebar {
+    animation: slideIn 0.5s ease-out;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .dashboard-container {
+        flex-direction: column;
+    }
+    
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: -280px;
+        width: 280px;
+        height: 100vh;
+        z-index: 1045;
+        transition: left 0.3s ease;
+        box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+    }
+    
+    .sidebar.mobile-open {
+        left: 0;
+    }
+    
+    .sidebar .sidebar-text {
+        display: block !important;
+    }
+    
+    .sidebar-toggle {
+        display: none;
+    }
+    
+    .main-content {
+        margin-left: 0;
+        padding: 80px 15px 15px 15px;
+        width: 100%;
+    }
+}
+
+/* Barra superior móvil */
+.mobile-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    z-index: 1050;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.mobile-menu-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 10px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mobile-menu-btn:hover,
+.mobile-menu-btn:focus {
+    background: rgba(255,255,255,0.2);
+    outline: none;
+}
+
+.mobile-logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: white;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.mobile-logo i {
+    font-size: 1.3rem;
+}
+
+.mobile-user {
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    transition: background 0.3s ease;
+}
+
+.mobile-user:hover {
+    background: rgba(255,255,255,0.2);
+}
+
+.mobile-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 1040;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.mobile-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Mejoras para tablets */
+@media (max-width: 992px) and (min-width: 769px) {
+    .sidebar {
+        width: 240px;
+    }
+    
+    .main-content {
+        padding: 20px;
+    }
+}
+
+/* Ajustes para el main content */
+.main-content {
+    flex: 1;
+    padding: 30px;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    min-height: 100vh;
+    transition: all 0.3s ease;
+    margin-left: 0;
+}
+
+.dashboard-container {
+    display: flex;
+    min-height: 100vh;
+    background: #f8f9fa;
+}
+
+/* Estilos adicionales para la vista de ventas */
+.ventas-dashboard .card {
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    border: none;
+    margin-bottom: 1.5rem;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.ventas-dashboard .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+}
+
+.ventas-dashboard .progress {
+    height: 20px;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.ventas-dashboard .badge {
+    font-size: 0.9rem;
+    padding: 0.5rem 0.8rem;
+    border-radius: 8px;
+}
+
+.ventas-dashboard .table th {
+    border-top: none;
+    font-weight: 600;
+    background: #f8f9fa;
+    color: #495057;
+    padding: 1rem;
+}
+
+.ventas-dashboard .table td {
+    padding: 1rem;
+    vertical-align: middle;
+}
+
+.ventas-dashboard .card-header {
+    border-bottom: none;
+    font-weight: 600;
+    padding: 1.25rem 1.5rem;
+}
+
+.ventas-dashboard .card-body {
+    padding: 1.5rem;
+}
+
+/* Mejoras para botones */
+.btn {
+    border-radius: 8px;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    transition: all 0.3s ease;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* Mejoras para las cards de estadísticas */
+.card.bg-primary,
+.card.bg-success,
+.card.bg-info,
+.card.bg-warning {
+    border: none;
+    border-radius: 15px;
+    overflow: hidden;
+    position: relative;
+}
+
+.card.bg-primary::before,
+.card.bg-success::before,
+.card.bg-info::before,
+.card.bg-warning::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, rgba(255,255,255,0.1), rgba(255,255,255,0));
+    pointer-events: none;
+}
+
+/* Animaciones suaves para las tablas */
+.table tbody tr {
+    transition: all 0.3s ease;
+}
+
+.table tbody tr:hover {
+    background-color: rgba(0,0,0,0.02);
+    transform: scale(1.01);
+}
+
+/* Asegurar que Font Awesome se carga correctamente */
+.fas, .fa-solid {
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+    display: inline-block;
+    font-style: normal;
+    font-variant: normal;
+    text-rendering: auto;
+    line-height: 1;
+}
+
+/* Iconos específicos como fallback */
+.fa-chart-line::before { content: "\f201"; }
+.fa-chart-bar::before { content: "\f080"; }
+.fa-shopping-cart::before { content: "\f07a"; }
+.fa-boxes::before { content: "\f468"; }
+.fa-warehouse::before { content: "\f494"; }
+.fa-tags::before { content: "\f02c"; }
+.fa-list::before { content: "\f03a"; }
+.fa-truck::before { content: "\f0d1"; }
+.fa-users::before { content: "\f0c0"; }
+.fa-desktop::before { content: "\f108"; }
+.fa-chevron-left::before { content: "\f053"; }
+.fa-user-shield::before { content: "\f505"; }
+
+/* Scrollbar personalizado para el sidebar */
+.sidebar-nav::-webkit-scrollbar {
+    width: 4px;
+}
+
+.sidebar-nav::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+}
+
+/* Estilos para la vista de productos */
+.productos-dashboard .card {
+    border: none;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    border-radius: 12px;
+}
+
+.productos-dashboard .table th {
+    background: #343a40;
+    color: white;
+    border: none;
+    font-weight: 600;
+    padding: 1rem 0.75rem;
+}
+
+.productos-dashboard .table td {
+    padding: 1rem 0.75rem;
+    vertical-align: middle;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.productos-dashboard .product-thumbnail {
+    border: 2px solid #e9ecef;
+    transition: all 0.3s ease;
+}
+
+.productos-dashboard .product-thumbnail:hover {
+    transform: scale(1.1);
+    border-color: #007bff;
+}
+
+.productos-dashboard .no-image-placeholder {
+    width: 50px;
+    height: 50px;
+    background: #f8f9fa;
+    border: 2px dashed #dee2e6;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+}
+
+.productos-dashboard .product-info strong {
+    color: #495057;
+}
+
+.productos-dashboard .badge {
+    font-size: 0.75rem;
+    padding: 0.375rem 0.75rem;
+}
+
+.productos-dashboard .btn-group-sm .btn {
+    padding: 0.375rem 0.5rem;
+}
+
+.productos-dashboard .no-products {
+    padding: 2rem;
+}
+
+/* Estilos para filtros */
+.productos-dashboard .card-header {
+    background: linear-gradient(45deg, #f8f9fa, #e9ecef);
+    border-bottom: 2px solid #dee2e6;
+}
+
+.productos-dashboard .form-control,
+.productos-dashboard .form-select {
+    border-radius: 8px;
+    border: 1px solid #ced4da;
+    transition: all 0.3s ease;
+}
+
+.productos-dashboard .form-control:focus,
+.productos-dashboard .form-select:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Estilos para paginación */
+.pagination {
+    margin-bottom: 0;
+}
+
+.pagination .page-link {
+    border-radius: 8px;
+    margin: 0 2px;
+    border: 1px solid #dee2e6;
+    color: #495057;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.pagination .page-link:hover {
+    background-color: #e9ecef;
+    border-color: #adb5bd;
+    color: #495057;
+    transform: translateY(-1px);
+}
+
+.pagination .page-item.active .page-link {
+    background-color: #007bff;
+    border-color: #007bff;
+    color: white;
+    box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+}
+
+.pagination .page-item.disabled .page-link {
+    color: #adb5bd;
+    background-color: #f8f9fa;
+    border-color: #dee2e6;
+}
+
+/* Responsive para la tabla de productos */
+@media (max-width: 768px) {
+    .productos-dashboard .table-responsive {
+        font-size: 0.875rem;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .productos-dashboard .table th,
+    .productos-dashboard .table td {
+        padding: 0.5rem 0.25rem;
+        white-space: nowrap;
+    }
+    
+    .productos-dashboard .product-thumbnail {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .productos-dashboard .btn-group-sm .btn {
+        padding: 0.25rem 0.375rem;
+        font-size: 0.75rem;
+    }
+    
+    /* Ocultar columnas menos importantes en móvil */
+    .productos-dashboard .table .d-none-mobile {
+        display: none !important;
+    }
+    
+    /* Mejorar filtros en móvil */
+    .productos-dashboard .row > .col-md-3,
+    .productos-dashboard .row > .col-md-6 {
+        margin-bottom: 1rem;
+    }
+    
+    /* Cards más compactas en móvil */
+    .productos-dashboard .card {
+        margin-bottom: 1rem;
+    }
+    
+    .productos-dashboard .card-header {
+        padding: 0.75rem 1rem;
+    }
+    
+    .productos-dashboard .card-body {
+        padding: 1rem;
+    }
+}
+
+/* Mejoras generales para móvil */
+@media (max-width: 576px) {
+    .main-content {
+        padding: 70px 10px 10px 10px;
+    }
+    
+    .main-content h2, .main-content h3 {
+        font-size: 1.25rem;
+        margin-bottom: 1rem;
+    }
+    
+    /* Botones más grandes en móvil */
+    .btn {
+        min-height: 44px;
+        touch-action: manipulation;
+    }
+    
+    /* Inputs más grandes */
+    .form-control, .form-select {
+        min-height: 44px;
+        font-size: 16px; /* Evita zoom en iOS */
+    }
+    
+    /* Tablas responsivas */
+    .table-responsive {
+        border: none;
+        margin-bottom: 1rem;
+    }
+    
+    .table {
+        margin-bottom: 0;
+        font-size: 0.8rem;
+    }
+    
+    .table th, .table td {
+        padding: 0.5rem 0.25rem;
+        border-top: 1px solid #dee2e6;
+    }
+    
+    /* Paginación responsive */
+    .pagination {
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-top: 1rem;
+    }
+    
+    .pagination .page-link {
+        padding: 0.5rem 0.75rem;
+        margin: 2px;
+        font-size: 0.875rem;
+    }
+    
+    /* Modales responsivos */
+    .modal-dialog {
+        margin: 1rem;
+    }
+    
+    .modal-header, .modal-body, .modal-footer {
+        padding: 1rem;
+    }
+}
+
+/* Estilos adicionales para mejorar UX móvil */
+.touch-friendly {
+    min-height: 44px;
+    min-width: 44px;
+}
+
+/* Mejoras para badges y elementos pequeños en móvil */
+@media (max-width: 576px) {
+    .badge {
+        font-size: 0.7rem;
+        padding: 0.35em 0.65em;
+    }
+    
+    .btn-group-sm .btn {
+        padding: 0.375rem 0.5rem;
+        font-size: 0.8rem;
+    }
+    
+    .table-responsive {
+        font-size: 0.8rem;
+    }
+    
+    /* Scroll horizontal suave para tablas */
+    .table-responsive {
+        scrollbar-width: thin;
+        scrollbar-color: #6c757d #f8f9fa;
+    }
+    
+    .table-responsive::-webkit-scrollbar {
+        height: 6px;
+    }
+    
+    .table-responsive::-webkit-scrollbar-track {
+        background: #f8f9fa;
+    }
+    
+    .table-responsive::-webkit-scrollbar-thumb {
+        background: #6c757d;
+        border-radius: 3px;
+    }
+    
+    .table-responsive::-webkit-scrollbar-thumb:hover {
+        background: #495057;
+    }
+}
+
+/* Estilos para el colapso de filtros en móvil */
+.collapse.collapsing {
+    transition: height 0.35s ease;
+}
+
+/* Mejoras para la paginación en dispositivos muy pequeños */
+@media (max-width: 480px) {
+    .pagination .page-link {
+        padding: 0.375rem 0.5rem;
+        font-size: 0.8rem;
+    }
+    
+    /* Ocultar algunos números de página en pantallas muy pequeñas */
+    .pagination .page-item:not(.active):not(:first-child):not(:last-child):not(:nth-child(2)):not(:nth-last-child(2)) {
+        display: none;
+    }
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    margin-bottom: 130px;
+    background: #fff;
+}
+
+th, td {
+    padding: 10px;
+    border: 1px solid #ddd;
+    text-align: left;
+}
+
+th {
+    background: #eee;
+}
+
+/* form crear producto */
+
+.form-crear-producto {
+    background: #fff;
+    padding: 24px 32px;
+    border-radius: 8px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+    max-width: 100%;
+    margin: 24px auto;
+}
+.precios{
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    margin-top: 10px;
+}
+.categorias-proveedor{
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    margin-top: 10px;
+}
+.form-crear-producto h2 {
+    margin-top: 0;
+    color: #222;
+    font-size: 1.4em;
+    margin-bottom: 18px;
+}
+
+.form-crear-producto label {
+    display: block;
+    margin-top: 14px;
+    margin-bottom: 4px;
+    font-weight: bold;
+    color: #333;
+}
+
+.form-crear-producto input[type="text"],
+.form-crear-producto input[type="number"],
+.form-crear-producto input[type="file"],
+.form-crear-producto textarea {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    font-size: 1em;
+    box-sizing: border-box;
+}
+
+.form-crear-producto textarea {
+    min-height: 60px;
+    resize: vertical;
+}
+
+.form-crear-producto button[type="submit"] {
+    background: #222;
+    color: #fff;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 4px;
+    font-size: 1em;
+    cursor: pointer;
+    margin-top: 16px;
+    transition: background 0.2s;
+}
+.form-select, select {
+    background: #fff !important;
+    color: #222 !important;
+    border: 1px solid #ccc !important;
+}
+
+.form-select option {
+    background: #fff !important;
+    color: #222 !important;
+}
+.form-crear-producto button[type="submit"]:hover {
+    background: #444;
+}
+
+.variante-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.form-crear-producto button[type="button"] {
+    background: #eee;
+    color: #222;
+    border: 1px solid #ccc;
+    padding: 6px 16px;
+    border-radius: 4px;
+    font-size: 0.95em;
+    cursor: pointer;
+    margin-bottom: 10px;
+}
+
+.form-crear-producto button[type="button"]:hover {
+    background: #ddd;
+}
+
+/* ventana modal comentario */
+  .modal1 {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0; top: 0;
+            width: 100%; height: 100%;
+            overflow: auto;
+            background: rgba(0,0,0,0.4);
+            border: #222 solid 2px;
+        }
+        .modal-content1 {
+            background: #fff;
+            margin: 10% auto;
+            padding: 20px;
+            border-radius: 8px;
+            border: #222 solid 2px;
+            width: 800px;
+            height: auto;
+            position: relative;
+        }
+        .close {
+            position: absolute;
+            right: 12px;
+            top: 8px;
+            font-size: 22px;
+            font-weight: bold;
+            color: #333;
+            cursor: pointer;
+        }

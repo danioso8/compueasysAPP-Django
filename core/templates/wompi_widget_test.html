@@ -1,0 +1,231 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Widget Wompi</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .error { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+        .warning { background: #fff3cd; border: 1px solid #ffeaa7; color: #856404; }
+        .info { background: #d1ecf1; border: 1px solid #bee5eb; color: #0c5460; }
+        button { padding: 10px 20px; margin: 10px; border: none; border-radius: 5px; cursor: pointer; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-secondary { background: #6c757d; color: white; }
+        #console { background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0; height: 300px; overflow-y: auto; font-family: monospace; font-size: 12px; border: 1px solid #dee2e6; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test Widget Wompi</h1>
+        
+        <div id="status" class="status info">
+            Iniciando tests...
+        </div>
+        
+        <div class="controls">
+            <button class="btn-primary" onclick="runAllTests()">🧪 Ejecutar Todos los Tests</button>
+            <button class="btn-secondary" onclick="testWidgetCreation()">🔧 Test Widget Creation</button>
+            <button class="btn-secondary" onclick="clearConsole()">🗑️ Limpiar Console</button>
+        </div>
+        
+        <div id="console"></div>
+        
+        <h2>📊 Resultados</h2>
+        <div id="results">
+            <p>Ejecuta los tests para ver resultados...</p>
+        </div>
+    </div>
+
+    <!-- Wompi Widget Script -->
+    <script src="https://checkout.wompi.co/widget.js"></script>
+    
+    <script>
+        // Console logger
+        const consoleDiv = document.getElementById('console');
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const color = {
+                'info': '#17a2b8',
+                'success': '#28a745', 
+                'error': '#dc3545',
+                'warn': '#ffc107'
+            }[type] || '#17a2b8';
+            
+            consoleDiv.innerHTML += `<div style="color: ${color};">[${timestamp}] ${message}</div>`;
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+            console.log(message);
+        }
+        
+        function clearConsole() {
+            consoleDiv.innerHTML = '';
+        }
+        
+        function updateStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.className = `status ${type}`;
+            statusDiv.textContent = message;
+        }
+        
+        function updateResults(html) {
+            document.getElementById('results').innerHTML = html;
+        }
+        
+        // Test functions
+        function testScriptLoad() {
+            log('🔍 Test 1: Verificar carga del script de Wompi', 'info');
+            
+            const script = document.querySelector('script[src*="wompi.co"]');
+            if (script) {
+                log('✅ Script de Wompi encontrado en el DOM', 'success');
+                log(`   URL: ${script.src}`, 'info');
+                return true;
+            } else {
+                log('❌ Script de Wompi NO encontrado', 'error');
+                return false;
+            }
+        }
+        
+        function testWidgetAvailability() {
+            log('🔍 Test 2: Verificar disponibilidad del WidgetCheckout', 'info');
+            
+            if (typeof WidgetCheckout !== 'undefined') {
+                log('✅ WidgetCheckout está disponible', 'success');
+                log(`   Tipo: ${typeof WidgetCheckout}`, 'info');
+                return true;
+            } else {
+                log('❌ WidgetCheckout NO está disponible', 'error');
+                log('   Posibles causas:', 'warn');
+                log('   - Script no cargó completamente', 'warn');
+                log('   - Bloqueador de anuncios', 'warn');
+                log('   - Problema de conexión', 'warn');
+                return false;
+            }
+        }
+        
+        function testWidgetCreation() {
+            log('🔍 Test 3: Intentar crear widget de Wompi', 'info');
+            
+            if (typeof WidgetCheckout === 'undefined') {
+                log('❌ No se puede crear widget - WidgetCheckout no disponible', 'error');
+                return false;
+            }
+            
+            try {
+                // Configuración de prueba
+                const testConfig = {
+                    currency: 'COP',
+                    amountInCents: 10000, // $100 pesos
+                    reference: 'test-' + Date.now(),
+                    publicKey: '{{ wompi_public_key }}',
+                    acceptanceToken: 'test-token', // Token falso para test
+                    customerData: {
+                        email: 'test@test.com',
+                        fullName: 'Usuario Test',
+                        phoneNumber: '1234567890'
+                    }
+                };
+                
+                log('   Configuración de test:', 'info');
+                log(`   ${JSON.stringify(testConfig, null, 2)}`, 'info');
+                
+                const widget = new WidgetCheckout(testConfig);
+                log('✅ Widget creado exitosamente', 'success');
+                log('   (NO se abrirá porque es solo una prueba)', 'info');
+                
+                return true;
+                
+            } catch (error) {
+                log(`❌ Error creando widget: ${error.message}`, 'error');
+                log(`   Stack: ${error.stack}`, 'error');
+                return false;
+            }
+        }
+        
+        function testConfiguration() {
+            log('🔍 Test 4: Verificar configuración de Wompi', 'info');
+            
+            const publicKey = '{{ wompi_public_key }}';
+            log(`   Public Key: ${publicKey}`, 'info');
+            
+            if (publicKey && publicKey.startsWith('pub_')) {
+                log('✅ Public key válida', 'success');
+                return true;
+            } else {
+                log('❌ Public key inválida o vacía', 'error');
+                return false;
+            }
+        }
+        
+        async function runAllTests() {
+            log('🚀 Iniciando suite de tests completa', 'info');
+            updateStatus('Ejecutando tests...', 'info');
+            
+            const results = {
+                scriptLoad: false,
+                widgetAvail: false,
+                widgetCreate: false,
+                config: false
+            };
+            
+            // Ejecutar tests
+            results.scriptLoad = testScriptLoad();
+            
+            // Esperar un momento para que el script se cargue
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            results.widgetAvail = testWidgetAvailability();
+            results.config = testConfiguration();
+            
+            if (results.widgetAvail) {
+                results.widgetCreate = testWidgetCreation();
+            }
+            
+            // Generar reporte
+            const passed = Object.values(results).filter(Boolean).length;
+            const total = Object.keys(results).length;
+            
+            log(`📊 Resumen: ${passed}/${total} tests pasaron`, passed === total ? 'success' : 'error');
+            
+            if (passed === total) {
+                updateStatus('✅ Todos los tests pasaron - Widget funcionando', 'success');
+            } else {
+                updateStatus(`❌ ${total - passed} tests fallaron - Revisar configuración`, 'error');
+            }
+            
+            // Mostrar resultados detallados
+            const resultsHtml = `
+                <h3>Resultados Detallados:</h3>
+                <p>✅ Script Load: ${results.scriptLoad ? 'PASS' : 'FAIL'}</p>
+                <p>✅ Widget Available: ${results.widgetAvail ? 'PASS' : 'FAIL'}</p>
+                <p>✅ Configuration: ${results.config ? 'PASS' : 'FAIL'}</p>
+                <p>✅ Widget Creation: ${results.widgetCreate ? 'PASS' : 'FAIL'}</p>
+                
+                <h4>Recomendaciones:</h4>
+                ${!results.scriptLoad ? '<p>❌ Verificar conexión a internet y firewall</p>' : ''}
+                ${!results.widgetAvail ? '<p>❌ Desactivar bloqueador de anuncios temporalmente</p>' : ''}
+                ${!results.config ? '<p>❌ Verificar configuración de Wompi en Django</p>' : ''}
+                ${!results.widgetCreate ? '<p>❌ Revisar configuración y tokens de Wompi</p>' : ''}
+            `;
+            
+            updateResults(resultsHtml);
+        }
+        
+        // Auto-ejecutar tests básicos al cargar
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                log('🎯 Tests automáticos al cargar página', 'info');
+                testScriptLoad();
+                
+                setTimeout(() => {
+                    testWidgetAvailability();
+                }, 2000);
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
