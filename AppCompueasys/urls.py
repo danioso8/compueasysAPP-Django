@@ -27,7 +27,7 @@ urlpatterns = [
     path('', home, name='home'),  # Added this line to map the root URL to the home view
     path('index/', index, name='index'),  # Added this line to map the /index URL to the index view
     path('', include('core.urls')),  # Included the core app's URL configurations
-    path('', include('contable.urls')),  # Included the contable app's URL configurations
+    path('contable/', include('contable.urls')),  # Included the contable app's URL configurations
     path('dashboard/', include('dashboard.urls')),
 ]
 

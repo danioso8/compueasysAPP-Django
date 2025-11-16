@@ -915,19 +915,31 @@ def update_cart(request, product_id):
         key = f"{product_id}-{variant_id}" if variant_id else str(product_id)
         action = request.POST.get('action')
         quantity = int(request.POST.get('quantity', 1))
+        
         if key in cart:
+            # Obtener precio del producto/variante
+            if variant_id:
+                try:
+                    variant = ProductVariant.objects.get(id=variant_id)
+                    stock = variant.stock
+                    price = variant.precio
+                except ProductVariant.DoesNotExist:
+                    return JsonResponse({'success': False, 'error': 'Variante no encontrada'})
+            else:
+                try:
+                    product = Product.objects.get(id=product_id)
+                    stock = product.stock
+                    price = product.price
+                except Product.DoesNotExist:
+                    return JsonResponse({'success': False, 'error': 'Producto no encontrado'})
+            
+            # Actualizar cantidad
             if action == 'set':
-                # Solo permite hasta el stock disponible
-                if variant_id:
-                    stock = ProductVariant.objects.get(id=variant_id).stock
-                    price = ProductVariant.objects.get(id=variant_id).precio
-                else:
-                    stock = Product.objects.get(id=product_id).stock
-                    price = Product.objects.get(id=product_id).price
                 if quantity > stock:
                     quantity = stock
                 if quantity < 1:
                     quantity = 1
+                    
                 if isinstance(cart[key], int):
                     cart[key] = quantity
                 else:
@@ -957,9 +969,18 @@ def update_cart(request, product_id):
                         except:
                             p = 0
                 else:
+                    # Formato antiguo: k puede ser "product_id" o "product_id-variant_id"
                     q = v
                     try:
-                        p = Product.objects.get(id=k).price
+                        if '-' in k:
+                            # Tiene variante
+                            parts = k.split('-')
+                            variant_id = parts[1]
+                            pv = ProductVariant.objects.get(id=variant_id)
+                            p = pv.precio
+                        else:
+                            # Solo producto
+                            p = Product.objects.get(id=k).price
                     except:
                         p = 0
                 
@@ -969,9 +990,9 @@ def update_cart(request, product_id):
 
             return JsonResponse({
                 'success': True,
-                'item_subtotal': subtotal,   # Cambiar de 'subtotal' a 'item_subtotal'
+                'item_subtotal': float(subtotal),
                 'quantity': quantity,        
-                'cart_total': cart_total,    
+                'cart_total': float(cart_total),
                 'cart_count': cart_count
             })
                

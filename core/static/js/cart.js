@@ -310,27 +310,26 @@
       console.log('🔄 Updating UI:', { productId, variantId, data });
       
       // Actualizar subtotal del item - mejorar selectores
-      if (data.subtotal !== undefined) {
-        // Buscar en vista de escritorio
-        const desktopRow = document.querySelector(`tr.cart-row[data-index]`);
+      if (data.item_subtotal !== undefined) {
         let found = false;
         
-        // Buscar la fila que contiene este producto específico
-        document.querySelectorAll('.cart-row').forEach(row => {
+        // Buscar la fila que contiene este producto específico en vista desktop
+        document.querySelectorAll('.cart-item-modern, .cart-row').forEach(row => {
           const quantityControl = row.querySelector(`[data-product="${productId}"][data-variant="${variantId || ''}"]`);
           if (quantityControl) {
             // 🔍 DEBUG: Ver qué fila se está actualizando  
             console.log('🖥️ Updating desktop row for product:', productId, 'variant:', variantId);
             
-            const subtotalElement = row.querySelector('.item-subtotal');
+            // Buscar elemento de subtotal con múltiples selectores
+            const subtotalElement = row.querySelector('.item-total-price, .item-subtotal');
             if (subtotalElement) {
-              AnimationManager.animatePriceUpdate(subtotalElement, data.subtotal);
-              console.log('✅ Updated desktop subtotal:', data.subtotal);
+              AnimationManager.animatePriceUpdate(subtotalElement, data.item_subtotal);
+              console.log('✅ Updated desktop subtotal:', data.item_subtotal);
               found = true;
             }
             
             // 🔄 También actualizar el input de cantidad en escritorio
-            const qtyInput = row.querySelector('.qty-input');
+            const qtyInput = row.querySelector('.qty-input-modern, .qty-input');
             if (qtyInput && data.quantity !== undefined) {
               qtyInput.value = data.quantity;
               console.log('✅ Updated desktop quantity input:', data.quantity);
@@ -339,23 +338,29 @@
         });
 
         // Buscar en vista móvil
-        document.querySelectorAll('.cart-item-card').forEach(card => {
+        document.querySelectorAll('.cart-item-mobile, .cart-item-card').forEach(card => {
           const quantityControl = card.querySelector(`[data-product="${productId}"][data-variant="${variantId || ''}"]`);
           if (quantityControl) {
             // 🔍 DEBUG: Ver qué carta se está actualizando
             console.log('📱 Updating mobile card for product:', productId, 'variant:', variantId);
             
-            const subtotalElement = card.querySelector('.total-price');
+            const subtotalElement = card.querySelector('.item-total-price, .total-price');
             if (subtotalElement) {
-              AnimationManager.animatePriceUpdate(subtotalElement, data.subtotal);
-              console.log('✅ Updated mobile subtotal:', data.subtotal);
+              AnimationManager.animatePriceUpdate(subtotalElement, data.item_subtotal);
+              console.log('✅ Updated mobile subtotal:', data.item_subtotal);
               found = true;
             }
             
             // 🔄 También actualizar la cantidad mostrada en móvil
-            const qtyDisplay = card.querySelector('.qty-display');
+            const qtyDisplay = card.querySelector('.qty-display-modern, .qty-display');
             if (qtyDisplay && data.quantity !== undefined) {
-              qtyDisplay.textContent = data.quantity;
+              // Buscar el input dentro de qty-display-modern
+              const qtyInput = qtyDisplay.querySelector('input');
+              if (qtyInput) {
+                qtyInput.value = data.quantity;
+              } else {
+                qtyDisplay.textContent = data.quantity;
+              }
               console.log('✅ Updated mobile quantity display:', data.quantity);
             }
           }
@@ -366,16 +371,19 @@
         }
       }
 
-      // Actualizar total del carrito
+      // Actualizar total del carrito (total de TODOS los productos)
       if (data.cart_total !== undefined) {
-        const totalElements = document.querySelectorAll('#cart-total, .total-value');
+        const totalElements = document.querySelectorAll('#cart-total-amount, .total-value');
         totalElements.forEach(element => {
           AnimationManager.animatePriceUpdate(element, data.cart_total);
         });
-        console.log('✅ Updated cart total:', data.cart_total);
+        console.log('✅ Updated cart total (all products):', data.cart_total);
 
-        // Actualizar total seleccionado
-        this.updateSelectedTotal();
+        // Actualizar total seleccionado (solo productos marcados)
+        // Usar setTimeout para asegurar que el DOM se haya actualizado
+        setTimeout(() => {
+          this.updateSelectedTotal();
+        }, 50);
       }
 
       // Actualizar contador de productos
@@ -398,8 +406,8 @@
       console.log('💰 Calculating selected total...');
       
       // 🔍 DEBUG: Verificar checkboxes duplicados ANTES de calcular
-      const allCheckboxes = document.querySelectorAll('.cart-checkbox');
-      const selectedCheckboxes = document.querySelectorAll('.cart-checkbox:checked:not(#select-all)');
+      const allCheckboxes = document.querySelectorAll('.cart-checkbox-modern, .cart-checkbox');
+      const selectedCheckboxes = document.querySelectorAll('.cart-checkbox-modern:checked:not(#select-all), .cart-checkbox:checked:not(#select-all)');
       
       console.log(`🔍 DEBUGGING CHECKBOXES:`);
       console.log(`Total checkboxes found: ${allCheckboxes.length}`);
@@ -452,25 +460,25 @@
         
         // 🖥️ Si la vista desktop está visible, buscar solo ahí
         if (isDesktopVisible && !isMobileVisible) {
-          const desktopRow = document.querySelector(`tr[data-index="${itemIndex}"]`);
-          if (desktopRow) {
-            subtotalElement = desktopRow.querySelector('.item-subtotal');
-            console.log(`�️ Using DESKTOP subtotal for item ${itemIndex}`);
+          const desktopItem = document.querySelector(`.cart-item-modern[data-index="${itemIndex}"], tr[data-index="${itemIndex}"]`);
+          if (desktopItem) {
+            subtotalElement = desktopItem.querySelector('.item-total-price, .item-subtotal');
+            console.log(`🖥️ Using DESKTOP subtotal for item ${itemIndex}`);
           }
         }
         // 📱 Si la vista móvil está visible, buscar solo ahí
         else if (isMobileVisible && !isDesktopVisible) {
-          const mobileCard = document.querySelector(`.cart-item-card[data-index="${itemIndex}"]`);
+          const mobileCard = document.querySelector(`.cart-item-mobile[data-index="${itemIndex}"], .cart-item-card[data-index="${itemIndex}"]`);
           if (mobileCard) {
-            subtotalElement = mobileCard.querySelector('.total-price');
+            subtotalElement = mobileCard.querySelector('.item-total-price, .total-price');
             console.log(`📱 Using MOBILE subtotal for item ${itemIndex}`);
           }
         }
         // 🔄 Si ambas vistas están visibles (caso raro), priorizar desktop
         else {
-          const desktopRow = document.querySelector(`tr[data-index="${itemIndex}"]`);
-          if (desktopRow) {
-            subtotalElement = desktopRow.querySelector('.item-subtotal');
+          const desktopItem = document.querySelector(`.cart-item-modern[data-index="${itemIndex}"], tr[data-index="${itemIndex}"]`);
+          if (desktopItem) {
+            subtotalElement = desktopItem.querySelector('.item-total-price, .item-subtotal');
             console.log(`🔄 Both views visible, using DESKTOP subtotal for item ${itemIndex}`);
           }
         }
@@ -493,6 +501,21 @@
       // Actualizar elementos de total en la UI
       const formattedTotal = `$${Utils.formatPrice(total)}`;
       
+      // Actualizar subtotal seleccionado
+      const selectedSubtotalElement = document.getElementById('selected-subtotal');
+      if (selectedSubtotalElement) {
+        selectedSubtotalElement.textContent = formattedTotal;
+        console.log('✅ Updated selected-subtotal element to:', formattedTotal);
+      }
+      
+      // Actualizar total a pagar (mismo valor que subtotal ya que el envío es gratis)
+      const cartTotalAmountElement = document.getElementById('cart-total-amount');
+      if (cartTotalAmountElement) {
+        cartTotalAmountElement.textContent = formattedTotal;
+        console.log('✅ Updated cart-total-amount element to:', formattedTotal);
+      }
+      
+      // También actualizar elementos legacy si existen
       const selectedTotalElement = document.getElementById('selected-total');
       if (selectedTotalElement) {
         selectedTotalElement.textContent = formattedTotal;

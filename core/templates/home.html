@@ -518,6 +518,10 @@
                                 <i class="bi bi-shop"></i>
                                 Explorar Tienda
                             </a>
+                            <a href="{% url 'contable:register' %}" class="btn btn-primary btn-lg" style="background: linear-gradient(135deg, #2563eb, #1e40af); border: none;">
+                                <i class="bi bi-calculator"></i>
+                                Software Contable
+                            </a>
                             <a href="/contactUs/" class="btn btn-outline-light btn-lg">
                                 <i class="bi bi-chat-dots"></i>
                                 Contáctanos
@@ -700,11 +704,11 @@
                             </div>
                         </div>
                         <div class="software-actions">
-                            <a href="{% url 'login' %}" class="btn btn-light btn-lg">
+                            <a href="{% url 'contable:login' %}?plan=free" class="btn btn-light btn-lg">
                                 <i class="bi bi-play-circle"></i>
-                                Comenzar Gratis
+                                Iniciar Sesion
                             </a>
-                            <a href="{% url 'register_user' %}" class="btn btn-outline-light btn-lg">
+                            <a href="{% url 'contable:register' %}" class="btn btn-outline-light btn-lg">
                                 <i class="bi bi-person-plus"></i>
                                 Registrarse
                             </a>
@@ -767,14 +771,14 @@
                 </div>
             </div>
             <div class="row g-4 justify-content-center">
-                <!-- Plan Gratis -->
+                <!-- Plan Estandar -->
                 <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="100">
                     <div class="pricing-card h-100">
                         <div class="pricing-header">
-                            <h3 class="plan-name">Gratis</h3>
+                            <h3 class="plan-name">Estandar</h3>
                             <div class="plan-price">
                                 <span class="currency">$</span>
-                                <span class="amount">0</span>
+                                <span class="amount">2</span>
                                 <span class="period">/mes</span>
                             </div>
                             <p class="plan-description">Perfecto para comenzar</p>
@@ -790,7 +794,7 @@
                         </ul>
                         <button class="btn btn-outline-primary w-100" data-bs-toggle="modal" data-bs-target="#planModal" data-plan="gratis">
                             <i class="bi bi-rocket"></i>
-                            Comenzar Gratis
+                            Inicia una prueba gratuita
                         </button>
                     </div>
                 </div>
@@ -806,7 +810,7 @@
                             <h3 class="plan-name">Pro</h3>
                             <div class="plan-price">
                                 <span class="currency">$</span>
-                                <span class="amount">3</span>
+                                <span class="amount">5</span>
                                 <span class="period">/mes</span>
                             </div>
                             <p class="plan-description">Para empresas en crecimiento</p>

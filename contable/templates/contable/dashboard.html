@@ -1,0 +1,404 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - {{ company.name }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/dashboard-contable.css' %}">
+</head>
+<body>
+    <!-- Navbar Superior -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary-gradient sticky-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{% url 'contable:dashboard' %}">
+                <i class="fas fa-calculator"></i>
+                <span class="brand-text">CompuEasys Contable</span>
+            </a>
+            
+            <!-- Company Selector -->
+            <div class="company-selector">
+                <button class="btn btn-outline-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                    <i class="fas fa-building"></i>
+                    {{ company.name }}
+                </button>
+                <ul class="dropdown-menu">
+                    {% for membership in user_companies %}
+                    <li>
+                        <a class="dropdown-item {% if membership.company.id == company.id %}active{% endif %}" 
+                           href="?switch_company={{ membership.company.id }}">
+                            <i class="fas fa-building"></i> {{ membership.company.name }}
+                        </a>
+                    </li>
+                    {% endfor %}
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="#"><i class="fas fa-plus"></i> Nueva Empresa</a></li>
+                </ul>
+            </div>
+
+            <!-- User Menu -->
+            <div class="ms-auto">
+                <div class="dropdown">
+                    <button class="btn btn-outline-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-user-circle"></i>
+                        {{ user.get_full_name }}
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="#"><i class="fas fa-user-cog"></i> Mi Perfil</a></li>
+                        <li><a class="dropdown-item" href="#"><i class="fas fa-cog"></i> Configuración</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item text-danger" href="{% url 'contable:logout' %}">
+                                <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <aside class="col-lg-2 col-md-3 sidebar">
+                <div class="sidebar-header">
+                    <h6 class="text-muted">PLAN ACTUAL</h6>
+                    <div class="plan-badge plan-{{ plan.name }}">
+                        <i class="fas fa-crown"></i> {{ plan.display_name }}
+                    </div>
+                </div>
+
+                <!-- Módulos de Navegación -->
+                <nav class="sidebar-nav">
+                    <h6 class="sidebar-title">MÓDULOS</h6>
+                    
+                    <!-- Dashboard -->
+                    <a href="{% url 'contable:dashboard' %}" class="nav-item active">
+                        <i class="fas fa-home"></i>
+                        <span>Dashboard</span>
+                    </a>
+
+                    <!-- Administración -->
+                    <div class="nav-section">
+                        <div class="nav-section-title">
+                            <i class="fas fa-shield-alt"></i> ADMINISTRACIÓN
+                        </div>
+                        <a href="#" class="nav-item">
+                            <i class="fas fa-users"></i>
+                            <span>Usuarios</span>
+                        </a>
+                        <a href="#" class="nav-item">
+                            <i class="fas fa-key"></i>
+                            <span>Roles y Permisos</span>
+                        </a>
+                        <a href="#" class="nav-item">
+                            <i class="fas fa-building"></i>
+                            <span>Empresas</span>
+                        </a>
+                    </div>
+
+                    <!-- Clientes y Proveedores -->
+                    <div class="nav-section">
+                        <div class="nav-section-title">
+                            <i class="fas fa-handshake"></i> CONTACTOS
+                        </div>
+                        <a href="#" class="nav-item">
+                            <i class="fas fa-user-tie"></i>
+                            <span>Clientes</span>
+                        </a>
+                        <a href="#" class="nav-item">
+                            <i class="fas fa-truck"></i>
+                            <span>Proveedores</span>
+                        </a>
+                    </div>
+
+                    <!-- Productos -->
+                    <div class="nav-section">
+                        <div class="nav-section-title">
+                            <i class="fas fa-boxes"></i> PRODUCTOS
+                        </div>
+                        <a href="#" class="nav-item">
+                            <i class="fas fa-box"></i>
+                            <span>Catálogo</span>
+                        </a>
+                        <a href="#" class="nav-item">
+                            <i class="fas fa-warehouse"></i>
+                            <span>Inventario</span>
+                        </a>
+                    </div>
+
+                    <!-- Ventas -->
+                    <div class="nav-section">
+                        <div class="nav-section-title">
+                            <i class="fas fa-shopping-cart"></i> VENTAS
+                        </div>
+                        <a href="#" class="nav-item">
+                            <i class="fas fa-file-invoice"></i>
+                            <span>Facturas</span>
+                        </a>
+                        <a href="#" class="nav-item">
+                            <i class="fas fa-file-alt"></i>
+                            <span>Cotizaciones</span>
+                        </a>
+                        <a href="#" class="nav-item">
+                            <i class="fas fa-credit-card"></i>
+                            <span>Notas de Crédito</span>
+                        </a>
+                    </div>
+
+                    <!-- Compras -->
+                    <div class="nav-section">
+                        <div class="nav-section-title">
+                            <i class="fas fa-shopping-basket"></i> COMPRAS
+                        </div>
+                        <a href="#" class="nav-item">
+                            <i class="fas fa-receipt"></i>
+                            <span>Órdenes de Compra</span>
+                        </a>
+                        <a href="#" class="nav-item">
+                            <i class="fas fa-file-invoice-dollar"></i>
+                            <span>Facturas de Compra</span>
+                        </a>
+                    </div>
+
+                    <!-- Contabilidad -->
+                    <div class="nav-section">
+                        <div class="nav-section-title">
+                            <i class="fas fa-calculator"></i> CONTABILIDAD
+                        </div>
+                        <a href="#" class="nav-item">
+                            <i class="fas fa-book"></i>
+                            <span>Plan de Cuentas</span>
+                        </a>
+                        <a href="#" class="nav-item">
+                            <i class="fas fa-pen-fancy"></i>
+                            <span>Asientos Contables</span>
+                        </a>
+                        <a href="#" class="nav-item">
+                            <i class="fas fa-book-open"></i>
+                            <span>Libro Diario</span>
+                        </a>
+                        <a href="#" class="nav-item">
+                            <i class="fas fa-balance-scale"></i>
+                            <span>Balance General</span>
+                        </a>
+                    </div>
+
+                    <!-- Nómina -->
+                    <div class="nav-section">
+                        <div class="nav-section-title">
+                            <i class="fas fa-users-cog"></i> NÓMINA
+                        </div>
+                        <a href="#" class="nav-item">
+                            <i class="fas fa-id-badge"></i>
+                            <span>Empleados</span>
+                        </a>
+                        <a href="#" class="nav-item">
+                            <i class="fas fa-money-check-alt"></i>
+                            <span>Liquidación Nómina</span>
+                        </a>
+                    </div>
+
+                    <!-- Activos Fijos -->
+                    <div class="nav-section">
+                        <div class="nav-section-title">
+                            <i class="fas fa-building"></i> ACTIVOS FIJOS
+                        </div>
+                        <a href="#" class="nav-item">
+                            <i class="fas fa-landmark"></i>
+                            <span>Registro de Activos</span>
+                        </a>
+                        <a href="#" class="nav-item">
+                            <i class="fas fa-chart-line"></i>
+                            <span>Depreciación</span>
+                        </a>
+                    </div>
+
+                    <!-- Reportes -->
+                    <div class="nav-section">
+                        <div class="nav-section-title">
+                            <i class="fas fa-chart-bar"></i> REPORTES
+                        </div>
+                        <a href="#" class="nav-item">
+                            <i class="fas fa-file-excel"></i>
+                            <span>Estado de Resultados</span>
+                        </a>
+                        <a href="#" class="nav-item">
+                            <i class="fas fa-chart-pie"></i>
+                            <span>Análisis Financiero</span>
+                        </a>
+                        <a href="#" class="nav-item">
+                            <i class="fas fa-money-bill-wave"></i>
+                            <span>Flujo de Caja</span>
+                        </a>
+                    </div>
+                </nav>
+            </aside>
+
+            <!-- Main Content Area -->
+            <main class="col-lg-10 col-md-9 main-content">
+                <!-- Stats Cards -->
+                <div class="row g-3 mb-4">
+                    <div class="col-xl-3 col-md-6">
+                        <div class="stat-card stat-primary">
+                            <div class="stat-icon">
+                                <i class="fas fa-dollar-sign"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h6>Ventas del Mes</h6>
+                                <h3>$0</h3>
+                                <span class="stat-change positive">
+                                    <i class="fas fa-arrow-up"></i> 0%
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-xl-3 col-md-6">
+                        <div class="stat-card stat-success">
+                            <div class="stat-icon">
+                                <i class="fas fa-shopping-cart"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h6>Compras del Mes</h6>
+                                <h3>$0</h3>
+                                <span class="stat-change negative">
+                                    <i class="fas fa-arrow-down"></i> 0%
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-xl-3 col-md-6">
+                        <div class="stat-card stat-warning">
+                            <div class="stat-icon">
+                                <i class="fas fa-file-invoice"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h6>Facturas Pendientes</h6>
+                                <h3>0</h3>
+                                <span class="stat-change">
+                                    0 vencidas
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-xl-3 col-md-6">
+                        <div class="stat-card stat-info">
+                            <div class="stat-icon">
+                                <i class="fas fa-wallet"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h6>Flujo de Caja</h6>
+                                <h3>$0</h3>
+                                <span class="stat-change positive">
+                                    <i class="fas fa-arrow-up"></i> Positivo
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Row -->
+                <div class="row g-3 mb-4">
+                    <div class="col-xl-8">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title">
+                                    <i class="fas fa-chart-line"></i>
+                                    Ventas vs Compras (Últimos 6 meses)
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="salesChart" height="80"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-xl-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title">
+                                    <i class="fas fa-chart-pie"></i>
+                                    Distribución de Gastos
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="expensesChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions & Recent Activity -->
+                <div class="row g-3">
+                    <div class="col-xl-8">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title">
+                                    <i class="fas fa-clock"></i>
+                                    Actividad Reciente
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="empty-state">
+                                    <i class="fas fa-inbox fa-3x"></i>
+                                    <p>No hay actividad reciente</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-xl-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title">
+                                    <i class="fas fa-bolt"></i>
+                                    Acciones Rápidas
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="quick-actions">
+                                    <a href="#" class="quick-action">
+                                        <i class="fas fa-file-invoice"></i>
+                                        <span>Nueva Factura</span>
+                                    </a>
+                                    <a href="#" class="quick-action">
+                                        <i class="fas fa-user-plus"></i>
+                                        <span>Nuevo Cliente</span>
+                                    </a>
+                                    <a href="#" class="quick-action">
+                                        <i class="fas fa-box"></i>
+                                        <span>Nuevo Producto</span>
+                                    </a>
+                                    <a href="#" class="quick-action">
+                                        <i class="fas fa-pen-fancy"></i>
+                                        <span>Asiento Contable</span>
+                                    </a>
+                                    <a href="#" class="quick-action">
+                                        <i class="fas fa-receipt"></i>
+                                        <span>Orden de Compra</span>
+                                    </a>
+                                    <a href="#" class="quick-action">
+                                        <i class="fas fa-money-check-alt"></i>
+                                        <span>Liquidar Nómina</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="{% static 'js/dashboard-contable.js' %}"></script>
+</body>
+</html>
