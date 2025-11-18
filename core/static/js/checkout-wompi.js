@@ -548,6 +548,8 @@ console.log('🚀 CHECKOUT v4.0 - Cargando...');
                     acceptance_token: data.acceptance_token?.acceptance_token?.substring(0, 20) + '...'
                 });
                 
+                console.log('🔍 DEBUG: Data JSON completo:', JSON.stringify(data, null, 2));
+                
                 // Validar datos críticos antes de abrir widget
                 if (!data.amount_in_cents || data.amount_in_cents <= 0) {
                     console.error('❌ Monto en centavos inválido desde backend:', data.amount_in_cents);
@@ -557,21 +559,48 @@ console.log('🚀 CHECKOUT v4.0 - Cargando...');
                     return;
                 }
                 
+                if (!data.reference) {
+                    console.error('❌ Referencia no recibida desde backend');
+                    showMessage('Error: Referencia de transacción no recibida', 'error');
+                    setButtonProcessing(false);
+                    checkoutState.processing = false;
+                    return;
+                }
+                
+                if (!data.acceptance_token || !data.acceptance_token.acceptance_token) {
+                    console.error('❌ Acceptance token no recibido correctamente:', data.acceptance_token);
+                    showMessage('Error: Token de aceptación no válido', 'error');
+                    setButtonProcessing(false);
+                    checkoutState.processing = false;
+                    return;
+                }
+                
+                if (!data.public_key) {
+                    console.error('❌ Public key no recibida desde backend');
+                    showMessage('Error: Clave pública no recibida', 'error');
+                    setButtonProcessing(false);
+                    checkoutState.processing = false;
+                    return;
+                }
+                
+                console.log('✅ Todas las validaciones pasaron, abriendo widget...');
                 openWompiWidget(data);
             } else {
                 console.error('❌ Error creando transacción:', data);
                 
-                // Mensajes específicos según el tipo de error
-                let errorMessage = 'Error creando transacción';
+                // Mensaje claro para todos los tipos de error
+                let errorMessage = 'No se pudo realizar el pago. ';
                 
                 if (data.error_type === 'timeout') {
-                    errorMessage = 'Timeout de conexión. El sistema de pagos no responde.';
+                    errorMessage += 'El servicio de pagos no responde. Por favor intenta más tarde o usa otro método de pago.';
                 } else if (data.error_type === 'connection') {
-                    errorMessage = 'Error de conexión con el sistema de pagos.';
+                    errorMessage += 'No se pudo conectar con el servicio de pagos. Verifica tu conexión a internet.';
                 } else if (data.error_type === 'service_unavailable') {
-                    errorMessage = 'Sistema de pagos temporalmente no disponible.';
+                    errorMessage += 'El servicio de pagos está temporalmente no disponible. Por favor intenta más tarde o usa otro método de pago.';
                 } else if (data.error) {
-                    errorMessage = data.error;
+                    errorMessage += data.error + '. Por favor intenta con otro método de pago.';
+                } else {
+                    errorMessage += 'Por favor intenta más tarde o usa otro método de pago.';
                 }
                 
                 showMessage(errorMessage, 'error');
@@ -582,20 +611,9 @@ console.log('🚀 CHECKOUT v4.0 - Cargando...');
         .catch(error => {
             console.error('❌ Error de conexión completo:', error);
             
-            let userMessage;
-            const errorMessage = error?.message || error?.toString() || 'Error desconocido';
+            // Mensaje claro y útil para el usuario
+            showMessage('No se pudo realizar el pago. Por favor verifica tu conexión a internet e intenta nuevamente, o usa otro método de pago.', 'error');
             
-            if (errorMessage.includes && errorMessage.includes('TypeError')) {
-                userMessage = 'Error de red. Verifica tu conexión a internet.';
-            } else if (errorMessage.includes && errorMessage.includes('Failed to fetch')) {
-                userMessage = 'No se pudo conectar con el servidor. Verifica tu conexión.';
-            } else if (errorMessage.includes && errorMessage.includes('Widget Error')) {
-                userMessage = 'Error en el sistema de pagos: ' + errorMessage;
-            } else {
-                userMessage = `Error de conexión: ${errorMessage}`;
-            }
-            
-            showMessage(userMessage, 'error');
             setButtonProcessing(false);
             checkoutState.processing = false;
         });
@@ -614,6 +632,9 @@ console.log('🚀 CHECKOUT v4.0 - Cargando...');
             return;
         }
         
+        // Usar la public key del backend si está disponible, si no usar la de CONFIG
+        const publicKey = transactionData.public_key || CONFIG.wompi_public_key;
+        
         // Validar que tenemos los datos necesarios
         if (!transactionData.amount_in_cents || transactionData.amount_in_cents <= 0) {
             console.error('❌ Monto en centavos inválido:', transactionData.amount_in_cents);
@@ -631,9 +652,19 @@ console.log('🚀 CHECKOUT v4.0 - Cargando...');
             return;
         }
         
-        if (!CONFIG.wompi_public_key) {
+        if (!publicKey) {
             console.error('❌ Public key no disponible');
+            console.log('Backend key:', transactionData.public_key);
+            console.log('CONFIG key:', CONFIG.wompi_public_key);
             showMessage('Error: Clave de configuración faltante', 'error');
+            setButtonProcessing(false);
+            checkoutState.processing = false;
+            return;
+        }
+        
+        if (!transactionData.acceptance_token || !transactionData.acceptance_token.acceptance_token) {
+            console.error('❌ Acceptance token no disponible:', transactionData.acceptance_token);
+            showMessage('Error: Token de aceptación no disponible', 'error');
             setButtonProcessing(false);
             checkoutState.processing = false;
             return;
@@ -642,7 +673,7 @@ console.log('🚀 CHECKOUT v4.0 - Cargando...');
         try {
             console.log('🎯 Configurando widget Wompi...');
             console.log('💰 Monto en centavos:', transactionData.amount_in_cents);
-            console.log('🔑 Public key:', CONFIG.wompi_public_key?.substring(0, 20) + '...');
+            console.log('🔑 Public key:', publicKey?.substring(0, 20) + '...');
             console.log('📄 Reference:', transactionData.reference);
             console.log('📧 Customer email:', transactionData.customer_email);
             
@@ -657,19 +688,19 @@ console.log('🚀 CHECKOUT v4.0 - Cargando...');
                 currency: 'COP',
                 amountInCents: parseInt(transactionData.amount_in_cents),
                 reference: transactionData.reference,
-                publicKey: CONFIG.wompi_public_key,
-                customerEmail: transactionData.customer_email,
+                publicKey: publicKey,
                 redirectUrl: redirectUrl
             };
             
-            // Agregar acceptance token si está disponible
-            if (transactionData.acceptance_token && transactionData.acceptance_token.acceptance_token) {
-                widgetConfig.acceptanceToken = transactionData.acceptance_token.acceptance_token;
-                console.log('🔐 Acceptance token agregado:', widgetConfig.acceptanceToken.substring(0, 20) + '...');
-            } else {
-                console.warn('⚠️ No se encontró acceptance token');
-                console.log('📄 Datos de transacción:', transactionData);
+            // Agregar customerEmail si está disponible
+            if (transactionData.customer_email) {
+                widgetConfig.customerEmail = transactionData.customer_email;
             }
+            
+            // Agregar acceptance token
+            const acceptanceToken = transactionData.acceptance_token.acceptance_token;
+            widgetConfig.acceptanceToken = acceptanceToken;
+            console.log('🔐 Acceptance token agregado:', acceptanceToken.substring(0, 20) + '...');
             
             console.log('🔧 Configuración final del widget:', {
                 ...widgetConfig,
@@ -683,6 +714,30 @@ console.log('🚀 CHECKOUT v4.0 - Cargando...');
             
             widget.open((result) => {
                 console.log('🔄 Callback del widget ejecutado:', result);
+                
+                // Verificar el resultado del widget
+                if (result.transaction) {
+                    const status = result.transaction.status;
+                    console.log('📊 Estado de la transacción:', status);
+                    
+                    if (status === 'APPROVED') {
+                        console.log('✅ Pago aprobado');
+                        showMessage('Pago procesado exitosamente', 'success');
+                    } else if (status === 'DECLINED') {
+                        console.log('❌ Pago rechazado');
+                        showMessage('No se pudo realizar el pago. Por favor intenta nuevamente o usa otro método de pago.', 'error');
+                    } else if (status === 'ERROR') {
+                        console.log('❌ Error en el pago');
+                        showMessage('No se pudo realizar el pago. El servicio de pagos podría estar temporalmente no disponible.', 'error');
+                    } else {
+                        console.log('⏳ Pago pendiente:', status);
+                        showMessage('El pago está en proceso de verificación', 'info');
+                    }
+                } else {
+                    console.log('⚠️ Widget cerrado sin resultado');
+                    showMessage('El proceso de pago fue cancelado', 'warning');
+                }
+                
                 setButtonProcessing(false);
                 checkoutState.processing = false;
             });
@@ -693,14 +748,9 @@ console.log('🚀 CHECKOUT v4.0 - Cargando...');
             console.error('Error message:', error?.message || 'Sin mensaje');
             console.error('Error stack:', error?.stack || 'Sin stack trace');
             
-            let errorMessage = 'Error desconocido en el sistema de pagos';
-            if (error && error.message) {
-                errorMessage = 'Error configurando el sistema de pagos: ' + error.message;
-            } else if (typeof error === 'string') {
-                errorMessage = 'Error: ' + error;
-            }
+            // Mensaje claro para el usuario
+            showMessage('No se pudo realizar el pago. El servicio de pagos podría estar temporalmente no disponible. Por favor intenta más tarde o usa otro método de pago.', 'error');
             
-            showMessage(errorMessage, 'error');
             setButtonProcessing(false);
             checkoutState.processing = false;
         }
