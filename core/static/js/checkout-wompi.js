@@ -447,7 +447,31 @@ console.log('🚀 CHECKOUT v4.0 - Cargando...');
         }
         
         // Agregar campos ocultos necesarios
-        addHiddenField(form, 'pago_entrega', checkoutState.selectedOption);
+        // Mapear la opción seleccionada a método de pago y forma de entrega
+        let metodoPago, formaEntrega;
+        
+        switch(checkoutState.selectedOption) {
+            case 'contra_entrega':
+                metodoPago = 'contraentrega';
+                formaEntrega = 'domicilio';
+                break;
+            case 'recoger_efectivo':
+                metodoPago = 'recoger_tienda';
+                formaEntrega = 'tienda';
+                break;
+            case 'recoger_tarjeta':
+                metodoPago = 'tarjeta';
+                formaEntrega = 'tienda';
+                break;
+            default:
+                metodoPago = 'efectivo';
+                formaEntrega = 'domicilio';
+        }
+        
+        console.log('📋 Enviando:', { metodoPago, formaEntrega, total: checkoutState.total, shipping: checkoutState.shipping });
+        
+        addHiddenField(form, 'metodo_pago', metodoPago);
+        addHiddenField(form, 'forma_entrega', formaEntrega);
         addHiddenField(form, 'total_final', checkoutState.total);
         addHiddenField(form, 'shipping_cost', checkoutState.shipping);
         

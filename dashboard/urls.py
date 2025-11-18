@@ -7,6 +7,7 @@ from django.conf.urls.static import static
 from AppCompueasys import settings
 from core.views import home, index
 
+from . import views
 from .views import (
     Category,
     dashboard_home,
@@ -75,6 +76,13 @@ urlpatterns = [
     path('pedido/<int:pedido_id>/detalle/', pedido_detalle, name='pedido_detalle'),
     path('pedido/update-estado/', update_pedido_estado, name='update_pedido_estado'),
     path('pedido/update-notes/', update_pedido_notes, name='update_pedido_notes'),
+    
+    # URLs para auto-actualización de pedidos
+    path('api/pedidos-count/', views.pedidos_count, name='pedidos_count'),
+    path('api/pedidos-list/', views.pedidos_list, name='pedidos_list'),
+    
+    # URLs para auto-actualización de estadísticas del home
+    path('api/dashboard-stats/', views.dashboard_stats, name='dashboard_stats'),
 
     # Nuevas URLs para gestión de usuarios
     path('usuario/editar/', edit_user, name='edit_user'),

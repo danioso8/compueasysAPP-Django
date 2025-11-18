@@ -98,8 +98,11 @@ class Pedido(models.Model):
     
     # Métodos de pago
     METODO_PAGO_CHOICES = [
-        ('efectivo', 'Pago en Efectivo'),
+        ('contraentrega', 'Contra Entrega (Efectivo)'),
+        ('recoger_tienda', 'Recoger en Tienda (Efectivo)'),
         ('tarjeta', 'Tarjeta de crédito/débito'),
+        ('wompi', 'Pago Wompi'),
+        ('efectivo', 'Pago en Efectivo'),  # Mantener por compatibilidad
     ]
     
     # Forma de entrega

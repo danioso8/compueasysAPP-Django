@@ -461,8 +461,11 @@ def pago_exitoso(request):
             # Usar el cálculo del backend por seguridad
             
         transaction_id = request.POST.get('transaction_id', '').strip()
-        metodo_pago = request.POST.get('metodo_pago', 'efectivo')
+        metodo_pago = request.POST.get('metodo_pago', 'contraentrega')
         forma_entrega = request.POST.get('forma_entrega', 'domicilio')
+        
+        # Log para debugging
+        print(f"📋 Checkout - Método pago: {metodo_pago}, Forma entrega: {forma_entrega}")
 
         # Crear o actualizar SimpleUser
         user, created = SimpleUser.objects.get_or_create(email=email, defaults={'telefono': telefono})
@@ -514,10 +517,13 @@ def pago_exitoso(request):
             cart_subtotal += subtotal
 
         # Calcular envío según forma de entrega
+        print(f"💰 Calculando envío - Forma entrega: {forma_entrega}, Subtotal: ${cart_subtotal}")
         if forma_entrega == 'tienda':
             shipping_cost = Decimal(0)  # Gratis para recoger en tienda
+            print(f"🏪 Recoger en tienda - Envío: $0")
         else:
             shipping_cost = Decimal(15000) if cart_subtotal < Decimal(100000) else Decimal(0)
+            print(f"📦 Domicilio - Envío: ${shipping_cost}")
         
         cart_total = cart_subtotal - discount_amount + shipping_cost
 

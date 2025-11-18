@@ -3394,6 +3394,275 @@
         });
       }
 
+      // ========================================
+      // SISTEMA DE AUTO-ACTUALIZACIÓN DE PEDIDOS
+      // ========================================
+      
+      let autoRefreshInterval = null;
+      let lastPedidosCount = {{ pedidos|length }};
+      const REFRESH_INTERVAL = 30000; // 30 segundos
+
+      // Iniciar auto-actualización si estamos en la vista de pedidos
+      {% if request.GET.view == "pedidos" or not request.GET.view %}
+      if (window.location.search.includes('view=pedidos') || !window.location.search.includes('view=')) {
+        console.log('🔄 Iniciando auto-actualización de pedidos...');
+        startAutoRefresh();
+      }
+      {% endif %}
+
+      function startAutoRefresh() {
+        // Limpiar intervalo existente si hay uno
+        if (autoRefreshInterval) {
+          clearInterval(autoRefreshInterval);
+        }
+
+        // Crear intervalo de actualización
+        autoRefreshInterval = setInterval(() => {
+          checkForNewPedidos();
+        }, REFRESH_INTERVAL);
+
+        console.log('✅ Auto-actualización activada (cada 30s)');
+      }
+
+      function stopAutoRefresh() {
+        if (autoRefreshInterval) {
+          clearInterval(autoRefreshInterval);
+          autoRefreshInterval = null;
+          console.log('🛑 Auto-actualización desactivada');
+        }
+      }
+
+      function checkForNewPedidos() {
+        console.log('🔍 Verificando nuevos pedidos...');
+        
+        // Construir URL con los mismos filtros actuales
+        const urlParams = new URLSearchParams(window.location.search);
+        const apiUrl = '/dashboard/api/pedidos-count/?' + urlParams.toString();
+
+        fetch(apiUrl, {
+          method: 'GET',
+          headers: {
+            'X-CSRFToken': getCsrfToken(),
+            'Content-Type': 'application/json',
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            const newCount = data.count;
+            console.log(`📊 Pedidos: ${lastPedidosCount} -> ${newCount}`);
+            
+            if (newCount !== lastPedidosCount) {
+              console.log('🆕 ¡Cambios detectados! Actualizando lista...');
+              lastPedidosCount = newCount;
+              reloadPedidosList();
+            } else {
+              console.log('✅ Sin cambios');
+            }
+          }
+        })
+        .catch(error => {
+          console.error('❌ Error verificando pedidos:', error);
+        });
+      }
+
+      function reloadPedidosList() {
+        console.log('🔄 Recargando lista de pedidos...');
+        
+        // Obtener la tabla de pedidos
+        const tableBody = document.querySelector('table tbody');
+        if (!tableBody) {
+          console.error('❌ No se encontró la tabla de pedidos');
+          return;
+        }
+
+        // Mostrar indicador de carga
+        const loadingIndicator = document.createElement('div');
+        loadingIndicator.className = 'alert alert-info alert-dismissible fade show position-fixed';
+        loadingIndicator.style.top = '20px';
+        loadingIndicator.style.right = '20px';
+        loadingIndicator.style.zIndex = '9999';
+        loadingIndicator.innerHTML = `
+          <i class="fas fa-sync-alt fa-spin"></i> Actualizando pedidos...
+        `;
+        document.body.appendChild(loadingIndicator);
+
+        // Construir URL con los mismos filtros actuales
+        const urlParams = new URLSearchParams(window.location.search);
+        const apiUrl = '/dashboard/api/pedidos-list/?' + urlParams.toString();
+
+        fetch(apiUrl, {
+          method: 'GET',
+          headers: {
+            'X-CSRFToken': getCsrfToken(),
+            'Content-Type': 'application/json',
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            // Actualizar la tabla
+            tableBody.innerHTML = data.html;
+            
+            // Mostrar notificación de éxito
+            loadingIndicator.className = 'alert alert-success alert-dismissible fade show position-fixed';
+            loadingIndicator.innerHTML = `
+              <i class="fas fa-check"></i> Lista actualizada (${data.count} pedidos)
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            // Remover después de 3 segundos
+            setTimeout(() => {
+              loadingIndicator.remove();
+            }, 3000);
+            
+            console.log('✅ Lista actualizada con éxito');
+          } else {
+            throw new Error(data.error || 'Error desconocido');
+          }
+        })
+        .catch(error => {
+          console.error('❌ Error recargando lista:', error);
+          loadingIndicator.className = 'alert alert-danger alert-dismissible fade show position-fixed';
+          loadingIndicator.innerHTML = `
+            <i class="fas fa-exclamation-triangle"></i> Error al actualizar
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          `;
+          setTimeout(() => {
+            loadingIndicator.remove();
+          }, 3000);
+        });
+      }
+
+      // Limpiar intervalo cuando se cambia de vista
+      window.addEventListener('beforeunload', () => {
+        stopAutoRefresh();
+        stopDashboardAutoRefresh();
+      });
+
+      // ========================================
+      // SISTEMA DE AUTO-ACTUALIZACIÓN DEL HOME
+      // ========================================
+      
+      let dashboardAutoRefreshInterval = null;
+      const DASHBOARD_REFRESH_INTERVAL = 30000; // 30 segundos
+
+      // Iniciar auto-actualización si estamos en el home (sin parámetro view o view=ventas)
+      {% if not request.GET.view or request.GET.view == "ventas" %}
+      if (!window.location.search.includes('view=') || window.location.search.includes('view=ventas')) {
+        console.log('🔄 Iniciando auto-actualización del dashboard home...');
+        startDashboardAutoRefresh();
+      }
+      {% endif %}
+
+      function startDashboardAutoRefresh() {
+        // Limpiar intervalo existente si hay uno
+        if (dashboardAutoRefreshInterval) {
+          clearInterval(dashboardAutoRefreshInterval);
+        }
+
+        // Crear intervalo de actualización
+        dashboardAutoRefreshInterval = setInterval(() => {
+          updateDashboardStats();
+        }, DASHBOARD_REFRESH_INTERVAL);
+
+        console.log('✅ Auto-actualización del home activada (cada 30s)');
+      }
+
+      function stopDashboardAutoRefresh() {
+        if (dashboardAutoRefreshInterval) {
+          clearInterval(dashboardAutoRefreshInterval);
+          dashboardAutoRefreshInterval = null;
+          console.log('🛑 Auto-actualización del home desactivada');
+        }
+      }
+
+      function updateDashboardStats() {
+        console.log('🔍 Actualizando estadísticas del dashboard...');
+        
+        fetch('/dashboard/api/dashboard-stats/', {
+          method: 'GET',
+          headers: {
+            'X-CSRFToken': getCsrfToken(),
+            'Content-Type': 'application/json',
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            console.log('📊 Estadísticas actualizadas:', data.stats);
+            updateStatsUI(data.stats);
+          } else {
+            console.error('❌ Error obteniendo estadísticas:', data.error);
+          }
+        })
+        .catch(error => {
+          console.error('❌ Error en petición de estadísticas:', error);
+        });
+      }
+
+      function updateStatsUI(stats) {
+        // Actualizar badges de estadísticas si existen
+        const formatCurrency = (value) => {
+          return new Intl.NumberFormat('es-CO', {
+            style: 'currency',
+            currency: 'COP',
+            minimumFractionDigits: 0
+          }).format(value);
+        };
+
+        // Pedidos
+        const totalPedidosEl = document.querySelector('[data-stat="total-pedidos"]');
+        if (totalPedidosEl) {
+          totalPedidosEl.textContent = stats.pedidos.total;
+        }
+
+        const pedidosPendientesEl = document.querySelector('[data-stat="pedidos-pendientes"]');
+        if (pedidosPendientesEl) {
+          pedidosPendientesEl.textContent = stats.pedidos.pendientes;
+        }
+
+        const pedidosCompletadosEl = document.querySelector('[data-stat="pedidos-completados"]');
+        if (pedidosCompletadosEl) {
+          pedidosCompletadosEl.textContent = stats.pedidos.completados;
+        }
+
+        // Finanzas
+        const ingresosTotalesEl = document.querySelector('[data-stat="ingresos-totales"]');
+        if (ingresosTotalesEl) {
+          ingresosTotalesEl.textContent = formatCurrency(stats.finanzas.ingresos_totales);
+        }
+
+        const ingresosPendientesEl = document.querySelector('[data-stat="ingresos-pendientes"]');
+        if (ingresosPendientesEl) {
+          ingresosPendientesEl.textContent = formatCurrency(stats.finanzas.ingresos_pendientes);
+        }
+
+        // Productos
+        const totalProductosEl = document.querySelector('[data-stat="total-productos"]');
+        if (totalProductosEl) {
+          totalProductosEl.textContent = stats.productos.total;
+        }
+
+        const productosSinStockEl = document.querySelector('[data-stat="productos-sin-stock"]');
+        if (productosSinStockEl) {
+          productosSinStockEl.textContent = stats.productos.sin_stock;
+        }
+
+        const productosBajoStockEl = document.querySelector('[data-stat="productos-bajo-stock"]');
+        if (productosBajoStockEl) {
+          productosBajoStockEl.textContent = stats.productos.bajo_stock;
+        }
+
+        // Usuarios
+        const totalUsuariosEl = document.querySelector('[data-stat="total-usuarios"]');
+        if (totalUsuariosEl) {
+          totalUsuariosEl.textContent = stats.usuarios.total;
+        }
+
+        console.log('✅ UI actualizada con nuevas estadísticas');
+      }
+
       // Mostrar alertas
       function showAlert(message, type = 'info') {
         const alertContainer = document.getElementById('alert-container') || createAlertContainer();

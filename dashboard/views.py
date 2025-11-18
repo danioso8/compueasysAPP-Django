@@ -1159,17 +1159,24 @@ def pedido_detalle(request, pedido_id):
         # Obtener detalles de productos - manejo más robusto
         items = []
         try:
-            # Intentar obtener desde PedidoDetalle
-            if hasattr(pedido, 'detalles_pedido'):
-                detalles = pedido.detalles_pedido.all()
-                for detalle in detalles:
-                    item = {
-                        'nombre': detalle.producto.name,
-                        'cantidad': detalle.cantidad,
-                        'precio': float(detalle.precio),
-                        'variante': getattr(detalle, 'variante', None)
-                    }
-                    items.append(item)
+            # Intentar obtener desde PedidoDetalle usando pedidodetalle_set
+            print(f"🔍 Buscando detalles para pedido {pedido_id}")
+            detalles = pedido.pedidodetalle_set.all()
+            print(f"📦 Encontrados {detalles.count()} detalles")
+            
+            for detalle in detalles:
+                variante_info = ''
+                if detalle.variante:
+                    variante_info = f"{detalle.variante.color or ''} {detalle.variante.size or ''}".strip()
+                
+                item = {
+                    'nombre': detalle.producto.name,
+                    'cantidad': detalle.cantidad,
+                    'precio': float(detalle.precio),
+                    'variante': variante_info if variante_info else None
+                }
+                items.append(item)
+                print(f"  ✅ Item: {item['nombre']} x{item['cantidad']}")
             
             # Si no hay detalles específicos, usar el campo detalles del pedido
             if not items and pedido.detalles:
@@ -1741,4 +1748,328 @@ def conversation_update_status(request):
         return JsonResponse({
             'success': False,
             'error': f'Error al actualizar estado: {str(e)}'
+        })
+
+
+@superuser_required
+def pedidos_count(request):
+    """API para obtener el conteo de pedidos con los filtros aplicados"""
+    try:
+        # Obtener todos los pedidos
+        pedidos = Pedido.objects.all().order_by('-fecha')
+        
+        # Aplicar filtros si existen
+        estado_filter = request.GET.get('estado_filter')
+        metodo_filter = request.GET.get('metodo_filter')
+        search = request.GET.get('search', '').strip()
+        
+        if estado_filter:
+            pedidos = pedidos.filter(estado=estado_filter)
+        
+        if metodo_filter:
+            pedidos = pedidos.filter(metodo_pago=metodo_filter)
+        
+        if search:
+            from django.db.models import Q
+            pedidos = pedidos.filter(
+                Q(id__icontains=search) |
+                Q(nombre__icontains=search) |
+                Q(email__icontains=search) |
+                Q(telefono__icontains=search) |
+                Q(transaction_id__icontains=search)
+            )
+        
+        count = pedidos.count()
+        
+        return JsonResponse({
+            'success': True,
+            'count': count
+        })
+        
+    except Exception as e:
+        print(f"Error in pedidos_count: {e}")
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        })
+
+
+@superuser_required
+def pedidos_list(request):
+    """API para obtener la lista HTML de pedidos actualizada"""
+    try:
+        from django.template.loader import render_to_string
+        
+        # Obtener todos los pedidos
+        pedidos = Pedido.objects.all().select_related('user').order_by('-fecha')
+        
+        # Aplicar filtros si existen
+        estado_filter = request.GET.get('estado_filter')
+        metodo_filter = request.GET.get('metodo_filter')
+        search = request.GET.get('search', '').strip()
+        
+        if estado_filter:
+            pedidos = pedidos.filter(estado=estado_filter)
+        
+        if metodo_filter:
+            pedidos = pedidos.filter(metodo_pago=metodo_filter)
+        
+        if search:
+            from django.db.models import Q
+            pedidos = pedidos.filter(
+                Q(id__icontains=search) |
+                Q(nombre__icontains=search) |
+                Q(email__icontains=search) |
+                Q(telefono__icontains=search) |
+                Q(transaction_id__icontains=search)
+            )
+        
+        # Generar HTML para las filas de la tabla
+        html_rows = []
+        for pedido in pedidos:
+            # Determinar clase de badge para estado
+            estado_class = {
+                'pendiente': 'warning',
+                'confirmado': 'info',
+                'enviado': 'primary',
+                'llegando': 'info',
+                'entregado': 'success',
+                'cancelado': 'danger'
+            }.get(pedido.estado, 'secondary')
+            
+            # Determinar clase de badge para método de pago
+            metodo_class = {
+                'contraentrega': 'warning',
+                'recoger_tienda': 'info',
+                'tarjeta': 'primary',
+                'wompi': 'primary',
+                'efectivo': 'warning'
+            }.get(pedido.metodo_pago, 'secondary')
+            
+            # Determinar clase de badge para estado de pago
+            pago_class = {
+                'completado': 'success',
+                'pendiente': 'warning',
+                'procesando': 'info',
+                'fallido': 'danger'
+            }.get(pedido.estado_pago, 'secondary')
+            
+            # Iconos para estados
+            estado_icons = {
+                'pendiente': 'fa-clock',
+                'confirmado': 'fa-check',
+                'enviado': 'fa-shipping-fast',
+                'llegando': 'fa-truck',
+                'entregado': 'fa-check-circle'
+            }
+            
+            pago_icons = {
+                'completado': 'fa-check-circle',
+                'pendiente': 'fa-clock',
+                'procesando': 'fa-spinner',
+                'fallido': 'fa-times-circle'
+            }
+            
+            metodo_icons = {
+                'contraentrega': 'fa-money-bill',
+                'recoger_tienda': 'fa-store',
+                'tarjeta': 'fa-credit-card',
+                'wompi': 'fa-credit-card',
+                'efectivo': 'fa-money-bill'
+            }
+            
+            html_row = f'''
+            <tr>
+                <td>
+                    <strong class="text-primary">#{pedido.id}</strong>
+                    {'<br><small class="text-muted">' + pedido.transaction_id[:8] + '...</small>' if pedido.transaction_id else ''}
+                </td>
+                <td>
+                    <div>
+                        <strong>{pedido.nombre}</strong><br>
+                        <small class="text-muted">{pedido.user.email if pedido.user else pedido.email}</small>
+                    </div>
+                </td>
+                <td>
+                    {'<small><i class="fas fa-phone"></i> ' + pedido.telefono + '</small><br>' if pedido.telefono else ''}
+                    <small class="text-muted">
+                        <i class="fas fa-map-marker-alt"></i> {pedido.ciudad}, {pedido.departamento}
+                    </small>
+                </td>
+                <td>
+                    <strong class="text-success">${pedido.total:,.0f}</strong>
+                    {'<br><small class="text-muted">Sub: $' + f'{pedido.subtotal:,.0f}' + (f' + Envío: ${pedido.envio:,.0f}' if pedido.envio and pedido.envio > 0 else '') + '</small>' if hasattr(pedido, 'subtotal') and pedido.subtotal else ''}
+                </td>
+                <td>
+                    <span class="badge bg-{metodo_class}">
+                        <i class="fas {metodo_icons.get(pedido.metodo_pago, 'fa-question')}"></i> 
+                        {pedido.get_metodo_pago_display()}
+                    </span>
+                </td>
+                <td>
+                    <span class="badge bg-{estado_class}">
+                        <i class="fas {estado_icons.get(pedido.estado, 'fa-question')}"></i>
+                        {pedido.get_estado_display()}
+                    </span>
+                </td>
+                <td>
+                    <span class="badge bg-{pago_class}">
+                        <i class="fas {pago_icons.get(pedido.estado_pago, 'fa-question')}"></i>
+                        {pedido.get_estado_pago_display()}
+                    </span>
+                </td>
+                <td>
+                    <small>{pedido.fecha.strftime('%d/%m/%Y %H:%M')}</small>
+                    {'<br><small class="text-success">Entregado: ' + pedido.fecha_entregado.strftime('%d/%m') + '</small>' if hasattr(pedido, 'fecha_entregado') and pedido.fecha_entregado else ''}
+                </td>
+                <td class="text-center">
+                    <div class="d-flex flex-column gap-1">
+                        <button type="button" class="btn btn-outline-primary btn-sm" 
+                                data-bs-toggle="modal" data-bs-target="#pedidoModal"
+                                onclick="viewPedidoDetails({pedido.id})"
+                                title="Ver detalles del pedido">
+                            <i class="fas fa-eye me-1"></i> Ver
+                        </button>
+                        <div class="dropdown">
+                            <button class="btn btn-outline-secondary btn-sm dropdown-toggle w-100" 
+                                    type="button" data-bs-toggle="dropdown"
+                                    title="Cambiar estado del pedido">
+                                <i class="fas fa-edit me-1"></i> Estado
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="#" onclick="updateEstado({pedido.id}, 'pendiente')">
+                                    <i class="fas fa-clock me-2 text-warning"></i>Pendiente
+                                </a></li>
+                                <li><a class="dropdown-item" href="#" onclick="updateEstado({pedido.id}, 'confirmado')">
+                                    <i class="fas fa-check me-2 text-info"></i>Confirmar
+                                </a></li>
+                                <li><a class="dropdown-item" href="#" onclick="updateEstado({pedido.id}, 'enviado')">
+                                    <i class="fas fa-shipping-fast me-2 text-primary"></i>Enviar
+                                </a></li>
+                                <li><a class="dropdown-item" href="#" onclick="updateEstado({pedido.id}, 'llegando')">
+                                    <i class="fas fa-truck me-2 text-info"></i>En camino
+                                </a></li>
+                                <li><a class="dropdown-item" href="#" onclick="updateEstado({pedido.id}, 'entregado')">
+                                    <i class="fas fa-check-circle me-2 text-success"></i>Entregar
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" href="#" onclick="updateEstado({pedido.id}, 'cancelado')">
+                                    <i class="fas fa-times-circle me-2"></i>Cancelar
+                                </a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            '''
+            html_rows.append(html_row)
+        
+        html = ''.join(html_rows)
+        
+        return JsonResponse({
+            'success': True,
+            'html': html,
+            'count': pedidos.count()
+        })
+        
+    except Exception as e:
+        print(f"Error in pedidos_list: {e}")
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        })
+
+
+@superuser_required
+def dashboard_stats(request):
+    """API para obtener estadísticas actualizadas del dashboard home"""
+    try:
+        from django.db.models import Sum, Count, Q
+        from decimal import Decimal
+        
+        # Estadísticas de pedidos
+        total_pedidos = Pedido.objects.count()
+        pedidos_pendientes = Pedido.objects.filter(estado='pendiente').count()
+        pedidos_completados = Pedido.objects.filter(estado='entregado').count()
+        
+        # Estadísticas financieras
+        ingresos_totales = Pedido.objects.filter(
+            estado_pago='completado'
+        ).aggregate(total=Sum('total'))['total'] or Decimal(0)
+        
+        ingresos_pendientes = Pedido.objects.filter(
+            Q(estado_pago='pendiente') | Q(estado_pago='procesando')
+        ).aggregate(total=Sum('total'))['total'] or Decimal(0)
+        
+        # Productos
+        total_productos = ProductStore.objects.count()
+        productos_sin_stock = ProductStore.objects.filter(stock=0).count()
+        productos_bajo_stock = ProductStore.objects.filter(stock__lte=5, stock__gt=0).count()
+        
+        # Usuarios
+        total_usuarios = SimpleUser.objects.count()
+        
+        # Pedidos recientes (últimos 5)
+        pedidos_recientes = Pedido.objects.select_related('user').order_by('-fecha')[:5]
+        pedidos_data = []
+        for pedido in pedidos_recientes:
+            pedidos_data.append({
+                'id': pedido.id,
+                'nombre': pedido.nombre,
+                'total': float(pedido.total),
+                'estado': pedido.estado,
+                'estado_display': pedido.get_estado_display(),
+                'fecha': pedido.fecha.strftime('%d/%m/%Y %H:%M')
+            })
+        
+        # Productos más vendidos (top 5)
+        from core.models import PedidoDetalle
+        productos_vendidos = PedidoDetalle.objects.values(
+            'producto__id', 'producto__name'
+        ).annotate(
+            total_vendido=Sum('cantidad')
+        ).order_by('-total_vendido')[:5]
+        
+        productos_top = []
+        for item in productos_vendidos:
+            productos_top.append({
+                'id': item['producto__id'],
+                'nombre': item['producto__name'],
+                'cantidad': item['total_vendido']
+            })
+        
+        return JsonResponse({
+            'success': True,
+            'stats': {
+                'pedidos': {
+                    'total': total_pedidos,
+                    'pendientes': pedidos_pendientes,
+                    'completados': pedidos_completados
+                },
+                'finanzas': {
+                    'ingresos_totales': float(ingresos_totales),
+                    'ingresos_pendientes': float(ingresos_pendientes)
+                },
+                'productos': {
+                    'total': total_productos,
+                    'sin_stock': productos_sin_stock,
+                    'bajo_stock': productos_bajo_stock
+                },
+                'usuarios': {
+                    'total': total_usuarios
+                },
+                'pedidos_recientes': pedidos_data,
+                'productos_top': productos_top
+            }
+        })
+        
+    except Exception as e:
+        print(f"Error in dashboard_stats: {e}")
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
         })
