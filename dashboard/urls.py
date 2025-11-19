@@ -76,6 +76,7 @@ urlpatterns = [
     path('pedido/<int:pedido_id>/detalle/', pedido_detalle, name='pedido_detalle'),
     path('pedido/update-estado/', update_pedido_estado, name='update_pedido_estado'),
     path('pedido/update-notes/', update_pedido_notes, name='update_pedido_notes'),
+    path('pedido/confirmar-pago/', views.confirmar_pago_pedido, name='confirmar_pago_pedido'),
     
     # URLs para auto-actualización de pedidos
     path('api/pedidos-count/', views.pedidos_count, name='pedidos_count'),

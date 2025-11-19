@@ -1489,7 +1489,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Event listener para guardar cambios del usuario
-    const saveUserBtn = safeEl('saveUserChanges');
+    const saveUserBtn = document.getElementById('saveUserChanges');
     if (saveUserBtn) {
       saveUserBtn.addEventListener('click', saveUserChanges);
       console.log('Save user button listener added');

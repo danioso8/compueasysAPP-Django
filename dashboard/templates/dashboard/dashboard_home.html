@@ -6,11 +6,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Tienda</title>
-    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}" />
-    <link rel="stylesheet" href="{% static 'css/main.css' %}" />
+    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
-    <!-- Font Awesome para los iconos -->
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    
+    <!-- Estilos Base del Dashboard -->
+    <link rel="stylesheet" href="{% static 'css/main.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}" />
+    
+    <!-- Módulos CSS Especializados -->
+    <link rel="stylesheet" href="{% static 'css/dashboard-realtime.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/dashboard-messages.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/dashboard-pedidos.css' %}" />
 
 </head>
 <body>
@@ -58,6 +66,7 @@
                         <a href="?view=ventas" class="nav-link {% if request.GET.view == 'ventas' %}active{% endif %}" title="Análisis de Ventas">
                             <i class="fas fa-chart-bar nav-icon"></i>
                             <span class="sidebar-text">Análisis Ventas</span>
+                            
                         </a>
                     </li>
                     
@@ -1140,6 +1149,54 @@
                     </div>
                 </div>
 
+                <!-- Estadísticas Diarias - TIEMPO REAL -->
+                <div class="alert alert-info mb-4">
+                    <h5 class="mb-3">
+                        <i class="fas fa-calendar-day me-2"></i>Actividad de Hoy
+                        <span class="badge bg-success ms-2">
+                            <i class="fas fa-sync-alt fa-spin"></i> Tiempo Real
+                        </span>
+                    </h5>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <h3 class="text-primary">
+                                    <i class="fas fa-shopping-cart me-2"></i>
+                                    <span data-stat="pedidos-hoy">{{ estadisticas_diarias.pedidos_hoy }}</span>
+                                </h3>
+                                <p class="mb-0 text-muted">Pedidos de Hoy</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <h3 class="text-success">
+                                    <i class="fas fa-dollar-sign me-2"></i>
+                                    <span data-stat="ventas-hoy">${{ estadisticas_diarias.ventas_hoy|default:"0"|floatformat:0 }}</span>
+                                </h3>
+                                <p class="mb-0 text-muted">Ventas de Hoy</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <h3 class="text-info">
+                                    <i class="fas fa-box-open me-2"></i>
+                                    <span data-stat="productos-vendidos-hoy">{{ estadisticas_diarias.productos_vendidos_hoy }}</span>
+                                </h3>
+                                <p class="mb-0 text-muted">Productos Vendidos Hoy</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <h3 class="text-warning">
+                                    <i class="fas fa-users me-2"></i>
+                                    <span data-stat="total-usuarios">{{ usuarios|length }}</span>
+                                </h3>
+                                <p class="mb-0 text-muted">Total Usuarios</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Filtros y estadísticas rápidas -->
                 <div class="row mb-4">
                     <div class="col-md-3">
@@ -1325,35 +1382,44 @@
                                             <td class="text-center">
                                                 <div class="d-flex flex-column gap-1">
                                                     <button type="button" class="btn btn-outline-primary btn-sm" 
-                                                            data-bs-toggle="modal" data-bs-target="#pedidoModal"
-                                                            onclick="viewPedidoDetails({{ pedido.id }})"
+                                                            onclick="event.preventDefault(); loadPedidoDetails({{ pedido.id }})"
                                                             title="Ver detalles del pedido">
                                                         <i class="fas fa-eye me-1"></i> Ver
                                                     </button>
+                                                    {% if pedido.estado_pago != 'completado' %}
+                                                    <button type="button" class="btn btn-outline-success btn-sm" 
+                                                            onclick="confirmarPago({{ pedido.id }})"
+                                                            title="Confirmar pago del pedido">
+                                                        <i class="fas fa-dollar-sign me-1"></i> Confirmar Pago
+                                                    </button>
+                                                    {% endif %}
                                                     <div class="dropdown">
                                                         <button class="btn btn-outline-secondary btn-sm dropdown-toggle w-100" 
-                                                                type="button" data-bs-toggle="dropdown"
+                                                                type="button" 
+                                                                id="dropdownEstado{{ pedido.id }}"
+                                                                data-bs-toggle="dropdown"
+                                                                aria-expanded="false"
                                                                 title="Cambiar estado del pedido">
                                                             <i class="fas fa-edit me-1"></i> Estado
                                                         </button>
-                                                        <ul class="dropdown-menu">
-                                                            <li><a class="dropdown-item" href="#" onclick="updateEstado({{ pedido.id }}, 'pendiente')">
+                                                        <ul class="dropdown-menu" aria-labelledby="dropdownEstado{{ pedido.id }}">
+                                                            <li><a class="dropdown-item" href="javascript:void(0)" onclick="event.preventDefault(); updateEstado({{ pedido.id }}, 'pendiente')">
                                                                 <i class="fas fa-clock me-2 text-warning"></i>Pendiente
                                                             </a></li>
-                                                            <li><a class="dropdown-item" href="#" onclick="updateEstado({{ pedido.id }}, 'confirmado')">
+                                                            <li><a class="dropdown-item" href="javascript:void(0)" onclick="event.preventDefault(); updateEstado({{ pedido.id }}, 'confirmado')">
                                                                 <i class="fas fa-check me-2 text-info"></i>Confirmar
                                                             </a></li>
-                                                            <li><a class="dropdown-item" href="#" onclick="updateEstado({{ pedido.id }}, 'enviado')">
+                                                            <li><a class="dropdown-item" href="javascript:void(0)" onclick="event.preventDefault(); updateEstado({{ pedido.id }}, 'enviado')">
                                                                 <i class="fas fa-shipping-fast me-2 text-primary"></i>Enviar
                                                             </a></li>
-                                                            <li><a class="dropdown-item" href="#" onclick="updateEstado({{ pedido.id }}, 'llegando')">
+                                                            <li><a class="dropdown-item" href="javascript:void(0)" onclick="event.preventDefault(); updateEstado({{ pedido.id }}, 'llegando')">
                                                                 <i class="fas fa-truck me-2 text-info"></i>En camino
                                                             </a></li>
-                                                            <li><a class="dropdown-item" href="#" onclick="updateEstado({{ pedido.id }}, 'entregado')">
+                                                            <li><a class="dropdown-item" href="javascript:void(0)" onclick="event.preventDefault(); updateEstado({{ pedido.id }}, 'entregado')">
                                                                 <i class="fas fa-check-circle me-2 text-success"></i>Entregar
                                                             </a></li>
                                                             <li><hr class="dropdown-divider"></li>
-                                                            <li><a class="dropdown-item text-danger" href="#" onclick="updateEstado({{ pedido.id }}, 'cancelado')">
+                                                            <li><a class="dropdown-item text-danger" href="javascript:void(0)" onclick="event.preventDefault(); updateEstado({{ pedido.id }}, 'cancelado')">
                                                                 <i class="fas fa-times-circle me-2"></i>Cancelar
                                                             </a></li>
                                                         </ul>
@@ -1683,9 +1749,58 @@
     </table>
 
             {% elif request.GET.view == "ventas" %}
+                <!-- ✅ BLOQUE CORRECTO CON ESTADISTICAS DIARIAS -->
                 <div class="ventas-dashboard">
                     <h2><i class="fas fa-chart-line me-2"></i>Análisis de Ventas por Categorías</h2>
                     
+                    <!-- Estadísticas Diarias - TIEMPO REAL -->
+                    <div class="alert alert-info mb-4">
+                        <h5 class="mb-3">
+                            <i class="fas fa-calendar-day me-2"></i>Actividad de Hoy
+                            <span class="badge bg-success ms-2">
+                                <i class="fas fa-sync-alt fa-spin"></i> Tiempo Real
+                            </span>
+                        </h5>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="stat-card">
+                                    <h3 class="text-primary">
+                                        <i class="fas fa-shopping-cart me-2"></i>
+                                        <span data-stat="pedidos-hoy">{{ estadisticas_diarias.pedidos_hoy }}</span>
+                                    </h3>
+                                    <p class="mb-0 text-muted">Pedidos de Hoy</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="stat-card">
+                                    <h3 class="text-success">
+                                        <i class="fas fa-dollar-sign me-2"></i>
+                                        <span data-stat="ventas-hoy">${{ estadisticas_diarias.ventas_hoy|default:"0"|floatformat:0 }}</span>
+                                    </h3>
+                                    <p class="mb-0 text-muted">Ventas de Hoy</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="stat-card">
+                                    <h3 class="text-info">
+                                        <i class="fas fa-box-open me-2"></i>
+                                        <span data-stat="productos-vendidos-hoy">{{ estadisticas_diarias.productos_vendidos_hoy }}</span>
+                                    </h3>
+                                    <p class="mb-0 text-muted">Productos Vendidos Hoy</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="stat-card">
+                                    <h3 class="text-warning">
+                                        <i class="fas fa-users me-2"></i>
+                                        <span data-stat="total-usuarios">{{ usuarios|length }}</span>
+                                    </h3>
+                                    <p class="mb-0 text-muted">Total Usuarios</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Resumen General -->
                     <div class="row mb-4">
                         <div class="col-md-3">
@@ -1693,7 +1808,7 @@
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between">
                                         <div>
-                                            <h4>${{ total_ventas_general|floatformat:0 }}</h4>
+                                            <h4><span data-stat="ingresos-totales">${{ total_ventas_general|floatformat:0 }}</span></h4>
                                             <p class="mb-0">Ventas Totales</p>
                                         </div>
                                         <div class="align-self-center">
@@ -1708,7 +1823,7 @@
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between">
                                         <div>
-                                            <h4>{{ estadisticas_ventas.pedidos_totales }}</h4>
+                                            <h4><span data-stat="total-pedidos">{{ estadisticas_ventas.pedidos_totales }}</span></h4>
                                             <p class="mb-0">Pedidos Totales</p>
                                         </div>
                                         <div class="align-self-center">
@@ -1723,7 +1838,7 @@
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between">
                                         <div>
-                                            <h4>{{ estadisticas_ventas.productos_vendidos }}</h4>
+                                            <h4><span data-stat="total-productos">{{ estadisticas_ventas.productos_vendidos }}</span></h4>
                                             <p class="mb-0">Productos Vendidos</p>
                                         </div>
                                         <div class="align-self-center">
@@ -1750,6 +1865,7 @@
                         </div>
                     </div>
 
+                   
                     <!-- Categorías Destacadas -->
                     <div class="row mb-4">
                         <div class="col-md-6">
@@ -1855,16 +1971,36 @@
                     </div>
                 </div>
 
-            {% elif request.GET.view == "ventas" %}
-                <!-- Vista Completa de Análisis de Ventas -->
-                <div class="ventas-dashboard">
-                    <h2><i class="fas fa-chart-line me-2"></i>Análisis Completo de Ventas por Categorías</h2>
-                    <p class="text-muted mb-4">Vista detallada de todas las métricas y estadísticas de ventas</p>
-                    
-                    <!-- Resumen General -->
-                    <div class="row mb-4">
-                        <div class="col-md-3">
-                            <div class="card bg-primary text-white">
+            {% elif request.GET.view == "proveedores" %}
+                <h2>Proveedores</h2>
+                    <a href="{% url 'create_proveedor' %}" data-bs-toggle="modal" data-bs-target="#modalNuevoProveedor" class="btn btn-primary mb-3">Crear Proveedor</a>
+                    <table>
+                        <tr>
+                              <th>Nombre</th>
+                            <th>Cédula</th>                          
+                            <th>Email</th>
+                            <th>Teléfono</th>
+                            <th>Dirección</th>
+                            <th>Acciones</th>
+                        </tr>
+                    {% if proveedores %}
+                        <tr>
+                            {% for proveedor in proveedores %}
+                                <td>{{ proveedor.nombre }}</td>
+                                <td>{{ proveedor.cedulaOnita }}</td>
+                                <td>{{ proveedor.email }}</td>
+                                <td>{{ proveedor.telefono }}</td>
+                                <td>{{ proveedor.direccion }}</td>
+                                <td>
+                                    <a href="{% url 'edit_proveedor' proveedor.id %}" class="btn btn-sm btn-warning">Editar</a>
+                                    <a href="{% url 'delete_proveedor' proveedor.id %}" class="btn btn-sm btn-danger">Eliminar</a>
+                                </td>
+                          
+                        </tr>
+                        {% endfor %}
+                {% else %}
+                    <p>No hay proveedores disponibles.</p>
+                {% endif %}
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between">
                                         <div>
@@ -2392,6 +2528,57 @@
                             </div>
                         </div>
                     </div>
+
+
+
+                     <!-- Estadísticas Diarias - TIEMPO REAL -->
+                    <div class="alert alert-info mb-4">
+                        <h5 class="mb-3">
+                            <i class="fas fa-calendar-day me-2"></i>Actividad de Hoy
+                            <span class="badge bg-success ms-2">
+                                <i class="fas fa-sync-alt fa-spin"></i> Tiempo Real
+                            </span>
+                        </h5>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="stat-card">
+                                    <h3 class="text-primary">
+                                        <i class="fas fa-shopping-cart me-2"></i>
+                                        <span data-stat="pedidos-hoy">{{ estadisticas_diarias.pedidos_hoy }}</span>
+                                    </h3>
+                                    <p class="mb-0 text-muted">Pedidos de Hoy</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="stat-card">
+                                    <h3 class="text-success">
+                                        <i class="fas fa-dollar-sign me-2"></i>
+                                        <span data-stat="ventas-hoy">${{ estadisticas_diarias.ventas_hoy|default:"0"|floatformat:0 }}</span>
+                                    </h3>
+                                    <p class="mb-0 text-muted">Ventas de Hoy</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="stat-card">
+                                    <h3 class="text-info">
+                                        <i class="fas fa-box-open me-2"></i>
+                                        <span data-stat="productos-vendidos-hoy">{{ estadisticas_diarias.productos_vendidos_hoy }}</span>
+                                    </h3>
+                                    <p class="mb-0 text-muted">Productos Vendidos Hoy</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="stat-card">
+                                    <h3 class="text-warning">
+                                        <i class="fas fa-users me-2"></i>
+                                        <span data-stat="total-usuarios">{{ usuarios|length }}</span>
+                                    </h3>
+                                    <p class="mb-0 text-muted">Total Usuarios</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
 
                     <!-- Categorías Destacadas -->
                     <div class="row mb-4">
@@ -2995,13 +3182,7 @@
         </div>
     </div>
 
-    <!-- Bootstrap JS primero -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
-    
-    <!-- Dashboard JS después -->
-    <script src="{% static 'js/dashboard.js' %}"></script>
-    
-    <!-- Scripts adicionales -->
+    <!-- Scripts de Inventario (selector de categoría) -->
     <script>
       document.addEventListener('DOMContentLoaded', function() {
         // Debug para verificar que el menú móvil funcione
@@ -3066,333 +3247,10 @@
         return cookieValue;
       }
 
-      // Ver detalles de un pedido
-      function viewPedidoDetails(pedidoId) {
-        console.log('👁️ Cargando detalles del pedido:', pedidoId);
-        
-        const modalContent = document.getElementById('pedidoModalContent');
-        modalContent.innerHTML = `
-          <div class="text-center">
-            <div class="spinner-border" role="status">
-              <span class="visually-hidden">Cargando...</span>
-            </div>
-          </div>
-        `;
-
-        // Hacer request para obtener detalles
-        fetch(`/dashboard/pedido/${pedidoId}/detalle/`, {
-          method: 'GET',
-          headers: {
-            'X-CSRFToken': getCsrfToken(),
-            'Content-Type': 'application/json',
-          }
-        })
-        .then(response => response.json())
-        .then(data => {
-          if (data.success) {
-            modalContent.innerHTML = buildPedidoDetailHTML(data.pedido);
-          } else {
-            modalContent.innerHTML = `
-              <div class="alert alert-danger">
-                <i class="fas fa-exclamation-triangle"></i> 
-                Error al cargar los detalles: ${data.error || 'Error desconocido'}
-              </div>
-            `;
-          }
-        })
-        .catch(error => {
-          console.error('Error:', error);
-          modalContent.innerHTML = `
-            <div class="alert alert-danger">
-              <i class="fas fa-exclamation-triangle"></i> 
-              Error de conexión. Por favor intenta de nuevo.
-            </div>
-          `;
-        });
-      }
-
-      // Construir HTML para detalles del pedido
-      function buildPedidoDetailHTML(pedido) {
-        const formatCurrency = (amount) => {
-          return new Intl.NumberFormat('es-CO', {
-            style: 'currency',
-            currency: 'COP',
-            minimumFractionDigits: 0
-          }).format(amount);
-        };
-
-        return `
-          <div class="row">
-            <!-- Información del cliente -->
-            <div class="col-md-6">
-              <div class="card mb-3">
-                <div class="card-header">
-                  <h6 class="mb-0"><i class="fas fa-user"></i> Información del Cliente</h6>
-                </div>
-                <div class="card-body">
-                  <p><strong>Nombre:</strong> ${pedido.nombre}</p>
-                  <p><strong>Email:</strong> ${pedido.email || 'No proporcionado'}</p>
-                  <p><strong>Teléfono:</strong> ${pedido.telefono || 'No proporcionado'}</p>
-                  <p class="mb-0"><strong>Fecha del pedido:</strong> ${new Date(pedido.fecha).toLocaleString()}</p>
-                </div>
-              </div>
-            </div>
-
-            <!-- Información de entrega -->
-            <div class="col-md-6">
-              <div class="card mb-3">
-                <div class="card-header">
-                  <h6 class="mb-0"><i class="fas fa-map-marker-alt"></i> Información de Entrega</h6>
-                </div>
-                <div class="card-body">
-                  <p><strong>Dirección:</strong> ${pedido.direccion}</p>
-                  <p><strong>Ciudad:</strong> ${pedido.ciudad}</p>
-                  <p><strong>Departamento:</strong> ${pedido.departamento}</p>
-                  ${pedido.codigo_postal ? `<p><strong>Código Postal:</strong> ${pedido.codigo_postal}</p>` : ''}
-                  ${pedido.nota ? `<p><strong>Nota del cliente:</strong> ${pedido.nota}</p>` : ''}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Notas Administrativas -->
-          <div class="row mb-3">
-            <div class="col-12">
-              <div class="card border-info">
-                <div class="card-header">
-                  <h6 class="mb-0"><i class="fas fa-clipboard"></i> Notas Administrativas</h6>
-                </div>
-                <div class="card-body">
-                  <div class="mb-2">
-                    <textarea id="nota_admin_${pedido.id}" class="form-control" rows="3" 
-                              placeholder="Agregar notas internas sobre el pedido...">${pedido.nota_admin || ''}</textarea>
-                  </div>
-                  <button type="button" class="btn btn-sm btn-primary" onclick="updateAdminNotes(${pedido.id})">
-                    <i class="fas fa-save"></i> Guardar Notas
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Estados y pago -->
-          <div class="row mb-3">
-            <div class="col-md-4">
-              <div class="card border-primary">
-                <div class="card-body text-center">
-                  <h6 class="text-primary">Estado del Pedido</h6>
-                  <span class="badge bg-${getEstadoBadgeColor(pedido.estado)} fs-6">
-                    ${pedido.estado_display}
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div class="card border-info">
-                <div class="card-body text-center">
-                  <h6 class="text-info">Método de Pago</h6>
-                  <span class="badge bg-${getMetodoPagoBadgeColor(pedido.metodo_pago)} fs-6">
-                    ${pedido.metodo_pago_display}
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div class="card border-success">
-                <div class="card-body text-center">
-                  <h6 class="text-success">Estado del Pago</h6>
-                  <span class="badge bg-${getPagoBadgeColor(pedido.estado_pago)} fs-6">
-                    ${pedido.estado_pago_display}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          ${pedido.transaction_id ? `
-            <div class="alert alert-info mb-3">
-              <h6><i class="fas fa-credit-card"></i> Información de Pago Digital</h6>
-              <p class="mb-1"><strong>ID de Transacción:</strong> ${pedido.transaction_id}</p>
-              ${pedido.payment_reference ? `<p class="mb-0"><strong>Referencia:</strong> ${pedido.payment_reference}</p>` : ''}
-            </div>
-          ` : ''}
-
-          <!-- Productos -->
-          <div class="card">
-            <div class="card-header">
-              <h6 class="mb-0"><i class="fas fa-shopping-bag"></i> Productos del Pedido</h6>
-            </div>
-            <div class="card-body p-0">
-              <div class="table-responsive">
-                <table class="table table-sm mb-0">
-                  <thead class="table-light">
-                    <tr>
-                      <th>Producto</th>
-                      <th class="text-center">Cantidad</th>
-                      <th class="text-end">Precio Unit.</th>
-                      <th class="text-end">Subtotal</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    ${pedido.items ? pedido.items.map(item => `
-                      <tr>
-                        <td>
-                          <strong>${item.nombre}</strong>
-                          ${item.variante ? `<br><small class="text-muted">Variante: ${item.variante}</small>` : ''}
-                        </td>
-                        <td class="text-center">${item.cantidad}</td>
-                        <td class="text-end">${formatCurrency(item.precio)}</td>
-                        <td class="text-end">${formatCurrency(item.precio * item.cantidad)}</td>
-                      </tr>
-                    `).join('') : '<tr><td colspan="4" class="text-center">No hay productos registrados</td></tr>'}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-            <div class="card-footer">
-              <div class="row text-end">
-                <div class="col-md-8"></div>
-                <div class="col-md-4">
-                  ${pedido.subtotal ? `<p class="mb-1">Subtotal: <strong>${formatCurrency(pedido.subtotal)}</strong></p>` : ''}
-                  ${pedido.codigo_descuento ? `<p class="mb-1 text-success">Descuento (${pedido.codigo_descuento}): <strong>-${formatCurrency(pedido.descuento)}</strong></p>` : ''}
-                  ${pedido.envio > 0 ? `<p class="mb-1">Envío: <strong>${formatCurrency(pedido.envio)}</strong></p>` : 
-                    `<p class="mb-1 text-success">Envío: <strong>GRATIS</strong></p>`}
-                  <h5 class="mb-0">Total: <strong class="text-success">${formatCurrency(pedido.total)}</strong></h5>
-                </div>
-              </div>
-            </div>
-          </div>
-        `;
-      }
-
-      // Funciones auxiliares para badges
-      function getEstadoBadgeColor(estado) {
-        const colors = {
-          'pendiente': 'warning',
-          'confirmado': 'info',
-          'enviado': 'primary',
-          'llegando': 'primary',
-          'entregado': 'success',
-          'cancelado': 'danger'
-        };
-        return colors[estado] || 'secondary';
-      }
-
-      function getMetodoPagoBadgeColor(metodo) {
-        const colors = {
-          'contraentrega': 'warning',
-          'recoger_tienda': 'info',
-          'tarjeta': 'primary',
-          'wompi': 'primary'
-        };
-        return colors[metodo] || 'secondary';
-      }
-
-      function getPagoBadgeColor(estado) {
-        const colors = {
-          'pendiente': 'warning',
-          'procesando': 'info',
-          'completado': 'success',
-          'fallido': 'danger',
-          'reembolsado': 'secondary'
-        };
-        return colors[estado] || 'secondary';
-      }
-
-      // Actualizar estado del pedido
-      function updateEstado(pedidoId, nuevoEstado) {
-        // Confirmación especial para cancelación
-        let confirmMessage;
-        if (nuevoEstado === 'cancelado') {
-          confirmMessage = `⚠️ ¿Estás seguro de CANCELAR el pedido #${pedidoId}?\n\n` +
-                          `Esta acción:\n` +
-                          `• Devolverá el stock de todos los productos al inventario\n` +
-                          `• Excluirá este pedido de las estadísticas de ventas\n` +
-                          `• No podrá deshacerse una vez confirmada`;
-        } else {
-          confirmMessage = `¿Estás seguro de cambiar el estado del pedido #${pedidoId} a "${nuevoEstado}"?`;
-        }
-        
-        if (!confirm(confirmMessage)) {
-          return;
-        }
-
-        console.log('🔄 Actualizando estado del pedido:', pedidoId, 'a', nuevoEstado);
-
-        fetch('/dashboard/pedido/update-estado/', {
-          method: 'POST',
-          headers: {
-            'X-CSRFToken': getCsrfToken(),
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            pedido_id: pedidoId,
-            nuevo_estado: nuevoEstado
-          })
-        })
-        .then(response => response.json())
-        .then(data => {
-          if (data.success) {
-            // Mostrar mensaje específico según el estado
-            let successMessage;
-            if (nuevoEstado === 'cancelado') {
-              successMessage = '✅ Pedido cancelado - Stock devuelto al inventario';
-            } else {
-              successMessage = `✅ Estado actualizado a "${nuevoEstado}" correctamente`;
-            }
-            
-            showAlert(successMessage, 'success');
-            
-            // Recargar la página para mostrar los cambios
-            setTimeout(() => {
-              location.reload();
-            }, 1000);
-          } else {
-            showAlert('❌ Error al actualizar: ' + (data.error || 'Error desconocido'), 'danger');
-          }
-        })
-        .catch(error => {
-          console.error('Error:', error);
-          showAlert('❌ Error de conexión. Intenta de nuevo.', 'danger');
-        });
-      }
-
-      // Actualizar notas administrativas
-      function updateAdminNotes(pedidoId) {
-        const notasTextarea = document.getElementById(`nota_admin_${pedidoId}`);
-        if (!notasTextarea) {
-          showAlert('❌ No se encontró el campo de notas', 'danger');
-          return;
-        }
-
-        const notas = notasTextarea.value.trim();
-
-        console.log('📝 Actualizando notas del pedido:', pedidoId);
-
-        fetch('/dashboard/pedido/update-notes/', {
-          method: 'POST',
-          headers: {
-            'X-CSRFToken': getCsrfToken(),
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            pedido_id: pedidoId,
-            notas_admin: notas
-          })
-        })
-        .then(response => response.json())
-        .then(data => {
-          if (data.success) {
-            showAlert('✅ Notas administrativas guardadas correctamente', 'success');
-          } else {
-            showAlert('❌ Error al guardar notas: ' + (data.error || 'Error desconocido'), 'danger');
-          }
-        })
-        .catch(error => {
-          console.error('Error:', error);
-          showAlert('❌ Error de conexión. Intenta de nuevo.', 'danger');
-        });
-      }
+      // NOTA: Las funciones viewPedidoDetails, updateEstado, updateAdminNotes, 
+      // buildPedidoDetailHTML, getEstadoBadgeColor, etc.
+      // están TODAS definidas en dashboard-pedidos.js
+      // NO las redefinas aquí para evitar conflictos
 
       // ========================================
       // SISTEMA DE AUTO-ACTUALIZACIÓN DE PEDIDOS
@@ -3400,7 +3258,7 @@
       
       let autoRefreshInterval = null;
       let lastPedidosCount = {{ pedidos|length }};
-      const REFRESH_INTERVAL = 30000; // 30 segundos
+      const REFRESH_INTERVAL = 15000; // 15 segundos - actualización en tiempo real
 
       // Iniciar auto-actualización si estamos en la vista de pedidos
       {% if request.GET.view == "pedidos" or not request.GET.view %}
@@ -3418,10 +3276,16 @@
 
         // Crear intervalo de actualización
         autoRefreshInterval = setInterval(() => {
+          // No actualizar si hay un modal abierto
+          const modalOpen = document.querySelector('.modal.show');
+          if (modalOpen) {
+            console.log('⏸️ Modal abierto - pausando auto-actualización');
+            return;
+          }
           checkForNewPedidos();
         }, REFRESH_INTERVAL);
 
-        console.log('✅ Auto-actualización activada (cada 30s)');
+        console.log('✅ Auto-actualización de pedidos activada (cada 15s - tiempo real)');
       }
 
       function stopAutoRefresh() {
@@ -3537,131 +3401,7 @@
       // Limpiar intervalo cuando se cambia de vista
       window.addEventListener('beforeunload', () => {
         stopAutoRefresh();
-        stopDashboardAutoRefresh();
       });
-
-      // ========================================
-      // SISTEMA DE AUTO-ACTUALIZACIÓN DEL HOME
-      // ========================================
-      
-      let dashboardAutoRefreshInterval = null;
-      const DASHBOARD_REFRESH_INTERVAL = 30000; // 30 segundos
-
-      // Iniciar auto-actualización si estamos en el home (sin parámetro view o view=ventas)
-      {% if not request.GET.view or request.GET.view == "ventas" %}
-      if (!window.location.search.includes('view=') || window.location.search.includes('view=ventas')) {
-        console.log('🔄 Iniciando auto-actualización del dashboard home...');
-        startDashboardAutoRefresh();
-      }
-      {% endif %}
-
-      function startDashboardAutoRefresh() {
-        // Limpiar intervalo existente si hay uno
-        if (dashboardAutoRefreshInterval) {
-          clearInterval(dashboardAutoRefreshInterval);
-        }
-
-        // Crear intervalo de actualización
-        dashboardAutoRefreshInterval = setInterval(() => {
-          updateDashboardStats();
-        }, DASHBOARD_REFRESH_INTERVAL);
-
-        console.log('✅ Auto-actualización del home activada (cada 30s)');
-      }
-
-      function stopDashboardAutoRefresh() {
-        if (dashboardAutoRefreshInterval) {
-          clearInterval(dashboardAutoRefreshInterval);
-          dashboardAutoRefreshInterval = null;
-          console.log('🛑 Auto-actualización del home desactivada');
-        }
-      }
-
-      function updateDashboardStats() {
-        console.log('🔍 Actualizando estadísticas del dashboard...');
-        
-        fetch('/dashboard/api/dashboard-stats/', {
-          method: 'GET',
-          headers: {
-            'X-CSRFToken': getCsrfToken(),
-            'Content-Type': 'application/json',
-          }
-        })
-        .then(response => response.json())
-        .then(data => {
-          if (data.success) {
-            console.log('📊 Estadísticas actualizadas:', data.stats);
-            updateStatsUI(data.stats);
-          } else {
-            console.error('❌ Error obteniendo estadísticas:', data.error);
-          }
-        })
-        .catch(error => {
-          console.error('❌ Error en petición de estadísticas:', error);
-        });
-      }
-
-      function updateStatsUI(stats) {
-        // Actualizar badges de estadísticas si existen
-        const formatCurrency = (value) => {
-          return new Intl.NumberFormat('es-CO', {
-            style: 'currency',
-            currency: 'COP',
-            minimumFractionDigits: 0
-          }).format(value);
-        };
-
-        // Pedidos
-        const totalPedidosEl = document.querySelector('[data-stat="total-pedidos"]');
-        if (totalPedidosEl) {
-          totalPedidosEl.textContent = stats.pedidos.total;
-        }
-
-        const pedidosPendientesEl = document.querySelector('[data-stat="pedidos-pendientes"]');
-        if (pedidosPendientesEl) {
-          pedidosPendientesEl.textContent = stats.pedidos.pendientes;
-        }
-
-        const pedidosCompletadosEl = document.querySelector('[data-stat="pedidos-completados"]');
-        if (pedidosCompletadosEl) {
-          pedidosCompletadosEl.textContent = stats.pedidos.completados;
-        }
-
-        // Finanzas
-        const ingresosTotalesEl = document.querySelector('[data-stat="ingresos-totales"]');
-        if (ingresosTotalesEl) {
-          ingresosTotalesEl.textContent = formatCurrency(stats.finanzas.ingresos_totales);
-        }
-
-        const ingresosPendientesEl = document.querySelector('[data-stat="ingresos-pendientes"]');
-        if (ingresosPendientesEl) {
-          ingresosPendientesEl.textContent = formatCurrency(stats.finanzas.ingresos_pendientes);
-        }
-
-        // Productos
-        const totalProductosEl = document.querySelector('[data-stat="total-productos"]');
-        if (totalProductosEl) {
-          totalProductosEl.textContent = stats.productos.total;
-        }
-
-        const productosSinStockEl = document.querySelector('[data-stat="productos-sin-stock"]');
-        if (productosSinStockEl) {
-          productosSinStockEl.textContent = stats.productos.sin_stock;
-        }
-
-        const productosBajoStockEl = document.querySelector('[data-stat="productos-bajo-stock"]');
-        if (productosBajoStockEl) {
-          productosBajoStockEl.textContent = stats.productos.bajo_stock;
-        }
-
-        // Usuarios
-        const totalUsuariosEl = document.querySelector('[data-stat="total-usuarios"]');
-        if (totalUsuariosEl) {
-          totalUsuariosEl.textContent = stats.usuarios.total;
-        }
-
-        console.log('✅ UI actualizada con nuevas estadísticas');
-      }
 
       // Mostrar alertas
       function showAlert(message, type = 'info') {
@@ -4217,308 +3957,83 @@
       });
     </script>
 
-    <style>
-      /* Estilos para la sección de mensajes */
-      .messages-dashboard .avatar-circle {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        background: linear-gradient(45deg, #007bff, #0056b3);
-        color: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: bold;
-        font-size: 1.1rem;
-      }
-      
-      .message-bubble {
-        border-radius: 18px;
-        padding: 12px 16px;
-        margin: 4px 0;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-        word-wrap: break-word;
-      }
-      
-      .message-item.admin-message .message-bubble {
-        background: linear-gradient(135deg, #007bff, #0056b3) !important;
-        border-bottom-right-radius: 4px;
-      }
-      
-      .message-item.user-message .message-bubble {
-        background: #f8f9fa;
-        border: 1px solid #dee2e6;
-        border-bottom-left-radius: 4px;
-      }
-      
-      .message-preview {
-        font-size: 0.9rem;
-        line-height: 1.3;
-        color: #495057;
-      }
-      
-      .conversation-header {
-        background: linear-gradient(135deg, #f8f9fa, #e9ecef) !important;
-      }
-      
-      .messages-container {
-        background: #fafbfc;
-        min-height: 300px;
-      }
-      
-      .response-form {
-        background: linear-gradient(135deg, #f8f9fa, #e9ecef) !important;
-        border-top: 2px solid #dee2e6 !important;
-      }
-      
-      /* Filtros de conversaciones */
-      .btn-check:checked + .btn-outline-primary {
-        background-color: #007bff;
-        border-color: #007bff;
-        color: white;
-      }
-      
-      .btn-check:checked + .btn-outline-warning {
-        background-color: #ffc107;
-        border-color: #ffc107;
-        color: #000;
-      }
-      
-      .btn-check:checked + .btn-outline-success {
-        background-color: #198754;
-        border-color: #198754;
-        color: white;
-      }
-      
-      .btn-check:checked + .btn-outline-secondary {
-        background-color: #6c757d;
-        border-color: #6c757d;
-        color: white;
-      }
-      
-      /* Responsivo para conversaciones */
-      @media (max-width: 768px) {
-        .messages-dashboard .avatar-circle {
-          width: 35px;
-          height: 35px;
-          font-size: 1rem;
-        }
-        
-        .message-bubble {
-          font-size: 0.9rem;
-          padding: 10px 12px;
-        }
-        
-        .btn-group .btn {
-          font-size: 0.8rem;
-          padding: 0.25rem 0.5rem;
-        }
-        
-        .conversation-row td {
-          font-size: 0.85rem;
-        }
-        
-        .conversation-row .date-info {
-          font-size: 0.8rem;
-        }
-      }
-      
-      /* Animaciones para nuevos mensajes */
-      .message-item {
-        animation: slideInMessage 0.3s ease-out;
-      }
-      
-      @keyframes slideInMessage {
-        from {
-          opacity: 0;
-          transform: translateY(20px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-      
-      /* Hover effects para conversaciones */
-      .conversation-row:hover {
-        background-color: rgba(0, 123, 255, 0.05);
-        transform: translateX(2px);
-        transition: all 0.2s ease;
-      }
-      
-      /* Arreglar z-index de dropdowns en tabla de pedidos */
-      .table tbody .dropdown {
-        position: static;
-      }
-      
-      .table tbody .dropdown-menu {
-        position: absolute !important;
-        z-index: 1050 !important;
-        transform: translate3d(0px, 0px, 0px) !important;
-        will-change: transform;
-      }
-      
-      /* Asegurar que la tabla no tenga overflow que oculte los dropdowns */
-      .table-responsive {
-        overflow: visible !important;
-      }
-      
-      /* Estilo mejorado para el dropdown de estado */
-      .btn-group-vertical .dropdown-menu {
-        min-width: 140px;
-        border: 1px solid rgba(0,0,0,.15);
-        border-radius: 0.375rem;
-        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-      }
-      
-      .dropdown-item {
-        padding: 0.5rem 0.75rem;
-        font-size: 0.875rem;
-        display: flex;
-        align-items: center;
-      }
-      
-      .dropdown-item:hover {
-        background-color: #f8f9fa;
-      }
-      
-      /* Mejorar espaciado de botones de acción */
-      .d-flex.flex-column.gap-1 {
-        gap: 0.25rem !important;
-        min-width: 120px;
-      }
-      
-      .d-flex.flex-column.gap-1 .btn {
-        white-space: nowrap;
-        text-overflow: ellipsis;
-        overflow: hidden;
-      }
-      
-      /* Asegurar que los dropdowns aparezcan correctamente en móvil */
-      @media (max-width: 768px) {
-        .table tbody .dropdown-menu {
-          position: fixed !important;
-          z-index: 1055 !important;
-        }
-        
-        .d-flex.flex-column.gap-1 {
-          min-width: 100px;
-        }
-        
-        .d-flex.flex-column.gap-1 .btn {
-          font-size: 0.75rem;
-          padding: 0.25rem 0.5rem;
-        }
-      }
-      
-      /* Colores para los iconos en el dropdown */
-      .dropdown-item i.text-warning { color: #ffc107 !important; }
-      .dropdown-item i.text-info { color: #0dcaf0 !important; }
-      .dropdown-item i.text-primary { color: #0d6efd !important; }
-      .dropdown-item i.text-success { color: #198754 !important; }
-      .dropdown-item i.text-danger { color: #dc3545 !important; }
-      
-      /* Estilos para el sistema de mensajes */
-      .avatar-circle {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: bold;
-        font-size: 16px;
-        text-transform: uppercase;
-      }
-      
-      .message-bubble {
-        border-radius: 15px;
-        padding: 10px 15px;
-        margin: 5px 0;
-        word-wrap: break-word;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-      }
-      
-      .admin-message .message-bubble {
-        background: #0d6efd;
-        color: white;
-        margin-left: 20%;
-      }
-      
-      .user-message .message-bubble {
-        background: #f8f9fa;
-        color: #212529;
-        margin-right: 20%;
-        border: 1px solid #dee2e6;
-      }
-      
-      .conversation-row:hover {
-        background-color: #f8f9fa;
-        cursor: pointer;
-      }
-      
-      .message-preview {
-        max-width: 300px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-      
-      .date-info {
-        text-align: center;
-        font-size: 0.85rem;
-      }
-      
-      .messages-container {
-        background: #fafafa;
-        border-radius: 10px;
-      }
-      
-      .conversation-header {
-        border-top-left-radius: 10px;
-        border-top-right-radius: 10px;
-      }
-      
-      .response-form {
-        border-bottom-left-radius: 10px;
-        border-bottom-right-radius: 10px;
-      }
-      
-      /* Animaciones suaves */
-      .conversation-row {
-        transition: background-color 0.2s ease;
-      }
-      
-      .message-bubble {
-        animation: fadeIn 0.3s ease-in;
-      }
-      
-      @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
-      }
-      
-      /* Responsive para mensajes */
-      @media (max-width: 768px) {
-        .admin-message .message-bubble,
-        .user-message .message-bubble {
-          margin-left: 10px;
-          margin-right: 10px;
-        }
-        
-        .message-preview {
-          max-width: 200px;
-        }
-        
-        .avatar-circle {
-          width: 35px;
-          height: 35px;
-          font-size: 14px;
-        }
-      }
-    </style>
+    <!-- Bootstrap Bundle JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-qKXV1j0HvMUeCBQ+QVp7JcfGl760yU08IQ+GpUo5hlbpg51QRiuqHAJz8+BrxE/N" crossorigin="anonymous"></script>
+    
+    <!-- Scripts Base del Dashboard -->
+    <script src="{% static 'js/dashboard.js' %}"></script>
+    
+    <!-- Módulos JS Especializados -->
+    <script src="{% static 'js/dashboard-users.js' %}"></script>
+    <script src="{% static 'js/dashboard-pedidos.js' %}"></script>
+    <script src="{% static 'js/dashboard-autorefresh.js' %}"></script>
+    
+    <!-- Script de Inicialización y Debug -->
+    <script>
+        console.log('🔍 DEBUG: Verificando elementos data-stat en la página');
+        document.addEventListener('DOMContentLoaded', function() {
+            const ventasHoyElement = document.querySelector('[data-stat="ventas-hoy"]');
+            if (ventasHoyElement) {
+                console.log('✅ Elemento ventas-hoy encontrado');
+                console.log('   Valor inicial:', ventasHoyElement.textContent);
+            } else {
+                console.error('❌ Elemento ventas-hoy NO encontrado');
+            }
+            
+            // Listar todos los elementos con data-stat
+            const allStats = document.querySelectorAll('[data-stat]');
+            console.log(`📊 Total elementos data-stat: ${allStats.length}`);
+            allStats.forEach(el => {
+                console.log(`   - ${el.getAttribute('data-stat')}: "${el.textContent.trim()}"`);
+            });
+            
+            // Verificar funciones de pedidos
+            console.log('🔍 Verificando funciones de pedidos...');
+            if (typeof viewPedidoDetails === 'function') {
+                console.log('✅ viewPedidoDetails está disponible');
+            } else {
+                console.error('❌ viewPedidoDetails NO está disponible');
+            }
+            
+            if (typeof updateEstado === 'function') {
+                console.log('✅ updateEstado está disponible');
+            } else {
+                console.error('❌ updateEstado NO está disponible');
+            }
+            
+            if (typeof confirmarPago === 'function') {
+                console.log('✅ confirmarPago está disponible');
+            } else {
+                console.error('❌ confirmarPago NO está disponible');
+            }
+            
+            // Verificar si DashboardAutoRefresh está disponible
+            setTimeout(() => {
+                if (window.DashboardAutoRefresh) {
+                    console.log('✅ DashboardAutoRefresh disponible');
+                    console.log('   Métodos:', Object.keys(window.DashboardAutoRefresh));
+                    
+                    // Forzar actualización manual para test
+                    console.log('🔄 Forzando actualización manual de stats...');
+                    window.DashboardAutoRefresh.refreshStats();
+                } else {
+                    console.error('❌ DashboardAutoRefresh NO disponible');
+                }
+            }, 1000);
+            
+            // Configurar event listeners para el modal de pedidos
+            const pedidoModal = document.getElementById('pedidoModal');
+            if (pedidoModal) {
+                pedidoModal.addEventListener('show.bs.modal', function(event) {
+                    console.log('🔓 Modal de pedido abierto');
+                });
+                
+                pedidoModal.addEventListener('hidden.bs.modal', function(event) {
+                    console.log('🔒 Modal de pedido cerrado');
+                });
+            }
+        });
+    </script>
     
 </body>
 </html>

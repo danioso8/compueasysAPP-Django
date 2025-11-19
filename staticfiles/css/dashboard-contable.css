@@ -1,0 +1,426 @@
+/* ==========================================
+   DASHBOARD CONTABLE - ESTILOS PRINCIPALES
+   ========================================== */
+
+:root {
+    --primary: #2563eb;
+    --primary-dark: #1e40af;
+    --secondary: #64748b;
+    --success: #10b981;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --info: #06b6d4;
+    --dark: #1f2937;
+    --light: #f3f4f6;
+    --white: #ffffff;
+    --border: #e5e7eb;
+    --sidebar-width: 280px;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: var(--light);
+    color: var(--dark);
+}
+
+/* ==========================================
+   NAVBAR
+   ========================================== */
+
+.bg-primary-gradient {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+}
+
+.navbar-brand {
+    font-size: 1.3rem;
+    font-weight: 700;
+}
+
+.navbar-brand i {
+    margin-right: 8px;
+}
+
+.company-selector {
+    margin-left: 20px;
+}
+
+.company-selector .btn {
+    font-weight: 600;
+}
+
+/* ==========================================
+   SIDEBAR
+   ========================================== */
+
+.sidebar {
+    background: var(--white);
+    min-height: calc(100vh - 56px);
+    padding: 20px 0;
+    border-right: 1px solid var(--border);
+}
+
+.sidebar-header {
+    padding: 0 20px 20px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 20px;
+}
+
+.plan-badge {
+    padding: 10px 15px;
+    border-radius: 10px;
+    font-weight: 600;
+    text-align: center;
+    margin-top: 10px;
+}
+
+.plan-badge.plan-free {
+    background: linear-gradient(135deg, #6b7280, #4b5563);
+    color: white;
+}
+
+.plan-badge.plan-pro {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+}
+
+.plan-badge.plan-enterprise {
+    background: linear-gradient(135deg, #7c3aed, #5b21b6);
+    color: white;
+}
+
+.sidebar-nav {
+    padding: 0 10px;
+}
+
+.sidebar-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--secondary);
+    padding: 10px 15px;
+    margin-bottom: 5px;
+}
+
+.nav-section {
+    margin-bottom: 15px;
+}
+
+.nav-section-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--secondary);
+    padding: 10px 15px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.nav-section-title i {
+    margin-right: 5px;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    color: var(--dark);
+    text-decoration: none;
+    border-radius: 8px;
+    margin: 2px 5px;
+    transition: all 0.3s ease;
+}
+
+.nav-item i {
+    width: 20px;
+    margin-right: 12px;
+    text-align: center;
+    font-size: 1rem;
+}
+
+.nav-item:hover {
+    background: var(--light);
+    color: var(--primary);
+    transform: translateX(5px);
+}
+
+.nav-item.active {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+    font-weight: 600;
+}
+
+/* ==========================================
+   MAIN CONTENT
+   ========================================== */
+
+.main-content {
+    padding: 30px;
+}
+
+/* Stat Cards */
+.stat-card {
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+}
+
+.stat-icon {
+    width: 70px;
+    height: 70px;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    margin-right: 20px;
+}
+
+.stat-primary .stat-icon {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+}
+
+.stat-success .stat-icon {
+    background: linear-gradient(135deg, var(--success), #059669);
+    color: white;
+}
+
+.stat-warning .stat-icon {
+    background: linear-gradient(135deg, var(--warning), #d97706);
+    color: white;
+}
+
+.stat-info .stat-icon {
+    background: linear-gradient(135deg, var(--info), #0891b2);
+    color: white;
+}
+
+.stat-content h6 {
+    font-size: 0.9rem;
+    color: var(--secondary);
+    margin-bottom: 5px;
+    font-weight: 600;
+}
+
+.stat-content h3 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 5px;
+    color: var(--dark);
+}
+
+.stat-change {
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.stat-change.positive {
+    color: var(--success);
+}
+
+.stat-change.negative {
+    color: var(--danger);
+}
+
+/* Cards */
+.card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    margin-bottom: 20px;
+}
+
+.card-header {
+    background: white;
+    border-bottom: 1px solid var(--border);
+    padding: 20px;
+    border-radius: 15px 15px 0 0;
+}
+
+.card-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 0;
+    color: var(--dark);
+}
+
+.card-title i {
+    margin-right: 8px;
+    color: var(--primary);
+}
+
+.card-body {
+    padding: 20px;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--secondary);
+}
+
+.empty-state i {
+    color: var(--border);
+    margin-bottom: 15px;
+}
+
+.empty-state p {
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+/* Quick Actions */
+.quick-actions {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+}
+
+.quick-action {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    background: var(--light);
+    border-radius: 12px;
+    text-decoration: none;
+    color: var(--dark);
+    transition: all 0.3s ease;
+}
+
+.quick-action:hover {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(37, 99, 235, 0.3);
+}
+
+.quick-action i {
+    font-size: 2rem;
+    margin-bottom: 10px;
+}
+
+.quick-action span {
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-align: center;
+}
+
+/* ==========================================
+   RESPONSIVE
+   ========================================== */
+
+@media (max-width: 992px) {
+    .sidebar {
+        position: fixed;
+        left: -100%;
+        top: 56px;
+        width: 280px;
+        height: calc(100vh - 56px);
+        z-index: 1000;
+        transition: left 0.3s ease;
+    }
+
+    .sidebar.show {
+        left: 0;
+    }
+
+    .main-content {
+        padding: 20px 15px;
+    }
+
+    .stat-card {
+        margin-bottom: 15px;
+    }
+
+    .quick-actions {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .stat-card {
+        padding: 20px;
+    }
+
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 1.5rem;
+        margin-right: 15px;
+    }
+
+    .stat-content h3 {
+        font-size: 1.5rem;
+    }
+
+    .company-selector {
+        margin-left: 10px;
+    }
+
+    .brand-text {
+        display: none;
+    }
+}
+
+/* ==========================================
+   ANIMATIONS
+   ========================================== */
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.stat-card,
+.card {
+    animation: fadeIn 0.5s ease;
+}
+
+/* ==========================================
+   UTILITIES
+   ========================================== */
+
+.text-primary {
+    color: var(--primary) !important;
+}
+
+.text-success {
+    color: var(--success) !important;
+}
+
+.text-danger {
+    color: var(--danger) !important;
+}
+
+.text-warning {
+    color: var(--warning) !important;
+}
+
+.text-info {
+    color: var(--info) !important;
+}
+
+.bg-light {
+    background-color: var(--light) !important;
+}

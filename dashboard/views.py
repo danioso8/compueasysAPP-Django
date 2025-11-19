@@ -633,6 +633,28 @@ def dashboard_home(request):
         # Categoría con mayores ingresos
         categoria_mayor_ingresos = ventas_por_categoria[0]  # Ya está ordenada por ingresos
     
+    # Calcular estadísticas diarias
+    from datetime import datetime, timedelta
+    from django.utils import timezone
+    
+    hoy = timezone.now().date()
+    inicio_dia = datetime.combine(hoy, datetime.min.time())
+    if timezone.is_aware(timezone.now()):
+        inicio_dia = timezone.make_aware(inicio_dia)
+    
+    pedidos_hoy = Pedido.objects.filter(fecha__gte=inicio_dia).exclude(estado='cancelado')
+    pedidos_diarios = pedidos_hoy.count()
+    
+    from django.db.models import Q
+    ventas_diarias = pedidos_hoy.filter(
+        Q(estado_pago='completado') | Q(estado='entregado')
+    ).aggregate(total=Sum('total'))['total'] or 0
+    
+    productos_vendidos_hoy = PedidoDetalle.objects.filter(
+        pedido__fecha__gte=inicio_dia,
+        pedido__estado__in=['pendiente', 'confirmado', 'enviado', 'llegando', 'entregado']
+    ).aggregate(total=Sum('cantidad'))['total'] or 0
+    
     estadisticas_ventas = {
         'pedidos_totales': pedidos_totales,
         'productos_vendidos': total_productos_vendidos,
@@ -640,6 +662,17 @@ def dashboard_home(request):
         'categoria_mas_vendida': categoria_mas_vendida,
         'categoria_mayor_ingresos': categoria_mayor_ingresos,
     }
+    
+    estadisticas_diarias = {
+        'pedidos_hoy': pedidos_diarios,
+        'ventas_hoy': float(ventas_diarias),
+        'productos_vendidos_hoy': productos_vendidos_hoy,
+    }
+    
+    # DEBUG: Logging para verificar valores
+    print(f"🔍 DEBUG estadisticas_diarias: {estadisticas_diarias}")
+    print(f"🔍 DEBUG ventas_diarias raw: {ventas_diarias}")
+    print(f"🔍 DEBUG pedidos_hoy count: {pedidos_diarios}")
 
     # Datos para la sección de mensajes
     conversations = []
@@ -708,6 +741,7 @@ def dashboard_home(request):
         'ventas_por_categoria': ventas_por_categoria,
         'total_ventas_general': total_ventas_general,
         'estadisticas_ventas': estadisticas_ventas,
+        'estadisticas_diarias': estadisticas_diarias,
         'categoria_filter': categoria_filter,
         'search_query': search_query,
         'conversations': conversations,
@@ -1416,6 +1450,55 @@ def update_pedido_notes(request):
         })
 
 
+@superuser_required  
+@csrf_exempt
+def confirmar_pago_pedido(request):
+    """Confirmar el pago de un pedido"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Método no permitido'})
+    
+    try:
+        import json
+        data = json.loads(request.body)
+        pedido_id = data.get('pedido_id')
+        
+        if not pedido_id:
+            return JsonResponse({
+                'success': False, 
+                'error': 'ID de pedido requerido'
+            })
+        
+        pedido = get_object_or_404(Pedido, id=pedido_id)
+        
+        # Obtener estado anterior
+        old_estado_pago = getattr(pedido, 'estado_pago', 'pendiente')
+        
+        # Actualizar estado de pago a completado
+        if hasattr(pedido, 'estado_pago'):
+            pedido.estado_pago = 'completado'
+        else:
+            setattr(pedido, 'estado_pago', 'completado')
+        
+        pedido.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Pago confirmado - Estado cambiado de "{old_estado_pago}" a "completado"',
+            'nuevo_estado_pago': 'completado'
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'success': False,
+            'error': 'Datos JSON inválidos'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'Error al confirmar pago: {str(e)}'
+        })
+
+
 @superuser_required
 @csrf_exempt
 def edit_user(request):
@@ -1925,35 +2008,40 @@ def pedidos_list(request):
                 <td class="text-center">
                     <div class="d-flex flex-column gap-1">
                         <button type="button" class="btn btn-outline-primary btn-sm" 
-                                data-bs-toggle="modal" data-bs-target="#pedidoModal"
-                                onclick="viewPedidoDetails({pedido.id})"
+                                data-bs-toggle="modal" 
+                                data-bs-target="#pedidoModal"
+                                onclick="loadPedidoDetails({pedido.id})"
                                 title="Ver detalles del pedido">
                             <i class="fas fa-eye me-1"></i> Ver
                         </button>
+                        {'<button type="button" class="btn btn-outline-success btn-sm" onclick="confirmarPago(' + str(pedido.id) + ')" title="Confirmar pago del pedido"><i class="fas fa-dollar-sign me-1"></i> Confirmar Pago</button>' if pedido.estado_pago != 'completado' else ''}
                         <div class="dropdown">
                             <button class="btn btn-outline-secondary btn-sm dropdown-toggle w-100" 
-                                    type="button" data-bs-toggle="dropdown"
+                                    type="button" 
+                                    id="dropdownEstado{pedido.id}"
+                                    data-bs-toggle="dropdown"
+                                    aria-expanded="false"
                                     title="Cambiar estado del pedido">
                                 <i class="fas fa-edit me-1"></i> Estado
                             </button>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="#" onclick="updateEstado({pedido.id}, 'pendiente')">
+                            <ul class="dropdown-menu" aria-labelledby="dropdownEstado{pedido.id}">
+                                <li><a class="dropdown-item" href="javascript:void(0)" onclick="event.preventDefault(); updateEstado({pedido.id}, 'pendiente')">
                                     <i class="fas fa-clock me-2 text-warning"></i>Pendiente
                                 </a></li>
-                                <li><a class="dropdown-item" href="#" onclick="updateEstado({pedido.id}, 'confirmado')">
+                                <li><a class="dropdown-item" href="javascript:void(0)" onclick="event.preventDefault(); updateEstado({pedido.id}, 'confirmado')">
                                     <i class="fas fa-check me-2 text-info"></i>Confirmar
                                 </a></li>
-                                <li><a class="dropdown-item" href="#" onclick="updateEstado({pedido.id}, 'enviado')">
+                                <li><a class="dropdown-item" href="javascript:void(0)" onclick="event.preventDefault(); updateEstado({pedido.id}, 'enviado')">
                                     <i class="fas fa-shipping-fast me-2 text-primary"></i>Enviar
                                 </a></li>
-                                <li><a class="dropdown-item" href="#" onclick="updateEstado({pedido.id}, 'llegando')">
+                                <li><a class="dropdown-item" href="javascript:void(0)" onclick="event.preventDefault(); updateEstado({pedido.id}, 'llegando')">
                                     <i class="fas fa-truck me-2 text-info"></i>En camino
                                 </a></li>
-                                <li><a class="dropdown-item" href="#" onclick="updateEstado({pedido.id}, 'entregado')">
+                                <li><a class="dropdown-item" href="javascript:void(0)" onclick="event.preventDefault(); updateEstado({pedido.id}, 'entregado')">
                                     <i class="fas fa-check-circle me-2 text-success"></i>Entregar
                                 </a></li>
                                 <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item text-danger" href="#" onclick="updateEstado({pedido.id}, 'cancelado')">
+                                <li><a class="dropdown-item text-danger" href="javascript:void(0)" onclick="event.preventDefault(); updateEstado({pedido.id}, 'cancelado')">
                                     <i class="fas fa-times-circle me-2"></i>Cancelar
                                 </a></li>
                             </ul>
@@ -1988,13 +2076,21 @@ def dashboard_stats(request):
     try:
         from django.db.models import Sum, Count, Q
         from decimal import Decimal
+        from datetime import datetime, timedelta
+        from django.utils import timezone
         
-        # Estadísticas de pedidos
+        # Obtener fecha de hoy
+        hoy = timezone.now().date()
+        inicio_dia = datetime.combine(hoy, datetime.min.time())
+        if timezone.is_aware(timezone.now()):
+            inicio_dia = timezone.make_aware(inicio_dia)
+        
+        # ===== ESTADÍSTICAS GENERALES =====
         total_pedidos = Pedido.objects.count()
         pedidos_pendientes = Pedido.objects.filter(estado='pendiente').count()
         pedidos_completados = Pedido.objects.filter(estado='entregado').count()
         
-        # Estadísticas financieras
+        # Estadísticas financieras generales
         ingresos_totales = Pedido.objects.filter(
             estado_pago='completado'
         ).aggregate(total=Sum('total'))['total'] or Decimal(0)
@@ -2003,12 +2099,39 @@ def dashboard_stats(request):
             Q(estado_pago='pendiente') | Q(estado_pago='procesando')
         ).aggregate(total=Sum('total'))['total'] or Decimal(0)
         
-        # Productos
+        # ===== ESTADÍSTICAS DIARIAS =====
+        pedidos_hoy = Pedido.objects.filter(fecha__gte=inicio_dia)
+        
+        # Pedidos de hoy
+        pedidos_diarios = pedidos_hoy.count()
+        
+        # Ventas de hoy (solo pedidos completados o con pago completado)
+        ventas_diarias = pedidos_hoy.filter(
+            Q(estado_pago='completado') | Q(estado='entregado')
+        ).aggregate(total=Sum('total'))['total'] or Decimal(0)
+        
+        # Productos vendidos hoy
+        from core.models import PedidoDetalle
+        productos_vendidos_hoy = PedidoDetalle.objects.filter(
+            pedido__fecha__gte=inicio_dia
+        ).aggregate(total=Sum('cantidad'))['total'] or 0
+        
+        # Ingresos pendientes de hoy
+        ingresos_pendientes_hoy = pedidos_hoy.filter(
+            Q(estado_pago='pendiente') | Q(estado_pago='procesando')
+        ).aggregate(total=Sum('total'))['total'] or Decimal(0)
+        
+        # Nuevos clientes hoy
+        nuevos_clientes_hoy = SimpleUser.objects.filter(
+            created_at__gte=inicio_dia
+        ).count() if hasattr(SimpleUser, 'created_at') else 0
+        
+        # ===== PRODUCTOS =====
         total_productos = ProductStore.objects.count()
         productos_sin_stock = ProductStore.objects.filter(stock=0).count()
         productos_bajo_stock = ProductStore.objects.filter(stock__lte=5, stock__gt=0).count()
         
-        # Usuarios
+        # ===== USUARIOS =====
         total_usuarios = SimpleUser.objects.count()
         
         # Pedidos recientes (últimos 5)
@@ -2052,6 +2175,13 @@ def dashboard_stats(request):
                     'ingresos_totales': float(ingresos_totales),
                     'ingresos_pendientes': float(ingresos_pendientes)
                 },
+                'diarias': {
+                    'pedidos_hoy': pedidos_diarios,
+                    'ventas_hoy': float(ventas_diarias),
+                    'productos_vendidos_hoy': productos_vendidos_hoy,
+                    'ingresos_pendientes_hoy': float(ingresos_pendientes_hoy),
+                    'nuevos_clientes_hoy': nuevos_clientes_hoy
+                },
                 'productos': {
                     'total': total_productos,
                     'sin_stock': productos_sin_stock,
@@ -2061,7 +2191,8 @@ def dashboard_stats(request):
                     'total': total_usuarios
                 },
                 'pedidos_recientes': pedidos_data,
-                'productos_top': productos_top
+                'productos_top': productos_top,
+                'timestamp': timezone.now().isoformat()
             }
         })
         
