@@ -130,7 +130,7 @@ def store(request):
 
     # Base queryset
     products = Product.objects.all().select_related('category')
-    categories = Category.objects.all()
+    categories = Category.objects.all().order_by('nombre')
     
     # Aplicar filtros
     if query:
@@ -184,6 +184,13 @@ def store(request):
     cart = request.session.get('cart', {})
     cart_count = sum([item['quantity'] if isinstance(item, dict) else item for item in cart.values()])
     
+    # Agrupar productos por categoría
+    from collections import defaultdict
+    products_by_category = defaultdict(list)
+    for product in products:
+        category_name = product.category.nombre if product.category else 'Sin categoría'
+        products_by_category[category_name].append(product)
+    
     # Para requests AJAX, devolver JSON
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         from django.template.loader import render_to_string
@@ -202,6 +209,7 @@ def store(request):
     # Context para template
     context = {
         'products': products,
+        'products_by_category': dict(products_by_category),
         'categories': categories,
         'cart_count': cart_count,
         'query': query,
@@ -1427,9 +1435,23 @@ def filter_products_ajax(request):
         
         # Renderizar HTML de productos
         from django.template.loader import render_to_string
-        products_html = render_to_string('partials/products_grid.html', {
-            'products': products,
-        }, request)
+        from collections import defaultdict
+        
+        # Si NO hay filtro de categoría, agrupar por categorías
+        if not category_id:
+            products_by_category = defaultdict(list)
+            for product in products:
+                category_name = product.category.nombre if product.category else 'Sin categoría'
+                products_by_category[category_name].append(product)
+            
+            products_html = render_to_string('partials/products_grid_categorized.html', {
+                'products_by_category': dict(products_by_category),
+            }, request)
+        else:
+            # Si hay filtro de categoría, mostrar productos simples
+            products_html = render_to_string('partials/products_grid.html', {
+                'products': products,
+            }, request)
         
         # Contar carrito
         cart = request.session.get('cart', {})

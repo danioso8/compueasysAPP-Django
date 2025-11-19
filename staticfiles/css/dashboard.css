@@ -31,8 +31,9 @@ body {
     transition: background 0.2s ease;
 }
 .dashboard-container {
-    display: flex;
+    display: block;
     min-height: 100vh;
+    position: relative;
 }
 
 .sidebar {
@@ -41,7 +42,9 @@ body {
     color: #fff;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: 2px 0 15px rgba(0,0,0,0.1);
-    position: relative;
+    position: fixed;
+    top: 0;
+    left: 0;
     z-index: 1000;
     display: flex;
     flex-direction: column;
@@ -51,6 +54,11 @@ body {
 
 .sidebar.collapsed {
     width: 70px;
+}
+
+.sidebar.collapsed ~ .main-content {
+    margin-left: 70px;
+    width: calc(100% - 70px);
 }
 
 /* Header del Sidebar */
@@ -424,12 +432,13 @@ body {
 
 /* Ajustes para el main content */
 .main-content {
-    flex: 1;
-    padding: 30px;
+    padding: 30px 30px 30px 50px;
     background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
     min-height: 100vh;
     transition: all 0.3s ease;
-    margin-left: 0;
+    margin-left: 280px;
+    width: calc(100% - 280px);
+    box-sizing: border-box;
 }
 
 .dashboard-container {

@@ -1138,10 +1138,10 @@ document.addEventListener('DOMContentLoaded', function() {
   function updateMainContentMargin(collapsed) {
     if (mainContent) {
       if (collapsed) {
-        mainContent.style.marginLeft = '0';
+        mainContent.style.marginLeft = '70px';
         mainContent.style.width = 'calc(100% - 70px)';
       } else {
-        mainContent.style.marginLeft = '0';
+        mainContent.style.marginLeft = '280px';
         mainContent.style.width = 'calc(100% - 280px)';
       }
     }
