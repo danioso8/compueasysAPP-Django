@@ -409,28 +409,55 @@
 
     bindViewToggle() {
       const viewButtons = document.querySelectorAll('.view-btn');
+      console.log('🔲 Binding view toggle buttons:', viewButtons.length, 'buttons found');
+      
+      if (viewButtons.length === 0) {
+        console.warn('⚠️ No view buttons found in DOM');
+        return;
+      }
+      
       viewButtons.forEach(btn => {
         btn.addEventListener('click', (e) => {
+          e.preventDefault();
           const view = e.currentTarget.dataset.view;
+          console.log('🔲 View button clicked:', view);
           this.switchView(view);
         });
       });
+      
+      console.log('✅ View toggle buttons bound successfully');
     },
 
     switchView(view) {
       StoreState.view = view;
-      console.log('👁️ View changed:', view);
+      console.log('👁️ View changed to:', view);
 
       // Actualizar botones
       document.querySelectorAll('.view-btn').forEach(btn => {
         btn.classList.remove('active');
       });
-      document.querySelector(`[data-view="${view}"]`).classList.add('active');
+      
+      const activeBtn = document.querySelector(`[data-view="${view}"]`);
+      if (activeBtn) {
+        activeBtn.classList.add('active');
+        console.log('✅ Active button updated:', view);
+      } else {
+        console.warn('⚠️ Active button not found for view:', view);
+      }
 
-      // Actualizar grid
-      const productsGrid = document.getElementById('products-grid');
-      if (productsGrid) {
-        productsGrid.className = view === 'list' ? 'products-list' : 'products-grid';
+      // Actualizar grid - aplicar clase a todos los products-grid dentro del container
+      const productsGrids = document.querySelectorAll('.products-grid');
+      console.log('🔲 Found', productsGrids.length, 'product grids to update');
+      
+      if (productsGrids.length > 0) {
+        const newClass = view === 'list' ? 'products-list' : 'products-grid';
+        productsGrids.forEach((grid, index) => {
+          grid.className = newClass;
+          console.log(`  Grid ${index + 1}: Changed to ${newClass}`);
+        });
+        console.log('✅ All grids updated successfully');
+      } else {
+        console.warn('⚠️ No product grids found to update');
       }
 
       Utils.vibrate([20]);
@@ -486,7 +513,7 @@
       .then(data => {
         if (data.success) {
           // Actualizar contenido
-          const productsContainer = document.getElementById('products-grid');
+          const productsContainer = document.getElementById('products-container');
           if (productsContainer) {
             productsContainer.innerHTML = data.html;
           }

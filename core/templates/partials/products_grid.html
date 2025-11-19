@@ -3,6 +3,7 @@
 
 <!-- Grid de productos para carga AJAX -->
 {% if products %}
+<div class="products-grid">
   {% for product in products %}
     <article class="product-card" data-product-id="{{ product.id }}">
       <div class="card-image-container">
@@ -89,6 +90,7 @@
       </div>
     </article>
   {% endfor %}
+</div>
 {% else %}
   <!-- Estado vacío -->
   <div class="empty-state">
