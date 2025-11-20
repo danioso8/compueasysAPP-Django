@@ -15,6 +15,7 @@ from core.views import (
     order_details, cancel_order, start_conversation, get_conversations,
     get_conversation, send_message
 )
+from core import views
 
 from django.conf import settings
 
@@ -70,4 +71,8 @@ urlpatterns = [
     path('api/conversations/', get_conversations, name='get_conversations'),
     path('api/conversation/<int:conversation_id>/', get_conversation, name='get_conversation'),
     path('api/send-message/', send_message, name='send_message'),
+    
+    # URLs públicas de proyectos
+    path('projects/', views.projects, name='projects'),
+    path('projects/<slug:slug>/', views.project_detail, name='project_detail'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

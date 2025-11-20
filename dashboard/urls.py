@@ -95,6 +95,12 @@ urlpatterns = [
     path('admin/conversation/reply/', conversation_reply, name='admin_conversation_reply'),
     path('admin/conversation/update-status/', conversation_update_status, name='admin_conversation_update_status'),
 
+    # URLs para gestión de proyectos
+    path('projects/', views.projects_list, name='dashboard_projects'),
+    path('projects/create/', views.project_create, name='project_create'),
+    path('projects/<int:project_id>/edit/', views.project_edit, name='project_edit'),
+    path('projects/<int:project_id>/delete/', views.project_delete, name='project_delete'),
+
 ]
 
 # Solo servir archivos media localmente si no estamos usando Cloudinary

@@ -2846,3 +2846,65 @@ def check_price_drops():
     except Exception as e:
         logger.error(f"Error in check_price_drops: {e}")
         return 0
+
+
+# ============================================
+# VISTAS PÚBLICAS DE PROYECTOS
+# ============================================
+
+def projects(request):
+    """Vista pública para mostrar todos los proyectos"""
+    from .models import Project
+    
+    # Obtener proyectos activos
+    projects_list = Project.objects.filter(is_active=True).order_by('-order', '-created_at')
+    
+    # Filtros
+    status_filter = request.GET.get('status', '')
+    if status_filter:
+        projects_list = projects_list.filter(status=status_filter)
+    
+    # Proyectos destacados
+    featured_projects = projects_list.filter(is_featured=True)[:3]
+    
+    # Contar carrito
+    cart_count = 0
+    if 'cart' in request.session:
+        cart_count = sum(item['quantity'] for item in request.session['cart'].values())
+    
+    context = {
+        'projects': projects_list,
+        'featured_projects': featured_projects,
+        'status_filter': status_filter,
+        'status_choices': Project.STATUS_CHOICES,
+        'cart_count': cart_count,
+    }
+    
+    return render(request, 'projects.html', context)
+
+
+def project_detail(request, slug):
+    """Vista pública para el detalle de un proyecto"""
+    from .models import Project
+    from django.shortcuts import get_object_or_404
+    
+    project = get_object_or_404(Project, slug=slug, is_active=True)
+    
+    # Proyectos relacionados (misma tecnología backend o frontend)
+    related_projects = Project.objects.filter(
+        Q(backend_tech__icontains=project.backend_tech.split(',')[0]) |
+        Q(frontend_tech__icontains=project.frontend_tech.split(',')[0])
+    ).exclude(id=project.id).filter(is_active=True)[:3]
+    
+    # Contar carrito
+    cart_count = 0
+    if 'cart' in request.session:
+        cart_count = sum(item['quantity'] for item in request.session['cart'].values())
+    
+    context = {
+        'project': project,
+        'related_projects': related_projects,
+        'cart_count': cart_count,
+    }
+    
+    return render(request, 'project_detail.html', context)

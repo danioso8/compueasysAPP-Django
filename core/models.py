@@ -468,3 +468,76 @@ class NotificationLog(models.Model):
     def __str__(self):
         status = "✅" if self.success else "❌"
         return f"{status} {self.email_subject} - {self.sent_at.strftime('%d/%m/%Y %H:%M')}"
+
+
+class Project(models.Model):
+    """
+    Modelo para gestionar proyectos de desarrollo
+    """
+    STATUS_CHOICES = [
+        ('planning', 'En Planificación'),
+        ('development', 'En Desarrollo'),
+        ('testing', 'En Pruebas'),
+        ('completed', 'Completado'),
+        ('paused', 'Pausado'),
+    ]
+    
+    # Información básica
+    name = models.CharField(max_length=200, verbose_name="Nombre del Proyecto")
+    slug = models.SlugField(max_length=200, unique=True, blank=True)
+    description = models.TextField(verbose_name="Descripción")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='planning', verbose_name="Estado")
+    
+    # Imágenes
+    main_image = models.ImageField(upload_to='projects/', blank=True, null=True, verbose_name="Imagen Principal")
+    screenshot_1 = models.ImageField(upload_to='projects/screenshots/', blank=True, null=True, verbose_name="Captura 1")
+    screenshot_2 = models.ImageField(upload_to='projects/screenshots/', blank=True, null=True, verbose_name="Captura 2")
+    screenshot_3 = models.ImageField(upload_to='projects/screenshots/', blank=True, null=True, verbose_name="Captura 3")
+    
+    # Tecnologías
+    frontend_tech = models.CharField(max_length=300, verbose_name="Tecnología Frontend", 
+                                     help_text="Ej: React, Vue.js, Bootstrap")
+    backend_tech = models.CharField(max_length=300, verbose_name="Tecnología Backend",
+                                    help_text="Ej: Django, Node.js, Python")
+    database = models.CharField(max_length=200, verbose_name="Base de Datos",
+                                help_text="Ej: PostgreSQL, MySQL, MongoDB")
+    authentication = models.CharField(max_length=200, verbose_name="Sistema de Autenticación",
+                                      help_text="Ej: JWT, OAuth, Django Auth")
+    
+    # Componentes principales
+    main_components = models.TextField(verbose_name="Componentes Principales",
+                                       help_text="Separa cada componente con una línea")
+    
+    # Información adicional
+    client = models.CharField(max_length=200, blank=True, verbose_name="Cliente")
+    project_url = models.URLField(blank=True, verbose_name="URL del Proyecto")
+    github_url = models.URLField(blank=True, verbose_name="Repositorio GitHub")
+    
+    # Fechas
+    start_date = models.DateField(verbose_name="Fecha de Inicio")
+    end_date = models.DateField(blank=True, null=True, verbose_name="Fecha de Finalización")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    # Control
+    is_featured = models.BooleanField(default=False, verbose_name="Proyecto Destacado")
+    is_active = models.BooleanField(default=True, verbose_name="Activo")
+    order = models.IntegerField(default=0, verbose_name="Orden de Visualización")
+    
+    class Meta:
+        verbose_name = "Proyecto"
+        verbose_name_plural = "Proyectos"
+        ordering = ['-order', '-created_at']
+    
+    def __str__(self):
+        return self.name
+    
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            from django.utils.text import slugify
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
+    
+    def get_components_list(self):
+        """Devuelve los componentes como una lista"""
+        return [comp.strip() for comp in self.main_components.split('\n') if comp.strip()]

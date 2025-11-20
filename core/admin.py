@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 # Register your models here.
-from .models import ProductStore, Galeria, Category, Type, Pedido, SimpleUser, ProductVariant, proveedor
+from .models import ProductStore, Galeria, Category, Type, Pedido, SimpleUser, ProductVariant, proveedor, Project
 
 admin.site.register(ProductVariant)
 admin.site.register(Galeria)   
@@ -10,6 +10,15 @@ admin.site.register(Type)
 admin.site.register(Pedido)   
 admin.site.register(SimpleUser)  
 admin.site.register(proveedor)
+
+@admin.register(Project)
+class ProjectAdmin(admin.ModelAdmin):
+    list_display = ('name', 'status', 'client', 'start_date', 'is_featured', 'is_active', 'order')
+    list_filter = ('status', 'is_featured', 'is_active')
+    search_fields = ('name', 'client', 'description')
+    prepopulated_fields = {'slug': ('name',)}
+    list_editable = ('is_featured', 'is_active', 'order')
+    ordering = ('-order', '-created_at')
 
 
 

@@ -2204,3 +2204,189 @@ def dashboard_stats(request):
             'success': False,
             'error': str(e)
         })
+
+
+# ============================================
+# GESTIÓN DE PROYECTOS
+# ============================================
+
+@superuser_required
+def projects_list(request):
+    """Lista todos los proyectos en el dashboard"""
+    from core.models import Project
+    
+    projects = Project.objects.all().order_by('-order', '-created_at')
+    
+    # Filtros
+    status_filter = request.GET.get('status', '')
+    if status_filter:
+        projects = projects.filter(status=status_filter)
+    
+    search_query = request.GET.get('search', '')
+    if search_query:
+        projects = projects.filter(
+            Q(name__icontains=search_query) |
+            Q(description__icontains=search_query) |
+            Q(client__icontains=search_query)
+        )
+    
+    context = {
+        'projects': projects,
+        'status_filter': status_filter,
+        'search_query': search_query,
+        'status_choices': Project.STATUS_CHOICES,
+    }
+    
+    return render(request, 'dashboard/projects_list.html', context)
+
+
+@superuser_required
+def project_create(request):
+    """Crear un nuevo proyecto"""
+    from core.models import Project
+    from django.utils.text import slugify
+    
+    if request.method == 'POST':
+        try:
+            # Crear proyecto
+            project = Project()
+            project.name = request.POST.get('name', '')
+            project.slug = slugify(project.name)
+            project.description = request.POST.get('description', '')
+            project.status = request.POST.get('status', 'planning')
+            
+            # Tecnologías
+            project.frontend_tech = request.POST.get('frontend_tech', '')
+            project.backend_tech = request.POST.get('backend_tech', '')
+            project.database = request.POST.get('database', '')
+            project.authentication = request.POST.get('authentication', '')
+            project.main_components = request.POST.get('main_components', '')
+            
+            # Información adicional
+            project.client = request.POST.get('client', '')
+            project.project_url = request.POST.get('project_url', '')
+            project.github_url = request.POST.get('github_url', '')
+            
+            # Fechas
+            project.start_date = request.POST.get('start_date')
+            end_date = request.POST.get('end_date')
+            if end_date:
+                project.end_date = end_date
+            
+            # Control
+            project.is_featured = request.POST.get('is_featured') == 'on'
+            project.is_active = request.POST.get('is_active') == 'on'
+            project.order = int(request.POST.get('order', 0))
+            
+            # Imágenes
+            if 'main_image' in request.FILES:
+                project.main_image = request.FILES['main_image']
+            if 'screenshot_1' in request.FILES:
+                project.screenshot_1 = request.FILES['screenshot_1']
+            if 'screenshot_2' in request.FILES:
+                project.screenshot_2 = request.FILES['screenshot_2']
+            if 'screenshot_3' in request.FILES:
+                project.screenshot_3 = request.FILES['screenshot_3']
+            
+            project.save()
+            
+            messages.success(request, f'Proyecto "{project.name}" creado exitosamente')
+            return redirect('dashboard_projects')
+            
+        except Exception as e:
+            messages.error(request, f'Error al crear proyecto: {str(e)}')
+            print(f"Error creating project: {e}")
+    
+    context = {
+        'status_choices': Project.STATUS_CHOICES,
+    }
+    
+    return render(request, 'dashboard/project_form.html', context)
+
+
+@superuser_required
+def project_edit(request, project_id):
+    """Editar un proyecto existente"""
+    from core.models import Project
+    from django.utils.text import slugify
+    
+    project = get_object_or_404(Project, id=project_id)
+    
+    if request.method == 'POST':
+        try:
+            # Actualizar datos básicos
+            project.name = request.POST.get('name', project.name)
+            project.slug = slugify(project.name)
+            project.description = request.POST.get('description', project.description)
+            project.status = request.POST.get('status', project.status)
+            
+            # Tecnologías
+            project.frontend_tech = request.POST.get('frontend_tech', project.frontend_tech)
+            project.backend_tech = request.POST.get('backend_tech', project.backend_tech)
+            project.database = request.POST.get('database', project.database)
+            project.authentication = request.POST.get('authentication', project.authentication)
+            project.main_components = request.POST.get('main_components', project.main_components)
+            
+            # Información adicional
+            project.client = request.POST.get('client', project.client)
+            project.project_url = request.POST.get('project_url', project.project_url)
+            project.github_url = request.POST.get('github_url', project.github_url)
+            
+            # Fechas
+            project.start_date = request.POST.get('start_date', project.start_date)
+            end_date = request.POST.get('end_date')
+            if end_date:
+                project.end_date = end_date
+            
+            # Control
+            project.is_featured = request.POST.get('is_featured') == 'on'
+            project.is_active = request.POST.get('is_active') == 'on'
+            project.order = int(request.POST.get('order', project.order))
+            
+            # Actualizar imágenes solo si se suben nuevas
+            if 'main_image' in request.FILES:
+                project.main_image = request.FILES['main_image']
+            if 'screenshot_1' in request.FILES:
+                project.screenshot_1 = request.FILES['screenshot_1']
+            if 'screenshot_2' in request.FILES:
+                project.screenshot_2 = request.FILES['screenshot_2']
+            if 'screenshot_3' in request.FILES:
+                project.screenshot_3 = request.FILES['screenshot_3']
+            
+            project.save()
+            
+            messages.success(request, f'Proyecto "{project.name}" actualizado exitosamente')
+            return redirect('dashboard_projects')
+            
+        except Exception as e:
+            messages.error(request, f'Error al actualizar proyecto: {str(e)}')
+            print(f"Error updating project: {e}")
+    
+    context = {
+        'project': project,
+        'status_choices': Project.STATUS_CHOICES,
+        'edit_mode': True,
+    }
+    
+    return render(request, 'dashboard/project_form.html', context)
+
+
+@superuser_required
+def project_delete(request, project_id):
+    """Eliminar un proyecto"""
+    from core.models import Project
+    
+    if request.method == 'POST':
+        try:
+            project = get_object_or_404(Project, id=project_id)
+            project_name = project.name
+            project.delete()
+            
+            messages.success(request, f'Proyecto "{project_name}" eliminado exitosamente')
+            return JsonResponse({'success': True, 'message': 'Proyecto eliminado'})
+            
+        except Exception as e:
+            messages.error(request, f'Error al eliminar proyecto: {str(e)}')
+            return JsonResponse({'success': False, 'error': str(e)})
+    
+    return JsonResponse({'success': False, 'error': 'Método no permitido'})
