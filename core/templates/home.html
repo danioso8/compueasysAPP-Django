@@ -653,10 +653,45 @@
                             <li><i class="bi bi-check-circle"></i> Mantenimiento Preventivo</li>
                             <li><i class="bi bi-check-circle"></i> Consultoría Técnica</li>
                         </ul>
-                        <a href="/contactUs/" class="btn btn-outline-primary w-100">
+                        <a href="/contactUs/" class="btn btn-outline-primary w-100 mb-2">
                             <i class="bi bi-arrow-right"></i>
                             Contactar Soporte
                         </a>
+                        <button class="btn btn-success w-100" type="button" data-bs-toggle="offcanvas" data-bs-target="#soporteRemotoOffcanvas" aria-controls="soporteRemotoOffcanvas">
+                            <i class="bi bi-display"></i>
+                            Soporte Remoto
+                        </button>
+                        <!-- Offcanvas Soporte Remoto -->
+                        <div class="offcanvas offcanvas-end" tabindex="-1" id="soporteRemotoOffcanvas" aria-labelledby="soporteRemotoOffcanvasLabel">
+                          <div class="offcanvas-header">
+                            <h5 class="offcanvas-title" id="soporteRemotoOffcanvasLabel"><i class="bi bi-display"></i> Soporte Remoto</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Cerrar"></button>
+                          </div>
+                          <div class="offcanvas-body">
+                            <p>¿Cómo deseas recibir soporte remoto?</p>
+                            <ul class="list-group mb-3">
+                                <li class="list-group-item">
+                                    <strong>1. Compartir pantalla (solo visualización)</strong><br>
+                                    <button class="btn btn-outline-primary mt-2 w-100" disabled title="Próximamente">
+                                        <i class="bi bi-eye"></i> Compartir pantalla (Web)
+                                    </button>
+                                    <small class="text-muted">Próximamente disponible desde el navegador.</small>
+                                </li>
+                                <li class="list-group-item">
+                                    <strong>2. Control total (recomendado)</strong><br>
+                                    
+                                    <a href="/media/uploads/rustdesk.exe" download class="btn btn-success mt-2 w-100">
+                                        <i class="bi bi-hdd"></i> Descargar Cliente Remoto CompuEasys
+                                    </a>
+                                    <small class="text-muted">Descarga y ejecuta el programa. Comparte tu ID con el técnico para recibir soporte seguro.</small>
+                                </li>
+                            </ul>
+                            <div class="alert alert-info small">
+                                <i class="bi bi-info-circle"></i> Para control total, debes descargar y ejecutar el cliente remoto. Si solo deseas compartir pantalla, espera la próxima actualización.<br>
+                                <b>Tu privacidad está protegida: solo tendrás acceso si aceptas y ejecutas el programa.</b>
+                            </div>
+                          </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1031,6 +1066,7 @@
             });
         });
     </script>
-
+    <!-- Bootstrap JS y Popper.js para modals -->
+    <!-- Solo se necesita bootstrap.bundle.min.js (ya incluye Popper) -->
 </body>
 </html>

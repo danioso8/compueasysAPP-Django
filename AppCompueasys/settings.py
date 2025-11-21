@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     'django_bootstrap5',    
     'django.contrib.humanize',
     'dashboard',
+    'channels',  # Para WebSockets
 ]
 
 MIDDLEWARE = [    
@@ -69,7 +70,17 @@ TEMPLATES = [
 ]
 
 
+
+# Configuración para Channels
+ASGI_APPLICATION = 'AppCompueasys.asgi.application'
 WSGI_APPLICATION = 'AppCompueasys.wsgi.application'
+
+# Channel layers (por defecto en memoria, para producción usar Redis)
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+    },
+}
 
 # Base de datos principal: configuración flexible
 import dj_database_url

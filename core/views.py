@@ -12,7 +12,7 @@ from django.contrib import messages
 import urllib.parse
 from django.http import JsonResponse, HttpResponseRedirect
 from dashboard.models import register_superuser
-from .models import Category, Type, Galeria, SimpleUser, Pedido, ProductVariant, ProductStore as Product, PedidoDetalle, BonoDescuento, Conversation, ConversationMessage, StockNotification, NotificationLog
+from .models import Category, StoreVisit, Type, Galeria, SimpleUser, Pedido, ProductVariant, ProductStore as Product, PedidoDetalle, BonoDescuento, Conversation, ConversationMessage, StockNotification, NotificationLog
 
 # Importar modelos temporalmente definidos en views hasta que se haga la migración
 class VerificationToken:

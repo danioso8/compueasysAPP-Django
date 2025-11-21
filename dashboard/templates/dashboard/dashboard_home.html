@@ -53,7 +53,7 @@
             </div>
             
             <!-- Navegación Principal -->
-            <nav class="sidebar-nav">
+            <nav class="sidebar-nav flex-grow-1" style="flex:1 1 auto;overflow-y:auto;overflow-x:hidden;">
                 <ul class="nav-list">
                     <li class="nav-item">
                         <a href="/dashboard/dashboard_home/" class="nav-link {% if not request.GET.view %}active{% endif %}" title="Panel Principal">
@@ -138,24 +138,95 @@
                             <span class="sidebar-text">Mensajes</span>
                         </a>
                     </li>
+                   
                 </ul>
             </nav>
             
-            <!-- Footer del Sidebar -->
-            <div class="sidebar-footer">
-                <div class="user-info">
+            <!-- Footer Sidebar (logout y admin) -->
+            <div class="sidebar-footer mt-auto">
+                <div class="user-info mb-2">
                     <i class="fas fa-user-shield nav-icon"></i>
                     <span class="sidebar-text">Admin</span>
                 </div>
-                 <div class="logout-container">
+                <div class="logout-container">
                     <form method="post" action="{% url 'logout_view' %}">
                        {% csrf_token %}
                        <button type="submit" class="btn text-light">Cerrar sesión</button>
                     </form>
-                 </div>
+                </div>
             </div>
         </aside>
         <main class="main-content">
+            {% if not request.GET.view or request.GET.view == 'ventas' %}
+            <section class="mb-4">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-info text-white d-flex align-items-center justify-content-between">
+                        <div>
+                            <i class="fas fa-eye me-2"></i>
+                            <strong>Visitas recientes a la tienda</strong>
+                        </div>
+                        <form method="get" class="d-flex gap-2 align-items-center mb-0">
+                            <input type="hidden" name="view" value="ventas">
+                            <select name="visitas_filter" class="form-select form-select-sm" onchange="this.form.submit()">
+                                <option value="all" {% if request.GET.visitas_filter == 'all' or not request.GET.visitas_filter %}selected{% endif %}>Todas</option>
+                                <option value="today" {% if request.GET.visitas_filter == 'today' %}selected{% endif %}>Hoy</option>
+                                <option value="week" {% if request.GET.visitas_filter == 'week' %}selected{% endif %}>Esta semana</option>
+                                <option value="month" {% if request.GET.visitas_filter == 'month' %}selected{% endif %}>Este mes</option>
+                            </select>
+                            <select name="visitas_user" class="form-select form-select-sm" onchange="this.form.submit()">
+                                <option value="all" {% if request.GET.visitas_user == 'all' or not request.GET.visitas_user %}selected{% endif %}>Todos</option>
+                                <option value="auth" {% if request.GET.visitas_user == 'auth' %}selected{% endif %}>Autenticados</option>
+                                <option value="anon" {% if request.GET.visitas_user == 'anon' %}selected{% endif %}>Anónimos</option>
+                            </select>
+                        </form>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="row g-0">
+                            <div class="col-lg-3 col-md-4 col-12 border-end">
+                                <div class="p-3">
+                                    <div class="mb-2"><span class="fw-bold">Total filtrado:</span> <span class="badge bg-info">{{ visitas_count }}</span></div>
+                                    <div class="mb-1 small">Hoy: <span class="badge bg-primary">{{ visitas_count_today }}</span></div>
+                                    <div class="mb-1 small">Esta semana: <span class="badge bg-success">{{ visitas_count_week }}</span></div>
+                                    <div class="mb-1 small">Este mes: <span class="badge bg-warning text-dark">{{ visitas_count_month }}</span></div>
+                                    <div class="mb-1 small">Autenticados: <span class="badge bg-secondary">{{ visitas_count_auth }}</span></div>
+                                    <div class="mb-1 small">Anónimos: <span class="badge bg-dark">{{ visitas_count_anon }}</span></div>
+                                </div>
+                            </div>
+                            <div class="col-lg-9 col-md-8 col-12">
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-hover mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Fecha/Hora</th>
+                                                <th>Usuario</th>
+                                                <th>Session Key</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for visita in visitas_recientes %}
+                                            <tr>
+                                                <td><span class="text-muted small">{{ visita.timestamp|date:"d/m/Y H:i:s" }}</span></td>
+                                                <td>
+                                                    {% if visita.user %}
+                                                        <span class="badge bg-primary"><i class="fas fa-user"></i> {{ visita.user.name|default:visita.user.email }}</span>
+                                                    {% else %}
+                                                        <span class="text-secondary">Anónimo</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td><code class="small">{{ visita.session_key|default:'-' }}</code></td>
+                                            </tr>
+                                            {% empty %}
+                                            <tr><td colspan="3" class="text-center text-muted">Sin visitas recientes</td></tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            {% endif %}
             {% if request.GET.view == "usuarios" %}
                 <div class="usuarios-dashboard">
                     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -980,6 +1051,13 @@
                                     <span class="page-link"><i class="fas fa-angle-double-right"></i></span>
                                 </li>
                             {% endif %}
+                            <!-- Link Visitas en el sidebar principal -->
+                            <li class="nav-item">
+                                <a href="?view=visitas" class="nav-link {% if request.GET.view == 'visitas' %}active{% endif %}" title="Visitas a la tienda">
+                                    <i class="fas fa-eye nav-icon"></i>
+                                    <span class="sidebar-text">Visitas</span>
+                                </a>
+                            </li>
                         </ul>
                     </nav>
 
@@ -4039,4 +4117,46 @@
     </script>
     
 </body>
+<script>
+(function() {
+    var ws_scheme = window.location.protocol === "https:" ? "wss" : "ws";
+    var ws_path = ws_scheme + '://' + window.location.host + '/ws/dashboard/';
+    var dashboardSocket = new WebSocket(ws_path);
+
+    dashboardSocket.onopen = function(e) {
+        console.log('[WebSocket] Dashboard conectado para notificaciones de visitas');
+    };
+    dashboardSocket.onmessage = function(e) {
+        var data = JSON.parse(e.data);
+        if (data.message === 'new_visit') {
+            // Modern alert: SweetAlert2 si está disponible, si no, toast, si no, alert
+            if (window.Swal && typeof Swal.fire === 'function') {
+                Swal.fire({
+                    title: '¡Nuevo visitante en tienda!',
+                    text: 'Alguien acaba de ingresar a la tienda online.',
+                    icon: 'info',
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 3500,
+                    timerProgressBar: true,
+                    background: '#f0f9ff',
+                    color: '#222',
+                    customClass: {
+                        popup: 'swal2-modern-toast swal2-shadow'
+                    }
+                });
+            } else if (window.showToast) {
+                showToast('Nuevo visitante', 'Alguien acaba de ingresar a la tienda', 'info', 3500);
+            } else {
+                alert('Nuevo visitante en la tienda');
+            }
+            console.log('[WebSocket] Nuevo visitante:', data.timestamp);
+        }
+    };
+    dashboardSocket.onclose = function(e) {
+        console.log('[WebSocket] Dashboard desconectado');
+    };
+})();
+</script>
 </html>

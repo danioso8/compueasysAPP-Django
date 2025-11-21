@@ -7,7 +7,7 @@ from django.dispatch import receiver
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from django.db.models import Sum, Count, Q, F
-from datetime import datetime as dt, timedelta
+from datetime import datetime, timedelta
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from functools import wraps
 from django.shortcuts import redirect, render, get_object_or_404
@@ -26,23 +26,25 @@ def superuser_required(view_func):
     return _wrapped_view
 
 
+
 @superuser_required
 def dashboard_home(request):
+    from core.models import StoreVisit
     Pedidos = [];
     categorias = [];
     crear_producto_url = f"{reverse('dashboard_home')}?view=productos"
-    
+
     # Filtros y paginación para productos
     view_param = request.GET.get('view', 'ventas')  # 'ventas' por defecto
-    
+
     # Obtener filtros para productos
     categoria_filter = request.GET.get('categoria_filter', '')
     search_query = request.GET.get('search', '')
     page_number = request.GET.get('page', 1)
-    
+
     # Base queryset para productos
     productos_queryset = ProductStore.objects.select_related('category', 'proveedor', 'type').all().order_by('-id')
-    
+
     # Aplicar filtros
     if categoria_filter:
         try:
@@ -50,13 +52,13 @@ def dashboard_home(request):
             productos_queryset = productos_queryset.filter(category_id=categoria_filter_id)
         except (ValueError, TypeError):
             pass
-    
+
     if search_query:
         productos_queryset = productos_queryset.filter(
             Q(name__icontains=search_query) |
             Q(description__icontains=search_query)
         )
-    
+
     # Paginación para productos
     productos_paginator = Paginator(productos_queryset, 10)  # 10 productos por página
     try:
@@ -65,21 +67,21 @@ def dashboard_home(request):
         productos_page = productos_paginator.page(1)
     except EmptyPage:
         productos_page = productos_paginator.page(productos_paginator.num_pages)
-    
+
     # Para compatibilidad con el código existente
     productos = productos_page.object_list
-    
+
     categorias = Category.objects.all()
     tipos = Type.objects.all()
     proveedores = proveedor.objects.all()
-    
+
     # Obtener todos los usuarios: SimpleUser y register_superuser combinados
     simple_users = SimpleUser.objects.all()
     admin_users = register_superuser.objects.all()
-    
+
     # Crear una lista combinada de usuarios con información de tipo
     all_users = []
-    
+
     # Agregar usuarios simples
     for user in simple_users:
         all_users.append({
@@ -95,7 +97,7 @@ def dashboard_home(request):
             'user_type': 'simple',
             'model_type': 'SimpleUser'
         })
-    
+
     # Agregar usuarios administradores
     for user in admin_users:
         all_users.append({
@@ -111,12 +113,44 @@ def dashboard_home(request):
             'user_type': 'admin',
             'model_type': 'register_superuser'
         })
-    
+
     userSimples = all_users  # Mantenemos el nombre para compatibilidad
     bonos = BonoDescuento.objects.all().order_by('-fecha_creacion')
-    
+
     # Obtener pedidos con filtros
     pedidos_queryset = Pedido.objects.select_related('user').all().order_by('-fecha')
+
+    # VISITAS RECIENTES Y RESUMEN
+    visitas_recientes = StoreVisit.objects.select_related('user').order_by('-timestamp')[:20]
+
+    # Filtros de visitas
+    visitas_filter = request.GET.get('visitas_filter', 'all')
+    visitas_user_filter = request.GET.get('visitas_user', 'all')
+    now = datetime.now()
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    week_start = today_start - timedelta(days=today_start.weekday())
+    month_start = today_start.replace(day=1)
+
+    visitas_qs = StoreVisit.objects.all()
+    if visitas_filter == 'today':
+        visitas_qs = visitas_qs.filter(timestamp__gte=today_start)
+    elif visitas_filter == 'week':
+        visitas_qs = visitas_qs.filter(timestamp__gte=week_start)
+    elif visitas_filter == 'month':
+        visitas_qs = visitas_qs.filter(timestamp__gte=month_start)
+
+    if visitas_user_filter == 'auth':
+        visitas_qs = visitas_qs.exclude(user=None)
+    elif visitas_user_filter == 'anon':
+        visitas_qs = visitas_qs.filter(user=None)
+
+    visitas_count = visitas_qs.count()
+    visitas_count_today = StoreVisit.objects.filter(timestamp__gte=today_start).count()
+    visitas_count_week = StoreVisit.objects.filter(timestamp__gte=week_start).count()
+    visitas_count_month = StoreVisit.objects.filter(timestamp__gte=month_start).count()
+    visitas_count_auth = StoreVisit.objects.exclude(user=None).count()
+    visitas_count_anon = StoreVisit.objects.filter(user=None).count()
+    visitas_count_total = StoreVisit.objects.count()
     
     # Aplicar filtros para pedidos
     if view_param == 'pedidos':
@@ -464,8 +498,8 @@ def dashboard_home(request):
                 
                 # Parsear fechas
                 try:
-                    fecha_inicio = timezone.make_aware(dt.strptime(fecha_inicio_str, '%Y-%m-%dT%H:%M'))
-                    fecha_fin = timezone.make_aware(dt.strptime(fecha_fin_str, '%Y-%m-%dT%H:%M'))
+                    fecha_inicio = timezone.make_aware(datetime.strptime(fecha_inicio_str, '%Y-%m-%dT%H:%M'))
+                    fecha_fin = timezone.make_aware(datetime.strptime(fecha_fin_str, '%Y-%m-%dT%H:%M'))
                 except ValueError:
                     messages.error(request, 'Formato de fecha inválido')
                     return redirect(f"{reverse('dashboard_home')}?view=bonos")
@@ -525,8 +559,8 @@ def dashboard_home(request):
                     return redirect(f"{reverse('dashboard_home')}?view=bonos")
                 
                 # Parsear fechas
-                fecha_inicio = timezone.make_aware(dt.strptime(fecha_inicio_str, '%Y-%m-%dT%H:%M'))
-                fecha_fin = timezone.make_aware(dt.strptime(fecha_fin_str, '%Y-%m-%dT%H:%M'))
+                fecha_inicio = timezone.make_aware(datetime.strptime(fecha_inicio_str, '%Y-%m-%dT%H:%M'))
+                fecha_fin = timezone.make_aware(datetime.strptime(fecha_fin_str, '%Y-%m-%dT%H:%M'))
                 
                 if fecha_fin <= fecha_inicio:
                     messages.error(request, 'La fecha de fin debe ser posterior a la fecha de inicio')
@@ -634,7 +668,7 @@ def dashboard_home(request):
         categoria_mayor_ingresos = ventas_por_categoria[0]  # Ya está ordenada por ingresos
     
     # Calcular estadísticas diarias
-    from datetime import datetime, timedelta
+
     from django.utils import timezone
     
     hoy = timezone.now().date()
@@ -707,7 +741,7 @@ def dashboard_home(request):
         active_conversations = Conversation.objects.filter(status='in_progress').count()
         
         # Mensajes de hoy
-        today = dt.now().date()
+        today = datetime.now().date()
         today_messages = ConversationMessage.objects.filter(
             created_at__date=today
         ).count()
@@ -2076,7 +2110,7 @@ def dashboard_stats(request):
     try:
         from django.db.models import Sum, Count, Q
         from decimal import Decimal
-        from datetime import datetime, timedelta
+
         from django.utils import timezone
         
         # Obtener fecha de hoy

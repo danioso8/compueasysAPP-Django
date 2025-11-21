@@ -3,7 +3,12 @@ from django.contrib.auth.models import User
 
 # Create your models here.
 
+from django.db import models
 
+class StoreVisit(models.Model):
+    timestamp = models.DateTimeField(auto_now_add=True)
+    session_key = models.CharField(max_length=40, blank=True, null=True)
+    user = models.ForeignKey('SimpleUser', blank=True, null=True, on_delete=models.SET_NULL)
 
 class Category(models.Model):
     nombre = models.CharField(max_length=100)
