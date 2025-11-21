@@ -297,13 +297,14 @@ body {
 
 /* Modern Price Display */
 .price {
-    background: linear-gradient(135deg, var(--success-color), #20c997);
-    color: white;
+    background: none;
+    color: rgb(17, 17, 17);
     padding: 20px;
     border-radius: var(--border-radius);
+    border: #e5e6e7 2px solid;
     margin-bottom: 30px;
     text-align: center;
-    box-shadow: var(--shadow-medium);
+   
 }
 
 .price .amount {
@@ -1191,12 +1192,24 @@ body {
     display: flex;
     align-items: center;
     gap: 10px;
-    background: var(--info-color);
-    color: white;
+    background: none;
+    color: rgb(15, 15, 15);
     padding: 12px 20px;
     border-radius: 25px;
     font-weight: 600;
     margin-bottom: 20px;
+}
+.stock-indicator .stok-show{
+    color: #28a745;
+}
+
+/* Quantity Controls */
+.quantity-controls {
+    display: flex;
+    padding: 10px;
+   
+    align-items: center;
+    gap: 30px;
 }
 
 /* Action Buttons */

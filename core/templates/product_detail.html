@@ -155,10 +155,10 @@
                         </div>
                         
                         <!-- Sección de compra moderna -->
-                        <div class="car">
+                        <div class="car-stock">
                             <div class="stock-indicator">
                                 <i class="bi bi-box-seam"></i>
-                                <span class="ui-pdp-buybox__quantity__selected" id="available-stock">
+                                <span class="stock-show" id="available-stock">
                                     {{ product.stock }} disponibles
                                 </span>
                             </div>
@@ -229,12 +229,16 @@
                                 </div>
                                 {% endif %}
                                 
-                                <!-- Controles de cantidad modernos -->
+                             
+                        </div>
+                           <!-- Controles de cantidad modernos -->
                                 {% if product.stock > 0 %}
                                 <div class="quantity-controls">
-                                    <label class="quantity-label">
-                                        <strong>Cantidad:</strong>
-                                    </label>
+                                    <div>
+                                        <label class="quantity-label">
+                                            <strong>Cantidad:</strong>
+                                        </label>
+                                    </div>
                                     <div class="quantity-wrapper">
                                         <button type="button" class="quantity-btn quantity-decrease" aria-label="Disminuir cantidad">
                                             <i class="bi bi-dash"></i>
@@ -254,14 +258,11 @@
                                 
                                 <!-- Botones de acción modernos -->
                                 <div class="action-buttons">
-                                    <button type="submit" id="add_to_cart" class="btn btn-primary">
+                                    <button type="submit" id="add_to_cart" class="btn btn-success">
                                         <i class="bi bi-cart-plus"></i>
                                         Agregar al Carrito
                                     </button>
-                                    <button type="submit" id="go_to_cart" name="go_to_cart" class="btn btn-success">
-                                        <i class="bi bi-lightning"></i>
-                                        Comprar Ahora
-                                    </button>
+                                   
                                 </div>
                                 
                                 {% else %}
@@ -313,7 +314,6 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
                     </div>
                 </div>
                                 <li><strong>Devoluciones:</strong> Aceptamos devoluciones dentro de los 30 días posteriores a la compra. El producto debe estar en su estado original.</li>
