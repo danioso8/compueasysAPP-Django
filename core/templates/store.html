@@ -350,7 +350,7 @@
                                     
                                     <!-- Stock Badge -->
                                     {% if product.stock > 0 %}
-                                    <div class="stock-badge in-stock">
+                                    <div class="stock-badge in-stock bg-primary text-white">
                                         <i class="bi bi-check-circle"></i>
                                        Disponible ({{ product.stock }})
                                     </div>
@@ -389,7 +389,7 @@
                                             <form class="add-to-cart-form" data-product="{{ product.id }}">
                                                 {% csrf_token %}
                                                 <input type="hidden" name="quantity" value="1">
-                                                <button type="submit" class="btn-add-cart">
+                                                <button type="submit" class="btn-add-cart btn btn-success">
                                                     <i class="bi bi-cart-plus"></i>
                                                     <span>Agregar</span>
                                                 </button>
