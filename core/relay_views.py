@@ -12,6 +12,17 @@ active_sessions = {}  # session_id -> {'client': data, 'technician': data, 'mess
 pending_messages = defaultdict(list)  # session_id -> [messages]
 
 
+@require_http_methods(["GET"])
+def relay_status(request):
+    """Endpoint de status del relay server"""
+    return JsonResponse({
+        'success': True,
+        'status': 'online',
+        'active_sessions': len(active_sessions),
+        'message': 'CompuEasys Remote Support Relay Server'
+    })
+
+
 @csrf_exempt
 @require_http_methods(["POST"])
 def register_client(request):

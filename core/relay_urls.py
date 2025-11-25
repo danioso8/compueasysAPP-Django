@@ -3,6 +3,7 @@ from django.urls import path
 from . import relay_views
 
 urlpatterns = [
+    path('', relay_views.relay_status, name='relay_status'),  # Endpoint base
     path('register_client/', relay_views.register_client, name='relay_register_client'),
     path('connect_technician/', relay_views.connect_technician, name='relay_connect_technician'),
     path('send_message/', relay_views.send_message, name='relay_send_message'),
