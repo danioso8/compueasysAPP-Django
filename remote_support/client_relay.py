@@ -19,18 +19,22 @@ class RemoteSupportClient:
     def __init__(self):
         self.window = tk.Tk()
         self.window.title("CompuEasys Remote Support - Cliente")
-        self.window.geometry("500x400")
+        self.window.geometry("600x500")  # Más grande para ver mejor el código
         
         self.connected = False
-        self.access_code = None
+        self.client_id = f"{platform.node()}_{int(time.time())}"
         self.session_id = None
         self.sharing_screen = False
+        self.technician_connected = False
         
         # URL del servidor relay en Render
         self.relay_url = "https://compueasys.onrender.com/api/relay"
-        
         self.setup_ui()
         
+        # Conectar automáticamente al iniciar
+        self.window.after(1000, self.auto_connect)
+        
+    def setup_ui(self):
     def setup_ui(self):
         """Configurar interfaz gráfica"""
         # Header
@@ -56,38 +60,44 @@ class RemoteSupportClient:
         
         ttk.Label(info_frame, text=system_info, justify=tk.LEFT).pack()
         
-        # Conexión
-        connect_frame = ttk.LabelFrame(main_frame, text="Conectar con Soporte", padding="10")
-        connect_frame.pack(fill=tk.X, pady=(0, 10))
+        # Estado de conexión
+        status_frame = ttk.LabelFrame(main_frame, text="Estado de Conexión", padding="10")
+        status_frame.pack(fill=tk.X, pady=(0, 10))
         
-        ttk.Label(connect_frame, text="Conexión a través de CompuEasys Cloud", 
-                 font=("Arial", 9, "italic")).pack(anchor=tk.W, pady=(0, 10))
+        self.connection_status = ttk.Label(status_frame, 
+                                          text="🔄 Conectando automáticamente...", 
+                                          font=("Arial", 10, "bold"))
+        self.connection_status.pack(pady=5)
         
-        self.connect_btn = ttk.Button(connect_frame, text="🔗 Conectar con Soporte", 
-                                     command=self.connect_to_relay, style='Accent.TButton')
-        self.connect_btn.pack(fill=tk.X)
+        ttk.Label(status_frame, text="Esperando solicitud de conexión del técnico", 
+                 font=("Arial", 9, "italic"), foreground="gray").pack()
         
-        # Código de acceso
-        code_frame = ttk.LabelFrame(main_frame, text="Código de Acceso", padding="10")
-        code_frame.pack(fill=tk.X, pady=(0, 10))
+        # ID de sesión - VISIBLE Y SIMPLE
+        id_frame = ttk.LabelFrame(main_frame, text="🆔 Identificación del Cliente", padding="20")
+        id_frame.pack(fill=tk.BOTH, expand=True, pady=(0, 10))
         
-        self.code_label = ttk.Label(code_frame, text="", 
-                                    font=("Courier New", 24, "bold"), 
-                                    foreground="green")
-        self.code_label.pack()
+        # Frame para ID
+        id_container = tk.Frame(id_frame, bg="#f0f0f0", bd=2, relief=tk.SOLID)
+        id_container.pack(fill=tk.BOTH, expand=True, pady=10)
         
-        ttk.Label(code_frame, text="Comparte este código con el técnico", 
-                 font=("Arial", 9, "italic")).pack()
+        ttk.Label(id_container, text="Tu ID de Cliente:", 
+                 font=("Arial", 11, "bold")).pack(pady=(10, 5))
         
-        # Status
-        self.status_frame = ttk.LabelFrame(main_frame, text="Estado", padding="10")
-        self.status_frame.pack(fill=tk.BOTH, expand=True)
+        self.client_id_label = tk.Label(id_container, text="Conectando...", 
+                                        font=("Courier New", 16, "bold"),
+                                        foreground="#0066cc",
+                                        background="#f0f0f0")
+        self.client_id_label.pack(pady=(0, 10))
         
-        self.status_label = ttk.Label(self.status_frame, text="⚪ Desconectado", 
-                                     font=("Arial", 12))
-        self.status_label.pack(pady=10)
+        ttk.Label(id_frame, text="El técnico verá este ID en su lista y podrá conectarse", 
+                 font=("Arial", 9, "italic"), foreground="gray").pack(pady=5)
         
-        self.log_text = tk.Text(self.status_frame, height=5, state=tk.DISABLED)
+        # Log de actividad
+        log_frame = ttk.LabelFrame(main_frame, text="📋 Actividad", padding="10")
+        log_frame.pack(fill=tk.BOTH, expand=True)
+        
+        self.log_text = tk.Text(log_frame, height=8, state=tk.DISABLED, 
+                               font=("Consolas", 9))
         self.log_text.pack(fill=tk.BOTH, expand=True)
         
         # Botones de acción
@@ -105,29 +115,26 @@ class RemoteSupportClient:
         self.log_text.see(tk.END)
         self.log_text.config(state=tk.DISABLED)
         
-    def generate_access_code(self):
-        """Generar código de acceso de 6 dígitos"""
-        import random
-        return ''.join([str(random.randint(0, 9)) for _ in range(6)])
-        
-    def connect_to_relay(self):
-        """Conectar al servidor relay en Render"""
+    def auto_connect(self):
+        """Conectar automáticamente al relay al iniciar"""
+        threading.Thread(target=self.connect_to_relay_auto, daemon=True).start()
+    
+    def connect_to_relay_auto(self):
+        """Conectar automáticamente al relay"""
         try:
-            self.log("Conectando al servidor CompuEasys...")
-            self.connect_btn.config(state=tk.DISABLED)
-            
-            # Generar código de acceso
-            self.access_code = self.generate_access_code()
-            client_id = f"{platform.node()}_{int(time.time())}"
+            self.log("🔄 Conectando a CompuEasys Cloud...")
+            self.log(f"🆔 Tu ID: {self.client_id}")
             
             # Registrar cliente en el relay
             response = requests.post(
                 f"{self.relay_url}/register_client/",
                 json={
-                    'client_id': client_id,
-                    'access_code': self.access_code
+                    'client_id': self.client_id,
+                    'access_code': '',  # No necesitamos código
+                    'client_name': platform.node(),
+                    'os': f"{platform.system()} {platform.release()}"
                 },
-                timeout=10
+                timeout=15
             )
             
             if response.status_code == 200:
@@ -137,28 +144,96 @@ class RemoteSupportClient:
                     self.connected = True
                     
                     # Actualizar UI
-                    self.code_label.config(text=self.access_code)
-                    self.status_label.config(text="🟢 Conectado - Esperando técnico", 
-                                           foreground="green")
-                    self.disconnect_btn.config(state=tk.NORMAL)
+                    self.connection_status.config(text="✅ Conectado - Esperando técnico")
+                    self.client_id_label.config(text=platform.node())
                     
                     self.log(f"✅ Conectado exitosamente")
-                    self.log(f"📋 Código de acceso: {self.access_code}")
-                    self.log("⏳ Esperando que el técnico se conecte...")
+                    self.log(f"⏳ Esperando solicitud de conexión...")
                     
-                    # Iniciar threads
-                    threading.Thread(target=self.receive_commands_loop, daemon=True).start()
-                    threading.Thread(target=self.send_screen_loop, daemon=True).start()
+                    # Iniciar thread para escuchar solicitudes
+                    threading.Thread(target=self.listen_for_connection_requests, daemon=True).start()
                 else:
-                    raise Exception(data.get('error', 'Error desconocido'))
+                    self.log(f"❌ Error: {data}")
+                    self.connection_status.config(text="❌ Error de conexión")
             else:
-                raise Exception(f"Error HTTP {response.status_code}")
+                self.log(f"❌ Error HTTP {response.status_code}")
+                self.connection_status.config(text="❌ Error de conexión")
                 
         except Exception as e:
-            self.log(f"❌ Error al conectar: {str(e)}")
-            self.connect_btn.config(state=tk.NORMAL)
-            messagebox.showerror("Error de Conexión", 
-                               f"No se pudo conectar al servidor:\n{str(e)}")
+            self.log(f"❌ Error: {str(e)[:100]}")
+            self.connection_status.config(text="❌ Error de conexión")
+            # Reintentar en 10 segundos
+            self.window.after(10000, self.auto_connect)
+    
+    def listen_for_connection_requests(self):
+        """Escuchar solicitudes de conexión de técnicos"""
+        while self.connected:
+            try:
+                response = requests.get(
+                    f"{self.relay_url}/check_connection_request/",
+                    params={'session_id': self.session_id},
+                    timeout=30  # Long polling
+                )
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    if data.get('connection_request'):
+                        # Hay una solicitud de conexión
+                        tech_name = data.get('technician_name', 'Técnico')
+                        self.ask_authorization(tech_name)
+                        
+            except Exception as e:
+                if self.connected:
+                    time.sleep(5)  # Esperar antes de reintentar
+                    
+    def ask_authorization(self, tech_name):
+        """Pedir autorización al usuario para permitir conexión"""
+        result = messagebox.askyesno(
+            "Solicitud de Conexión",
+            f"🔔 El técnico '{tech_name}' quiere conectarse a tu PC.\n\n"
+            f"¿Permitir el acceso remoto?",
+            icon='question'
+        )
+        
+        if result:
+            self.authorize_connection()
+        else:
+            self.deny_connection()
+    
+    def authorize_connection(self):
+        """Autorizar la conexión del técnico"""
+        try:
+            response = requests.post(
+                f"{self.relay_url}/authorize_connection/",
+                json={'session_id': self.session_id, 'authorized': True},
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                self.technician_connected = True
+                self.connection_status.config(text="✅ Técnico conectado")
+                self.log("✅ Conexión autorizada")
+                self.log("👁️ El técnico puede ver tu pantalla")
+                
+                # Iniciar compartir pantalla
+                threading.Thread(target=self.send_screen_loop, daemon=True).start()
+                threading.Thread(target=self.receive_commands_loop, daemon=True).start()
+        except Exception as e:
+            self.log(f"❌ Error al autorizar: {str(e)[:100]}")
+    
+    def deny_connection(self):
+        """Denegar la conexión del técnico"""
+        try:
+            requests.post(
+                f"{self.relay_url}/authorize_connection/",
+                json={'session_id': self.session_id, 'authorized': False},
+                timeout=10
+            )
+            self.log("❌ Conexión denegada")
+        except:
+            pass
+        
+
             
     def send_screen_loop(self):
         """Enviar capturas de pantalla continuamente"""

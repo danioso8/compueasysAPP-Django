@@ -60,15 +60,19 @@ class RemoteSupportServer:
         control_frame = ttk.Frame(left_panel)
         control_frame.pack(fill=tk.X, padx=5, pady=5)
         
-        ttk.Button(control_frame, text="🔄 Actualizar", 
+        ttk.Button(control_frame, text="🔄 Actualizar Lista", 
                   command=self.refresh_sessions).pack(fill=tk.X, pady=2)
-        ttk.Button(control_frame, text="🔗 Conectar con Código", 
-                  command=self.connect_with_code, 
-                  style='Accent.TButton').pack(fill=tk.X, pady=2)
+        self.connect_btn = ttk.Button(control_frame, text="🔗 Solicitar Conexión", 
+                  command=self.request_connection_to_client, 
+                  style='Accent.TButton')
+        self.connect_btn.pack(fill=tk.X, pady=2)
         self.disconnect_btn = ttk.Button(control_frame, text="❌ Desconectar", 
                                         command=self.disconnect, 
                                         state=tk.DISABLED)
         self.disconnect_btn.pack(fill=tk.X, pady=2)
+        
+        # Doble click en lista para conectar
+        self.sessions_listbox.bind('<Double-Button-1>', lambda e: self.request_connection_to_client())
         
         # Panel derecho - Vista remota
         right_panel = ttk.Frame(main_container)
@@ -122,54 +126,116 @@ class RemoteSupportServer:
                 data = response.json()
                 if data['success']:
                     self.sessions_listbox.delete(0, tk.END)
-                    for session in data['sessions']:
-                        display_text = f"{session['client_id']} - {time.ctime(session['created_at'])}"
-                        self.sessions_listbox.insert(tk.END, display_text)
+                    sessions = data['sessions']
+                    
+                    if not sessions:
+                        self.sessions_listbox.insert(tk.END, "No hay clientes esperando...")
+                    else:
+                        for session in sessions:
+                            client_name = session.get('client_name', session.get('client_id', 'Cliente'))
+                            os_info = session.get('os', 'Unknown OS')
+                            session_id = session.get('session_id', '')
+                            
+                            # Formato amigable
+                            display_text = f"🖥️ {client_name} ({os_info}) - {session_id}"
+                            self.sessions_listbox.insert(tk.END, display_text)
+                        
+                        self.log(f"📋 {len(sessions)} cliente(s) disponible(s)")
                         
             # Auto-refresh cada 5 segundos si no está conectado
             if not self.connected:
                 self.window.after(5000, self.refresh_sessions)
         except Exception as e:
-            self.log(f"⚠️ Error al actualizar sesiones: {str(e)}")
+            self.log(f"⚠️ Error al actualizar: {str(e)[:50]}")
             
-    def connect_with_code(self):
-        """Conectar usando código de acceso"""
-        code = simpledialog.askstring("Código de Acceso", 
-                                     "Ingresa el código de 6 dígitos del cliente:",
-                                     parent=self.window)
-        
-        if not code:
+    def request_connection_to_client(self):
+        """Solicitar conexión a un cliente seleccionado"""
+        selection = self.sessions_listbox.curselection()
+        if not selection:
+            messagebox.showwarning("Advertencia", "Selecciona un cliente de la lista")
             return
-            
+        
+        # Obtener el session_id del cliente seleccionado
+        index = selection[0]
+        session_text = self.sessions_listbox.get(index)
+        
+        # Extraer session_id (formato: "Cliente - session_xxxx")
+        if "session_" in session_text:
+            session_id = session_text.split("session_")[1].strip()
+            session_id = "session_" + session_id.split()[0]
+        else:
+            messagebox.showerror("Error", "No se pudo obtener el ID de sesión")
+            return
+        
         try:
-            self.log(f"Conectando con código: {code}")
+            self.log(f"📞 Solicitando conexión al cliente...")
+            self.connect_btn.config(state=tk.DISABLED)
             
+            # Solicitar conexión
             response = requests.post(
-                f"{self.relay_url}/connect_technician/",
-                json={'access_code': code},
+                f"{self.relay_url}/request_connection/",
+                json={
+                    'session_id': session_id,
+                    'technician_name': platform.node()  # Nombre del técnico
+                },
                 timeout=10
             )
             
             if response.status_code == 200:
                 data = response.json()
                 if data['success']:
-                    self.session_id = data['session_id']
-                    self.connected = True
+                    self.session_id = session_id
+                    self.log("⏳ Esperando autorización del cliente...")
                     
-                    self.status_label.config(text="🟢 Conectado", foreground="green")
-                    self.disconnect_btn.config(state=tk.NORMAL)
-                    self.log("✅ Conectado exitosamente al cliente")
-                    
-                    # Iniciar thread de recepción de pantalla
-                    threading.Thread(target=self.receive_screen_loop, daemon=True).start()
+                    # Esperar autorización en otro thread
+                    threading.Thread(target=self.wait_for_authorization, daemon=True).start()
                 else:
-                    raise Exception(data.get('error', 'Código inválido'))
+                    raise Exception(data.get('error', 'Error en solicitud'))
             else:
                 raise Exception(f"Error HTTP {response.status_code}")
                 
         except Exception as e:
-            self.log(f"❌ Error al conectar: {str(e)}")
-            messagebox.showerror("Error de Conexión", str(e))
+            self.log(f"❌ Error: {str(e)[:100]}")
+            self.connect_btn.config(state=tk.NORMAL)
+            messagebox.showerror("Error", f"No se pudo solicitar conexión:\n{str(e)[:80]}")
+    
+    def wait_for_authorization(self):
+        """Esperar a que el cliente autorice la conexión"""
+        try:
+            response = requests.get(
+                f"{self.relay_url}/check_authorization/",
+                params={'session_id': self.session_id},
+                timeout=35  # Esperar hasta 35s
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get('authorized'):
+                    self.connected = True
+                    self.log("✅ ¡Conexión autorizada!")
+                    self.log("👁️ Ahora puedes ver la pantalla del cliente")
+                    
+                    # Actualizar UI
+                    self.status_label.config(text="🟢 Conectado y Autorizado", foreground="green")
+                    self.disconnect_btn.config(state=tk.NORMAL)
+                    self.connect_btn.config(state=tk.DISABLED)
+                    
+                    # Iniciar recepción de pantalla
+                    threading.Thread(target=self.receive_screen_loop, daemon=True).start()
+                elif data.get('timeout'):
+                    self.log("⏱️ Timeout - El cliente no respondió")
+                    self.connect_btn.config(state=tk.NORMAL)
+                    messagebox.showwarning("Timeout", "El cliente no respondió a tiempo")
+                else:
+                    self.log("❌ Conexión denegada por el cliente")
+                    self.connect_btn.config(state=tk.NORMAL)
+                    messagebox.showinfo("Denegado", "El cliente rechazó la conexión")
+            else:
+                raise Exception(f"Error HTTP {response.status_code}")
+                
+        except Exception as e:
+            self.log(f"❌ Error esperando autorización: {str(e)[:100]}")
+            self.connect_btn.config(state=tk.NORMAL)
             
     def receive_screen_loop(self):
         """Recibir pantallas del cliente continuamente"""

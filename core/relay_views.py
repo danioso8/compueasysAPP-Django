@@ -26,19 +26,23 @@ def relay_status(request):
 @csrf_exempt
 @require_http_methods(["POST"])
 def register_client(request):
-    """Cliente registra su sesión y obtiene código de acceso"""
+    """Cliente registra su sesión automáticamente"""
     try:
         data = json.loads(request.body)
         client_id = data.get('client_id')
-        access_code = data.get('access_code')
+        client_name = data.get('client_name', 'Cliente')
+        os_info = data.get('os', 'Unknown')
         
         # Crear nueva sesión
         session_id = f"session_{client_id}_{int(time.time())}"
         active_sessions[session_id] = {
             'client_id': client_id,
-            'access_code': access_code,
+            'client_name': client_name,
+            'os': os_info,
             'client_connected': True,
             'technician_connected': False,
+            'authorization_pending': False,
+            'authorized': False,
             'created_at': time.time()
         }
         
@@ -180,6 +184,8 @@ def list_active_sessions(request):
                 sessions.append({
                     'session_id': session_id,
                     'client_id': session['client_id'],
+                    'client_name': session.get('client_name', 'Cliente'),
+                    'os': session.get('os', 'Unknown'),
                     'created_at': session['created_at']
                 })
         
@@ -187,6 +193,142 @@ def list_active_sessions(request):
             'success': True,
             'sessions': sessions
         })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def request_connection(request):
+    """Técnico solicita conectarse a un cliente (sin código)"""
+    try:
+        data = json.loads(request.body)
+        session_id = data.get('session_id')
+        technician_name = data.get('technician_name', 'Técnico CompuEasys')
+        
+        if session_id in active_sessions:
+            session = active_sessions[session_id]
+            session['authorization_pending'] = True
+            session['technician_name'] = technician_name
+            session['connection_request_time'] = time.time()
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Solicitud enviada al cliente'
+            })
+        else:
+            return JsonResponse({
+                'success': False,
+                'error': 'Sesión no encontrada'
+            }, status=404)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def check_connection_request(request):
+    """Cliente verifica si hay solicitud de conexión (long polling)"""
+    try:
+        session_id = request.GET.get('session_id')
+        
+        if session_id in active_sessions:
+            session = active_sessions[session_id]
+            
+            # Long polling: esperar hasta 25s por una solicitud
+            max_wait = 25
+            start_time = time.time()
+            
+            while time.time() - start_time < max_wait:
+                if session.get('authorization_pending'):
+                    return JsonResponse({
+                        'success': True,
+                        'connection_request': True,
+                        'technician_name': session.get('technician_name', 'Técnico')
+                    })
+                time.sleep(1)
+            
+            # Timeout sin solicitud
+            return JsonResponse({
+                'success': True,
+                'connection_request': False
+            })
+        else:
+            return JsonResponse({
+                'success': False,
+                'error': 'Sesión no encontrada'
+            }, status=404)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def authorize_connection(request):
+    """Cliente autoriza o deniega la conexión"""
+    try:
+        data = json.loads(request.body)
+        session_id = data.get('session_id')
+        authorized = data.get('authorized', False)
+        
+        if session_id in active_sessions:
+            session = active_sessions[session_id]
+            session['authorization_pending'] = False
+            session['authorized'] = authorized
+            session['authorization_time'] = time.time()
+            
+            if authorized:
+                session['technician_connected'] = True
+            
+            return JsonResponse({
+                'success': True,
+                'authorized': authorized
+            })
+        else:
+            return JsonResponse({
+                'success': False,
+                'error': 'Sesión no encontrada'
+            }, status=404)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def check_authorization(request):
+    """Técnico verifica si el cliente autorizó la conexión"""
+    try:
+        session_id = request.GET.get('session_id')
+        
+        if session_id in active_sessions:
+            session = active_sessions[session_id]
+            
+            # Long polling: esperar hasta 30s por autorización
+            max_wait = 30
+            start_time = time.time()
+            
+            while time.time() - start_time < max_wait:
+                if not session.get('authorization_pending', False):
+                    # Ya hubo respuesta
+                    return JsonResponse({
+                        'success': True,
+                        'authorized': session.get('authorized', False),
+                        'responded': True
+                    })
+                time.sleep(1)
+            
+            # Timeout
+            return JsonResponse({
+                'success': True,
+                'authorized': False,
+                'responded': False,
+                'timeout': True
+            })
+        else:
+            return JsonResponse({
+                'success': False,
+                'error': 'Sesión no encontrada'
+            }, status=404)
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=400)
 
