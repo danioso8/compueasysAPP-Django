@@ -1,3 +1,14 @@
+try:
+    from dashboard.models import WompiConfig
+    wompi_config = WompiConfig.objects.first()
+    if wompi_config:
+        from django.conf import settings
+        settings.WOMPI_PUBLIC_KEY = wompi_config.public_key
+        settings.WOMPI_PRIVATE_KEY = wompi_config.private_key
+        settings.WOMPI_ENVIRONMENT = wompi_config.environment
+        settings.WOMPI_BASE_URL = wompi_config.base_url
+except Exception as e:
+    print(f"[WOMPI CONFIG] No se pudo cargar configuración global: {e}")
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.db.models import Q, Sum
@@ -50,6 +61,41 @@ logger = logging.getLogger(__name__)
 # Create your views here.
 def home(request):
     return render(request, 'home.html')
+
+# --- Consulta y actualización de estado de transacción Wompi ---
+from django.views.decorators.http import require_GET
+@require_GET
+def wompi_check_transaction(request, transaction_id):
+    """
+    Consulta el estado de una transacción Wompi y actualiza el Pedido relacionado si existe.
+    URL: /api/wompi-check-transaction/<transaction_id>/
+    """
+    client = WompiClient()
+    url = f"{client.base_url}/transactions/{transaction_id}"
+    response = client._make_request('get', url)
+    if response and 'data' in response:
+        data = response['data']
+        # Buscar el pedido por transaction_id
+        pedido = Pedido.objects.filter(transaction_id=transaction_id).first()
+        if pedido:
+            # Actualizar estado de pago y pedido según status de Wompi
+            status = data.get('status', '').lower()
+            if status == 'approved':
+                pedido.estado_pago = 'completado'
+                pedido.estado = 'pagado'
+            elif status == 'pending':
+                pedido.estado_pago = 'pendiente'
+            elif status == 'declined':
+                pedido.estado_pago = 'rechazado'
+                pedido.estado = 'cancelado'
+            elif status == 'voided':
+                pedido.estado_pago = 'anulado'
+                pedido.estado = 'cancelado'
+            elif status == 'error':
+                pedido.estado_pago = 'error'
+            pedido.save()
+        return JsonResponse({'success': True, 'wompi_status': data.get('status'), 'pedido_id': pedido.id if pedido else None})
+    return JsonResponse({'success': False, 'error': response.get('error', 'No se pudo consultar la transacción')}, status=400)
 
 def wompi_test(request):
     """Vista de test para verificar configuración de Wompi"""
@@ -1797,7 +1843,12 @@ def create_wompi_transaction(request):
         
         # Crear cliente Wompi con manejo de errores
         try:
-            wompi_client = WompiClient()
+            from dashboard.models import WompiConfig
+            wompi_config = WompiConfig.objects.first()
+            if wompi_config:
+                wompi_client = WompiClient(wompi_config)
+            else:
+                wompi_client = WompiClient()
             print("✅ WOMPI Client creado exitosamente")
         except Exception as e:
             print(f"❌ WOMPI Error creando cliente: {str(e)}")
@@ -1807,16 +1858,15 @@ def create_wompi_transaction(request):
             }, status=500)
         
         # Obtener token de aceptación
+
         print("🔍 WOMPI Obteniendo acceptance token...")
         acceptance_token = wompi_client.get_acceptance_token()
-        
+
         # Manejar errores del WompiClient mejorado
         if isinstance(acceptance_token, dict) and 'error' in acceptance_token:
             error_type = acceptance_token.get('error')
             error_message = acceptance_token.get('message', 'Error desconocido')
-            
             print(f"❌ WOMPI Error ({error_type}): {error_message}")
-            
             # Mensajes específicos según el tipo de error
             if error_type == 'timeout':
                 return JsonResponse({
@@ -1842,15 +1892,20 @@ def create_wompi_transaction(request):
                     'error_type': error_type,
                     'details': error_message
                 }, status=500)
-        
+
         if not acceptance_token:
             print("❌ WOMPI Error: No se pudo obtener acceptance token")
             return JsonResponse({
                 'error': 'Error obteniendo términos de aceptación',
                 'details': 'No se pudo obtener el acceptance token de Wompi'
             }, status=500)
-        
-        print(f"✅ WOMPI Acceptance token obtenido: {acceptance_token.get('acceptance_token', 'N/A')[:20]}...")
+
+        # Si el token es un dict con 'acceptance_token', extraer el string
+        if isinstance(acceptance_token, dict) and 'acceptance_token' in acceptance_token:
+            print(f"✅ WOMPI Acceptance token obtenido: {acceptance_token['acceptance_token'][:20]}...")
+            acceptance_token = acceptance_token['acceptance_token']
+        else:
+            print(f"✅ WOMPI Acceptance token obtenido: {str(acceptance_token)[:20]}...")
         
         # Convertir a centavos para Wompi
         amount_in_cents = int(amount * 100)
