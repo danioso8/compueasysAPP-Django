@@ -1,3 +1,35 @@
+from functools import wraps
+from django.shortcuts import redirect, render
+from django.contrib import messages
+
+def superuser_required(view_func):
+    @wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        if request.session.get('superuser_id'):
+            return view_func(request, *args, **kwargs)
+        return redirect('/login_user/?next=' + request.path)
+    return _wrapped_view
+
+from .models import WompiConfig
+
+# Vista para configuración global de Wompi
+@superuser_required
+def wompi_config_view(request):
+    config = WompiConfig.objects.first()
+    if not config:
+        config = WompiConfig.objects.create(
+            public_key='', private_key='', environment='production', base_url='https://production.wompi.co/v1')
+
+    if request.method == 'POST':
+        config.public_key = request.POST.get('public_key', config.public_key)
+        config.private_key = request.POST.get('private_key', config.private_key)
+        config.environment = request.POST.get('environment', config.environment)
+        config.base_url = request.POST.get('base_url', config.base_url)
+        config.save()
+        messages.success(request, 'Configuración Wompi actualizada correctamente.')
+        return redirect('wompi_config')
+
+    return render(request, 'dashboard/wompi_config.html', {'config': config})
 from django.contrib.auth.decorators import login_required, permission_required
 from core.models import ProductStore, Pedido, SimpleUser, Category, Type, proveedor, Galeria, ProductVariant, PedidoDetalle, BonoDescuento, Conversation, ConversationMessage
 from django.contrib.auth.models import User
@@ -36,6 +68,34 @@ def dashboard_home(request):
 
     # Filtros y paginación para productos
     view_param = request.GET.get('view', 'ventas')  # 'ventas' por defecto
+
+    # Si el usuario selecciona 'Configurar Wompi', preparar config para el contexto
+    config = None
+    if view_param == 'wompi_config':
+        from .models import WompiConfig
+        config = WompiConfig.objects.first()
+        if not config:
+            config = WompiConfig.objects.create(
+                public_key='', private_key='', environment='production', base_url='https://production.wompi.co/v1')
+        if request.method == 'POST':
+            config.public_key = request.POST.get('public_key', config.public_key)
+            config.private_key = request.POST.get('private_key', config.private_key)
+            config.environment = request.POST.get('environment', config.environment)
+            config.base_url = request.POST.get('base_url', config.base_url)
+            config.save()
+            messages.success(request, 'Configuración Wompi actualizada correctamente.')
+
+    # Si el usuario selecciona 'Datos de mi tienda', puedes preparar datos aquí si lo necesitas
+
+    # ... (resto de la lógica de la vista) ...
+
+    context = {
+        # ... agrega aquí todas las variables de contexto necesarias ...
+        'config': config,
+        # ...
+    }
+    # Agrega aquí el resto de variables de contexto que usas en el template
+    return render(request, 'dashboard/dashboard_home.html', context)
 
     # Obtener filtros para productos
     categoria_filter = request.GET.get('categoria_filter', '')

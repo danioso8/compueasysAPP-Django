@@ -1,16 +1,28 @@
+
 from django.db import models
 from django.contrib.auth.models import User
 
+class Tenant(models.Model):
+    nombre = models.CharField(max_length=100)
+    email_contacto = models.EmailField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.nombre
+
 # Create your models here.
 
-from django.db import models
+
 
 class StoreVisit(models.Model):
+    tenant = models.ForeignKey('Tenant', on_delete=models.CASCADE, null=True, blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)
     session_key = models.CharField(max_length=40, blank=True, null=True)
     user = models.ForeignKey('SimpleUser', blank=True, null=True, on_delete=models.SET_NULL)
 
 class Category(models.Model):
+    tenant = models.ForeignKey('Tenant', on_delete=models.CASCADE, null=True, blank=True)
     nombre = models.CharField(max_length=100)
     slug = models.CharField(max_length=100)
 
@@ -18,6 +30,7 @@ class Category(models.Model):
         return self.nombre
     
 class Type(models.Model):
+    tenant = models.ForeignKey('Tenant', on_delete=models.CASCADE, null=True, blank=True)
     name = models.CharField(max_length=100)
     slug = models.CharField(max_length=100)
 
@@ -25,6 +38,7 @@ class Type(models.Model):
         return self.name
 
 class proveedor(models.Model):
+    tenant = models.ForeignKey('Tenant', on_delete=models.CASCADE, null=True, blank=True)
     nombre = models.CharField(max_length=100)
     cedulaOnita = models.CharField(max_length=20)
     telefono = models.CharField(max_length=20)
@@ -35,6 +49,7 @@ class proveedor(models.Model):
         return self.nombre
 
 class ProductStore(models.Model):
+    tenant = models.ForeignKey('Tenant', on_delete=models.CASCADE, null=True, blank=True)
     name = models.CharField(max_length=100)
     description = models.TextField()
     price_buy = models.DecimalField(max_digits=10, decimal_places=0)
@@ -53,6 +68,7 @@ class ProductStore(models.Model):
         return self.name
     
 class ProductVariant(models.Model):
+    tenant = models.ForeignKey('Tenant', on_delete=models.CASCADE, null=True, blank=True)
     product = models.ForeignKey(ProductStore, on_delete=models.CASCADE, related_name='variants')
     nombre = models.CharField(max_length=100)  # Ej: "Rojo - M", "Azul - L"
     precio = models.DecimalField(max_digits=10, decimal_places=0)
@@ -66,6 +82,7 @@ class ProductVariant(models.Model):
         return f"{self.product.name} - {self.nombre}"
 
 class Galeria(models.Model):
+    tenant = models.ForeignKey('Tenant', on_delete=models.CASCADE, null=True, blank=True)
     galeria = models.ImageField(upload_to='galeria/')
     product = models.ForeignKey(ProductStore, related_name='galeria', on_delete=models.CASCADE)
     
@@ -73,6 +90,7 @@ class Galeria(models.Model):
         return f"Imagen {self.id}"    
 
 class SimpleUser(models.Model):
+    tenant = models.ForeignKey('Tenant', on_delete=models.CASCADE, null=True, blank=True)
     email = models.EmailField(unique=True)
     telefono = models.CharField(max_length=20)
     name = models.CharField(max_length=100)
@@ -91,6 +109,7 @@ class SimpleUser(models.Model):
         return self.email
 
 class Pedido(models.Model):
+    tenant = models.ForeignKey('Tenant', on_delete=models.CASCADE, null=True, blank=True)
     # Estados del pedido
     ESTADO_CHOICES = [
         ('pendiente', 'Pendiente'),

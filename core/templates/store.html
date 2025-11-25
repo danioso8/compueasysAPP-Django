@@ -176,9 +176,9 @@
                                     <input type="radio" name="category" value="" 
                                            {% if not request.GET.category %}checked{% endif %}>
                                     <span class="filter-label">
-                                        <i class="bi bi-grid"></i>
-                                        Todos los productos
-                                        <span class="count">{{ products.count }}</span>
+                                           <i class="bi bi-grid"></i>
+                                            Todos los productos
+                                           <span class="count">{{ products.count }}</span>
                                     </span>
                                 </label>
                                 {% for category in categories %}
@@ -264,7 +264,7 @@
                         <div class="toolbar-left">
                             <button class="filters-toggle" id="filters-toggle">
                                 <i class="bi bi-funnel"></i>
-                                <span>Filtros</span>
+                                <span>Categorias</span>
                             </button>
                             
                             <div class="results-info">
@@ -374,7 +374,7 @@
                                         {% endif %}
                                     </div>
                                     
-                                    <p class="card-description">
+                                    <p class="card-description" hidden>
                                         {{ product.description|truncatechars:80 }}
                                     </p>
                                     

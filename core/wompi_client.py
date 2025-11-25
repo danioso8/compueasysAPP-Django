@@ -8,28 +8,32 @@ logger = logging.getLogger(__name__)
 
 class WompiClient:
     """Cliente para interactuar con la API de Wompi"""
-    
-    def __init__(self):
-        self.private_key = getattr(settings, 'WOMPI_PRIVATE_KEY', '')
-        self.public_key = getattr(settings, 'WOMPI_PUBLIC_KEY', '')
-        self.base_url = getattr(settings, 'WOMPI_BASE_URL', 'https://sandbox.wompi.co/v1')
-        self.environment = getattr(settings, 'WOMPI_ENVIRONMENT', 'test')
-        
+    def __init__(self, config=None):
+        # Permite pasar un objeto/config dict personalizado (por ejemplo, desde WompiConfig)
+        if config:
+            self.private_key = getattr(config, 'private_key', '') or config.get('private_key', '')
+            self.public_key = getattr(config, 'public_key', '') or config.get('public_key', '')
+            self.base_url = getattr(config, 'base_url', '') or config.get('base_url', 'https://sandbox.wompi.co/v1')
+            self.environment = getattr(config, 'environment', '') or config.get('environment', 'test')
+        else:
+            self.private_key = getattr(settings, 'WOMPI_PRIVATE_KEY', '')
+            self.public_key = getattr(settings, 'WOMPI_PUBLIC_KEY', '')
+            self.base_url = getattr(settings, 'WOMPI_BASE_URL', 'https://sandbox.wompi.co/v1')
+            self.environment = getattr(settings, 'WOMPI_ENVIRONMENT', 'test')
+
         # Validar configuración
         if not self.private_key:
             logger.error("📴 WOMPI: Private key no configurada")
             raise ValueError("WOMPI_PRIVATE_KEY no configurada")
-            
         if not self.public_key:
             logger.error("📴 WOMPI: Public key no configurada")
             raise ValueError("WOMPI_PUBLIC_KEY no configurada")
-        
+
         self.headers = {
             'Authorization': f'Bearer {self.private_key}',
             'Content-Type': 'application/json',
             'User-Agent': 'CompuEasys/1.0'
         }
-        
         logger.info(f"💳 WOMPI Client inicializado - Environment: {self.environment}")
     
     def _make_request(self, method, url, payload=None):

@@ -199,12 +199,14 @@ else:
 
 # ===== WOMPI CONFIGURATION =====
 # Configuración completa de Wompi Colombia
-WOMPI_PUBLIC_KEY = os.getenv('WOMPI_PUBLIC_KEY', 'pub_test_g5Oj3xwKyvchLmBswlrLsDsFjqiUK1Hn')
-WOMPI_PRIVATE_KEY = os.getenv('WOMPI_PRIVATE_KEY', 'prv_test_AsyPjPPqCzvs5tJGg5RqFvKvATrbXE7N') 
-WOMPI_EVENTS_SECRET = os.getenv('WOMPI_EVENTS_SECRET', 'test_events_Y5xgnMtxikUVSnqAIIErboQwcRSD0gvW')
-WOMPI_INTEGRITY_SECRET = os.getenv('WOMPI_INTEGRITY_SECRET', 'test_integrity_Fl8y2n78WWzrwRJwfEPduMxa3IweHi08')
-WOMPI_ENVIRONMENT = os.getenv('WOMPI_ENVIRONMENT', 'test')
-WOMPI_BASE_URL = os.getenv('WOMPI_BASE_URL', 'https://sandbox.wompi.co/v1')
+
+# === PRODUCCIÓN WOMPI ===
+WOMPI_PUBLIC_KEY = os.getenv('WOMPI_PUBLIC_KEY', 'pub_prod_DMT4tAPNSvnvuHiVmwjIoyVwaam8N3k7')
+WOMPI_PRIVATE_KEY = os.getenv('WOMPI_PRIVATE_KEY', 'prv_prod_1X63CjcbCvba86WpWJOuXiqJnKvtMgeT')
+WOMPI_EVENTS_SECRET = os.getenv('WOMPI_EVENTS_SECRET', 'prod_events_cmDhDmWt3heMjSm5uB9QMRHJO8HxJLvv')
+WOMPI_INTEGRITY_SECRET = os.getenv('WOMPI_INTEGRITY_SECRET', 'prod_integrity_YW2t43XJOhLUAOONX5u6U8AO5sEosmTT')
+WOMPI_ENVIRONMENT = os.getenv('WOMPI_ENVIRONMENT', 'prod')
+WOMPI_BASE_URL = os.getenv('WOMPI_BASE_URL', 'https://production.wompi.co/v1')
 
 # URL para eventos de Wompi
 WOMPI_EVENTS_URL = f"{WOMPI_BASE_URL}/merchants/events"

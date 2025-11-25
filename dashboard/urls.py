@@ -1,3 +1,33 @@
+from .views import (
+    wompi_config_view,
+    Category,
+    dashboard_home,
+    dar_permiso_staff,
+    eliminar_usuario,
+    editar_usuario,
+    edit_product,
+    eliminar_producto,
+    delete_category,
+    crear_categoria,
+    editar_categoria,
+    eliminar_categoria,
+    api_get_product,
+    create_proveedor,
+    edit_proveedor,
+    delete_proveedor,
+    crear_tipo,
+    edit_tipo,
+    delete_tipo,
+    pedido_detalle,
+    update_pedido_estado,
+    update_pedido_notes,
+    edit_user,
+    delete_user,
+    get_user_details,
+    conversation_detail,
+    conversation_reply,
+    conversation_update_status,
+)
 from django.urls import path
 from django.contrib import admin
 from django.urls import path, include

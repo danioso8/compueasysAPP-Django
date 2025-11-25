@@ -1143,23 +1143,31 @@ body {
 /* Small Mobile */
 @media (max-width: 480px) {
   .store-layout {
-    padding: 0 var(--space-md);
+    padding: 0 4px;
   }
-  
   .products-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
   }
-  
+  .product-card {
+    border-radius: var(--border-radius-md);
+    margin-bottom: 8px;
+  }
   .brand-logo span {
     display: none;
   }
-  
   .search-form {
     padding: 2px;
   }
-  
   .search-submit span {
     display: none;
+  }
+  .products-area {
+    padding-left: 0;
+    padding-right: 0;
+  }
+  .category-section {
+    margin-bottom: 1rem;
   }
 }
 

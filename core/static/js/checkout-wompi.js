@@ -569,7 +569,7 @@ console.log('🚀 CHECKOUT v4.0 - Cargando...');
                     reference: data.reference,
                     customer_email: data.customer_email,
                     public_key: data.public_key?.substring(0, 20) + '...',
-                    acceptance_token: data.acceptance_token?.acceptance_token?.substring(0, 20) + '...'
+                    acceptance_token: data.acceptance_token?.substring(0, 20) + '...'
                 });
                 
                 console.log('🔍 DEBUG: Data JSON completo:', JSON.stringify(data, null, 2));
@@ -591,7 +591,7 @@ console.log('🚀 CHECKOUT v4.0 - Cargando...');
                     return;
                 }
                 
-                if (!data.acceptance_token || !data.acceptance_token.acceptance_token) {
+                if (!data.acceptance_token) {
                     console.error('❌ Acceptance token no recibido correctamente:', data.acceptance_token);
                     showMessage('Error: Token de aceptación no válido', 'error');
                     setButtonProcessing(false);
@@ -686,7 +686,7 @@ console.log('🚀 CHECKOUT v4.0 - Cargando...');
             return;
         }
         
-        if (!transactionData.acceptance_token || !transactionData.acceptance_token.acceptance_token) {
+        if (!transactionData.acceptance_token) {
             console.error('❌ Acceptance token no disponible:', transactionData.acceptance_token);
             showMessage('Error: Token de aceptación no disponible', 'error');
             setButtonProcessing(false);
@@ -722,7 +722,7 @@ console.log('🚀 CHECKOUT v4.0 - Cargando...');
             }
             
             // Agregar acceptance token
-            const acceptanceToken = transactionData.acceptance_token.acceptance_token;
+            const acceptanceToken = transactionData.acceptance_token;
             widgetConfig.acceptanceToken = acceptanceToken;
             console.log('🔐 Acceptance token agregado:', acceptanceToken.substring(0, 20) + '...');
             

@@ -6,7 +6,6 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-   
     max-width: 100%;
     margin: 0 auto;
     padding: 20px;
@@ -86,6 +85,7 @@ body {
 
 .logo-text {
     font-size: 18px;
+
     font-weight: 700;
     color: #fff;
     letter-spacing: -0.5px;
