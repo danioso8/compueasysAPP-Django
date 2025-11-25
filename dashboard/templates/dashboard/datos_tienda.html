@@ -1,0 +1,21 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Datos de mi tienda{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0"><i class="fas fa-store me-2"></i>Datos de mi tienda</h4>
+        </div>
+        <div class="card-body">
+            <p>Aquí puedes mostrar y editar los datos principales de tu tienda (nombre, dirección, contacto, etc.).</p>
+            <!-- Aquí puedes agregar un formulario o información de la tienda -->
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> Personaliza este contenido según los datos de tu tienda.
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,7 +1,22 @@
-from os import name
+
 from django.urls import path, include
 from django.conf.urls.static import static
 from django.contrib import admin
+from core.views import (
+    add_to_cart, login_user, add_to_cart_detail, clear_cart, pago_exitoso, 
+    mis_pedidos, remove_from_cart, store, auctions, services, contactUs, 
+    aboutUs, cart, register_user, login, product_detail, checkout, 
+    update_cart, logout_view, search_suggestions, 
+    filter_products_ajax, get_categories_ajax, cart_count_api, register_stock_notification,
+    create_wompi_transaction, wompi_webhook, wompi_test, wompi_widget_test, validate_discount_code,
+    # Nuevas funciones para dashboard de usuario
+    send_verification_email, verify_code, resend_verification_code,
+    order_details, cancel_order, start_conversation, get_conversations,
+    get_conversation, send_message,
+    wompi_check_transaction
+)
+from core import views
+from django.conf import settings
 
 from core.views import (
     add_to_cart, login_user, add_to_cart_detail, clear_cart, pago_exitoso, 
@@ -19,13 +34,12 @@ from core import views
 
 from django.conf import settings
 
-urlpatterns = [  
-    
-    path('store/', store, name='store'),  # Added this line to map the /store URL to the store view
-    
-    path('services/', services, name='services'),  # Added this line to map the /services URL to the Services view
-    path('contactUs/', contactUs, name='contactUs'),  # Added this line to map the /contactUs URL to the contactUs view
-    path('aboutUs/', aboutUs, name='aboutUs'),  # Added this line to map the /aboutUs URL to the aboutUs view
+urlpatterns = [
+    path('api/wompi-check-transaction/<str:transaction_id>/', wompi_check_transaction, name='wompi_check_transaction'),
+    path('store/', store, name='store'),
+    path('services/', services, name='services'),
+    path('contactUs/', contactUs, name='contactUs'),
+    path('aboutUs/', aboutUs, name='aboutUs'),
     path('register_user/', register_user, name='register_user'),  # Added this line to map the /register URL to the register view
     path('login/', login, name='login'),  # Added this line to map the /login URL to the login view
     path('admin/', admin.site.urls),  # URL pattern for the admin site
@@ -75,4 +89,7 @@ urlpatterns = [
     # URLs públicas de proyectos
     path('projects/', views.projects, name='projects'),
     path('projects/<slug:slug>/', views.project_detail, name='project_detail'),
+    
+    # URLs del servidor relay para soporte remoto
+    path('api/relay/', include('core.relay_urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
