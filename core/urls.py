@@ -9,29 +9,11 @@ from core.views import (
     update_cart, logout_view, search_suggestions, 
     filter_products_ajax, get_categories_ajax, cart_count_api, register_stock_notification,
     create_wompi_transaction, wompi_webhook, wompi_test, wompi_widget_test, validate_discount_code,
-    # Nuevas funciones para dashboard de usuario
     send_verification_email, verify_code, resend_verification_code,
     order_details, cancel_order, start_conversation, get_conversations,
-    get_conversation, send_message,
-    wompi_check_transaction
+    get_conversation, send_message, wompi_check_transaction
 )
 from core import views
-from django.conf import settings
-
-from core.views import (
-    add_to_cart, login_user, add_to_cart_detail, clear_cart, pago_exitoso, 
-    mis_pedidos, remove_from_cart, store, auctions, services, contactUs, 
-    aboutUs, cart, register_user, login, product_detail, checkout, 
-    update_cart, logout_view, search_suggestions, 
-    filter_products_ajax, get_categories_ajax, cart_count_api, register_stock_notification,
-    create_wompi_transaction, wompi_webhook, wompi_test, wompi_widget_test, validate_discount_code,
-    # Nuevas funciones para dashboard de usuario
-    send_verification_email, verify_code, resend_verification_code,
-    order_details, cancel_order, start_conversation, get_conversations,
-    get_conversation, send_message
-)
-from core import views
-
 from django.conf import settings
 
 urlpatterns = [
