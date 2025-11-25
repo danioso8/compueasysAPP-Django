@@ -24,7 +24,7 @@ class RemoteSupportServer:
         self.current_screen = None
         
         # URL del servidor relay en Render
-        self.relay_url = "https://compueasysapp-django.onrender.com/api/relay"
+        self.relay_url = "https://compueasys.onrender.com/api/relay"
         
         self.setup_ui()
         
