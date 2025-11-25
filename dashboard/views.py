@@ -87,16 +87,6 @@ def dashboard_home(request):
 
     # Si el usuario selecciona 'Datos de mi tienda', puedes preparar datos aquí si lo necesitas
 
-    # ... (resto de la lógica de la vista) ...
-
-    context = {
-        # ... agrega aquí todas las variables de contexto necesarias ...
-        'config': config,
-        # ...
-    }
-    # Agrega aquí el resto de variables de contexto que usas en el template
-    return render(request, 'dashboard/dashboard_home.html', context)
-
     # Obtener filtros para productos
     categoria_filter = request.GET.get('categoria_filter', '')
     search_query = request.GET.get('search', '')

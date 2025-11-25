@@ -31,7 +31,11 @@ urlpatterns = [
     path('dashboard/', include('dashboard.urls')),
 ]
 
+# Servir archivos media en desarrollo y producción
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+else:
+    # En producción, servir archivos estáticos locales además de Cloudinary
+    urlpatterns += static('/media_files/', document_root=settings.MEDIA_ROOT)
 
 
