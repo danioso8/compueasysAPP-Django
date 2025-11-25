@@ -12,13 +12,37 @@ active_sessions = {}  # session_id -> {'client': data, 'technician': data, 'mess
 pending_messages = defaultdict(list)  # session_id -> [messages]
 
 
+def clean_old_sessions():
+    """Limpiar sesiones antiguas (más de 5 minutos sin actividad)"""
+    current_time = time.time()
+    max_age = 300  # 5 minutos
+    
+    sessions_to_remove = []
+    for session_id, session in active_sessions.items():
+        # Si la sesión tiene más de 5 minutos
+        if current_time - session.get('created_at', 0) > max_age:
+            sessions_to_remove.append(session_id)
+    
+    # Eliminar sesiones antiguas
+    for session_id in sessions_to_remove:
+        del active_sessions[session_id]
+        if session_id in pending_messages:
+            del pending_messages[session_id]
+    
+    return len(sessions_to_remove)
+
+
 @require_http_methods(["GET"])
 def relay_status(request):
     """Endpoint de status del relay server"""
+    # Limpiar sesiones antiguas antes de reportar
+    cleaned = clean_old_sessions()
+    
     return JsonResponse({
         'success': True,
         'status': 'online',
         'active_sessions': len(active_sessions),
+        'cleaned_sessions': cleaned,
         'message': 'CompuEasys Remote Support Relay Server'
     })
 
@@ -178,6 +202,9 @@ def disconnect(request):
 def list_active_sessions(request):
     """Listar sesiones activas (solo para clientes esperando)"""
     try:
+        # Primero, limpiar sesiones antiguas
+        clean_old_sessions()
+        
         sessions = []
         for session_id, session in active_sessions.items():
             if session['client_connected'] and not session['technician_connected']:
