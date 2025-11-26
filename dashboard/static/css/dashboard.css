@@ -206,9 +206,9 @@ body {
 
 /* Footer del Sidebar */
 .sidebar-footer {
-    padding: 20px 15px;
-    border-top: 1px solid #e5e7eb;
-    background: #f9fafb;
+    padding: 15px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
 .user-info {
@@ -217,6 +217,61 @@ body {
     gap: 12px;
     color: #6b7280;
     font-size: 14px;
+}
+
+/* Estilos para la tarjeta de usuario */
+.user-info-card {
+    background: rgba(255,255,255,0.05) !important;
+    border-radius: 8px;
+    padding: 0.75rem;
+    transition: all 0.3s ease;
+}
+
+.user-info-card:hover {
+    background: rgba(255,255,255,0.08) !important;
+    transform: translateY(-2px);
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.user-name {
+    color: #fff !important;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.user-role .badge {
+    font-size: 0.7rem;
+    font-weight: 500;
+    padding: 0.25rem 0.5rem;
+}
+
+/* Botón de logout mejorado */
+.logout-container .btn-danger {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    border: none;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    box-shadow: 0 2px 8px rgba(245, 87, 108, 0.3);
+}
+
+.logout-container .btn-danger:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(245, 87, 108, 0.5);
+    background: linear-gradient(135deg, #f5576c 0%, #f093fb 100%);
+}
+
+.logout-container .btn-danger:active {
+    transform: translateY(0);
 }
 
 /* Estados colapsado */
@@ -243,11 +298,37 @@ body {
 
 .sidebar.collapsed .sidebar-footer {
     text-align: center;
+    padding: 10px;
 }
 
 .sidebar.collapsed .user-info {
     justify-content: center;
     gap: 0;
+}
+
+.sidebar.collapsed .user-info-card {
+    padding: 0.5rem;
+}
+
+.sidebar.collapsed .user-details {
+    display: none;
+}
+
+.sidebar.collapsed .user-avatar {
+    margin: 0 auto;
+}
+
+.sidebar.collapsed .logout-container .btn span {
+    display: none;
+}
+
+.sidebar.collapsed .logout-container .btn {
+    padding: 0.5rem;
+    width: auto;
+}
+
+.sidebar.collapsed .logout-container .btn i {
+    margin: 0;
 }
 
 /* Tooltips para modo colapsado */

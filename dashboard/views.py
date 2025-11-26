@@ -66,6 +66,20 @@ def dashboard_home(request):
     Pedidos = [];
     categorias = [];
     crear_producto_url = f"{reverse('dashboard_home')}?view=productos"
+    
+    # Obtener información del usuario autenticado
+    superuser_id = request.session.get('superuser_id')
+    current_user = None
+    is_superuser = False
+    is_staff = False
+    
+    if superuser_id:
+        try:
+            current_user = register_superuser.objects.get(id=superuser_id)
+            is_superuser = current_user.is_superuser
+            is_staff = current_user.is_staff
+        except register_superuser.DoesNotExist:
+            pass
 
     # Filtros y paginación para productos
     view_param = request.GET.get('view', 'ventas')  # 'ventas' por defecto
@@ -880,6 +894,9 @@ def dashboard_home(request):
         'visitas_count_product': visitas_count_product,
         'productos_mas_visitados': productos_mas_visitados,
         'view': view_param,
+        'current_user': current_user,
+        'is_superuser': is_superuser,
+        'is_staff': is_staff,
 
     })
 # ...existing code...
