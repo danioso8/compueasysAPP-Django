@@ -200,24 +200,24 @@
             </nav>
             
             <!-- Footer Sidebar (info usuario y logout) -->
-            <div class="sidebar-footer mt-auto" style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1rem;">
+            <div class="sidebar-footer mt-auto">
                 <!-- Información del Usuario -->
-                <div class="user-info-card mb-3" style="background: rgba(255,255,255,0.05); border-radius: 8px; padding: 0.75rem;">
+                <div class="user-info-card mb-3">
                     <div class="d-flex align-items-center">
-                        <div class="user-avatar me-2" style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center;">
+                        <div class="user-avatar me-2">
                             <i class="fas fa-user text-white"></i>
                         </div>
                         <div class="user-details flex-grow-1" style="min-width: 0;">
-                            <div class="user-name text-white fw-bold text-truncate" style="font-size: 0.9rem;">
+                            <div class="user-name fw-bold text-truncate" style="font-size: 0.9rem;">
                                 {{ current_user.username|default:"Admin" }}
                             </div>
                             <div class="user-role" style="font-size: 0.75rem;">
                                 {% if is_superuser %}
-                                    <span class="badge bg-danger">
+                                    <span class="badge bg-dark">
                                         <i class="fas fa-crown"></i> SuperUser
                                     </span>
                                 {% elif is_staff %}
-                                    <span class="badge bg-primary">
+                                    <span class="badge bg-secondary">
                                         <i class="fas fa-user-tie"></i> Staff
                                     </span>
                                 {% else %}
@@ -232,7 +232,7 @@
                 <div class="logout-container">
                     <form method="post" action="{% url 'logout_view' %}" class="w-100">
                         {% csrf_token %}
-                        <button type="submit" class="btn btn-danger w-100 d-flex align-items-center justify-content-center" style="border-radius: 8px; padding: 0.6rem 1rem; font-weight: 500; transition: all 0.3s ease;">
+                        <button type="submit" class="btn btn-danger w-100 d-flex align-items-center justify-content-center">
                             <i class="fas fa-sign-out-alt me-2"></i>
                             <span class="sidebar-text">Cerrar Sesión</span>
                         </button>
@@ -241,7 +241,236 @@
             </div>
         </aside>
         <main class="main-content">
-            {% if request.GET.view == 'visitas' %}
+            {% if not request.GET.view %}
+            <!-- HOME DASHBOARD - Vista por defecto -->
+            <div class="home-dashboard-modern">
+                <div class="mb-4">
+                    <h2 class="mb-1">
+                        <i class="fas fa-chart-line me-2 text-primary"></i>
+                        Panel de Control
+                    </h2>
+                    <p class="text-muted">Resumen general de ventas y rendimiento de tu tienda</p>
+                </div>
+                
+                <!-- KPIs Cards Modernos -->
+                <div class="row g-3 mb-4">
+                    <!-- Ventas Totales -->
+                    <div class="col-md-3">
+                        <div class="modern-stat-card gradient-primary">
+                            <div class="stat-icon">
+                                <i class="fas fa-dollar-sign"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-value">
+                                    ${{ total_ventas_general|floatformat:0 }}
+                                </div>
+                                <div class="stat-label">Ventas Totales</div>
+                                <div class="stat-trend">
+                                    <i class="fas fa-arrow-up me-1"></i>
+                                    <span>Todas las ventas</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Productos Vendidos -->
+                    <div class="col-md-3">
+                        <div class="modern-stat-card gradient-success">
+                            <div class="stat-icon">
+                                <i class="fas fa-box"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-value">
+                                    {{ estadisticas_ventas.productos_vendidos }}
+                                </div>
+                                <div class="stat-label">Productos Vendidos</div>
+                                <div class="stat-trend">
+                                    <i class="fas fa-shopping-cart me-1"></i>
+                                    <span>Total unidades</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Promedio por Pedido -->
+                    <div class="col-md-3">
+                        <div class="modern-stat-card gradient-warning">
+                            <div class="stat-icon">
+                                <i class="fas fa-receipt"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-value">
+                                    ${{ estadisticas_ventas.promedio_por_pedido|floatformat:0 }}
+                                </div>
+                                <div class="stat-label">Promedio por Pedido</div>
+                                <div class="stat-trend">
+                                    <i class="fas fa-calculator me-1"></i>
+                                    <span>Ticket promedio</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Total Pedidos -->
+                    <div class="col-md-3">
+                        <div class="modern-stat-card gradient-info">
+                            <div class="stat-icon">
+                                <i class="fas fa-shopping-bag"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-value">
+                                    {{ estadisticas_ventas.pedidos_totales }}
+                                </div>
+                                <div class="stat-label">Total Pedidos</div>
+                                <div class="stat-trend">
+                                    <i class="fas fa-chart-bar me-1"></i>
+                                    <span>Pedidos confirmados</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gráfico y Top 5 Categorías -->
+                <div class="row g-3 mb-4">
+                    <!-- Gráfico Principal -->
+                    <div class="col-lg-8">
+                        <div class="card modern-card shadow-sm">
+                            <div class="card-header bg-white border-bottom">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-chart-pie me-2 text-primary"></i>
+                                        Ventas por Categoría
+                                    </h5>
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <button type="button" class="btn btn-outline-primary active" data-chart-type="bar">
+                                            <i class="fas fa-chart-bar"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-outline-primary" data-chart-type="pie">
+                                            <i class="fas fa-chart-pie"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-outline-primary" data-chart-type="doughnut">
+                                            <i class="fas fa-circle-notch"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-container" style="position: relative; height: 350px;">
+                                    <canvas id="homeVentasChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Top 5 Categorías -->
+                    <div class="col-lg-4">
+                        <div class="card modern-card shadow-sm h-100">
+                            <div class="card-header bg-white border-bottom">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-trophy me-2 text-warning"></i>
+                                    Top 5 Categorías
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="top-5-list" id="home-top-5">
+                                    {% for categoria in ventas_por_categoria|slice:":5" %}
+                                    <div class="top-category-item mb-3">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <div>
+                                                <span class="fw-bold">{{ forloop.counter }}. {{ categoria.nombre }}</span>
+                                                <small class="text-muted d-block">{{ categoria.cantidad_productos }} productos</small>
+                                            </div>
+                                            <span class="badge bg-success">${{ categoria.total_ingresos|floatformat:0 }}</span>
+                                        </div>
+                                        <div class="progress" style="height: 8px;">
+                                            {% widthratio categoria.total_ingresos ventas_por_categoria.0.total_ingresos 100 as percentage %}
+                                            <div class="progress-bar" role="progressbar" 
+                                                 style="width: {{ percentage }}%; background: {% cycle 'linear-gradient(90deg, rgba(102, 126, 234, 0.8), rgba(118, 75, 162, 0.8))' 'linear-gradient(90deg, rgba(79, 172, 254, 0.8), rgba(0, 242, 254, 0.8))' 'linear-gradient(90deg, rgba(67, 233, 123, 0.8), rgba(79, 172, 254, 0.8))' 'linear-gradient(90deg, rgba(245, 87, 108, 0.8), rgba(255, 159, 64, 0.8))' 'linear-gradient(90deg, rgba(255, 205, 86, 0.8), rgba(153, 102, 255, 0.8))' %};"
+                                                 aria-valuenow="{{ percentage }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                        </div>
+                                    </div>
+                                    {% empty %}
+                                    <div class="text-center text-muted py-4">
+                                        <i class="fas fa-chart-bar fa-3x mb-3"></i>
+                                        <p>No hay datos de ventas</p>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabla Detallada de Ventas -->
+                <div class="card modern-card shadow-sm">
+                    <div class="card-header bg-white border-bottom">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="fas fa-table me-2 text-info"></i>
+                                Detalle por Categoría
+                            </h5>
+                            <button type="button" class="btn btn-sm btn-success" onclick="exportToExcelHome()">
+                                <i class="fas fa-file-excel me-1"></i>
+                                Exportar a Excel
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="text-center" style="width: 60px;">#</th>
+                                        <th>Categoría</th>
+                                        <th class="text-end">Ingresos Totales</th>
+                                        <th class="text-center">Productos Vendidos</th>
+                                        <th class="text-center">Pedidos</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for categoria in ventas_por_categoria %}
+                                    <tr>
+                                        <td class="fw-bold text-muted">{{ forloop.counter }}</td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="category-color-indicator me-2" 
+                                                     style="width: 8px; height: 8px; border-radius: 50%; background: {% cycle 'rgba(102, 126, 234, 0.8)' 'rgba(118, 75, 162, 0.8)' 'rgba(79, 172, 254, 0.8)' 'rgba(0, 242, 254, 0.8)' 'rgba(67, 233, 123, 0.8)' 'rgba(245, 87, 108, 0.8)' 'rgba(255, 159, 64, 0.8)' 'rgba(255, 205, 86, 0.8)' 'rgba(153, 102, 255, 0.8)' 'rgba(201, 203, 207, 0.8)' %};"></div>
+                                                <strong class="text-dark">{{ categoria.nombre }}</strong>
+                                            </div>
+                                        </td>
+                                        <td class="text-end">
+                                            <span class="badge bg-success-subtle text-success px-3 py-2">
+                                                ${{ categoria.total_ingresos|floatformat:0 }}
+                                            </span>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge bg-info-subtle text-info">
+                                                {{ categoria.cantidad_productos }}
+                                            </span>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge bg-primary-subtle text-primary">
+                                                {{ categoria.cantidad_pedidos }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted py-4">
+                                            <i class="fas fa-inbox fa-2x mb-2"></i>
+                                            <p class="mb-0">No hay datos de ventas disponibles</p>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            {% elif request.GET.view == 'visitas' %}
             <!-- Sección Visitas Recientes -->
              <section class="mb-4">
                 <div class="card modern-card">
@@ -2060,116 +2289,102 @@
     </table>
 
             {% elif request.GET.view == "ventas" %}
-                <!-- ✅ BLOQUE CORRECTO CON ESTADISTICAS DIARIAS -->
-                <div class="ventas-dashboard">
-                    <h2><i class="fas fa-chart-line me-2"></i>Análisis de Ventas por Categorías</h2>
-                    
-                    <!-- Estadísticas Diarias - TIEMPO REAL -->
-                    <div class="alert alert-info mb-4">
-                        <h5 class="mb-3">
-                            <i class="fas fa-calendar-day me-2"></i>Actividad de Hoy
-                            <span class="badge bg-success ms-2">
-                                <i class="fas fa-sync-alt fa-spin"></i> Tiempo Real
-                            </span>
-                        </h5>
-                        <div class="row">
-                            <div class="col-md-3">
-                                <div class="stat-card">
-                                    <h3 class="text-primary">
-                                        <i class="fas fa-shopping-cart me-2"></i>
-                                        <span data-stat="pedidos-hoy">{{ estadisticas_diarias.pedidos_hoy }}</span>
-                                    </h3>
-                                    <p class="mb-0 text-muted">Pedidos de Hoy</p>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="stat-card">
-                                    <h3 class="text-success">
-                                        <i class="fas fa-dollar-sign me-2"></i>
-                                        <span data-stat="ventas-hoy">${{ estadisticas_diarias.ventas_hoy|default:"0"|floatformat:0 }}</span>
-                                    </h3>
-                                    <p class="mb-0 text-muted">Ventas de Hoy</p>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="stat-card">
-                                    <h3 class="text-info">
-                                        <i class="fas fa-box-open me-2"></i>
-                                        <span data-stat="productos-vendidos-hoy">{{ estadisticas_diarias.productos_vendidos_hoy }}</span>
-                                    </h3>
-                                    <p class="mb-0 text-muted">Productos Vendidos Hoy</p>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="stat-card">
-                                    <h3 class="text-warning">
-                                        <i class="fas fa-users me-2"></i>
-                                        <span data-stat="total-usuarios">{{ usuarios|length }}</span>
-                                    </h3>
-                                    <p class="mb-0 text-muted">Total Usuarios</p>
-                                </div>
-                            </div>
+                <!-- ANÁLISIS DE VENTAS MODERNIZADO -->
+                <div class="ventas-dashboard-modern">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2 class="mb-0">
+                            <i class="fas fa-chart-line me-2 text-primary"></i>
+                            Análisis de Ventas
+                        </h2>
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-outline-primary active" data-period="all">
+                                <i class="fas fa-infinity me-1"></i>Todo
+                            </button>
+                            <button type="button" class="btn btn-outline-primary" data-period="today">
+                                <i class="fas fa-calendar-day me-1"></i>Hoy
+                            </button>
+                            <button type="button" class="btn btn-outline-primary" data-period="week">
+                                <i class="fas fa-calendar-week me-1"></i>Semana
+                            </button>
+                            <button type="button" class="btn btn-outline-primary" data-period="month">
+                                <i class="fas fa-calendar-alt me-1"></i>Mes
+                            </button>
                         </div>
                     </div>
+                    
+                    <!-- KPIs Cards Modernos -->
+                    <div class="row g-3 mb-4">
+                        <!-- Ventas Totales -->
+                        <div class="col-md-3">
+                            <div class="modern-stat-card gradient-primary">
+                                <div class="stat-icon">
+                                    <i class="fas fa-dollar-sign"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <div class="stat-value" data-stat="ingresos-totales">
+                                        ${{ total_ventas_general|floatformat:0 }}
+                                    </div>
+                                    <div class="stat-label">Ventas Totales</div>
+                                    <div class="stat-trend">
+                                        <i class="fas fa-arrow-up me-1"></i>
+                                        <span class="small">Hoy: ${{ estadisticas_diarias.ventas_hoy|default:"0"|floatformat:0 }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
-                    <!-- Resumen General -->
-                    <div class="row mb-4">
+                        <!-- Pedidos Totales -->
                         <div class="col-md-3">
-                            <div class="card bg-primary text-white">
-                                <div class="card-body">
-                                    <div class="d-flex justify-content-between">
-                                        <div>
-                                            <h4><span data-stat="ingresos-totales">${{ total_ventas_general|floatformat:0 }}</span></h4>
-                                            <p class="mb-0">Ventas Totales</p>
-                                        </div>
-                                        <div class="align-self-center">
-                                            <i class="fas fa-dollar-sign fa-2x"></i>
-                                        </div>
+                            <div class="modern-stat-card gradient-success">
+                                <div class="stat-icon">
+                                    <i class="fas fa-shopping-cart"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <div class="stat-value" data-stat="total-pedidos">
+                                        {{ estadisticas_ventas.pedidos_totales }}
+                                    </div>
+                                    <div class="stat-label">Pedidos Totales</div>
+                                    <div class="stat-trend">
+                                        <i class="fas fa-calendar-day me-1"></i>
+                                        <span class="small">Hoy: {{ estadisticas_diarias.pedidos_hoy }}</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Productos Vendidos -->
                         <div class="col-md-3">
-                            <div class="card bg-success text-white">
-                                <div class="card-body">
-                                    <div class="d-flex justify-content-between">
-                                        <div>
-                                            <h4><span data-stat="total-pedidos">{{ estadisticas_ventas.pedidos_totales }}</span></h4>
-                                            <p class="mb-0">Pedidos Totales</p>
-                                        </div>
-                                        <div class="align-self-center">
-                                            <i class="fas fa-shopping-cart fa-2x"></i>
-                                        </div>
+                            <div class="modern-stat-card gradient-info">
+                                <div class="stat-icon">
+                                    <i class="fas fa-boxes"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <div class="stat-value" data-stat="total-productos">
+                                        {{ estadisticas_ventas.productos_vendidos }}
+                                    </div>
+                                    <div class="stat-label">Productos Vendidos</div>
+                                    <div class="stat-trend">
+                                        <i class="fas fa-box-open me-1"></i>
+                                        <span class="small">Hoy: {{ estadisticas_diarias.productos_vendidos_hoy }}</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Promedio por Pedido -->
                         <div class="col-md-3">
-                            <div class="card bg-info text-white">
-                                <div class="card-body">
-                                    <div class="d-flex justify-content-between">
-                                        <div>
-                                            <h4><span data-stat="total-productos">{{ estadisticas_ventas.productos_vendidos }}</span></h4>
-                                            <p class="mb-0">Productos Vendidos</p>
-                                        </div>
-                                        <div class="align-self-center">
-                                            <i class="fas fa-boxes fa-2x"></i>
-                                        </div>
-                                    </div>
+                            <div class="modern-stat-card gradient-warning">
+                                <div class="stat-icon">
+                                    <i class="fas fa-calculator"></i>
                                 </div>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="card bg-warning text-white">
-                                <div class="card-body">
-                                    <div class="d-flex justify-content-between">
-                                        <div>
-                                            <h4>${{ estadisticas_ventas.promedio_por_pedido|floatformat:0 }}</h4>
-                                            <p class="mb-0">Promedio por Pedido</p>
-                                        </div>
-                                        <div class="align-self-center">
-                                            <i class="fas fa-calculator fa-2x"></i>
-                                        </div>
+                                <div class="stat-content">
+                                    <div class="stat-value">
+                                        ${{ estadisticas_ventas.promedio_por_pedido|floatformat:0 }}
+                                    </div>
+                                    <div class="stat-label">Promedio por Pedido</div>
+                                    <div class="stat-trend">
+                                        <i class="fas fa-chart-line me-1"></i>
+                                        <span class="small">Ticket promedio</span>
                                     </div>
                                 </div>
                             </div>
@@ -2177,101 +2392,155 @@
                     </div>
 
                    
-                    <!-- Categorías Destacadas -->
-                    <div class="row mb-4">
-                        <div class="col-md-6">
-                            <div class="card">
-                                <div class="card-header bg-primary text-white">
-                                    <h5 class="mb-0"><i class="fas fa-crown me-2"></i>Categoría con Mayores Ingresos</h5>
+                    <!-- Gráficos de Análisis -->
+                    <div class="row g-3 mb-4">
+                        <!-- Gráfico de Ventas por Categoría -->
+                        <div class="col-lg-8">
+                            <div class="card shadow-sm">
+                                <div class="card-header bg-white border-bottom">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h5 class="mb-0">
+                                            <i class="fas fa-chart-bar text-primary me-2"></i>
+                                            Ventas por Categoría
+                                        </h5>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <button type="button" class="btn btn-outline-secondary active" data-chart-type="bar">
+                                                <i class="fas fa-chart-bar"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-outline-secondary" data-chart-type="pie">
+                                                <i class="fas fa-chart-pie"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-outline-secondary" data-chart-type="doughnut">
+                                                <i class="fas fa-dot-circle"></i>
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="card-body">
-                                    {% if estadisticas_ventas.categoria_mayor_ingresos %}
-                                        <h4 class="text-primary">{{ estadisticas_ventas.categoria_mayor_ingresos.nombre }}</h4>
-                                        <p class="mb-1"><strong>Ingresos:</strong> ${{ estadisticas_ventas.categoria_mayor_ingresos.total_ingresos|floatformat:0 }}</p>
-                                        <p class="mb-1"><strong>Productos vendidos:</strong> {{ estadisticas_ventas.categoria_mayor_ingresos.cantidad_productos }}</p>
-                                        <p class="mb-0"><strong>Pedidos:</strong> {{ estadisticas_ventas.categoria_mayor_ingresos.cantidad_pedidos }}</p>
-                                    {% else %}
-                                        <p class="text-muted">No hay datos de ventas disponibles</p>
-                                    {% endif %}
+                                <div class="card-body" style="height: 400px;">
+                                    <canvas id="ventasCategoriaChart"></canvas>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="card">
-                                <div class="card-header bg-success text-white">
-                                    <h5 class="mb-0"><i class="fas fa-trophy me-2"></i>Categoría Más Vendida</h5>
+
+                        <!-- Top 5 Categorías -->
+                        <div class="col-lg-4">
+                            <div class="card shadow-sm">
+                                <div class="card-header bg-white border-bottom">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-trophy text-warning me-2"></i>
+                                        Top 5 Categorías
+                                    </h5>
                                 </div>
-                                <div class="card-body">
-                                    {% if estadisticas_ventas.categoria_mas_vendida %}
-                                        <h4 class="text-success">{{ estadisticas_ventas.categoria_mas_vendida.nombre }}</h4>
-                                        <p class="mb-1"><strong>Productos vendidos:</strong> {{ estadisticas_ventas.categoria_mas_vendida.cantidad_productos }}</p>
-                                        <p class="mb-1"><strong>Ingresos:</strong> ${{ estadisticas_ventas.categoria_mas_vendida.total_ingresos|floatformat:0 }}</p>
-                                        <p class="mb-0"><strong>Pedidos:</strong> {{ estadisticas_ventas.categoria_mas_vendida.cantidad_pedidos }}</p>
-                                    {% else %}
-                                        <p class="text-muted">No hay datos de ventas disponibles</p>
-                                    {% endif %}
+                                <div class="card-body p-0">
+                                    <div class="list-group list-group-flush">
+                                        {% for categoria in ventas_por_categoria|slice:":5" %}
+                                        <div class="list-group-item">
+                                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                                <div class="me-auto">
+                                                    <div class="fw-bold text-dark">{{ categoria.nombre }}</div>
+                                                    <small class="text-muted">
+                                                        {{ categoria.cantidad_pedidos }} pedido{{ categoria.cantidad_pedidos|pluralize }} · 
+                                                        {{ categoria.cantidad_productos }} producto{{ categoria.cantidad_productos|pluralize }}
+                                                    </small>
+                                                </div>
+                                                <span class="badge bg-success rounded-pill">
+                                                    ${{ categoria.total_ingresos|floatformat:0 }}
+                                                </span>
+                                            </div>
+                                            <div class="progress" style="height: 6px;">
+                                                {% widthratio categoria.total_ingresos total_ventas_general 100 as porcentaje %}
+                                                <div class="progress-bar bg-gradient" role="progressbar" 
+                                                     style="width: {{ porcentaje }}%; background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);">
+                                                </div>
+                                            </div>
+                                            <small class="text-muted">{{ porcentaje|floatformat:1 }}% del total</small>
+                                        </div>
+                                        {% empty %}
+                                        <div class="list-group-item text-center text-muted py-5">
+                                            <i class="fas fa-info-circle fa-2x mb-2"></i>
+                                            <p class="mb-0">Sin datos de ventas</p>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Tabla Detallada de Ventas por Categoría -->
-                    <div class="card">
-                        <div class="card-header bg-dark text-white">
-                            <h5 class="mb-0"><i class="fas fa-table me-2"></i>Ventas Detalladas por Categoría</h5>
+                    <!-- Tabla Detallada Moderna -->
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-white border-bottom">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-table text-primary me-2"></i>
+                                    Detalle de Ventas por Categoría
+                                </h5>
+                                <button class="btn btn-sm btn-outline-primary" onclick="exportToExcel()">
+                                    <i class="fas fa-download me-1"></i>Exportar
+                                </button>
+                            </div>
                         </div>
-                        <div class="card-body">
+                        <div class="card-body p-0">
                             <div class="table-responsive">
-                                <table class="table table-striped table-hover">
-                                    <thead class="table-dark">
+                                <table class="table table-hover mb-0" id="ventasTable">
+                                    <thead class="bg-light">
                                         <tr>
-                                            <th scope="col">#</th>
-                                            <th scope="col">Categoría</th>
-                                            <th scope="col">Ingresos Totales</th>
-                                            <th scope="col">Productos Vendidos</th>
-                                            <th scope="col">Pedidos</th>
-                                            <th scope="col">Promedio por Pedido</th>
-                                            <th scope="col">% del Total</th>
-                                            <th scope="col">Acciones</th>
+                                            <th class="border-0">#</th>
+                                            <th class="border-0">Categoría</th>
+                                            <th class="border-0 text-end">Ingresos</th>
+                                            <th class="border-0 text-center">Productos</th>
+                                            <th class="border-0 text-center">Pedidos</th>
+                                            <th class="border-0 text-end">Promedio</th>
+                                            <th class="border-0">Participación</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {% for categoria in ventas_por_categoria %}
                                         <tr>
-                                            <td>{{ forloop.counter }}</td>
+                                            <td class="fw-bold text-muted">{{ forloop.counter }}</td>
                                             <td>
-                                                <strong class="text-primary">{{ categoria.nombre }}</strong>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="category-color-indicator me-2" 
+                                                         style="width: 8px; height: 8px; border-radius: 50%; background: {% cycle 'rgba(102, 126, 234, 0.8)' 'rgba(118, 75, 162, 0.8)' 'rgba(79, 172, 254, 0.8)' 'rgba(0, 242, 254, 0.8)' 'rgba(67, 233, 123, 0.8)' 'rgba(245, 87, 108, 0.8)' 'rgba(255, 159, 64, 0.8)' 'rgba(255, 205, 86, 0.8)' 'rgba(153, 102, 255, 0.8)' 'rgba(201, 203, 207, 0.8)' %};"></div>
+                                                    <strong class="text-dark">{{ categoria.nombre }}</strong>
+                                                </div>
                                             </td>
-                                            <td>
-                                                <span class="badge bg-success">${{ categoria.total_ingresos|floatformat:0 }}</span>
+                                            <td class="text-end">
+                                                <span class="badge bg-success-subtle text-success px-3 py-2">
+                                                    ${{ categoria.total_ingresos|floatformat:0 }}
+                                                </span>
                                             </td>
-                                            <td>{{ categoria.cantidad_productos }}</td>
-                                            <td>{{ categoria.cantidad_pedidos }}</td>
-                                            <td>
+                                            <td class="text-center">
+                                                <span class="badge bg-info-subtle text-info">
+                                                    {{ categoria.cantidad_productos }}
+                                                </span>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-primary-subtle text-primary">
+                                                    {{ categoria.cantidad_pedidos }}
+                                                </span>
+                                            </td>
+                                            <td class="text-end text-muted">
                                                 {% widthratio categoria.total_ingresos categoria.cantidad_pedidos 1 as promedio %}
                                                 ${{ promedio|floatformat:0 }}
                                             </td>
-                                            <td>
+                                            <td style="min-width: 150px;">
                                                 {% widthratio categoria.total_ingresos total_ventas_general 100 as porcentaje %}
-                                                <div class="progress" style="width: 60px;">
-                                                    <div class="progress-bar" role="progressbar" style="width: {{ porcentaje }}%">
-                                                        {{ porcentaje|floatformat:1 }}%
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <div class="progress flex-grow-1" style="height: 8px;">
+                                                        <div class="progress-bar bg-gradient" role="progressbar" 
+                                                             style="width: {{ porcentaje }}%; background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);">
+                                                        </div>
                                                     </div>
+                                                    <small class="text-muted fw-bold" style="min-width: 45px;">{{ porcentaje|floatformat:1 }}%</small>
                                                 </div>
-                                            </td>
-                                            <td>
-                                                <button type="button" class="btn btn-sm btn-outline-primary ver-detalle-categoria" 
-                                                        data-categoria="{{ categoria.nombre }}"
-                                                        data-bs-toggle="modal" 
-                                                        data-bs-target="#modalDetalleCategoriaVentas">
-                                                    <i class="fas fa-eye"></i> Ver Detalles
-                                                </button>
                                             </td>
                                         </tr>
                                         {% empty %}
                                         <tr>
-                                            <td colspan="8" class="text-center text-muted">
-                                                <i class="fas fa-info-circle me-2"></i>No hay ventas registradas aún
+                                            <td colspan="7" class="text-center text-muted py-5">
+                                                <i class="fas fa-chart-line fa-3x mb-3 d-block" style="opacity: 0.3;"></i>
+                                                <p class="mb-0">No hay ventas registradas aún</p>
                                             </td>
                                         </tr>
                                         {% endfor %}
@@ -4701,6 +4970,615 @@
         }
     `;
     document.head.appendChild(style);
+    
+})();
+</script>
+
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<!-- Script de Gráficos de Ventas -->
+<script>
+(function() {
+    'use strict';
+    
+    // Solo ejecutar en la vista de ventas
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('view') !== 'ventas') {
+        return;
+    }
+    
+    console.log('📊 Inicializando gráficos de análisis de ventas');
+    
+    // Datos de ventas por categoría desde Django
+    const ventasData = {
+        categorias: [
+            {% for categoria in ventas_por_categoria %}
+                '{{ categoria.nombre }}'{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ],
+        ingresos: [
+            {% for categoria in ventas_por_categoria %}
+                {{ categoria.total_ingresos|default:0 }}{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ],
+        productos: [
+            {% for categoria in ventas_por_categoria %}
+                {{ categoria.cantidad_productos|default:0 }}{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ],
+        pedidos: [
+            {% for categoria in ventas_por_categoria %}
+                {{ categoria.cantidad_pedidos|default:0 }}{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ]
+    };
+    
+    // Colores modernos para los gráficos
+    const colors = [
+        'rgba(102, 126, 234, 0.8)',   // Púrpura
+        'rgba(118, 75, 162, 0.8)',    // Morado oscuro
+        'rgba(79, 172, 254, 0.8)',    // Azul claro
+        'rgba(0, 242, 254, 0.8)',     // Cyan
+        'rgba(67, 233, 123, 0.8)',    // Verde
+        'rgba(245, 87, 108, 0.8)',    // Rosa
+        'rgba(255, 159, 64, 0.8)',    // Naranja
+        'rgba(255, 205, 86, 0.8)',    // Amarillo
+        'rgba(153, 102, 255, 0.8)',   // Violeta
+        'rgba(201, 203, 207, 0.8)'    // Gris
+    ];
+    
+    const borderColors = colors.map(color => color.replace('0.8', '1'));
+    
+    // Configuración del gráfico
+    const ctx = document.getElementById('ventasCategoriaChart');
+    if (!ctx) {
+        console.error('❌ Canvas del gráfico no encontrado');
+        return;
+    }
+    
+    let currentChart = null;
+    let currentChartType = 'bar';
+    
+    // Función para crear/actualizar el gráfico
+    function createChart(type = 'bar') {
+        if (currentChart) {
+            currentChart.destroy();
+        }
+        
+        const config = {
+            type: type,
+            data: {
+                labels: ventasData.categorias,
+                datasets: [{
+                    label: 'Ingresos ($)',
+                    data: ventasData.ingresos,
+                    backgroundColor: colors,
+                    borderColor: borderColors,
+                    borderWidth: 2,
+                    borderRadius: type === 'bar' ? 8 : 0,
+                    hoverOffset: type === 'pie' || type === 'doughnut' ? 10 : 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: type !== 'bar',
+                        position: 'right',
+                        labels: {
+                            boxWidth: 12,
+                            padding: 15,
+                            font: {
+                                size: 12
+                            },
+                            generateLabels: function(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    return data.labels.map((label, i) => {
+                                        const value = data.datasets[0].data[i];
+                                        return {
+                                            text: label + ' ($' + value.toLocaleString() + ')',
+                                            fillStyle: data.datasets[0].backgroundColor[i],
+                                            hidden: false,
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                label += '$' + context.parsed.y.toLocaleString();
+                                return label;
+                            }
+                        },
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleFont: {
+                            size: 14,
+                            weight: 'bold'
+                        },
+                        bodyFont: {
+                            size: 13
+                        },
+                        padding: 12,
+                        cornerRadius: 8
+                    }
+                },
+                scales: type === 'bar' ? {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return '$' + value.toLocaleString();
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                } : {}
+            }
+        };
+        
+        currentChart = new Chart(ctx, config);
+        currentChartType = type;
+        
+        console.log(`✅ Gráfico ${type} creado exitosamente`);
+    }
+    
+    // Crear gráfico inicial
+    createChart('bar');
+    
+    // Event listeners para cambio de tipo de gráfico
+    document.querySelectorAll('[data-chart-type]').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const type = this.getAttribute('data-chart-type');
+            
+            // Actualizar botones activos
+            document.querySelectorAll('[data-chart-type]').forEach(b => {
+                b.classList.remove('active');
+            });
+            this.classList.add('active');
+            
+            // Crear nuevo gráfico
+            createChart(type);
+            
+            console.log('📊 Tipo de gráfico cambiado a:', type);
+        });
+    });
+    
+    // Función para cargar datos de ventas por período
+    let currentPeriod = 'all';
+    
+    async function loadVentasPorPeriodo(periodo) {
+        try {
+            console.log(`📊 Cargando ventas para período: ${periodo}`);
+            
+            // Mostrar indicador de carga
+            const chartContainer = document.querySelector('.chart-container');
+            if (chartContainer) {
+                chartContainer.style.opacity = '0.5';
+            }
+            
+            const response = await fetch(`/dashboard/api/ventas-por-periodo/?periodo=${periodo}`);
+            const data = await response.json();
+            
+            if (!data.success) {
+                throw new Error('Error al cargar datos de ventas');
+            }
+            
+            console.log('✅ Datos cargados:', data);
+            
+            // Actualizar datos del gráfico
+            ventasData.categorias = data.ventas_por_categoria.map(c => c.nombre);
+            ventasData.ingresos = data.ventas_por_categoria.map(c => c.total_ingresos);
+            ventasData.productos = data.ventas_por_categoria.map(c => c.cantidad_productos);
+            ventasData.pedidos = data.ventas_por_categoria.map(c => c.cantidad_pedidos);
+            
+            // Recrear gráfico con nuevos datos
+            createChart(currentChartType);
+            
+            // Actualizar KPIs
+            updateKPIs(data.estadisticas, data.ventas_por_categoria);
+            
+            // Actualizar tabla
+            updateTable(data.ventas_por_categoria);
+            
+            // Actualizar top 5
+            updateTop5(data.ventas_por_categoria);
+            
+            currentPeriod = periodo;
+            
+            // Restaurar opacidad
+            if (chartContainer) {
+                chartContainer.style.opacity = '1';
+            }
+            
+            console.log('✅ Vista actualizada exitosamente');
+            
+        } catch (error) {
+            console.error('❌ Error cargando ventas:', error);
+            alert('Error al cargar datos de ventas. Por favor intente nuevamente.');
+        }
+    }
+    
+    // Función para actualizar KPIs
+    function updateKPIs(stats, categorias) {
+        // Total ventas
+        const totalVentasEl = document.querySelector('.modern-stat-card:nth-child(1) .stat-value');
+        if (totalVentasEl) {
+            totalVentasEl.textContent = '$' + stats.total_ventas.toLocaleString('es-CO', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+        }
+        
+        // Productos vendidos
+        const totalProductosEl = document.querySelector('.modern-stat-card:nth-child(2) .stat-value');
+        if (totalProductosEl) {
+            totalProductosEl.textContent = stats.total_productos.toLocaleString();
+        }
+        
+        // Promedio por pedido
+        const promedioEl = document.querySelector('.modern-stat-card:nth-child(3) .stat-value');
+        if (promedioEl) {
+            promedioEl.textContent = '$' + stats.promedio_por_pedido.toLocaleString('es-CO', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+        }
+        
+        // Total pedidos
+        const pedidosEl = document.querySelector('.modern-stat-card:nth-child(4) .stat-value');
+        if (pedidosEl) {
+            pedidosEl.textContent = stats.pedidos_totales.toLocaleString();
+        }
+        
+        console.log('✅ KPIs actualizados');
+    }
+    
+    // Función para actualizar tabla
+    function updateTable(categorias) {
+        const tbody = document.querySelector('.table tbody');
+        if (!tbody) return;
+        
+        tbody.innerHTML = '';
+        
+        categorias.forEach((categoria, index) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td class="fw-bold text-muted">${index + 1}</td>
+                <td>
+                    <div class="d-flex align-items-center">
+                        <div class="category-color-indicator me-2" 
+                             style="width: 8px; height: 8px; border-radius: 50%; background: ${colors[index % colors.length]};"></div>
+                        <strong class="text-dark">${categoria.nombre}</strong>
+                    </div>
+                </td>
+                <td class="text-end">
+                    <span class="badge bg-success-subtle text-success px-3 py-2">
+                        $${categoria.total_ingresos.toLocaleString('es-CO', {minimumFractionDigits: 0})}
+                    </span>
+                </td>
+                <td class="text-center">
+                    <span class="badge bg-info-subtle text-info">
+                        ${categoria.cantidad_productos}
+                    </span>
+                </td>
+                <td class="text-center">
+                    <span class="badge bg-primary-subtle text-primary">
+                        ${categoria.cantidad_pedidos}
+                    </span>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+        
+        console.log('✅ Tabla actualizada');
+    }
+    
+    // Función para actualizar top 5
+    function updateTop5(categorias) {
+        const container = document.querySelector('.top-5-list');
+        if (!container) return;
+        
+        container.innerHTML = '';
+        
+        const top5 = categorias.slice(0, 5);
+        const maxIngresos = top5[0]?.total_ingresos || 1;
+        
+        top5.forEach((categoria, index) => {
+            const percentage = (categoria.total_ingresos / maxIngresos) * 100;
+            const item = document.createElement('div');
+            item.className = 'top-category-item';
+            item.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div>
+                        <span class="fw-bold">${index + 1}. ${categoria.nombre}</span>
+                        <small class="text-muted d-block">${categoria.cantidad_productos} productos</small>
+                    </div>
+                    <span class="badge bg-success">$${categoria.total_ingresos.toLocaleString('es-CO', {minimumFractionDigits: 0})}</span>
+                </div>
+                <div class="progress" style="height: 8px;">
+                    <div class="progress-bar" role="progressbar" 
+                         style="width: ${percentage}%; background: linear-gradient(90deg, ${colors[index % colors.length]}, ${colors[(index + 1) % colors.length]});"
+                         aria-valuenow="${percentage}" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+            `;
+            container.appendChild(item);
+        });
+        
+        console.log('✅ Top 5 actualizado');
+    }
+    
+    // Event listeners para botones de período
+    document.querySelectorAll('[data-period]').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const periodo = this.getAttribute('data-period');
+            
+            // Actualizar botones activos
+            document.querySelectorAll('[data-period]').forEach(b => {
+                b.classList.remove('active');
+            });
+            this.classList.add('active');
+            
+            // Cargar datos del período
+            loadVentasPorPeriodo(periodo);
+            
+            console.log('📅 Período cambiado a:', periodo);
+        });
+    });
+    
+    // Función para exportar a Excel (simplificada)
+    window.exportToExcel = function() {
+        console.log('📥 Exportando datos a Excel...');
+        
+        // Crear datos CSV
+        let csv = 'Categoría,Ingresos,Productos Vendidos,Pedidos\n';
+        for (let i = 0; i < ventasData.categorias.length; i++) {
+            csv += `${ventasData.categorias[i]},${ventasData.ingresos[i]},${ventasData.productos[i]},${ventasData.pedidos[i]}\n`;
+        }
+        
+        // Descargar archivo
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'analisis_ventas_' + currentPeriod + '_' + new Date().toISOString().split('T')[0] + '.csv';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        
+        console.log('✅ Datos exportados exitosamente');
+    };
+    
+    console.log('✅ Sistema de gráficos inicializado correctamente');
+    
+})();
+</script>
+
+<!-- Script de Gráficos del HOME -->
+<script>
+(function() {
+    'use strict';
+    
+    // Solo ejecutar en la vista home (sin parámetro view)
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('view')) {
+        return; // No es la vista home
+    }
+    
+    console.log('🏠 Inicializando gráficos del panel principal (HOME)');
+    
+    // Datos de ventas por categoría desde Django
+    const homeVentasData = {
+        categorias: [
+            {% for categoria in ventas_por_categoria %}
+                '{{ categoria.nombre }}'{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ],
+        ingresos: [
+            {% for categoria in ventas_por_categoria %}
+                {{ categoria.total_ingresos|default:0 }}{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ],
+        productos: [
+            {% for categoria in ventas_por_categoria %}
+                {{ categoria.cantidad_productos|default:0 }}{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ],
+        pedidos: [
+            {% for categoria in ventas_por_categoria %}
+                {{ categoria.cantidad_pedidos|default:0 }}{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ]
+    };
+    
+    // Colores modernos para los gráficos
+    const homeColors = [
+        'rgba(102, 126, 234, 0.8)',
+        'rgba(118, 75, 162, 0.8)',
+        'rgba(79, 172, 254, 0.8)',
+        'rgba(0, 242, 254, 0.8)',
+        'rgba(67, 233, 123, 0.8)',
+        'rgba(245, 87, 108, 0.8)',
+        'rgba(255, 159, 64, 0.8)',
+        'rgba(255, 205, 86, 0.8)',
+        'rgba(153, 102, 255, 0.8)',
+        'rgba(201, 203, 207, 0.8)'
+    ];
+    
+    const homeBorderColors = homeColors.map(color => color.replace('0.8', '1'));
+    
+    // Configuración del gráfico
+    const homeCtx = document.getElementById('homeVentasChart');
+    if (!homeCtx) {
+        console.warn('⚠️ Canvas del gráfico HOME no encontrado');
+        return;
+    }
+    
+    let homeCurrentChart = null;
+    let homeCurrentChartType = 'bar';
+    
+    // Función para crear/actualizar el gráfico
+    function createHomeChart(type = 'bar') {
+        if (homeCurrentChart) {
+            homeCurrentChart.destroy();
+        }
+        
+        const config = {
+            type: type,
+            data: {
+                labels: homeVentasData.categorias,
+                datasets: [{
+                    label: 'Ingresos ($)',
+                    data: homeVentasData.ingresos,
+                    backgroundColor: homeColors,
+                    borderColor: homeBorderColors,
+                    borderWidth: 2,
+                    borderRadius: type === 'bar' ? 8 : 0,
+                    hoverOffset: type === 'pie' || type === 'doughnut' ? 10 : 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: type !== 'bar',
+                        position: 'right',
+                        labels: {
+                            boxWidth: 12,
+                            padding: 15,
+                            font: {
+                                size: 12
+                            },
+                            generateLabels: function(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    return data.labels.map((label, i) => {
+                                        const value = data.datasets[0].data[i];
+                                        return {
+                                            text: label + ' ($' + value.toLocaleString() + ')',
+                                            fillStyle: data.datasets[0].backgroundColor[i],
+                                            hidden: false,
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (type === 'bar') {
+                                    label += '$' + context.parsed.y.toLocaleString();
+                                } else {
+                                    label += '$' + context.parsed.toLocaleString();
+                                }
+                                return label;
+                            }
+                        },
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleFont: {
+                            size: 14,
+                            weight: 'bold'
+                        },
+                        bodyFont: {
+                            size: 13
+                        },
+                        padding: 12,
+                        cornerRadius: 8
+                    }
+                },
+                scales: type === 'bar' ? {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return '$' + value.toLocaleString();
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                } : {}
+            }
+        };
+        
+        homeCurrentChart = new Chart(homeCtx, config);
+        homeCurrentChartType = type;
+        
+        console.log(`✅ Gráfico HOME ${type} creado exitosamente`);
+    }
+    
+    // Crear gráfico inicial
+    createHomeChart('bar');
+    
+    // Event listeners para cambio de tipo de gráfico en HOME
+    document.querySelectorAll('[data-chart-type]').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const type = this.getAttribute('data-chart-type');
+            
+            // Actualizar botones activos
+            document.querySelectorAll('[data-chart-type]').forEach(b => {
+                b.classList.remove('active');
+            });
+            this.classList.add('active');
+            
+            // Crear nuevo gráfico
+            createHomeChart(type);
+            
+            console.log('📊 Tipo de gráfico HOME cambiado a:', type);
+        });
+    });
+    
+    // Función para exportar a Excel del HOME
+    window.exportToExcelHome = function() {
+        console.log('📥 Exportando datos del HOME a Excel...');
+        
+        // Crear datos CSV
+        let csv = 'Categoría,Ingresos,Productos Vendidos,Pedidos\n';
+        for (let i = 0; i < homeVentasData.categorias.length; i++) {
+            csv += `${homeVentasData.categorias[i]},${homeVentasData.ingresos[i]},${homeVentasData.productos[i]},${homeVentasData.pedidos[i]}\n`;
+        }
+        
+        // Descargar archivo
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'resumen_ventas_' + new Date().toISOString().split('T')[0] + '.csv';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        
+        console.log('✅ Datos del HOME exportados exitosamente');
+    };
+    
+    console.log('✅ Sistema de gráficos HOME inicializado correctamente');
     
 })();
 </script>

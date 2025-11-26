@@ -2708,3 +2708,97 @@ def productos_mas_visitados(request):
         'periodo': periodo,
         'timestamp': now.strftime('%Y-%m-%d %H:%M:%S')
     })
+
+
+@superuser_required
+def ventas_por_periodo(request):
+    """
+    API endpoint para obtener estadísticas de ventas filtradas por período.
+    Parámetros GET:
+    - periodo: 'all', 'today', 'week', 'month'
+    """
+    from django.utils import timezone
+    from django.db.models import Count
+    from datetime import datetime, timedelta
+    
+    periodo = request.GET.get('periodo', 'all')
+    
+    # Calcular rangos de tiempo
+    now = timezone.now()
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    week_start = today_start - timedelta(days=today_start.weekday())
+    month_start = today_start.replace(day=1)
+    
+    # Base queryset - excluir pedidos cancelados
+    ventas_qs = PedidoDetalle.objects.select_related(
+        'producto', 'producto__category', 'pedido'
+    ).exclude(pedido__estado='cancelado')
+    
+    # Aplicar filtro de período
+    if periodo == 'today':
+        ventas_qs = ventas_qs.filter(pedido__fecha__gte=today_start)
+    elif periodo == 'week':
+        ventas_qs = ventas_qs.filter(pedido__fecha__gte=week_start)
+    elif periodo == 'month':
+        ventas_qs = ventas_qs.filter(pedido__fecha__gte=month_start)
+    
+    # Calcular ventas por categoría
+    ventas_por_categoria_dict = {}
+    total_ventas = 0
+    total_productos = 0
+    
+    for detalle in ventas_qs:
+        categoria = detalle.producto.category
+        categoria_nombre = categoria.nombre if categoria else 'Sin Categoría'
+        precio_total = float(detalle.precio) * int(detalle.cantidad)
+        
+        if categoria_nombre not in ventas_por_categoria_dict:
+            ventas_por_categoria_dict[categoria_nombre] = {
+                'nombre': categoria_nombre,
+                'total_ingresos': 0,
+                'cantidad_productos': 0,
+                'cantidad_pedidos': 0,
+                'pedidos_ids': set(),
+            }
+        
+        ventas_por_categoria_dict[categoria_nombre]['total_ingresos'] += precio_total
+        ventas_por_categoria_dict[categoria_nombre]['cantidad_productos'] += int(detalle.cantidad)
+        ventas_por_categoria_dict[categoria_nombre]['pedidos_ids'].add(detalle.pedido.id)
+        
+        total_ventas += precio_total
+        total_productos += int(detalle.cantidad)
+    
+    # Convertir a lista
+    ventas_por_categoria = []
+    for categoria_data in ventas_por_categoria_dict.values():
+        categoria_data['cantidad_pedidos'] = len(categoria_data['pedidos_ids'])
+        del categoria_data['pedidos_ids']
+        ventas_por_categoria.append(categoria_data)
+    
+    # Ordenar por ingresos
+    ventas_por_categoria.sort(key=lambda x: x['total_ingresos'], reverse=True)
+    
+    # Estadísticas generales
+    pedidos_totales = Pedido.objects.exclude(estado='cancelado')
+    if periodo == 'today':
+        pedidos_totales = pedidos_totales.filter(fecha__gte=today_start)
+    elif periodo == 'week':
+        pedidos_totales = pedidos_totales.filter(fecha__gte=week_start)
+    elif periodo == 'month':
+        pedidos_totales = pedidos_totales.filter(fecha__gte=month_start)
+    
+    pedidos_count = pedidos_totales.count()
+    promedio_pedido = total_ventas / pedidos_count if pedidos_count > 0 else 0
+    
+    return JsonResponse({
+        'success': True,
+        'periodo': periodo,
+        'ventas_por_categoria': ventas_por_categoria,
+        'estadisticas': {
+            'total_ventas': total_ventas,
+            'total_productos': total_productos,
+            'pedidos_totales': pedidos_count,
+            'promedio_por_pedido': promedio_pedido,
+        },
+        'timestamp': now.strftime('%Y-%m-%d %H:%M:%S')
+    })

@@ -29,6 +29,7 @@ from .views import (
     conversation_update_status,
     visitas_live_data,
     productos_mas_visitados,
+    ventas_por_periodo,
 )
 from django.urls import path
 from django.contrib import admin
@@ -120,6 +121,7 @@ urlpatterns = [
     # URLs para visitas en tiempo real
     path('api/visitas-live/', views.visitas_live_data, name='visitas_live_data'),
     path('api/productos-mas-visitados/', views.productos_mas_visitados, name='productos_mas_visitados'),
+    path('api/ventas-por-periodo/', views.ventas_por_periodo, name='ventas_por_periodo'),
 
     # Nuevas URLs para gestión de usuarios
     path('usuario/editar/', edit_user, name='edit_user'),

@@ -207,8 +207,8 @@ body {
 /* Footer del Sidebar */
 .sidebar-footer {
     padding: 15px;
-    border-top: 1px solid rgba(255,255,255,0.1);
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-top: 1px solid #e5e7eb;
+    background: #f8f9fa;
 }
 
 .user-info {
@@ -221,30 +221,33 @@ body {
 
 /* Estilos para la tarjeta de usuario */
 .user-info-card {
-    background: rgba(255,255,255,0.05) !important;
+    background: #ffffff !important;
+    border: 1px solid #e5e7eb;
     border-radius: 8px;
     padding: 0.75rem;
     transition: all 0.3s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 
 .user-info-card:hover {
-    background: rgba(255,255,255,0.08) !important;
-    transform: translateY(-2px);
+    background: #f9fafb !important;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
 }
 
 .user-avatar {
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .user-name {
-    color: #fff !important;
+    color: #1f2937 !important;
     font-weight: 600;
     font-size: 0.9rem;
 }
@@ -255,23 +258,25 @@ body {
     padding: 0.25rem 0.5rem;
 }
 
-/* Botón de logout mejorado */
+/* Botón de logout mejorado - Tonos neutros */
 .logout-container .btn-danger {
-    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    background: #6b7280;
     border: none;
     transition: all 0.3s ease;
     font-weight: 500;
-    box-shadow: 0 2px 8px rgba(245, 87, 108, 0.3);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    color: #ffffff;
 }
 
 .logout-container .btn-danger:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(245, 87, 108, 0.5);
-    background: linear-gradient(135deg, #f5576c 0%, #f093fb 100%);
+    background: #4b5563;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(0,0,0,0.15);
 }
 
 .logout-container .btn-danger:active {
     transform: translateY(0);
+    background: #374151;
 }
 
 /* Estados colapsado */
@@ -1131,3 +1136,205 @@ th {
             color: #333;
             cursor: pointer;
         }
+
+/* ============================================
+   ESTILOS MODERNOS PARA ANÁLISIS DE VENTAS
+   ============================================ */
+
+/* Tarjetas KPI Modernas con Gradientes */
+.modern-stat-card {
+    position: relative;
+    border-radius: 12px;
+    padding: 1.5rem;
+    color: white;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    min-height: 140px;
+}
+
+.modern-stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+}
+
+.modern-stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.05);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.modern-stat-card:hover::before {
+    opacity: 1;
+}
+
+/* Gradientes personalizados para cada tipo */
+.gradient-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.gradient-success {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.gradient-info {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.gradient-warning {
+    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+}
+
+/* Contenido de la tarjeta */
+.stat-icon {
+    position: absolute;
+    right: 20px;
+    top: 20px;
+    font-size: 3rem;
+    opacity: 0.3;
+}
+
+.stat-content {
+    position: relative;
+    z-index: 1;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    opacity: 0.9;
+    margin-bottom: 0.5rem;
+}
+
+.stat-trend {
+    font-size: 0.75rem;
+    opacity: 0.8;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+/* Estilos para las tarjetas de gráficos */
+.card {
+    border: none;
+    border-radius: 12px;
+}
+
+.card-header {
+    border-radius: 12px 12px 0 0 !important;
+    padding: 1rem 1.25rem;
+}
+
+/* Estilos para la tabla moderna */
+.category-color-indicator {
+    flex-shrink: 0;
+}
+
+.table > tbody > tr:hover {
+    background-color: #f8f9fa;
+}
+
+.bg-success-subtle {
+    background-color: rgba(25, 135, 84, 0.1);
+}
+
+.text-success {
+    color: #198754 !important;
+}
+
+.bg-info-subtle {
+    background-color: rgba(13, 202, 240, 0.1);
+}
+
+.text-info {
+    color: #0dcaf0 !important;
+}
+
+.bg-primary-subtle {
+    background-color: rgba(13, 110, 253, 0.1);
+}
+
+.text-primary {
+    color: #0d6efd !important;
+}
+
+/* Progress bar con gradiente */
+.progress {
+    background-color: rgba(0,0,0,0.05);
+    border-radius: 10px;
+}
+
+.progress-bar.bg-gradient {
+    border-radius: 10px;
+}
+
+/* Botones de filtro de período */
+.btn-group .btn {
+    transition: all 0.3s ease;
+}
+
+.btn-group .btn.active {
+    background-color: #0d6efd;
+    color: white;
+    border-color: #0d6efd;
+}
+
+/* Animación de carga para gráficos */
+@keyframes chartLoading {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 1; }
+}
+
+.chart-loading {
+    animation: chartLoading 1.5s ease-in-out infinite;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .modern-stat-card {
+        min-height: 120px;
+    }
+    
+    .stat-value {
+        font-size: 1.5rem;
+    }
+    
+    .stat-icon {
+        font-size: 2rem;
+        right: 15px;
+        top: 15px;
+    }
+}
+
+/* Lista de top categorías */
+.list-group-item {
+    border-left: none;
+    border-right: none;
+    padding: 1rem 1.25rem;
+    transition: background-color 0.2s ease;
+}
+
+.list-group-item:hover {
+    background-color: #f8f9fa;
+}
+
+.list-group-item:first-child {
+    border-top: none;
+}
+
+.list-group-item:last-child {
+    border-bottom: none;
+}
