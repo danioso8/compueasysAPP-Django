@@ -71,8 +71,8 @@
                         </a>
                     </li>
                     
-                    <!-- VISITAS - Solo Superuser -->
-                    {% if is_superuser %}
+                    <!-- VISITAS - Superuser y Staff -->
+                    {% if is_superuser or is_staff %}
                     <li class="nav-item">
                         <a href="?view=visitas" class="nav-link {% if request.GET.view == 'visitas' %}active{% endif %}" title="Visitas a la Tienda">
                             <i class="fas fa-eye nav-icon"></i>
