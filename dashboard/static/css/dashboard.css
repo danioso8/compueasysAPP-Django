@@ -37,10 +37,11 @@ body {
 
 .sidebar {
     width: 280px;
-    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-    color: #fff;
+    background: #ffffff;
+    color: #1a1a1a;
+    border-right: 1px solid #e5e7eb;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 2px 0 15px rgba(0,0,0,0.1);
+    box-shadow: none;
     position: fixed;
     top: 0;
     left: 0;
@@ -62,12 +63,12 @@ body {
 
 /* Header del Sidebar */
 .sidebar-header {
-    padding: 20px 15px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 24px 20px;
+    border-bottom: 1px solid #e5e7eb;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background: rgba(0, 0, 0, 0.1);
+    background: #f9fafb;
     min-height: 70px;
 }
 
@@ -79,32 +80,32 @@ body {
 
 .sidebar-logo-icon {
     font-size: 24px;
-    color: #64b5f6;
+    color: #3b82f6;
     flex-shrink: 0;
 }
 
 .logo-text {
     font-size: 18px;
-
     font-weight: 700;
-    color: #fff;
+    color: #1a1a1a;
     letter-spacing: -0.5px;
 }
 
 .sidebar-toggle {
-    background: rgba(255, 255, 255, 0.1);
-    border: none;
-    color: #fff;
+    background: #f3f4f6;
+    border: 1px solid #e5e7eb;
+    color: #6b7280;
     padding: 8px;
     border-radius: 6px;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
     flex-shrink: 0;
 }
 
 .sidebar-toggle:hover {
-    background: rgba(255, 255, 255, 0.2);
-    transform: scale(1.05);
+    background: #e5e7eb;
+    transform: none;
+    color: #1f2937;
 }
 
 .sidebar.collapsed .sidebar-toggle i {
@@ -133,13 +134,13 @@ body {
 .nav-link {
     display: flex;
     align-items: center;
-    gap: 15px;
-    padding: 14px 20px;
-    color: rgba(255, 255, 255, 0.8);
+    gap: 12px;
+    padding: 12px 16px;
+    color: #6b7280;
     text-decoration: none;
-    border-radius: 12px;
-    margin: 4px 0;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 8px;
+    margin: 2px 0;
+    transition: all 0.2s ease;
     position: relative;
     overflow: hidden;
     font-weight: 500;
@@ -147,29 +148,23 @@ body {
 }
 
 .nav-link:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: #fff;
-    transform: translateX(5px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    background: #f3f4f6;
+    color: #1f2937;
+    transform: none;
+    box-shadow: none;
 }
 
 .nav-link.active {
-    background: linear-gradient(45deg, #64b5f6, #42a5f5);
-    color: #fff;
+    background: #eff6ff;
+    color: #2563eb;
     font-weight: 600;
-    box-shadow: 0 6px 20px rgba(100, 181, 246, 0.4);
-    transform: translateX(5px);
+    box-shadow: none;
+    transform: none;
+    border-left: 3px solid #3b82f6;
 }
 
 .nav-link.active::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    height: 100%;
-    width: 4px;
-    background: #fff;
-    border-radius: 0 4px 4px 0;
+    display: none;
 }
 
 .nav-icon {
@@ -177,19 +172,19 @@ body {
     flex-shrink: 0;
     width: 20px;
     text-align: center;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
     display: inline-block;
     font-family: "Font Awesome 6 Free", "Font Awesome 6 Pro", FontAwesome;
     font-weight: 900;
 }
 
 .nav-link:hover .nav-icon {
-    transform: scale(1.1);
+    transform: none;
 }
 
 .nav-link.active .nav-icon {
-    color: #fff;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    color: #2563eb;
+    text-shadow: none;
 }
 
 .sidebar-logo-icon {
@@ -204,23 +199,23 @@ body {
 /* Separador */
 .nav-separator {
     height: 1px;
-    background: rgba(255, 255, 255, 0.1);
-    margin: 15px 20px;
+    background: #e5e7eb;
+    margin: 12px 20px;
     padding: 0;
 }
 
 /* Footer del Sidebar */
 .sidebar-footer {
     padding: 20px 15px;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    background: rgba(0, 0, 0, 0.1);
+    border-top: 1px solid #e5e7eb;
+    background: #f9fafb;
 }
 
 .user-info {
     display: flex;
     align-items: center;
     gap: 12px;
-    color: rgba(255, 255, 255, 0.7);
+    color: #6b7280;
     font-size: 14px;
 }
 
@@ -344,24 +339,25 @@ body {
     left: 0;
     right: 0;
     height: 60px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #ffffff;
+    border-bottom: 1px solid #e5e7eb;
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 0 20px;
     z-index: 1050;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
 
 .mobile-menu-btn {
     background: none;
     border: none;
-    color: white;
+    color: #1f2937;
     font-size: 1.5rem;
     cursor: pointer;
     padding: 10px;
     border-radius: 8px;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
     min-width: 44px;
     min-height: 44px;
     display: flex;
@@ -371,7 +367,7 @@ body {
 
 .mobile-menu-btn:hover,
 .mobile-menu-btn:focus {
-    background: rgba(255,255,255,0.2);
+    background: #f3f4f6;
     outline: none;
 }
 
@@ -379,26 +375,55 @@ body {
     display: flex;
     align-items: center;
     gap: 8px;
-    color: white;
+    color: #1f2937;
     font-weight: 600;
     font-size: 1.1rem;
 }
 
 .mobile-logo i {
     font-size: 1.3rem;
+    color: #3b82f6;
 }
 
 .mobile-user {
-    color: white;
+    color: #6b7280;
     font-size: 1.5rem;
     cursor: pointer;
     padding: 8px;
     border-radius: 50%;
-    transition: background 0.3s ease;
+    transition: background 0.2s ease;
 }
 
 .mobile-user:hover {
-    background: rgba(255,255,255,0.2);
+    background: #f3f4f6;
+    color: #1f2937;
+}
+
+/* Estilos modernos para cards */
+.modern-card {
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    box-shadow: none;
+    transition: box-shadow 0.2s ease;
+}
+
+.modern-card:hover {
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+}
+
+.modern-header {
+    background: #f9fafb !important;
+    color: #1f2937 !important;
+    border-bottom: 1px solid #e5e7eb;
+    padding: 16px 20px;
+    font-weight: 600;
+}
+
+/* Actualizar main content */
+.main-content {
+    background: #f9fafb;
+    min-height: 100vh;
+    padding: 24px;
 }
 
 .mobile-overlay {

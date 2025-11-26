@@ -66,7 +66,13 @@
                         <a href="?view=ventas" class="nav-link {% if request.GET.view == 'ventas' %}active{% endif %}" title="Análisis de Ventas">
                             <i class="fas fa-chart-bar nav-icon"></i>
                             <span class="sidebar-text">Análisis Ventas</span>
-                            
+                        </a>
+                    </li>
+                    
+                    <li class="nav-item">
+                        <a href="?view=visitas" class="nav-link {% if request.GET.view == 'visitas' %}active{% endif %}" title="Visitas a la Tienda">
+                            <i class="fas fa-eye nav-icon"></i>
+                            <span class="sidebar-text">Visitas</span>
                         </a>
                     </li>
                     
@@ -179,13 +185,14 @@
             </div>
         </aside>
         <main class="main-content">
-            {% if not request.GET.view or request.GET.view == 'ventas' %}
+            {% if request.GET.view == 'visitas' %}
+            <!-- Sección Visitas Recientes -->
              <section class="mb-4">
-                <div class="card shadow-sm">
-                    <div class="card-header bg-info text-white d-flex align-items-center justify-content-between">
+                <div class="card modern-card">
+                    <div class="card-header modern-header d-flex align-items-center justify-content-between">
                         <div>
                             <i class="fas fa-eye me-2"></i>
-                            <strong>Visitas recientes a la tienda</strong>
+                            <strong>Visitas a la Tienda</strong>
                         </div>
                         <form method="get" class="d-flex gap-2 align-items-center mb-0">
                             <input type="hidden" name="view" value="ventas">
