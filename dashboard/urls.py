@@ -27,6 +27,8 @@ from .views import (
     conversation_detail,
     conversation_reply,
     conversation_update_status,
+    visitas_live_data,
+    productos_mas_visitados,
 )
 from django.urls import path
 from django.contrib import admin
@@ -114,6 +116,10 @@ urlpatterns = [
     
     # URLs para auto-actualización de estadísticas del home
     path('api/dashboard-stats/', views.dashboard_stats, name='dashboard_stats'),
+    
+    # URLs para visitas en tiempo real
+    path('api/visitas-live/', views.visitas_live_data, name='visitas_live_data'),
+    path('api/productos-mas-visitados/', views.productos_mas_visitados, name='productos_mas_visitados'),
 
     # Nuevas URLs para gestión de usuarios
     path('usuario/editar/', edit_user, name='edit_user'),

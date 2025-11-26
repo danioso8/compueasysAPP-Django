@@ -36,7 +36,7 @@ class StoreVisitConsumer(AsyncWebsocketConsumer):
         except Exception:
             user = None
         session_key = self.scope.get('session').session_key if self.scope.get('session') else None
-        StoreVisit.objects.create(session_key=session_key, user=user)
+        StoreVisit.objects.create(session_key=session_key, user=user, visit_type='store')
 
     async def disconnect(self, close_code):
         pass

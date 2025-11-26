@@ -60,6 +60,45 @@ logger = logging.getLogger(__name__)
 
 # Create your views here.
 def home(request):
+    # Registrar visita a la tienda principal
+    from core.models import StoreVisit
+    
+    # Obtener o crear session_key
+    if not request.session.session_key:
+        request.session.create()
+    
+    session_key = request.session.session_key
+    user_obj = None
+    
+    # Verificar si hay usuario autenticado
+    user_id = request.session.get('user_id')
+    if user_id:
+        try:
+            user_obj = SimpleUser.objects.get(id=user_id)
+        except SimpleUser.DoesNotExist:
+            pass
+    
+    # Obtener información del cliente
+    def get_client_ip(request):
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            ip = x_forwarded_for.split(',')[0]
+        else:
+            ip = request.META.get('REMOTE_ADDR')
+        return ip
+    
+    ip_address = get_client_ip(request)
+    user_agent = request.META.get('HTTP_USER_AGENT', '')
+    
+    # Registrar visita a la tienda
+    StoreVisit.objects.create(
+        session_key=session_key,
+        user=user_obj,
+        visit_type='store',
+        ip_address=ip_address,
+        user_agent=user_agent
+    )
+    
     return render(request, 'home.html')
 
 # --- Consulta y actualización de estado de transacción Wompi ---
@@ -163,6 +202,31 @@ def store(request):
     """
     Vista principal de la tienda con filtros modernos y AJAX
     """
+    # Registrar visita a la tienda
+    from core.models import StoreVisit
+    
+    # Obtener o crear session_key
+    if not request.session.session_key:
+        request.session.create()
+    
+    session_key = request.session.session_key
+    user_obj = None
+    
+    # Verificar si hay usuario autenticado
+    user_id = request.session.get('user_id')
+    if user_id:
+        try:
+            user_obj = SimpleUser.objects.get(id=user_id)
+        except SimpleUser.DoesNotExist:
+            pass
+    
+    # Registrar la visita
+    StoreVisit.objects.create(
+        session_key=session_key,
+        user=user_obj,
+        visit_type='store'
+    )
+    
     # Obtener parámetros de filtro
     query = request.GET.get('q', '')
     print(query)
@@ -383,6 +447,46 @@ def store_modern(request):
     return render(request, 'store_modern.html', context)
    
 def product_detail(request, product_id):
+    # Registrar visita al producto
+    from core.models import StoreVisit
+    
+    # Obtener o crear session_key
+    if not request.session.session_key:
+        request.session.create()
+    
+    session_key = request.session.session_key
+    user_obj = None
+    
+    # Verificar si hay usuario autenticado
+    user_id = request.session.get('user_id')
+    if user_id:
+        try:
+            user_obj = SimpleUser.objects.get(id=user_id)
+        except SimpleUser.DoesNotExist:
+            pass
+    
+    # Obtener información del cliente
+    def get_client_ip(request):
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            ip = x_forwarded_for.split(',')[0]
+        else:
+            ip = request.META.get('REMOTE_ADDR')
+        return ip
+    
+    ip_address = get_client_ip(request)
+    user_agent = request.META.get('HTTP_USER_AGENT', '')
+    
+    # Registrar la visita con toda la información
+    StoreVisit.objects.create(
+        session_key=session_key,
+        user=user_obj,
+        visit_type='product_detail',
+        product_id=product_id,
+        ip_address=ip_address,
+        user_agent=user_agent
+    )
+    
     try:
         product = Product.objects.get(id=product_id)        
         Galeria_images = product.galeria.all()

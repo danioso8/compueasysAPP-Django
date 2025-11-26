@@ -193,32 +193,48 @@
                         <div>
                             <i class="fas fa-eye me-2"></i>
                             <strong>Visitas a la Tienda</strong>
+                            <span class="badge bg-success ms-2" id="live-indicator">
+                                <i class="fas fa-circle pulse-animation"></i> En vivo
+                            </span>
                         </div>
-                        <form method="get" class="d-flex gap-2 align-items-center mb-0">
-                            <input type="hidden" name="view" value="ventas">
-                            <select name="visitas_filter" class="form-select form-select-sm" onchange="this.form.submit()">
+                        <form method="get" class="d-flex gap-2 align-items-center mb-0" id="visitas-filter-form">
+                            <input type="hidden" name="view" value="visitas">
+                            <select name="visitas_filter" class="form-select form-select-sm" id="visitas_filter" onchange="this.form.submit()">
                                 <option value="all" {% if request.GET.visitas_filter == 'all' or not request.GET.visitas_filter %}selected{% endif %}>Todas</option>
                                 <option value="today" {% if request.GET.visitas_filter == 'today' %}selected{% endif %}>Hoy</option>
                                 <option value="week" {% if request.GET.visitas_filter == 'week' %}selected{% endif %}>Esta semana</option>
                                 <option value="month" {% if request.GET.visitas_filter == 'month' %}selected{% endif %}>Este mes</option>
                             </select>
-                            <select name="visitas_user" class="form-select form-select-sm" onchange="this.form.submit()">
+                            <select name="visitas_user" class="form-select form-select-sm" id="visitas_user" onchange="this.form.submit()">
                                 <option value="all" {% if request.GET.visitas_user == 'all' or not request.GET.visitas_user %}selected{% endif %}>Todos</option>
                                 <option value="auth" {% if request.GET.visitas_user == 'auth' %}selected{% endif %}>Autenticados</option>
                                 <option value="anon" {% if request.GET.visitas_user == 'anon' %}selected{% endif %}>Anónimos</option>
                             </select>
+                            <select name="visitas_type" class="form-select form-select-sm" id="visitas_type" onchange="this.form.submit()">
+                                <option value="all" {% if request.GET.visitas_type == 'all' or not request.GET.visitas_type %}selected{% endif %}>Todos los tipos</option>
+                                <option value="store" {% if request.GET.visitas_type == 'store' %}selected{% endif %}>Tienda Principal</option>
+                                <option value="product_detail" {% if request.GET.visitas_type == 'product_detail' %}selected{% endif %}>Detalle Producto</option>
+                            </select>
+                            <button type="button" class="btn btn-sm btn-outline-primary" id="refresh-visitas" title="Refrescar ahora">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
                         </form>
                     </div>
                     <div class="card-body p-0">
                         <div class="row g-0">
                             <div class="col-lg-3 col-md-4 col-12 border-end">
                                 <div class="p-3">
-                                    <div class="mb-2"><span class="fw-bold">Total filtrado:</span> <span class="badge bg-info">{{ visitas_count }}</span></div>
+                                    <div class="mb-3"><span class="fw-bold">Total filtrado:</span> <span class="badge bg-info fs-6">{{ visitas_count }}</span></div>
+                                    <h6 class="mb-2 text-muted"><i class="fas fa-calendar-alt"></i> Por Período</h6>
                                     <div class="mb-1 small">Hoy: <span class="badge bg-primary">{{ visitas_count_today }}</span></div>
                                     <div class="mb-1 small">Esta semana: <span class="badge bg-success">{{ visitas_count_week }}</span></div>
-                                    <div class="mb-1 small">Este mes: <span class="badge bg-warning text-dark">{{ visitas_count_month }}</span></div>
+                                    <div class="mb-3 small">Este mes: <span class="badge bg-warning text-dark">{{ visitas_count_month }}</span></div>
+                                    <h6 class="mb-2 text-muted"><i class="fas fa-users"></i> Por Usuario</h6>
                                     <div class="mb-1 small">Autenticados: <span class="badge bg-secondary">{{ visitas_count_auth }}</span></div>
-                                    <div class="mb-1 small">Anónimos: <span class="badge bg-dark">{{ visitas_count_anon }}</span></div>
+                                    <div class="mb-3 small">Anónimos: <span class="badge bg-dark">{{ visitas_count_anon }}</span></div>
+                                    <h6 class="mb-2 text-muted"><i class="fas fa-map-signs"></i> Por Tipo</h6>
+                                    <div class="mb-1 small">Tienda: <span class="badge bg-info">{{ visitas_count_store }}</span></div>
+                                    <div class="mb-1 small">Productos: <span class="badge bg-success">{{ visitas_count_product }}</span></div>
                                 </div>
                             </div>
                             <div class="col-lg-9 col-md-8 col-12">
@@ -227,30 +243,120 @@
                                         <thead class="table-light">
                                             <tr>
                                                 <th>Fecha/Hora</th>
+                                                <th>Tipo de Visita</th>
                                                 <th>Usuario</th>
-                                                <th>Session Key</th>
+                                                <th>Ubicación</th>
+                                                <th>IP</th>
                                             </tr>
                                         </thead>
-                                        <tbody>
+                                        <tbody id="visitas-tbody">
                                             {% for visita in visitas_recientes %}
                                             <tr>
                                                 <td><span class="text-muted small">{{ visita.timestamp|date:"d/m/Y H:i:s" }}</span></td>
                                                 <td>
+                                                    {% if visita.visit_type == 'store' %}
+                                                        <span class="badge bg-info"><i class="fas fa-store"></i> Tienda</span>
+                                                    {% elif visita.visit_type == 'product_detail' %}
+                                                        <span class="badge bg-success"><i class="fas fa-box"></i> Producto 
+                                                            {% if visita.product_id %}#{{ visita.product_id }}{% endif %}
+                                                        </span>
+                                                    {% else %}
+                                                        <span class="badge bg-secondary">-</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
                                                     {% if visita.user %}
                                                         <span class="badge bg-primary"><i class="fas fa-user"></i> {{ visita.user.name|default:visita.user.email }}</span>
                                                     {% else %}
-                                                        <span class="text-secondary">Anónimo</span>
+                                                        <span class="text-secondary small">Anónimo</span>
                                                     {% endif %}
                                                 </td>
-                                                <td><code class="small">{{ visita.session_key|default:'-' }}</code></td>
+                                                <td>
+                                                    {% if visita.city or visita.country %}
+                                                        <span class="small"><i class="fas fa-map-marker-alt text-danger"></i> {{ visita.city|default:'' }}{% if visita.city and visita.country %}, {% endif %}{{ visita.country|default:'' }}</span>
+                                                    {% else %}
+                                                        <span class="text-muted small">-</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td><code class="small">{{ visita.ip_address|default:'-' }}</code></td>
                                             </tr>
                                             {% empty %}
-                                            <tr><td colspan="3" class="text-center text-muted">Sin visitas recientes</td></tr>
+                                            <tr><td colspan="5" class="text-center text-muted">Sin visitas recientes</td></tr>
                                             {% endfor %}
                                         </tbody>
                                     </table>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Sección Productos Más Visitados -->
+            <section class="mb-4">
+                <div class="card modern-card">
+                    <div class="card-header modern-header d-flex align-items-center justify-content-between">
+                        <div>
+                            <i class="fas fa-fire me-2 text-danger"></i>
+                            <strong>Productos Más Visitados</strong>
+                        </div>
+                        <div class="d-flex gap-2 align-items-center">
+                            <select class="form-select form-select-sm" id="periodo-productos" style="width: auto;">
+                                <option value="all">Todo el tiempo</option>
+                                <option value="today">Hoy</option>
+                                <option value="week">Esta semana</option>
+                                <option value="month">Este mes</option>
+                            </select>
+                            <button type="button" class="btn btn-sm btn-outline-success" id="refresh-productos" title="Refrescar productos">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row" id="productos-visitados-container">
+                            {% for item in productos_mas_visitados %}
+                            <div class="col-md-6 col-lg-4 mb-3">
+                                <div class="card h-100 shadow-sm">
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-center">
+                                            <div class="flex-shrink-0">
+                                                {% if item.product.imagen %}
+                                                    <img src="{{ item.product.imagen.url }}" alt="{{ item.product.name }}" 
+                                                         class="rounded" width="60" height="60" style="object-fit: cover;">
+                                                {% else %}
+                                                    <div class="bg-light rounded d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                                                        <i class="fas fa-image text-muted"></i>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                            <div class="flex-grow-1 ms-3">
+                                                <h6 class="mb-1">{{ item.product.name|truncatewords:5 }}</h6>
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <span class="badge bg-danger">
+                                                        <i class="fas fa-eye"></i> {{ item.total_visitas }} visita{{ item.total_visitas|pluralize }}
+                                                    </span>
+                                                    <span class="text-muted small">
+                                                        ${{ item.product.price|floatformat:0 }}
+                                                    </span>
+                                                </div>
+                                                <div class="mt-1">
+                                                    <span class="badge bg-secondary small">Stock: {{ item.product.stock }}</span>
+                                                    {% if item.product.category %}
+                                                        <span class="badge bg-info small">{{ item.product.category.nombre }}</span>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <div class="col-12">
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle"></i> No hay datos de productos visitados en este período
+                                </div>
+                            </div>
+                            {% endfor %}
                         </div>
                     </div>
                 </div>
@@ -2608,7 +2714,7 @@
                     </div>
                 </div>
 
-            {% else %}
+            {% elif request.GET.view != 'visitas' %}
                 <!-- Vista de Ventas por Categorías - Home del Dashboard -->
                 <div class="ventas-dashboard">
                     <h2><i class="fas fa-chart-line me-2"></i>Panel de Ventas - CompuEasys</h2>
@@ -4223,11 +4329,323 @@
                 alert('Nuevo visitante en la tienda');
             }
             console.log('[WebSocket] Nuevo visitante:', data.timestamp);
+            
+            // Auto-refresh si estamos en la vista de visitas
+            if (window.location.search.includes('view=visitas')) {
+                refreshVisitas();
+            }
         }
     };
     dashboardSocket.onclose = function(e) {
         console.log('[WebSocket] Dashboard desconectado');
     };
+})();
+</script>
+
+<!-- Auto-refresh para visitas en tiempo real -->
+<script>
+(function() {
+    'use strict';
+    
+    // Solo ejecutar en la vista de visitas
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('view') !== 'visitas') {
+        return;
+    }
+    
+    console.log('🔄 Iniciando sistema de auto-refresh para visitas');
+    
+    let refreshInterval = null;
+    const REFRESH_INTERVAL = 10000; // 10 segundos
+    
+    // Función para actualizar visitas
+    window.refreshVisitas = function() {
+        const filterForm = document.getElementById('visitas-filter-form');
+        if (!filterForm) return;
+        
+        const formData = new FormData(filterForm);
+        const params = new URLSearchParams(formData);
+        
+        console.log('🔄 Actualizando visitas...', params.toString());
+        
+        fetch(`/dashboard/api/visitas-live/?${params.toString()}`, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                console.log('✅ Visitas actualizadas:', data.visitas.length);
+                updateVisitasTable(data.visitas);
+                updateVisitasStats(data.stats);
+                
+                // Animar indicador en vivo
+                const liveIndicator = document.getElementById('live-indicator');
+                if (liveIndicator) {
+                    liveIndicator.style.animation = 'none';
+                    setTimeout(() => {
+                        liveIndicator.style.animation = '';
+                    }, 10);
+                }
+            }
+        })
+        .catch(error => {
+            console.error('❌ Error al actualizar visitas:', error);
+        });
+    };
+    
+    // Función para actualizar tabla de visitas
+    function updateVisitasTable(visitas) {
+        const tbody = document.getElementById('visitas-tbody');
+        if (!tbody) return;
+        
+        if (visitas.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Sin visitas recientes</td></tr>';
+            return;
+        }
+        
+        tbody.innerHTML = visitas.map(visita => {
+            let visitType = '';
+            if (visita.visit_type === 'store') {
+                visitType = '<span class="badge bg-info"><i class="fas fa-store"></i> Tienda</span>';
+            } else if (visita.visit_type === 'product_detail') {
+                const productInfo = visita.product_name ? 
+                    `<br><small class="text-muted">${visita.product_name}</small>` : '';
+                visitType = `<span class="badge bg-success"><i class="fas fa-box"></i> Producto #${visita.product_id || ''}</span>${productInfo}`;
+            } else {
+                visitType = '<span class="badge bg-secondary">-</span>';
+            }
+            
+            let userInfo = '';
+            if (visita.is_authenticated) {
+                userInfo = `<span class="badge bg-primary"><i class="fas fa-user"></i> ${visita.user_name || visita.user_email}</span>`;
+            } else {
+                userInfo = '<span class="text-secondary small">Anónimo</span>';
+            }
+            
+            let location = '';
+            if (visita.city || visita.country) {
+                location = `<span class="small"><i class="fas fa-map-marker-alt text-danger"></i> ${visita.city || ''}${visita.city && visita.country ? ', ' : ''}${visita.country || ''}</span>`;
+            } else {
+                location = '<span class="text-muted small">-</span>';
+            }
+            
+            return `
+                <tr>
+                    <td><span class="text-muted small">${visita.timestamp}</span></td>
+                    <td>${visitType}</td>
+                    <td>${userInfo}</td>
+                    <td>${location}</td>
+                    <td><code class="small">${visita.ip_address || '-'}</code></td>
+                </tr>
+            `;
+        }).join('');
+    }
+    
+    // Función para actualizar estadísticas
+    function updateVisitasStats(stats) {
+        const statElements = {
+            'visitas_count': stats.total_filtrado,
+            'visitas_count_today': stats.total_hoy,
+            'visitas_count_week': stats.total_semana,
+            'visitas_count_month': stats.total_mes,
+            'visitas_count_auth': stats.total_autenticados,
+            'visitas_count_anon': stats.total_anonimos,
+            'visitas_count_store': stats.total_tienda,
+            'visitas_count_product': stats.total_productos
+        };
+        
+        // Actualizar badges en el sidebar
+        document.querySelectorAll('.badge').forEach(badge => {
+            const text = badge.textContent.trim();
+            // Reemplazar números en badges
+            for (const [key, value] of Object.entries(stats)) {
+                const currentBadge = badge.closest('.small, .mb-3');
+                if (currentBadge) {
+                    const parentText = currentBadge.textContent;
+                    if (parentText.includes('Total filtrado') && key === 'total_filtrado') {
+                        badge.textContent = value;
+                    } else if (parentText.includes('Hoy') && key === 'total_hoy') {
+                        badge.textContent = value;
+                    } else if (parentText.includes('Esta semana') && key === 'total_semana') {
+                        badge.textContent = value;
+                    } else if (parentText.includes('Este mes') && key === 'total_mes') {
+                        badge.textContent = value;
+                    } else if (parentText.includes('Autenticados') && key === 'total_autenticados') {
+                        badge.textContent = value;
+                    } else if (parentText.includes('Anónimos') && key === 'total_anonimos') {
+                        badge.textContent = value;
+                    } else if (parentText.includes('Tienda') && key === 'total_tienda') {
+                        badge.textContent = value;
+                    } else if (parentText.includes('Productos') && key === 'total_productos') {
+                        badge.textContent = value;
+                    }
+                }
+            }
+        });
+    }
+    
+    // Función para actualizar productos más visitados
+    function refreshProductosMasVisitados() {
+        const periodoSelect = document.getElementById('periodo-productos');
+        if (!periodoSelect) return;
+        
+        const periodo = periodoSelect.value;
+        
+        fetch(`/dashboard/api/productos-mas-visitados/?periodo=${periodo}`, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                console.log('✅ Productos más visitados actualizados:', data.productos.length);
+                updateProductosVisitados(data.productos);
+            }
+        })
+        .catch(error => {
+            console.error('❌ Error al actualizar productos:', error);
+        });
+    }
+    
+    // Función para actualizar contenedor de productos
+    function updateProductosVisitados(productos) {
+        const container = document.getElementById('productos-visitados-container');
+        if (!container) return;
+        
+        if (productos.length === 0) {
+            container.innerHTML = `
+                <div class="col-12">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> No hay datos de productos visitados en este período
+                    </div>
+                </div>
+            `;
+            return;
+        }
+        
+        container.innerHTML = productos.map(item => {
+            const imageHtml = item.product_image ? 
+                `<img src="${item.product_image}" alt="${item.product_name}" class="rounded" width="60" height="60" style="object-fit: cover;">` :
+                `<div class="bg-light rounded d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                    <i class="fas fa-image text-muted"></i>
+                </div>`;
+            
+            return `
+                <div class="col-md-6 col-lg-4 mb-3">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                    ${imageHtml}
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="mb-1">${item.product_name}</h6>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="badge bg-danger">
+                                            <i class="fas fa-eye"></i> ${item.total_visitas} visita${item.total_visitas !== 1 ? 's' : ''}
+                                        </span>
+                                        <span class="text-muted small">
+                                            $${parseFloat(item.product_price).toLocaleString()}
+                                        </span>
+                                    </div>
+                                    <div class="mt-1">
+                                        <span class="badge bg-secondary small">Stock: ${item.product_stock}</span>
+                                        <span class="badge bg-info small">${item.product_category}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+    
+    // Event listeners
+    document.addEventListener('DOMContentLoaded', function() {
+        // Botón de refresh manual
+        const refreshBtn = document.getElementById('refresh-visitas');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', function() {
+                console.log('🔄 Refresh manual solicitado');
+                refreshVisitas();
+                refreshProductosMasVisitados();
+                
+                // Feedback visual
+                const icon = this.querySelector('i');
+                if (icon) {
+                    icon.classList.add('fa-spin');
+                    setTimeout(() => icon.classList.remove('fa-spin'), 1000);
+                }
+            });
+        }
+        
+        // Selector de período de productos
+        const periodoSelect = document.getElementById('periodo-productos');
+        if (periodoSelect) {
+            periodoSelect.addEventListener('change', function() {
+                console.log('📊 Cambiando período de productos:', this.value);
+                refreshProductosMasVisitados();
+            });
+        }
+        
+        // Botón de refresh de productos
+        const refreshProductosBtn = document.getElementById('refresh-productos');
+        if (refreshProductosBtn) {
+            refreshProductosBtn.addEventListener('click', function() {
+                console.log('🔄 Refresh manual de productos');
+                refreshProductosMasVisitados();
+                
+                // Feedback visual
+                const icon = this.querySelector('i');
+                if (icon) {
+                    icon.classList.add('fa-spin');
+                    setTimeout(() => icon.classList.remove('fa-spin'), 1000);
+                }
+            });
+        }
+        
+        // Iniciar auto-refresh
+        refreshInterval = setInterval(() => {
+            refreshVisitas();
+            refreshProductosMasVisitados();
+        }, REFRESH_INTERVAL);
+        
+        console.log(`✅ Auto-refresh iniciado (cada ${REFRESH_INTERVAL/1000}s)`);
+        
+        // Refresh inicial después de 2 segundos
+        setTimeout(() => {
+            refreshVisitas();
+            refreshProductosMasVisitados();
+        }, 2000);
+    });
+    
+    // Limpiar interval al salir de la página
+    window.addEventListener('beforeunload', function() {
+        if (refreshInterval) {
+            clearInterval(refreshInterval);
+            console.log('🛑 Auto-refresh detenido');
+        }
+    });
+    
+    // CSS para animación del indicador en vivo
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes pulse-animation {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .pulse-animation {
+            animation: pulse-animation 2s ease-in-out infinite;
+        }
+    `;
+    document.head.appendChild(style);
+    
 })();
 </script>
 </html>

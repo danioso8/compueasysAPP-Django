@@ -20,6 +20,15 @@ class StoreVisit(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
     session_key = models.CharField(max_length=40, blank=True, null=True)
     user = models.ForeignKey('SimpleUser', blank=True, null=True, on_delete=models.SET_NULL)
+    visit_type = models.CharField(max_length=20, default='store', choices=[
+        ('store', 'Store Homepage'),
+        ('product_detail', 'Product Detail')
+    ])
+    product_id = models.IntegerField(blank=True, null=True)
+    ip_address = models.GenericIPAddressField(blank=True, null=True)
+    country = models.CharField(max_length=100, blank=True, null=True)
+    city = models.CharField(max_length=100, blank=True, null=True)
+    user_agent = models.TextField(blank=True, null=True)
 
 class Category(models.Model):
     tenant = models.ForeignKey('Tenant', on_delete=models.CASCADE, null=True, blank=True)

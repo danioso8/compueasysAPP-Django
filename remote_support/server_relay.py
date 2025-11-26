@@ -22,6 +22,7 @@ class RemoteSupportServer:
         self.connected = False
         self.session_id = None
         self.current_screen = None
+        self.session_map = {}  # Mapeo de índice a session_id
         
         # URL del servidor relay en Render
         self.relay_url = "https://compueasys.onrender.com/api/relay"
@@ -52,9 +53,25 @@ class RemoteSupportServer:
         ttk.Label(left_panel, text="Sesiones Disponibles", 
                  font=("Arial", 12, "bold")).pack(pady=5)
         
-        # Lista de sesiones
-        self.sessions_listbox = tk.Listbox(left_panel, height=10)
-        self.sessions_listbox.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+        # Título de la lista
+        ttk.Label(left_panel, text="CLIENTES CONECTADOS", 
+                 font=("Arial", 12, "bold")).pack(pady=(5,0))
+        
+        # Lista de sesiones - Configuración mejorada
+        listbox_frame = ttk.Frame(left_panel)
+        listbox_frame.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+        
+        scrollbar = ttk.Scrollbar(listbox_frame)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        
+        self.sessions_listbox = tk.Listbox(listbox_frame, height=10, 
+                                           font=("Arial", 11, "bold"),
+                                           bg="#f0f0f0", fg="#000000",
+                                           selectbackground="#0078d7",
+                                           selectforeground="white",
+                                           yscrollcommand=scrollbar.set)
+        self.sessions_listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        scrollbar.config(command=self.sessions_listbox.yview)
         
         # Botones de control
         control_frame = ttk.Frame(left_panel)
@@ -109,6 +126,8 @@ class RemoteSupportServer:
         self.log_text.pack(fill=tk.BOTH, expand=True)
         
         # Iniciar actualización de sesiones
+        self.log("🚀 Iniciando CompuEasys Servidor Cloud...")
+        self.log(f"🌐 Conectando a: {self.relay_url}")
         self.refresh_sessions()
         
     def log(self, message):
@@ -117,36 +136,59 @@ class RemoteSupportServer:
         self.log_text.insert(tk.END, f"{time.strftime('%H:%M:%S')} - {message}\n")
         self.log_text.see(tk.END)
         self.log_text.config(state=tk.DISABLED)
+        # También imprimir en consola para debugging
+        print(f"[{time.strftime('%H:%M:%S')}] {message}")
         
     def refresh_sessions(self):
         """Actualizar lista de sesiones disponibles"""
         try:
+            self.log(f"🔄 Actualizando lista de sesiones...")
             response = requests.get(f"{self.relay_url}/list_sessions/", timeout=5)
+            self.log(f"📊 Status: {response.status_code}")
+            
             if response.status_code == 200:
                 data = response.json()
                 if data['success']:
                     self.sessions_listbox.delete(0, tk.END)
+                    self.session_map.clear()  # Limpiar mapeo anterior
                     sessions = data['sessions']
                     
                     if not sessions:
-                        self.sessions_listbox.insert(tk.END, "No hay clientes esperando...")
+                        self.sessions_listbox.insert(tk.END, "--- No hay clientes ---")
+                        self.log("📋 0 clientes disponibles")
                     else:
-                        for session in sessions:
+                        for idx, session in enumerate(sessions):
                             client_name = session.get('client_name', session.get('client_id', 'Cliente'))
                             os_info = session.get('os', 'Unknown OS')
                             session_id = session.get('session_id', '')
                             
-                            # Formato amigable
-                            display_text = f"🖥️ {client_name} ({os_info}) - {session_id}"
+                            # Guardar mapeo de índice a session_id
+                            self.session_map[idx] = session_id
+                            
+                            # Formato: numero - nombre - OS
+                            display_text = f"{idx+1}. {client_name} - {os_info}"
                             self.sessions_listbox.insert(tk.END, display_text)
+                            self.log(f"➕ Agregado #{idx+1}: {client_name}")
                         
-                        self.log(f"📋 {len(sessions)} cliente(s) disponible(s)")
+                        self.log(f"✅ {len(sessions)} cliente(s) disponible(s)")
+                        self.log(f"📋 Items en listbox: {self.sessions_listbox.size()}")
+                        
+                        # Triple actualización forzada
+                        self.sessions_listbox.update_idletasks()
+                        self.sessions_listbox.update()
+                        self.window.update()
+            else:
+                self.log(f"❌ Error HTTP {response.status_code}")
+                self.sessions_listbox.delete(0, tk.END)
+                self.sessions_listbox.insert(tk.END, f"❌ Error: {response.status_code}")
                         
             # Auto-refresh cada 5 segundos si no está conectado
             if not self.connected:
                 self.window.after(5000, self.refresh_sessions)
         except Exception as e:
-            self.log(f"⚠️ Error al actualizar: {str(e)[:50]}")
+            self.log(f"⚠️ Error: {str(e)[:80]}")
+            self.sessions_listbox.delete(0, tk.END)
+            self.sessions_listbox.insert(tk.END, f"⚠️ Error de conexión")
             
     def request_connection_to_client(self):
         """Solicitar conexión a un cliente seleccionado"""
@@ -155,16 +197,14 @@ class RemoteSupportServer:
             messagebox.showwarning("Advertencia", "Selecciona un cliente de la lista")
             return
         
-        # Obtener el session_id del cliente seleccionado
+        # Obtener el session_id del mapeo
         index = selection[0]
-        session_text = self.sessions_listbox.get(index)
+        session_id = self.session_map.get(index)
         
-        # Extraer session_id (formato: "Cliente - session_xxxx")
-        if "session_" in session_text:
-            session_id = session_text.split("session_")[1].strip()
-            session_id = "session_" + session_id.split()[0]
-        else:
-            messagebox.showerror("Error", "No se pudo obtener el ID de sesión")
+        if not session_id:
+            messagebox.showerror("Error", "No se encontró el session_id del cliente")
+            self.log(f"❌ Error: No hay session_id para índice {index}")
+            self.log(f"📋 Session map: {self.session_map}")
             return
         
         try:

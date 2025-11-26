@@ -1,6 +1,7 @@
 from functools import wraps
 from django.shortcuts import redirect, render
 from django.contrib import messages
+from django.db.models import Q
 
 def superuser_required(view_func):
     @wraps(view_func)
@@ -176,6 +177,7 @@ def dashboard_home(request):
     # Filtros de visitas
     visitas_filter = request.GET.get('visitas_filter', 'all')
     visitas_user_filter = request.GET.get('visitas_user', 'all')
+    visitas_type_filter = request.GET.get('visitas_type', 'all')
     now = datetime.now()
     today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
     week_start = today_start - timedelta(days=today_start.weekday())
@@ -193,6 +195,11 @@ def dashboard_home(request):
         visitas_qs = visitas_qs.exclude(user=None)
     elif visitas_user_filter == 'anon':
         visitas_qs = visitas_qs.filter(user=None)
+    
+    if visitas_type_filter == 'store':
+        visitas_qs = visitas_qs.filter(visit_type='store')
+    elif visitas_type_filter == 'product_detail':
+        visitas_qs = visitas_qs.filter(visit_type='product_detail')
 
     visitas_count = visitas_qs.count()
     visitas_count_today = StoreVisit.objects.filter(timestamp__gte=today_start).count()
@@ -201,6 +208,39 @@ def dashboard_home(request):
     visitas_count_auth = StoreVisit.objects.exclude(user=None).count()
     visitas_count_anon = StoreVisit.objects.filter(user=None).count()
     visitas_count_total = StoreVisit.objects.count()
+    visitas_count_store = StoreVisit.objects.filter(visit_type='store').count()
+    visitas_count_product = StoreVisit.objects.filter(visit_type='product_detail').count()
+    
+    # ESTADÍSTICAS DE PRODUCTOS MÁS VISITADOS
+    from django.db.models import Count
+    productos_mas_visitados = []
+    if view_param == 'visitas':
+        periodo_productos = request.GET.get('periodo_productos', 'all')
+        visitas_productos_qs = StoreVisit.objects.filter(
+            visit_type='product_detail',
+            product_id__isnull=False
+        )
+        
+        if periodo_productos == 'today':
+            visitas_productos_qs = visitas_productos_qs.filter(timestamp__gte=today_start)
+        elif periodo_productos == 'week':
+            visitas_productos_qs = visitas_productos_qs.filter(timestamp__gte=week_start)
+        elif periodo_productos == 'month':
+            visitas_productos_qs = visitas_productos_qs.filter(timestamp__gte=month_start)
+        
+        productos_stats = visitas_productos_qs.values('product_id').annotate(
+            total_visitas=Count('id')
+        ).order_by('-total_visitas')[:10]
+        
+        for item in productos_stats:
+            try:
+                product = ProductStore.objects.get(id=item['product_id'])
+                productos_mas_visitados.append({
+                    'product': product,
+                    'total_visitas': item['total_visitas']
+                })
+            except ProductStore.DoesNotExist:
+                pass
     
     # Aplicar filtros para pedidos
     if view_param == 'pedidos':
@@ -729,7 +769,6 @@ def dashboard_home(request):
     pedidos_hoy = Pedido.objects.filter(fecha__gte=inicio_dia).exclude(estado='cancelado')
     pedidos_diarios = pedidos_hoy.count()
     
-    from django.db.models import Q
     ventas_diarias = pedidos_hoy.filter(
         Q(estado_pago='completado') | Q(estado='entregado')
     ).aggregate(total=Sum('total'))['total'] or 0
@@ -830,6 +869,17 @@ def dashboard_home(request):
         'search_query': search_query,
         'conversations': conversations,
         'conversations_stats': conversations_stats,
+        'visitas_recientes': visitas_qs.select_related('user').order_by('-timestamp')[:20],
+        'visitas_count': visitas_count,
+        'visitas_count_today': visitas_count_today,
+        'visitas_count_week': visitas_count_week,
+        'visitas_count_month': visitas_count_month,
+        'visitas_count_auth': visitas_count_auth,
+        'visitas_count_anon': visitas_count_anon,
+        'visitas_count_store': visitas_count_store,
+        'visitas_count_product': visitas_count_product,
+        'productos_mas_visitados': productos_mas_visitados,
+        'view': view_param,
 
     })
 # ...existing code...
@@ -1937,7 +1987,6 @@ def pedidos_count(request):
             pedidos = pedidos.filter(metodo_pago=metodo_filter)
         
         if search:
-            from django.db.models import Q
             pedidos = pedidos.filter(
                 Q(id__icontains=search) |
                 Q(nombre__icontains=search) |
@@ -1982,7 +2031,6 @@ def pedidos_list(request):
             pedidos = pedidos.filter(metodo_pago=metodo_filter)
         
         if search:
-            from django.db.models import Q
             pedidos = pedidos.filter(
                 Q(id__icontains=search) |
                 Q(nombre__icontains=search) |
@@ -2158,7 +2206,7 @@ def pedidos_list(request):
 def dashboard_stats(request):
     """API para obtener estadísticas actualizadas del dashboard home"""
     try:
-        from django.db.models import Sum, Count, Q
+        from django.db.models import Sum, Count
         from decimal import Decimal
 
         from django.utils import timezone
@@ -2474,3 +2522,172 @@ def project_delete(request, project_id):
             return JsonResponse({'success': False, 'error': str(e)})
     
     return JsonResponse({'success': False, 'error': 'Método no permitido'})
+
+
+# ============================================
+# API ENDPOINTS PARA VISITAS EN TIEMPO REAL
+# ============================================
+
+@superuser_required
+def visitas_live_data(request):
+    """
+    Endpoint API para obtener datos de visitas en tiempo real
+    Retorna visitas recientes y estadísticas actualizadas
+    """
+    from core.models import StoreVisit, ProductStore
+    from django.utils import timezone
+    
+    # Obtener filtros
+    visitas_filter = request.GET.get('visitas_filter', 'all')
+    visitas_user_filter = request.GET.get('visitas_user', 'all')
+    visitas_type_filter = request.GET.get('visitas_type', 'all')
+    limit = int(request.GET.get('limit', 20))
+    
+    # Calcular rangos de tiempo
+    now = timezone.now()
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    week_start = today_start - timedelta(days=today_start.weekday())
+    month_start = today_start.replace(day=1)
+    
+    # Base queryset
+    visitas_qs = StoreVisit.objects.select_related('user').all()
+    
+    # Aplicar filtros de tiempo
+    if visitas_filter == 'today':
+        visitas_qs = visitas_qs.filter(timestamp__gte=today_start)
+    elif visitas_filter == 'week':
+        visitas_qs = visitas_qs.filter(timestamp__gte=week_start)
+    elif visitas_filter == 'month':
+        visitas_qs = visitas_qs.filter(timestamp__gte=month_start)
+    
+    # Aplicar filtros de usuario
+    if visitas_user_filter == 'auth':
+        visitas_qs = visitas_qs.exclude(user=None)
+    elif visitas_user_filter == 'anon':
+        visitas_qs = visitas_qs.filter(user=None)
+    
+    # Aplicar filtros de tipo
+    if visitas_type_filter == 'store':
+        visitas_qs = visitas_qs.filter(visit_type='store')
+    elif visitas_type_filter == 'product_detail':
+        visitas_qs = visitas_qs.filter(visit_type='product_detail')
+    
+    # Obtener visitas recientes
+    visitas_recientes = visitas_qs.order_by('-timestamp')[:limit]
+    
+    # Serializar visitas
+    visitas_data = []
+    for visita in visitas_recientes:
+        product_name = None
+        if visita.product_id:
+            try:
+                product = ProductStore.objects.get(id=visita.product_id)
+                product_name = product.name
+            except ProductStore.DoesNotExist:
+                pass
+        
+        visitas_data.append({
+            'id': visita.id,
+            'timestamp': visita.timestamp.strftime('%d/%m/%Y %H:%M:%S'),
+            'visit_type': visita.visit_type,
+            'product_id': visita.product_id,
+            'product_name': product_name,
+            'user_name': visita.user.name if visita.user else None,
+            'user_email': visita.user.email if visita.user else None,
+            'is_authenticated': visita.user is not None,
+            'city': visita.city,
+            'country': visita.country,
+            'ip_address': visita.ip_address,
+        })
+    
+    # Calcular estadísticas
+    stats = {
+        'total_filtrado': visitas_qs.count(),
+        'total_hoy': StoreVisit.objects.filter(timestamp__gte=today_start).count(),
+        'total_semana': StoreVisit.objects.filter(timestamp__gte=week_start).count(),
+        'total_mes': StoreVisit.objects.filter(timestamp__gte=month_start).count(),
+        'total_autenticados': StoreVisit.objects.exclude(user=None).count(),
+        'total_anonimos': StoreVisit.objects.filter(user=None).count(),
+        'total_tienda': StoreVisit.objects.filter(visit_type='store').count(),
+        'total_productos': StoreVisit.objects.filter(visit_type='product_detail').count(),
+        'total_general': StoreVisit.objects.count(),
+    }
+    
+    return JsonResponse({
+        'success': True,
+        'visitas': visitas_data,
+        'stats': stats,
+        'timestamp': now.strftime('%Y-%m-%d %H:%M:%S')
+    })
+
+
+@superuser_required
+def productos_mas_visitados(request):
+    """
+    Endpoint API para obtener estadísticas de productos más visitados
+    """
+    from core.models import StoreVisit, ProductStore
+    from django.db.models import Count
+    from django.utils import timezone
+    
+    # Obtener parámetros
+    periodo = request.GET.get('periodo', 'all')  # all, today, week, month
+    limit = int(request.GET.get('limit', 10))
+    
+    # Calcular rangos de tiempo
+    now = timezone.now()
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    week_start = today_start - timedelta(days=today_start.weekday())
+    month_start = today_start.replace(day=1)
+    
+    # Base queryset - solo visitas a productos
+    visitas_qs = StoreVisit.objects.filter(
+        visit_type='product_detail',
+        product_id__isnull=False
+    )
+    
+    # Aplicar filtro de periodo
+    if periodo == 'today':
+        visitas_qs = visitas_qs.filter(timestamp__gte=today_start)
+    elif periodo == 'week':
+        visitas_qs = visitas_qs.filter(timestamp__gte=week_start)
+    elif periodo == 'month':
+        visitas_qs = visitas_qs.filter(timestamp__gte=month_start)
+    
+    # Agrupar por producto y contar visitas
+    productos_visitados = visitas_qs.values('product_id').annotate(
+        total_visitas=Count('id')
+    ).order_by('-total_visitas')[:limit]
+    
+    # Enriquecer con datos del producto
+    productos_data = []
+    for item in productos_visitados:
+        try:
+            product = ProductStore.objects.select_related('category').get(id=item['product_id'])
+            productos_data.append({
+                'product_id': product.id,
+                'product_name': product.name,
+                'product_price': float(product.price),
+                'product_stock': product.stock,
+                'product_category': product.category.nombre if product.category else 'Sin categoría',
+                'product_image': product.imagen.url if product.imagen else None,
+                'total_visitas': item['total_visitas'],
+            })
+        except ProductStore.DoesNotExist:
+            # Producto eliminado pero con visitas
+            productos_data.append({
+                'product_id': item['product_id'],
+                'product_name': f'Producto #{item["product_id"]} (eliminado)',
+                'product_price': 0,
+                'product_stock': 0,
+                'product_category': 'N/A',
+                'product_image': None,
+                'total_visitas': item['total_visitas'],
+            })
+    
+    return JsonResponse({
+        'success': True,
+        'productos': productos_data,
+        'periodo': periodo,
+        'timestamp': now.strftime('%Y-%m-%d %H:%M:%S')
+    })

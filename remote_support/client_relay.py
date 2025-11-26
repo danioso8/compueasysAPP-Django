@@ -29,12 +29,12 @@ class RemoteSupportClient:
         
         # URL del servidor relay en Render
         self.relay_url = "https://compueasys.onrender.com/api/relay"
+        
         self.setup_ui()
         
         # Conectar automáticamente al iniciar
         self.window.after(1000, self.auto_connect)
         
-    def setup_ui(self):
     def setup_ui(self):
         """Configurar interfaz gráfica"""
         # Header
@@ -124,8 +124,10 @@ class RemoteSupportClient:
         try:
             self.log("🔄 Conectando a CompuEasys Cloud...")
             self.log(f"🆔 Tu ID: {self.client_id}")
+            self.log(f"🌐 URL: {self.relay_url}/register_client/")
             
             # Registrar cliente en el relay
+            self.log("📡 Enviando petición de registro...")
             response = requests.post(
                 f"{self.relay_url}/register_client/",
                 json={
@@ -136,6 +138,8 @@ class RemoteSupportClient:
                 },
                 timeout=15
             )
+            
+            self.log(f"📊 Status Code: {response.status_code}")
             
             if response.status_code == 200:
                 data = response.json()
@@ -159,10 +163,22 @@ class RemoteSupportClient:
                 self.log(f"❌ Error HTTP {response.status_code}")
                 self.connection_status.config(text="❌ Error de conexión")
                 
+        except requests.exceptions.Timeout:
+            self.log(f"⏱️ Timeout - El servidor no respondió")
+            self.log("🔄 Reintentando en 10 segundos...")
+            self.connection_status.config(text="🔄 Reintentando...")
+            self.window.after(10000, self.auto_connect)
+        except requests.exceptions.ConnectionError as e:
+            self.log(f"🔌 Error de conexión a internet")
+            self.log(f"📝 {str(e)[:80]}")
+            self.log("🔄 Reintentando en 10 segundos...")
+            self.connection_status.config(text="🔄 Reintentando...")
+            self.window.after(10000, self.auto_connect)
         except Exception as e:
-            self.log(f"❌ Error: {str(e)[:100]}")
-            self.connection_status.config(text="❌ Error de conexión")
-            # Reintentar en 10 segundos
+            self.log(f"⚠️ Error: {type(e).__name__}")
+            self.log(f"📝 {str(e)[:100]}")
+            self.log("🔄 Reintentando en 10 segundos...")
+            self.connection_status.config(text="🔄 Reintentando...")
             self.window.after(10000, self.auto_connect)
     
     def listen_for_connection_requests(self):
