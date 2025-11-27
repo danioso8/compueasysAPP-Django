@@ -273,15 +273,16 @@
     window.agregarVariante = function () {
       if (!variantesContainer) return;
       const row = document.createElement("div");
-      row.className = "variante-row d-flex gap-2 mb-2 align-items-center";
+      row.className = "variante-row d-flex gap-2 mb-2 align-items-center p-2 border rounded";
+      row.style.background = "#f8f9fa";
       row.innerHTML =
-        '<button type="button" class="btn btn-sm btn-danger variant-remove-btn-new" style="margin-right:6px;">×</button>' +
-        '<input type="text" name="variante_nombre[]" class="form-control" placeholder="Nombre variante">' +
-        '<input type="number" name="variante_precio[]" class="form-control" placeholder="Precio" step="0.01">' +
-        '<input type="number" name="variante_stock[]" class="form-control" placeholder="Stock">' +
-        '<input type="text" name="variante_color[]" class="form-control" placeholder="Color">' +
-        '<input type="text" name="variante_talla[]" class="form-control" placeholder="Talla">' +
-        '<input type="file" name="variante_imagen[]" class="form-control">';
+        '<button type="button" class="btn btn-sm btn-danger variant-remove-btn-new" style="display:block; margin-right:6px;">×</button>' +
+        '<input type="text" name="variante_nombre[]" class="form-control form-control-sm" placeholder="Nombre" style="max-width:150px;">' +
+        '<input type="number" name="variante_precio[]" class="form-control form-control-sm" placeholder="Precio" step="0.01" style="max-width:100px;">' +
+        '<input type="number" name="variante_stock[]" class="form-control form-control-sm" placeholder="Stock" style="max-width:80px;">' +
+        '<input type="text" name="variante_color[]" class="form-control form-control-sm" placeholder="Color" style="max-width:100px;">' +
+        '<input type="text" name="variante_talla[]" class="form-control form-control-sm" placeholder="Talla" style="max-width:80px;">' +
+        '<input type="file" name="variante_imagen[]" class="form-control form-control-sm" accept="image/*">';
       variantesContainer.appendChild(row);
       // attach new-button handler
       const del = row.querySelector(".variant-remove-btn-new");

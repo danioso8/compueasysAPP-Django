@@ -298,7 +298,23 @@ def dashboard_home(request):
     
    
     if editar_id:
-        producto_to_edit = ProductStore.objects.filter(id=editar_id).first()
+        # Obtener producto con todas sus relaciones (galería y variantes)
+        producto_to_edit = ProductStore.objects.prefetch_related(
+            'galeria',
+            'variants'
+        ).filter(id=editar_id).first()
+        
+        # DEBUG: Verificar que el producto tiene galería y variantes
+        if producto_to_edit:
+            print(f"🔍 PRODUCTO A EDITAR: {producto_to_edit.name} (ID: {producto_to_edit.id})")
+            print(f"📸 Galería count: {producto_to_edit.galeria.count()}")
+            print(f"🎨 Variantes count: {producto_to_edit.variants.count()}")
+            if producto_to_edit.galeria.exists():
+                for img in producto_to_edit.galeria.all():
+                    print(f"  - Imagen galería ID: {img.id}, URL: {img.galeria.url if img.galeria else 'N/A'}")
+            if producto_to_edit.variants.exists():
+                for var in producto_to_edit.variants.all():
+                    print(f"  - Variante: {var.nombre}, Precio: {var.precio}, Imagen: {var.imagen.url if var.imagen else 'N/A'}")
 
         inventario_all = []
         inventario_by_category = []
@@ -478,27 +494,54 @@ def dashboard_home(request):
                 product.imagen = imagen
             product.save()
 
-            # agregar nuevas imágenes de galería si se enviaron
+            # Manejar eliminación de imágenes de galería marcadas
+            galeria_delete_ids = request.POST.getlist('galeria_delete[]')
+            if galeria_delete_ids:
+                for gal_id in galeria_delete_ids:
+                    try:
+                        gal_obj = Galeria.objects.get(id=gal_id, product=product)
+                        # Eliminar el archivo físico
+                        if hasattr(gal_obj, 'galeria') and gal_obj.galeria:
+                            gal_obj.galeria.delete(save=False)
+                        elif hasattr(gal_obj, 'imagen') and gal_obj.imagen:
+                            gal_obj.imagen.delete(save=False)
+                        gal_obj.delete()
+                    except Galeria.DoesNotExist:
+                        pass
+            
+            # Agregar nuevas imágenes de galería si se enviaron
             if galeria_files:
                 for img in galeria_files:
                     galeria_obj = Galeria.objects.create(galeria=img, product=product)
                     product.galeria.add(galeria_obj)
 
-            # manejar variantes: opción simple -> borrar existentes y recrear
-            # (ajusta si prefieres actualizar por id)
+            # Manejar variantes: eliminar las marcadas y actualizar/crear las demás
+            variante_ids = request.POST.getlist('variante_id[]')  # IDs de variantes existentes
             variante_nombres = request.POST.getlist('variante_nombre[]')
             variante_precios = request.POST.getlist('variante_precio[]')
             variante_imagenes = request.FILES.getlist('variante_imagen[]')
             variante_stocks = request.POST.getlist('variante_stock[]')
             variante_colores = request.POST.getlist('variante_color[]')
             variante_tallas = request.POST.getlist('variante_talla[]')
-
+            variante_delete_ids = request.POST.getlist('variante_delete[]')
+            
+            # Eliminar variantes marcadas
+            if variante_delete_ids:
+                for var_id in variante_delete_ids:
+                    try:
+                        var_obj = ProductVariant.objects.get(id=var_id, product=product)
+                        # Eliminar imagen si existe
+                        if var_obj.imagen:
+                            var_obj.imagen.delete(save=False)
+                        var_obj.delete()
+                    except ProductVariant.DoesNotExist:
+                        pass
+            
+            # Actualizar o crear variantes
             if hasattr(product, 'variants'):
-                # eliminar variantes viejas
-                product.variants.all().delete()
-                # crear nuevas variantes
                 max_len = max(len(variante_nombres), len(variante_precios), len(variante_stocks),
-                              len(variante_colores), len(variante_tallas), len(variante_imagenes))
+                              len(variante_colores), len(variante_tallas), len(variante_ids))
+                
                 for i in range(max_len):
                     nombre = variante_nombres[i] if i < len(variante_nombres) else ''
                     precio_v = variante_precios[i] if i < len(variante_precios) else None
@@ -506,12 +549,36 @@ def dashboard_home(request):
                     color = variante_colores[i] if i < len(variante_colores) else ''
                     talla = variante_tallas[i] if i < len(variante_tallas) else ''
                     img_v = variante_imagenes[i] if i < len(variante_imagenes) else None
-                    if nombre or precio_v:
+                    var_id = variante_ids[i] if i < len(variante_ids) else None
+                    
+                    # Saltar si no hay nombre ni precio
+                    if not nombre and not precio_v:
+                        continue
+                    
+                    # Si tiene ID, actualizar variante existente
+                    if var_id:
+                        try:
+                            variant = ProductVariant.objects.get(id=var_id, product=product)
+                            variant.nombre = nombre
+                            variant.precio = float(precio_v) if precio_v else 0
+                            variant.stock = int(stock_v) if stock_v else 0
+                            variant.color = color
+                            variant.talla = talla
+                            if img_v:  # Solo actualizar imagen si se sube una nueva
+                                # Eliminar imagen anterior
+                                if variant.imagen:
+                                    variant.imagen.delete(save=False)
+                                variant.imagen = img_v
+                            variant.save()
+                        except ProductVariant.DoesNotExist:
+                            pass
+                    else:
+                        # Crear nueva variante
                         ProductVariant.objects.create(
                             product=product,
                             nombre=nombre,
-                            precio=(float(precio_v) if precio_v else 0),
-                            stock=(int(stock_v) if stock_v else 0),
+                            precio=float(precio_v) if precio_v else 0,
+                            stock=int(stock_v) if stock_v else 0,
                             color=color,
                             talla=talla,
                             imagen=img_v
