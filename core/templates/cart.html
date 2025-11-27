@@ -13,6 +13,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- SweetAlert2 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.5/dist/sweetalert2.min.css">
+    <!-- Animate.css for SweetAlert2 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
   </head>
   <body>
     {% include "navbarr.html" %}
@@ -159,14 +163,19 @@
                 {% for item in cart_items %}
                 <div class="cart-item-mobile" data-index="{{ forloop.counter0 }}">
                   <div class="cart-item-mobile-header">
-                    <input type="checkbox" class="cart-checkbox-modern" 
-                           id="mobile-item-{{ forloop.counter0 }}"
-                           name="selected_products" value="{{ forloop.counter0 }}" checked>
-                    <label for="mobile-item-{{ forloop.counter0 }}" class="checkbox-label"></label>
+                    <div class="checkbox-wrapper-mobile">
+                      <input type="checkbox" class="cart-checkbox-modern" 
+                             id="mobile-item-{{ forloop.counter0 }}"
+                             name="selected_products" value="{{ forloop.counter0 }}" checked>
+                      <label for="mobile-item-{{ forloop.counter0 }}" class="checkbox-label-mobile">
+                        <span class="sr-only">Seleccionar producto</span>
+                      </label>
+                    </div>
                     
                     <button type="button" class="btn-remove-mobile" 
                             data-product="{{ item.product.id }}"
-                            data-variant="{% if item.variant %}{{ item.variant.id }}{% endif %}">
+                            data-variant="{% if item.variant %}{{ item.variant.id }}{% endif %}"
+                            aria-label="Eliminar producto">
                       <i class="bi bi-x-lg"></i>
                     </button>
                   </div>
@@ -451,6 +460,7 @@
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.5/dist/sweetalert2.all.min.js"></script>
       <!-- Scripts específicos del carrito moderno -->
   <script src="{% static 'js/cart.js' %}"></script>
   </body>

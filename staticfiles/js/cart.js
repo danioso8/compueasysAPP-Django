@@ -30,30 +30,36 @@
       return new Intl.NumberFormat('es-CO').format(Math.round(price));
     },
 
-    // Mostrar toast notification
+    // Mostrar toast notification con SweetAlert2
     showToast(message, type = 'success') {
-      const toast = document.createElement('div');
-      toast.className = `toast-notification toast-${type}`;
-      toast.textContent = message;
-      toast.style.cssText = `
-        position: fixed;
-        top: 100px;
-        right: 20px;
-        background: ${type === 'success' ? '#10b981' : '#ef4444'};
-        color: white;
-        padding: 16px 24px;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        z-index: 10000;
-        animation: slideIn 0.3s ease-out;
-      `;
-      
-      document.body.appendChild(toast);
-      setTimeout(() => {
-        toast.style.animation = 'slideOut 0.3s ease-out';
-        setTimeout(() => toast.remove(), 300);
-      }, 3000);
-    }
+      if (typeof Swal === 'undefined') {
+        console.warn('SweetAlert2 no está disponible, usando alert básico');
+        alert(message);
+        return;
+      }
+
+      const Toast = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        didOpen: (toast) => {
+          toast.addEventListener('mouseenter', Swal.stopTimer)
+          toast.addEventListener('mouseleave', Swal.resumeTimer)
+        }
+      });
+
+      let icon = 'success';
+      if (type === 'error') icon = 'error';
+      else if (type === 'warning') icon = 'warning';
+      else if (type === 'info') icon = 'info';
+
+      Toast.fire({
+        icon: icon,
+        title: message
+      });
+    },
   };
 
   // ========================================
@@ -524,7 +530,32 @@
       
       console.log(`🗑️ Eliminando producto ${productId}, variante ${variantId}`);
       
-      if (!confirm('¿Eliminar este producto del carrito?')) {
+      // Confirmar con SweetAlert2 o confirm básico
+      let confirmed = false;
+      if (typeof Swal !== 'undefined') {
+        const result = await Swal.fire({
+          title: 'Confirmar eliminación',
+          text: '¿Estás seguro de que quieres eliminar este producto del carrito?',
+          icon: 'question',
+          showCancelButton: true,
+          confirmButtonColor: '#ef4444',
+          cancelButtonColor: '#6b7280',
+          confirmButtonText: '<i class="bi bi-trash-fill me-2"></i>Eliminar',
+          cancelButtonText: '<i class="bi bi-x-circle me-2"></i>Cancelar',
+          backdrop: 'rgba(0,0,0,0.5)',
+          showClass: {
+            popup: 'animate__animated animate__zoomIn animate__faster'
+          },
+          hideClass: {
+            popup: 'animate__animated animate__zoomOut animate__faster'
+          }
+        });
+        confirmed = result.isConfirmed;
+      } else {
+        confirmed = confirm('¿Eliminar este producto del carrito?');
+      }
+      
+      if (!confirmed) {
         return;
       }
 
@@ -581,8 +612,45 @@
     },
 
     async confirmClear() {
-      if (!confirm('¿Estás seguro de que deseas vaciar el carrito?')) {
-        return;
+      if (typeof Swal === 'undefined') {
+        if (!confirm('¿Estás seguro de que deseas vaciar el carrito?')) {
+          return;
+        }
+      } else {
+        const result = await Swal.fire({
+          title: '¿Vaciar carrito completo?',
+          html: `
+            <div style="text-align: left; margin-top: 20px;">
+              <div style="background: linear-gradient(135deg, #fef3c7, #fde68a); border: 1px solid #f59e0b; border-radius: 12px; padding: 16px;">
+                <div style="display: flex; align-items: center; gap: 8px; color: #92400e; margin-bottom: 8px;">
+                  <i class="bi bi-exclamation-triangle-fill"></i>
+                  <span style="font-weight: 600;">Advertencia importante</span>
+                </div>
+                <p style="margin: 0; color: #92400e; font-size: 14px; line-height: 1.4;">
+                  Se eliminarán todos los productos de tu carrito de compras.
+                  Tendrás que agregarlos nuevamente si deseas continuar.
+                </p>
+              </div>
+            </div>
+          `,
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#dc2626',
+          cancelButtonColor: '#6b7280',
+          confirmButtonText: '<i class="bi bi-trash3-fill me-2"></i>Sí, vaciar carrito',
+          cancelButtonText: '<i class="bi bi-x-circle me-2"></i>Cancelar',
+          backdrop: 'rgba(0,0,0,0.5)',
+          showClass: {
+            popup: 'animate__animated animate__fadeInDown animate__faster'
+          },
+          hideClass: {
+            popup: 'animate__animated animate__fadeOutUp animate__faster'
+          }
+        });
+        
+        if (!result.isConfirmed) {
+          return;
+        }
       }
 
       try {
@@ -590,17 +658,22 @@
           method: 'POST',
           headers: {
             'X-CSRFToken': Utils.getCsrfToken(),
+            'X-Requested-With': 'XMLHttpRequest',
             'Content-Type': 'application/json'
           }
         });
 
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
         const data = await response.json();
 
         if (data.success) {
-          Utils.showToast('Carrito vaciado', 'success');
+          Utils.showToast('Carrito vaciado exitosamente', 'success');
           setTimeout(() => {
             window.location.reload();
-          }, 500);
+          }, 1000);
         } else {
           throw new Error(data.message || 'Error al vaciar el carrito');
         }

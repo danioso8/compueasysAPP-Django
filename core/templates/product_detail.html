@@ -521,7 +521,7 @@
                                             <span class="btn-shimmer"></span>
                                         </button>
                                         
-                                        <button type="button" class="btn-buy-now-modern" onclick="document.getElementById('add_to_cart').click(); window.location.href='/cart'">
+                                        <button type="button" class="btn-buy-now-modern" id="buy-now-btn">
                                             <span class="btn-icon">
                                                 <i class="bi bi-lightning-charge-fill"></i>
                                             </span>
@@ -1473,6 +1473,57 @@ notificationStyles.textContent = `
     }
 `;
 document.head.appendChild(notificationStyles);
+
+// ===== BOTÓN COMPRAR AHORA =====
+const buyNowBtn = document.getElementById('buy-now-btn');
+if (buyNowBtn) {
+    buyNowBtn.addEventListener('click', async function(e) {
+        e.preventDefault();
+        
+        const form = document.querySelector('form[action*="add-to-cart"]');
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const productId = '{{ product.id }}';
+        const quantityInput = document.getElementById('quantity');
+        const quantity = quantityInput ? quantityInput.value : 1;
+        const variantSelect = document.getElementById('variant_id');
+        const variantId = variantSelect ? variantSelect.value : '';
+        
+        // Deshabilitar botón y mostrar loading
+        buyNowBtn.disabled = true;
+        const originalText = buyNowBtn.querySelector('.btn-text').textContent;
+        buyNowBtn.querySelector('.btn-text').textContent = 'Procesando...';
+        
+        try {
+            // Agregar al carrito primero
+            const formData = new FormData();
+            formData.append('csrfmiddlewaretoken', csrfToken);
+            formData.append('quantity', quantity);
+            if (variantId) {
+                formData.append('variant_id', variantId);
+            }
+            
+            const response = await fetch(`/add-to-cart-detail/${productId}/`, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            
+            if (response.ok) {
+                // Redirigir al carrito después de agregar exitosamente
+                window.location.href = '/cart';
+            } else {
+                throw new Error('Error al agregar al carrito');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            buyNowBtn.querySelector('.btn-text').textContent = originalText;
+            buyNowBtn.disabled = false;
+            alert('Error al procesar la compra. Por favor intenta nuevamente.');
+        }
+    });
+}
     </script>
     
     

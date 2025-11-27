@@ -90,11 +90,11 @@ def home(request):
     ip_address = get_client_ip(request)
     user_agent = request.META.get('HTTP_USER_AGENT', '')
     
-    # Registrar visita a la tienda
+    # Registrar visita al home
     StoreVisit.objects.create(
         session_key=session_key,
         user=user_obj,
-        visit_type='store',
+        visit_type='home',
         ip_address=ip_address,
         user_agent=user_agent
     )
@@ -640,6 +640,40 @@ def product_detail(request, product_id):
         return HttpResponse("Product not found", status=404)
 
 def checkout(request, note=None):
+    # Registrar visita al checkout
+    from core.models import StoreVisit
+    
+    if not request.session.session_key:
+        request.session.create()
+    
+    session_key = request.session.session_key
+    user_obj = None
+    user_id = request.session.get('user_id')
+    if user_id:
+        try:
+            user_obj = SimpleUser.objects.get(id=user_id)
+        except SimpleUser.DoesNotExist:
+            pass
+    
+    def get_client_ip(request):
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            ip = x_forwarded_for.split(',')[0]
+        else:
+            ip = request.META.get('REMOTE_ADDR')
+        return ip
+    
+    ip_address = get_client_ip(request)
+    user_agent = request.META.get('HTTP_USER_AGENT', '')
+    
+    StoreVisit.objects.create(
+        session_key=session_key,
+        user=user_obj,
+        visit_type='checkout',
+        ip_address=ip_address,
+        user_agent=user_agent
+    )
+    
     saved = request.session.get('saved_checkout', {})   
     departament_selected = saved.get('departamento', '') 
     city_selected = saved.get('ciudad', '')
@@ -1144,6 +1178,45 @@ def index(request):
 
 # ...existing code...
 def cart(request):
+    # Registrar visita al carrito
+    from core.models import StoreVisit
+    
+    # Obtener o crear session_key
+    if not request.session.session_key:
+        request.session.create()
+    
+    session_key = request.session.session_key
+    user_obj = None
+    
+    # Verificar si hay usuario autenticado
+    user_id = request.session.get('user_id')
+    if user_id:
+        try:
+            user_obj = SimpleUser.objects.get(id=user_id)
+        except SimpleUser.DoesNotExist:
+            pass
+    
+    # Obtener información del cliente
+    def get_client_ip(request):
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            ip = x_forwarded_for.split(',')[0]
+        else:
+            ip = request.META.get('REMOTE_ADDR')
+        return ip
+    
+    ip_address = get_client_ip(request)
+    user_agent = request.META.get('HTTP_USER_AGENT', '')
+    
+    # Registrar la visita al carrito
+    StoreVisit.objects.create(
+        session_key=session_key,
+        user=user_obj,
+        visit_type='cart',
+        ip_address=ip_address,
+        user_agent=user_agent
+    )
+    
     cart = request.session.get('cart', {})
     cart_items = []
     cart_total = Decimal(0)
@@ -1447,18 +1520,19 @@ def remove_from_cart(request, product_id):
     return redirect('cart')
 
 def clear_cart(request):
-    if 'cart' in request.session:
-        del request.session['cart']
-        request.session.modified = True
-    
-    # Si es una petición AJAX, devolver JSON
-    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-        return JsonResponse({
-            'success': True,
-            'message': 'Carrito vaciado correctamente',
-            'cart_total': 0,
-            'cart_count': 0
-        })
+    if request.method == 'POST' or request.method == 'GET':
+        if 'cart' in request.session:
+            del request.session['cart']
+            request.session.modified = True
+        
+        # Si es una petición AJAX, devolver JSON
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({
+                'success': True,
+                'message': 'Carrito vaciado correctamente',
+                'cart_total': 0,
+                'cart_count': 0
+            })
     
     # Si no es AJAX, hacer redirect normal
     return redirect('cart')

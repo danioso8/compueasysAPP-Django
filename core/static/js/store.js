@@ -945,15 +945,51 @@
           Utils.showToast('Producto agregado al carrito', 'success');
           Utils.vibrate([30, 20, 30]);
           
-          // Actualizar contador
+          // Actualizar todos los contadores inmediatamente
+          if (data.cart_count !== undefined) {
+            const count = data.cart_count;
+            
+            // Badge del navbar
+            const navCartCount = document.querySelector('.action-btn.cart-btn .cart-count');
+            if (navCartCount) {
+              navCartCount.textContent = count;
+              navCartCount.style.display = count > 0 ? 'block' : 'none';
+              console.log('✅ Nav cart count actualizado:', count);
+            }
+            
+            // Badge del cart flotante
+            const cartFloatBadge = document.getElementById('cart-badge-float');
+            if (cartFloatBadge) {
+              cartFloatBadge.textContent = count;
+              cartFloatBadge.style.display = count > 0 ? 'block' : 'none';
+              console.log('✅ Float cart badge actualizado:', count);
+            }
+            
+            // Badge del sidebar
+            const cartCountSidebar = document.getElementById('cart-count-sidebar');
+            if (cartCountSidebar) {
+              cartCountSidebar.textContent = count;
+              console.log('✅ Sidebar cart count actualizado:', count);
+            }
+          }
+          
+          // Actualizar contador completo (como backup)
           this.updateCartCount();
           
-          // Efecto de rebote en el carrito flotante
-          const floatingCart = document.querySelector('.floating-cart');
+          // Efecto de rebote en ambos carritos
+          const floatingCart = document.querySelector('.cart-float-modern');
           if (floatingCart) {
             floatingCart.classList.add('bounce');
             setTimeout(() => {
               floatingCart.classList.remove('bounce');
+            }, 600);
+          }
+          
+          const navCartBtn = document.querySelector('.action-btn.cart-btn');
+          if (navCartBtn) {
+            navCartBtn.classList.add('bounce');
+            setTimeout(() => {
+              navCartBtn.classList.remove('bounce');
             }, 600);
           }
           
@@ -1014,7 +1050,22 @@
           const headerCartCount = document.querySelector('.cart-count');
           if (headerCartCount) {
             headerCartCount.textContent = count;
+            headerCartCount.style.display = count > 0 ? 'flex' : 'none';
             console.log('✅ Header cart count actualizado:', count);
+          }
+          
+          // Actualizar badge del cart flotante
+          const cartFloatBadge = document.getElementById('cart-badge-float');
+          if (cartFloatBadge) {
+            cartFloatBadge.textContent = count;
+            cartFloatBadge.style.display = count > 0 ? 'block' : 'none';
+            console.log('✅ Float cart badge actualizado:', count);
+          }
+          
+          // Actualizar contador del sidebar
+          const cartCountSidebar = document.getElementById('cart-count-sidebar');
+          if (cartCountSidebar) {
+            cartCountSidebar.textContent = count;
           }
           
           // Animar contador si cambió
@@ -1467,9 +1518,6 @@
 
     console.log('✅ Store experience initialized successfully');
     console.groupEnd();
-
-    // Mostrar mensaje de bienvenida
-    Utils.showToast('Tienda cargada correctamente', 'success');
   });
 
   // Exponer managers globalmente para debugging

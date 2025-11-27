@@ -273,15 +273,37 @@
     window.agregarVariante = function () {
       if (!variantesContainer) return;
       const row = document.createElement("div");
-      row.className = "variante-row d-flex gap-2 mb-2 align-items-center";
-      row.innerHTML =
-        '<button type="button" class="btn btn-sm btn-danger variant-remove-btn-new" style="margin-right:6px;">×</button>' +
-        '<input type="text" name="variante_nombre[]" class="form-control" placeholder="Nombre variante">' +
-        '<input type="number" name="variante_precio[]" class="form-control" placeholder="Precio" step="0.01">' +
-        '<input type="number" name="variante_stock[]" class="form-control" placeholder="Stock">' +
-        '<input type="text" name="variante_color[]" class="form-control" placeholder="Color">' +
-        '<input type="text" name="variante_talla[]" class="form-control" placeholder="Talla">' +
-        '<input type="file" name="variante_imagen[]" class="form-control">';
+      row.className = "variante-row-mobile mb-3 p-3 border rounded position-relative";
+      row.style.background = "#f8f9fa";
+      row.innerHTML = `
+        <button type="button" class="btn btn-sm btn-danger variant-remove-btn-new" style="display:block; position:absolute; top:8px; right:8px; width:28px; height:28px; padding:0; border-radius:50%; z-index:10;">×</button>
+        <div class="row g-2">
+          <div class="col-12 col-sm-6">
+            <label class="small">Nombre</label>
+            <input type="text" name="variante_nombre[]" placeholder="Nombre de la variante" class="form-control form-control-sm" />
+          </div>
+          <div class="col-6 col-sm-3">
+            <label class="small">Precio</label>
+            <input type="number" name="variante_precio[]" placeholder="0.00" step="0.01" class="form-control form-control-sm" />
+          </div>
+          <div class="col-6 col-sm-3">
+            <label class="small">Stock</label>
+            <input type="number" name="variante_stock[]" placeholder="0" class="form-control form-control-sm" />
+          </div>
+          <div class="col-6 col-sm-6">
+            <label class="small">Color</label>
+            <input type="text" name="variante_color[]" placeholder="Ej: Rojo" class="form-control form-control-sm" />
+          </div>
+          <div class="col-6 col-sm-6">
+            <label class="small">Talla</label>
+            <input type="text" name="variante_talla[]" placeholder="Ej: M" class="form-control form-control-sm" />
+          </div>
+          <div class="col-12">
+            <label class="small">Imagen</label>
+            <input type="file" name="variante_imagen[]" class="form-control form-control-sm" accept="image/*" />
+          </div>
+        </div>
+      `;
       variantesContainer.appendChild(row);
       // attach new-button handler
       const del = row.querySelector(".variant-remove-btn-new");
@@ -566,6 +588,9 @@
     }
 
     /* ---------- If URL has editar param on load, attempt load product into form ---------- */
+    // DESHABILITADO: Ya no necesitamos fetch API porque producto_to_edit viene del servidor
+    // con todas las relaciones (galería y variantes) pre-cargadas en el template
+    /*
     try {
       const params = new URLSearchParams(window.location.search);
       const editarId = params.get("editar");
@@ -585,8 +610,9 @@
           .catch((err) => console.error("initial fetch error", err));
       }
     } catch (e) {
-      /* ignore */
+      // ignore
     }
+    */
 
     /* ---------- Delete product flow (uses showConfirm) ---------- */
     function deleteProduct(productId, rowEl) {

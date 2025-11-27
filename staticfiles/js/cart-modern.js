@@ -66,75 +66,28 @@
 
     // Mostrar notificaciones toast mejoradas
     showToast(message, type = 'success') {
-      let toastContainer = document.getElementById('toast-container-modern');
-      if (!toastContainer) {
-        toastContainer = document.createElement('div');
-        toastContainer.id = 'toast-container-modern';
-        toastContainer.style.cssText = `
-          position: fixed;
-          top: 100px;
-          right: 20px;
-          z-index: 10000;
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-          max-width: 400px;
-        `;
-        document.body.appendChild(toastContainer);
-      }
+      // Usar SweetAlert2 Toast
+      const Toast = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        didOpen: (toast) => {
+          toast.addEventListener('mouseenter', Swal.stopTimer)
+          toast.addEventListener('mouseleave', Swal.resumeTimer)
+        }
+      });
 
-      const toast = document.createElement('div');
-      toast.style.cssText = `
-        padding: 16px 20px;
-        border-radius: 12px;
-        color: white;
-        font-weight: 600;
-        font-size: 14px;
-        line-height: 1.4;
-        box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
-        transform: translateX(100%);
-        transition: all 0.3s ease-out;
-        opacity: 0;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-      `;
+      let icon = 'success';
+      if (type === 'error') icon = 'error';
+      else if (type === 'warning') icon = 'warning';
+      else if (type === 'info') icon = 'info';
 
-      // Estilos según el tipo
-      switch(type) {
-        case 'success':
-          toast.style.background = 'linear-gradient(135deg, #10b981, #059669)';
-          toast.innerHTML = `<i class="bi bi-check-circle-fill"></i><span>${message}</span>`;
-          break;
-        case 'error':
-          toast.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
-          toast.innerHTML = `<i class="bi bi-x-circle-fill"></i><span>${message}</span>`;
-          break;
-        case 'warning':
-          toast.style.background = 'linear-gradient(135deg, #f59e0b, #d97706)';
-          toast.innerHTML = `<i class="bi bi-exclamation-triangle-fill"></i><span>${message}</span>`;
-          break;
-        default:
-          toast.style.background = 'linear-gradient(135deg, #3b82f6, #2563eb)';
-          toast.innerHTML = `<i class="bi bi-info-circle-fill"></i><span>${message}</span>`;
-      }
-
-      toastContainer.appendChild(toast);
-
-      // Animar entrada
-      setTimeout(() => {
-        toast.style.transform = 'translateX(0)';
-        toast.style.opacity = '1';
-      }, 100);
-
-      // Auto-remover
-      setTimeout(() => {
-        toast.style.transform = 'translateX(100%)';
-        toast.style.opacity = '0';
-        setTimeout(() => {
-          if (toast.parentNode) toast.parentNode.removeChild(toast);
-        }, 300);
-      }, 4000);
+      Toast.fire({
+        icon: icon,
+        title: message
+      });
     },
 
     // Debounce para mejor performance
@@ -330,107 +283,43 @@
       }
     },
     
-    showClearConfirmDialog() {
-      return new Promise((resolve) => {
-        const modal = document.createElement('div');
-        modal.style.cssText = `
-          position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-          background: rgba(0, 0, 0, 0.5); display: flex; align-items: center;
-          justify-content: center; z-index: 10000; backdrop-filter: blur(4px);
-          opacity: 0; transition: opacity 0.3s ease;
-        `;
-        
-        modal.innerHTML = `
-          <div style="
-            background: white; border-radius: 20px; padding: 32px; max-width: 480px;
-            width: 90%; box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
-            transform: scale(0.9); transition: transform 0.3s ease;
-          ">
-            <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 24px;">
-              <div style="
-                width: 64px; height: 64px; background: linear-gradient(135deg, #fee2e2, #fecaca);
-                border-radius: 50%; display: flex; align-items: center; justify-content: center;
-                color: #dc2626; font-size: 28px;
-              ">
-                <i class="bi bi-trash3-fill"></i>
-              </div>
-              <div>
-                <h3 style="margin: 0; font-size: 24px; font-weight: 800; color: #1e293b;">
-                  ¿Vaciar carrito completo?
-                </h3>
-                <p style="margin: 4px 0 0; color: #64748b; font-size: 16px;">
-                  Esta acción no se puede deshacer
-                </p>
-              </div>
-            </div>
-            
-            <div style="
-              background: linear-gradient(135deg, #fef3c7, #fde68a);
-              border: 1px solid #f59e0b; border-radius: 12px;
-              padding: 16px; margin-bottom: 24px;
-            ">
-              <div style="display: flex; align-items: center; gap: 8px; color: #92400e;">
+    async showClearConfirmDialog() {
+      const result = await Swal.fire({
+        title: '¿Vaciar carrito completo?',
+        html: `
+          <div style="text-align: left; margin-top: 20px;">
+            <div style="background: linear-gradient(135deg, #fef3c7, #fde68a); border: 1px solid #f59e0b; border-radius: 12px; padding: 16px;">
+              <div style="display: flex; align-items: center; gap: 8px; color: #92400e; margin-bottom: 8px;">
                 <i class="bi bi-exclamation-triangle-fill"></i>
-                <span style="font-weight: 600; font-size: 14px;">Advertencia importante</span>
+                <span style="font-weight: 600;">Advertencia importante</span>
               </div>
-              <p style="margin: 8px 0 0; color: #92400e; font-size: 14px; line-height: 1.4;">
+              <p style="margin: 0; color: #92400e; font-size: 14px; line-height: 1.4;">
                 Se eliminarán todos los productos de tu carrito de compras.
                 Tendrás que agregarlos nuevamente si deseas continuar.
               </p>
             </div>
-            
-            <div style="display: flex; gap: 12px; justify-content: flex-end;">
-              <button id="cancel-clear" style="
-                padding: 12px 24px; border: 2px solid #e2e8f0; background: #f8fafc;
-                color: #64748b; border-radius: 12px; font-weight: 600; cursor: pointer;
-                font-size: 16px; transition: all 0.2s ease;
-              ">Cancelar</button>
-              <button id="confirm-clear" style="
-                padding: 12px 24px; border: 2px solid #dc2626; background: #dc2626;
-                color: white; border-radius: 12px; font-weight: 600; cursor: pointer;
-                font-size: 16px; transition: all 0.2s ease;
-              ">Sí, vaciar carrito</button>
-            </div>
           </div>
-        `;
-        
-        document.body.appendChild(modal);
-        
-        // Animación de entrada
-        setTimeout(() => {
-          modal.style.opacity = '1';
-          modal.querySelector('div').style.transform = 'scale(1)';
-        }, 10);
-        
-        // Event listeners
-        modal.querySelector('#confirm-clear').onclick = () => {
-          modal.remove();
-          resolve(true);
-        };
-        
-        modal.querySelector('#cancel-clear').onclick = () => {
-          modal.remove();
-          resolve(false);
-        };
-        
-        // Click fuera del modal
-        modal.onclick = (e) => {
-          if (e.target === modal) {
-            modal.remove();
-            resolve(false);
-          }
-        };
-        
-        // Escape key
-        const handleEscape = (e) => {
-          if (e.key === 'Escape') {
-            modal.remove();
-            resolve(false);
-            document.removeEventListener('keydown', handleEscape);
-          }
-        };
-        document.addEventListener('keydown', handleEscape);
+        `,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: '<i class="bi bi-trash3-fill me-2"></i>Sí, vaciar carrito',
+        cancelButtonText: '<i class="bi bi-x-circle me-2"></i>Cancelar',
+        customClass: {
+          popup: 'swal-modern',
+          confirmButton: 'btn-confirm-modern',
+          cancelButton: 'btn-cancel-modern'
+        },
+        backdrop: 'rgba(0,0,0,0.5)',
+        showClass: {
+          popup: 'animate__animated animate__fadeInDown animate__faster'
+        },
+        hideClass: {
+          popup: 'animate__animated animate__fadeOutUp animate__faster'
+        }
       });
+      return result.isConfirmed;
     },
     
     setupClearButton() {
@@ -506,74 +395,25 @@
       }
     },
 
-    showConfirmDialog() {
-      return new Promise((resolve) => {
-        const modal = document.createElement('div');
-        modal.style.cssText = `
-          position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-          background: rgba(0, 0, 0, 0.5); display: flex; align-items: center;
-          justify-content: center; z-index: 10000; backdrop-filter: blur(4px);
-          opacity: 0; transition: opacity 0.3s ease;
-        `;
-        
-        modal.innerHTML = `
-          <div style="
-            background: white; border-radius: 16px; padding: 24px; max-width: 400px;
-            width: 90%; box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1);
-            transform: scale(0.9); transition: transform 0.3s ease;
-          ">
-            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
-              <div style="
-                width: 48px; height: 48px; background: linear-gradient(135deg, #fef2f2, #fee2e2);
-                border-radius: 50%; display: flex; align-items: center; justify-content: center;
-                color: #ef4444; font-size: 20px;
-              ">
-                <i class="bi bi-exclamation-triangle-fill"></i>
-              </div>
-              <h3 style="margin: 0; font-size: 18px; font-weight: 700; color: #1e293b;">
-                Confirmar eliminación
-              </h3>
-            </div>
-            <p style="margin: 0 0 24px; color: #64748b; line-height: 1.5;">
-              ¿Estás seguro de que quieres eliminar este producto del carrito?
-            </p>
-            <div style="display: flex; gap: 12px; justify-content: flex-end;">
-              <button id="cancel-remove" style="
-                padding: 8px 16px; border: 2px solid #e2e8f0; background: #f8fafc;
-                color: #64748b; border-radius: 8px; font-weight: 600; cursor: pointer;
-              ">Cancelar</button>
-              <button id="confirm-remove" style="
-                padding: 8px 16px; border: 2px solid #ef4444; background: #ef4444;
-                color: white; border-radius: 8px; font-weight: 600; cursor: pointer;
-              ">Eliminar</button>
-            </div>
-          </div>
-        `;
-        
-        document.body.appendChild(modal);
-        
-        setTimeout(() => {
-          modal.style.opacity = '1';
-          modal.querySelector('div').style.transform = 'scale(1)';
-        }, 10);
-        
-        modal.querySelector('#confirm-remove').onclick = () => {
-          modal.remove();
-          resolve(true);
-        };
-        
-        modal.querySelector('#cancel-remove').onclick = () => {
-          modal.remove();
-          resolve(false);
-        };
-        
-        modal.onclick = (e) => {
-          if (e.target === modal) {
-            modal.remove();
-            resolve(false);
-          }
-        };
+    async showConfirmDialog() {
+      const result = await Swal.fire({
+        title: 'Confirmar eliminación',
+        text: '¿Estás seguro de que quieres eliminar este producto del carrito?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: '<i class="bi bi-trash-fill me-2"></i>Eliminar',
+        cancelButtonText: '<i class="bi bi-x-circle me-2"></i>Cancelar',
+        backdrop: 'rgba(0,0,0,0.5)',
+        showClass: {
+          popup: 'animate__animated animate__zoomIn animate__faster'
+        },
+        hideClass: {
+          popup: 'animate__animated animate__zoomOut animate__faster'
+        }
       });
+      return result.isConfirmed;
     },
 
     showEmptyState() {

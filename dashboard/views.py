@@ -210,10 +210,16 @@ def dashboard_home(request):
     elif visitas_user_filter == 'anon':
         visitas_qs = visitas_qs.filter(user=None)
     
-    if visitas_type_filter == 'store':
+    if visitas_type_filter == 'home':
+        visitas_qs = visitas_qs.filter(visit_type='home')
+    elif visitas_type_filter == 'store':
         visitas_qs = visitas_qs.filter(visit_type='store')
     elif visitas_type_filter == 'product_detail':
         visitas_qs = visitas_qs.filter(visit_type='product_detail')
+    elif visitas_type_filter == 'cart':
+        visitas_qs = visitas_qs.filter(visit_type='cart')
+    elif visitas_type_filter == 'checkout':
+        visitas_qs = visitas_qs.filter(visit_type='checkout')
 
     visitas_count = visitas_qs.count()
     visitas_count_today = StoreVisit.objects.filter(timestamp__gte=today_start).count()
@@ -222,8 +228,11 @@ def dashboard_home(request):
     visitas_count_auth = StoreVisit.objects.exclude(user=None).count()
     visitas_count_anon = StoreVisit.objects.filter(user=None).count()
     visitas_count_total = StoreVisit.objects.count()
+    visitas_count_home = StoreVisit.objects.filter(visit_type='home').count()
     visitas_count_store = StoreVisit.objects.filter(visit_type='store').count()
     visitas_count_product = StoreVisit.objects.filter(visit_type='product_detail').count()
+    visitas_count_cart = StoreVisit.objects.filter(visit_type='cart').count()
+    visitas_count_checkout = StoreVisit.objects.filter(visit_type='checkout').count()
     
     # ESTADÍSTICAS DE PRODUCTOS MÁS VISITADOS
     from django.db.models import Count
@@ -942,8 +951,11 @@ def dashboard_home(request):
         'visitas_count_month': visitas_count_month,
         'visitas_count_auth': visitas_count_auth,
         'visitas_count_anon': visitas_count_anon,
+        'visitas_count_home': visitas_count_home,
         'visitas_count_store': visitas_count_store,
         'visitas_count_product': visitas_count_product,
+        'visitas_count_cart': visitas_count_cart,
+        'visitas_count_checkout': visitas_count_checkout,
         'productos_mas_visitados': productos_mas_visitados,
         'view': view_param,
         'current_user': current_user,
@@ -2637,10 +2649,16 @@ def visitas_live_data(request):
         visitas_qs = visitas_qs.filter(user=None)
     
     # Aplicar filtros de tipo
-    if visitas_type_filter == 'store':
+    if visitas_type_filter == 'home':
+        visitas_qs = visitas_qs.filter(visit_type='home')
+    elif visitas_type_filter == 'store':
         visitas_qs = visitas_qs.filter(visit_type='store')
     elif visitas_type_filter == 'product_detail':
         visitas_qs = visitas_qs.filter(visit_type='product_detail')
+    elif visitas_type_filter == 'cart':
+        visitas_qs = visitas_qs.filter(visit_type='cart')
+    elif visitas_type_filter == 'checkout':
+        visitas_qs = visitas_qs.filter(visit_type='checkout')
     
     # Obtener visitas recientes
     visitas_recientes = visitas_qs.order_by('-timestamp')[:limit]
@@ -2678,8 +2696,11 @@ def visitas_live_data(request):
         'total_mes': StoreVisit.objects.filter(timestamp__gte=month_start).count(),
         'total_autenticados': StoreVisit.objects.exclude(user=None).count(),
         'total_anonimos': StoreVisit.objects.filter(user=None).count(),
+        'total_home': StoreVisit.objects.filter(visit_type='home').count(),
         'total_tienda': StoreVisit.objects.filter(visit_type='store').count(),
         'total_productos': StoreVisit.objects.filter(visit_type='product_detail').count(),
+        'total_carrito': StoreVisit.objects.filter(visit_type='cart').count(),
+        'total_checkout': StoreVisit.objects.filter(visit_type='checkout').count(),
         'total_general': StoreVisit.objects.count(),
     }
     

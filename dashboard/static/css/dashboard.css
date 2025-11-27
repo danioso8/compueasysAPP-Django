@@ -1607,3 +1607,13 @@ th {
 .list-group-item:last-child {
     border-bottom: none;
 }
+
+/* Badge personalizado purple */
+.bg-purple {
+    background-color: #8b5cf6 !important;
+    color: white !important;
+}
+
+.badge.bg-purple {
+    background-color: #8b5cf6 !important;
+}

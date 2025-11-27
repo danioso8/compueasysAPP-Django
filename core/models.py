@@ -21,8 +21,11 @@ class StoreVisit(models.Model):
     session_key = models.CharField(max_length=40, blank=True, null=True)
     user = models.ForeignKey('SimpleUser', blank=True, null=True, on_delete=models.SET_NULL)
     visit_type = models.CharField(max_length=20, default='store', choices=[
-        ('store', 'Store Homepage'),
-        ('product_detail', 'Product Detail')
+        ('home', 'Home Page'),
+        ('store', 'Store/Tienda'),
+        ('product_detail', 'Product Detail'),
+        ('cart', 'Carrito'),
+        ('checkout', 'Checkout/Pago')
     ])
     product_id = models.IntegerField(blank=True, null=True)
     ip_address = models.GenericIPAddressField(blank=True, null=True)
