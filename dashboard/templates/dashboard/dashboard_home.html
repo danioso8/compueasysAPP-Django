@@ -1598,29 +1598,29 @@
              <label>Descripción:</label>
             <textarea name="description" id="producto_description">{% if producto_to_edit %}{{ producto_to_edit.description }}{% endif %}</textarea>
  
-             <div class="precios">
-              <div>
+             <div class="row g-3 mt-2">
+              <div class="col-12 col-md-6">
                 <label>Precio de compra:</label>
-                <input type="number" name="price_buy" id="producto_price_buy" step="0.01" value="{% if producto_to_edit %}{{ producto_to_edit.price_buy }}{% endif %}" required />
+                <input type="number" name="price_buy" id="producto_price_buy" step="0.01" value="{% if producto_to_edit %}{{ producto_to_edit.price_buy }}{% endif %}" class="form-control" required />
              </div>
-            <div>
+            <div class="col-12 col-md-6">
                 <label>Precio de venta:</label>
-                <input type="number" name="price" id="producto_price" step="0.01" value="{% if producto_to_edit %}{{ producto_to_edit.price }}{% endif %}" required />
+                <input type="number" name="price" id="producto_price" step="0.01" value="{% if producto_to_edit %}{{ producto_to_edit.price }}{% endif %}" class="form-control" required />
             </div>
-            <div>
+            <div class="col-12 col-md-4">
                 <label>Stock:</label>
-                <input type="number" name="stock" id="producto_stock" value="{% if producto_to_edit %}{{ producto_to_edit.stock }}{% endif %}" required />
+                <input type="number" name="stock" id="producto_stock" value="{% if producto_to_edit %}{{ producto_to_edit.stock }}{% endif %}" class="form-control" required />
             </div>
-            <div>
+            <div class="col-12 col-md-4">
                 <label>Descuento:</label>
-                <input type="number" name="descuento" id="producto_descuento" step="0.01" value="{% if producto_to_edit %}{{ producto_to_edit.descuento|default:0 }}{% endif %}" />
+                <input type="number" name="descuento" id="producto_descuento" step="0.01" value="{% if producto_to_edit %}{{ producto_to_edit.descuento|default:0 }}{% endif %}" class="form-control" />
             </div>
-            <div>
+            <div class="col-12 col-md-4">
                 <label>IVA:</label>
-                <input type="number" name="iva" id="producto_iva" step="0.01" value="{% if producto_to_edit %}{{ producto_to_edit.iva|default:0 }}{% endif %}" />
+                <input type="number" name="iva" id="producto_iva" step="0.01" value="{% if producto_to_edit %}{{ producto_to_edit.iva|default:0 }}{% endif %}" class="form-control" />
             </div>
-        </div>        <div class="categorias-proveedor">
-            <div>
+        </div>        <div class="row g-3 mt-2">
+            <div class="col-12 col-md-4">
                 <label>Proveedor:</label>
                 <select name="proveedor" id="producto_proveedor" class="form-select">
                     <option value="">Seleccione un proveedor</option>
@@ -1629,7 +1629,7 @@
                     {% endfor %}
                 </select>
             </div>
-            <div>
+            <div class="col-12 col-md-4">
                 <label>Categorías:</label>
                 <select name="categoria" id="producto_categoria" class="form-select">
                     <option value="">Seleccione una categoría</option>
@@ -1638,7 +1638,7 @@
                     {% endfor %}
                 </select>
             </div>
-            <div>
+            <div class="col-12 col-md-4">
                 <label>Tipo de producto:</label>
                 <select name="type" id="producto_type" class="form-select">
                     <option value="">Seleccione un tipo</option>
@@ -1691,43 +1691,88 @@
   {# variantes existentes (editar) #}
   {% if producto_to_edit %}
     {% for v in producto_to_edit.variants.all %}
-      <div class="variante-row d-flex gap-2 mb-3 align-items-start p-2 border rounded" data-variant-id="{{ v.id }}" style="background:#f8f9fa; position:relative;">
+      <div class="variante-row-mobile mb-3 p-3 border rounded position-relative" data-variant-id="{{ v.id }}" style="background:#f8f9fa;">
         <button type="button" class="btn btn-sm btn-danger variant-remove-btn" data-variant-id="{{ v.id }}" title="Eliminar variante" style="position:absolute; top:8px; right:8px; width:28px; height:28px; padding:0; border-radius:50%; z-index:10;">×</button>
         <input type="hidden" class="variant-keep" name="variante_id[]" value="{{ v.id }}">
-        <input type="text" name="variante_nombre[]" value="{{ v.nombre }}" placeholder="Nombre" class="form-control form-control-sm" style="max-width:150px;" />
-        <input type="number" name="variante_precio[]" value="{{ v.precio }}" placeholder="Precio" step="0.01" class="form-control form-control-sm" style="max-width:100px;" />
-        <input type="number" name="variante_stock[]" value="{{ v.stock }}" placeholder="Stock" class="form-control form-control-sm" style="max-width:80px;" />
-        <input type="text" name="variante_color[]" value="{{ v.color|default:'' }}" placeholder="Color" class="form-control form-control-sm" style="max-width:100px;" />
-        <input type="text" name="variante_talla[]" value="{{ v.talla|default:'' }}" placeholder="Talla" class="form-control form-control-sm" style="max-width:80px;" />
-        <div class="d-flex flex-column align-items-center" style="min-width:100px;">
-          {% if v.imagen and v.imagen.name %}
-            <img src="{{ v.imagen.url }}" style="max-width:80px; max-height:80px; object-fit:cover; border-radius:4px; border:2px solid #ddd; margin-bottom:4px;" />
-            <small class="text-muted" style="font-size:10px;">Actual</small>
-          {% else %}
-            <div style="width:80px; height:80px; background:#e9ecef; border-radius:4px; display:flex; align-items:center; justify-content:center; margin-bottom:4px;">
-              <i class="fas fa-image text-muted"></i>
+        
+        <div class="row g-2">
+          <!-- Imagen primero en móvil -->
+          <div class="col-12 col-md-auto text-center mb-2">
+            {% if v.imagen and v.imagen.name %}
+              <img src="{{ v.imagen.url }}" class="img-thumbnail" style="max-width:100px; max-height:100px; object-fit:cover;" />
+              <small class="d-block text-muted" style="font-size:10px;">Actual</small>
+            {% else %}
+              <div class="bg-light rounded d-flex align-items-center justify-content-center" style="width:100px; height:100px; margin:0 auto;">
+                <i class="fas fa-image text-muted"></i>
+              </div>
+            {% endif %}
+            <input type="file" name="variante_imagen[]" class="form-control form-control-sm mt-2" accept="image/*" />
+            <small class="text-muted" style="font-size:10px;">Nueva imagen</small>
+          </div>
+          
+          <!-- Campos en grid responsive -->
+          <div class="col-12 col-md">
+            <div class="row g-2">
+              <div class="col-12 col-sm-6">
+                <label class="small">Nombre</label>
+                <input type="text" name="variante_nombre[]" value="{{ v.nombre }}" placeholder="Nombre" class="form-control form-control-sm" />
+              </div>
+              <div class="col-6 col-sm-3">
+                <label class="small">Precio</label>
+                <input type="number" name="variante_precio[]" value="{{ v.precio }}" placeholder="Precio" step="0.01" class="form-control form-control-sm" />
+              </div>
+              <div class="col-6 col-sm-3">
+                <label class="small">Stock</label>
+                <input type="number" name="variante_stock[]" value="{{ v.stock }}" placeholder="Stock" class="form-control form-control-sm" />
+              </div>
+              <div class="col-6 col-sm-6">
+                <label class="small">Color</label>
+                <input type="text" name="variante_color[]" value="{{ v.color|default:'' }}" placeholder="Color" class="form-control form-control-sm" />
+              </div>
+              <div class="col-6 col-sm-6">
+                <label class="small">Talla</label>
+                <input type="text" name="variante_talla[]" value="{{ v.talla|default:'' }}" placeholder="Talla" class="form-control form-control-sm" />
+              </div>
             </div>
-          {% endif %}
-          <input type="file" name="variante_imagen[]" class="form-control form-control-sm mt-1" accept="image/*" style="font-size:11px;" />
-          <small class="text-muted" style="font-size:10px;">Nueva</small>
+          </div>
         </div>
       </div>
     {% endfor %}
   {% else %}
     {# fila vacía por defecto para crear #}
-    <div class="variante-row d-flex gap-2 mb-2 align-items-center p-2 border rounded" style="background:#f8f9fa;">
-      <button type="button" class="btn btn-sm btn-danger variant-remove-btn-new" style="display:none; margin-right:6px;">×</button>
-      <input type="text" name="variante_nombre[]" placeholder="Nombre" class="form-control form-control-sm" style="max-width:150px;" />
-      <input type="number" name="variante_precio[]" placeholder="Precio" step="0.01" class="form-control form-control-sm" style="max-width:100px;" />
-      <input type="number" name="variante_stock[]" placeholder="Stock" class="form-control form-control-sm" style="max-width:80px;" />
-      <input type="text" name="variante_color[]" placeholder="Color" class="form-control form-control-sm" style="max-width:100px;" />
-      <input type="text" name="variante_talla[]" placeholder="Talla" class="form-control form-control-sm" style="max-width:80px;" />
-      <input type="file" name="variante_imagen[]" class="form-control form-control-sm" accept="image/*" />
+    <div class="variante-row-mobile mb-3 p-3 border rounded position-relative" style="background:#f8f9fa;">
+      <button type="button" class="btn btn-sm btn-danger variant-remove-btn-new" style="display:none; position:absolute; top:8px; right:8px; width:28px; height:28px; padding:0; border-radius:50%; z-index:10;">×</button>
+      <div class="row g-2">
+        <div class="col-12 col-sm-6">
+          <label class="small">Nombre</label>
+          <input type="text" name="variante_nombre[]" placeholder="Nombre de la variante" class="form-control form-control-sm" />
+        </div>
+        <div class="col-6 col-sm-3">
+          <label class="small">Precio</label>
+          <input type="number" name="variante_precio[]" placeholder="0.00" step="0.01" class="form-control form-control-sm" />
+        </div>
+        <div class="col-6 col-sm-3">
+          <label class="small">Stock</label>
+          <input type="number" name="variante_stock[]" placeholder="0" class="form-control form-control-sm" />
+        </div>
+        <div class="col-6 col-sm-6">
+          <label class="small">Color</label>
+          <input type="text" name="variante_color[]" placeholder="Ej: Rojo" class="form-control form-control-sm" />
+        </div>
+        <div class="col-6 col-sm-6">
+          <label class="small">Talla</label>
+          <input type="text" name="variante_talla[]" placeholder="Ej: M" class="form-control form-control-sm" />
+        </div>
+        <div class="col-12">
+          <label class="small">Imagen</label>
+          <input type="file" name="variante_imagen[]" class="form-control form-control-sm" accept="image/*" />
+        </div>
+      </div>
     </div>
   {% endif %}
 </div>
-        <button type="button" class="btn btn-secondary btn-sm mt-2" onclick="agregarVariante()"><i class="fas fa-plus me-1"></i>Agregar variante</button>
-        <div class="d-flex gap-2 mt-3">
+        <button type="button" class="btn btn-secondary btn-sm mt-3 w-100 w-md-auto" onclick="agregarVariante()"><i class="fas fa-plus me-1"></i>Agregar variante</button>
+        <div class="d-grid gap-2 d-md-flex mt-3">
           <button type="submit" id="form-submit-btn" class="btn btn-success"><i class="fas fa-save me-1"></i>{% if producto_to_edit %}Actualizar{% else %}Guardar{% endif %}</button>
           <button type="button" id="form-clear-btn" class="btn btn-outline-secondary"><i class="fas fa-plus me-1"></i>Nuevo Producto</button>
           {% if producto_to_edit %}

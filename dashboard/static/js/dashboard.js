@@ -273,16 +273,37 @@
     window.agregarVariante = function () {
       if (!variantesContainer) return;
       const row = document.createElement("div");
-      row.className = "variante-row d-flex gap-2 mb-2 align-items-center p-2 border rounded";
+      row.className = "variante-row-mobile mb-3 p-3 border rounded position-relative";
       row.style.background = "#f8f9fa";
-      row.innerHTML =
-        '<button type="button" class="btn btn-sm btn-danger variant-remove-btn-new" style="display:block; margin-right:6px;">×</button>' +
-        '<input type="text" name="variante_nombre[]" class="form-control form-control-sm" placeholder="Nombre" style="max-width:150px;">' +
-        '<input type="number" name="variante_precio[]" class="form-control form-control-sm" placeholder="Precio" step="0.01" style="max-width:100px;">' +
-        '<input type="number" name="variante_stock[]" class="form-control form-control-sm" placeholder="Stock" style="max-width:80px;">' +
-        '<input type="text" name="variante_color[]" class="form-control form-control-sm" placeholder="Color" style="max-width:100px;">' +
-        '<input type="text" name="variante_talla[]" class="form-control form-control-sm" placeholder="Talla" style="max-width:80px;">' +
-        '<input type="file" name="variante_imagen[]" class="form-control form-control-sm" accept="image/*">';
+      row.innerHTML = `
+        <button type="button" class="btn btn-sm btn-danger variant-remove-btn-new" style="display:block; position:absolute; top:8px; right:8px; width:28px; height:28px; padding:0; border-radius:50%; z-index:10;">×</button>
+        <div class="row g-2">
+          <div class="col-12 col-sm-6">
+            <label class="small">Nombre</label>
+            <input type="text" name="variante_nombre[]" placeholder="Nombre de la variante" class="form-control form-control-sm" />
+          </div>
+          <div class="col-6 col-sm-3">
+            <label class="small">Precio</label>
+            <input type="number" name="variante_precio[]" placeholder="0.00" step="0.01" class="form-control form-control-sm" />
+          </div>
+          <div class="col-6 col-sm-3">
+            <label class="small">Stock</label>
+            <input type="number" name="variante_stock[]" placeholder="0" class="form-control form-control-sm" />
+          </div>
+          <div class="col-6 col-sm-6">
+            <label class="small">Color</label>
+            <input type="text" name="variante_color[]" placeholder="Ej: Rojo" class="form-control form-control-sm" />
+          </div>
+          <div class="col-6 col-sm-6">
+            <label class="small">Talla</label>
+            <input type="text" name="variante_talla[]" placeholder="Ej: M" class="form-control form-control-sm" />
+          </div>
+          <div class="col-12">
+            <label class="small">Imagen</label>
+            <input type="file" name="variante_imagen[]" class="form-control form-control-sm" accept="image/*" />
+          </div>
+        </div>
+      `;
       variantesContainer.appendChild(row);
       // attach new-button handler
       const del = row.querySelector(".variant-remove-btn-new");
