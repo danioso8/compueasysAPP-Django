@@ -303,18 +303,6 @@ def dashboard_home(request):
             'galeria',
             'variants'
         ).filter(id=editar_id).first()
-        
-        # DEBUG: Verificar que el producto tiene galería y variantes
-        if producto_to_edit:
-            print(f"🔍 PRODUCTO A EDITAR: {producto_to_edit.name} (ID: {producto_to_edit.id})")
-            print(f"📸 Galería count: {producto_to_edit.galeria.count()}")
-            print(f"🎨 Variantes count: {producto_to_edit.variants.count()}")
-            if producto_to_edit.galeria.exists():
-                for img in producto_to_edit.galeria.all():
-                    print(f"  - Imagen galería ID: {img.id}, URL: {img.galeria.url if img.galeria else 'N/A'}")
-            if producto_to_edit.variants.exists():
-                for var in producto_to_edit.variants.all():
-                    print(f"  - Variante: {var.nombre}, Precio: {var.precio}, Imagen: {var.imagen.url if var.imagen else 'N/A'}")
 
         inventario_all = []
         inventario_by_category = []
@@ -873,10 +861,7 @@ def dashboard_home(request):
         'productos_vendidos_hoy': productos_vendidos_hoy,
     }
     
-    # DEBUG: Logging para verificar valores
-    print(f"🔍 DEBUG estadisticas_diarias: {estadisticas_diarias}")
-    print(f"🔍 DEBUG ventas_diarias raw: {ventas_diarias}")
-    print(f"🔍 DEBUG pedidos_hoy count: {pedidos_diarios}")
+
 
     # Datos para la sección de mensajes
     conversations = []

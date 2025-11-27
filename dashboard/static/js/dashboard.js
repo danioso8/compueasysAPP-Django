@@ -567,6 +567,9 @@
     }
 
     /* ---------- If URL has editar param on load, attempt load product into form ---------- */
+    // DESHABILITADO: Ya no necesitamos fetch API porque producto_to_edit viene del servidor
+    // con todas las relaciones (galería y variantes) pre-cargadas en el template
+    /*
     try {
       const params = new URLSearchParams(window.location.search);
       const editarId = params.get("editar");
@@ -586,8 +589,9 @@
           .catch((err) => console.error("initial fetch error", err));
       }
     } catch (e) {
-      /* ignore */
+      // ignore
     }
+    */
 
     /* ---------- Delete product flow (uses showConfirm) ---------- */
     function deleteProduct(productId, rowEl) {
