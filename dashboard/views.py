@@ -897,6 +897,7 @@ def dashboard_home(request):
         'current_user': current_user,
         'is_superuser': is_superuser,
         'is_staff': is_staff,
+        'selected_category': selected_category,
 
     })
 # ...existing code...
