@@ -9,7 +9,9 @@
     <!-- CSS Moderno -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="{% static 'css/store.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/store.css' %}?v=1.3">
+    <link rel="stylesheet" href="{% static 'css/detail_modern.css' %}?v=1.3">
     
     <!-- Preload crítico -->
     <link rel="preload" href="{% static 'js/store.js' %}" as="script">
@@ -20,48 +22,106 @@
 </head>
 
 <body>
-    <!-- Carrito flotante (igual al de detail-product) -->
-    <div class="floating-cart">
-        <a href="/cart" class="cart-toggle-btn position-relative" title="Ver carrito">
-            <i class="bi bi-cart-plus-fill"></i>
-            {% if cart_count > 0 %}
-            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger cart-badge">
-                {{ cart_count }}
-            </span>
-            {% endif %}
-        </a>
+    <!-- WhatsApp Floating Button - Modern (abajo a la derecha) -->
+    <a href="#" id="whatsapp-chat-float" class="whatsapp-float-modern" title="Chatea por WhatsApp" target="_blank" style="position: fixed !important; right: 30px !important; bottom: 30px !important; z-index: 9998 !important; width: 60px !important; height: 60px !important; display: flex !important; align-items: center !important; justify-content: center !important; border-radius: 50% !important; background: linear-gradient(135deg, #25d366 0%, #128c7e 100%) !important; color: white !important; font-size: 28px !important; box-shadow: 0 8px 32px rgba(0,0,0,0.16) !important;">
+         <i class="fab fa-whatsapp"></i>
+    </a>
+    
+    <!-- Floating Cart Button - Modern (arriba a la derecha) -->
+    <button class="cart-float-modern cart-float-top" title="Ver carrito" onclick="toggleCartSidebar()" style="position: fixed !important; right: 30px !important; top: 20px !important; z-index: 9998 !important; width: 65px !important; height: 65px !important; display: flex !important; align-items: center !important; justify-content: center !important; border-radius: 50% !important; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; color: white !important; font-size: 30px !important; border: none !important; cursor: pointer !important; box-shadow: 0 8px 32px rgba(0,0,0,0.16) !important; transition: all 0.3s ease !important;">
+        <i class="bi bi-cart-plus-fill"></i>
+        {% if cart_count > 0 %}
+        <span id="cart-badge-float" class="badge rounded-pill bg-danger pulse-animation" style="position: absolute !important; top: -5px !important; right: -5px !important; z-index: 9999 !important; font-size: 13px !important; font-weight: 700 !important; padding: 5px 8px !important; min-width: 24px !important;">
+            {{ cart_count }}
+        </span>
+        {% endif %}
+    </button>
+    
+    <!-- Cart Sidebar Modern -->
+    <div id="cart-sidebar-modern" class="cart-sidebar-modern">
+        <div class="cart-sidebar-header">
+            <h3>
+                <i class="bi bi-cart3 me-2"></i>
+                Mi Carrito
+                <span id="cart-count-sidebar" class="cart-count-badge">{{ cart_count }}</span>
+            </h3>
+            <button class="cart-close-btn" onclick="toggleCartSidebar()">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
         
-        <!-- Mini preview del carrito al hover -->
-        <div class="cart-preview" id="cart-preview">
-            <div class="cart-preview-header">
-                <h6 class="mb-0">
-                    <i class="bi bi-cart-check"></i>
-                    Mi Carrito (<span class="cart-count-text">{{ cart_count }}</span>)
-                </h6>
-            </div>
-            <div class="cart-preview-body" id="cart-preview-body">
-                <!-- Se llenará dinámicamente con JavaScript -->
-                {% if cart_count == 0 %}
-                <div class="cart-preview-empty">
-                    <i class="bi bi-cart-x"></i>
-                    <p class="mb-0">Tu carrito está vacío</p>
-                </div>
-                {% else %}
-                <div class="cart-preview-items">
-                    <div class="preview-item">
-                        <small class="text-muted">{{ cart_count }} producto{{ cart_count|pluralize }}</small>
+        <div class="cart-sidebar-content">
+            {% if cart_count > 0 %}
+                <!-- Items del carrito con productos reales -->
+                <div id="cart-items-container" class="cart-items-list">
+                    {% for item in cart_items %}
+                    <div class="cart-item-card">
+                        <div class="cart-item-image">
+                            {% if item.variant and item.variant.imagen %}
+                                <img src="{{ item.variant.imagen.url }}" alt="{{ item.product.name }}">
+                            {% elif item.product.imagen %}
+                                <img src="{{ item.product.imagen.url }}" alt="{{ item.product.name }}">
+                            {% else %}
+                                <div class="cart-item-no-image">
+                                    <i class="bi bi-image"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="cart-item-details">
+                            <h4 class="cart-item-name">{{ item.product.name|truncatechars:35 }}</h4>
+                            {% if item.variant %}
+                            <p class="cart-item-variant">
+                                <i class="bi bi-palette me-1"></i>{{ item.variant.color }}
+                            </p>
+                            {% endif %}
+                            <div class="cart-item-quantity">
+                                <span class="quantity-label">Cantidad:</span>
+                                <span class="quantity-value">{{ item.quantity }}</span>
+                            </div>
+                            <div class="cart-item-price">
+                                <span class="price-label">Precio:</span>
+                                <span class="price-value">${{ item.price|floatformat:0|intcomma }}</span>
+                            </div>
+                            <div class="cart-item-subtotal">
+                                <span class="subtotal-label">Subtotal:</span>
+                                <span class="subtotal-value">${{ item.subtotal|floatformat:0|intcomma }} COP</span>
+                            </div>
+                        </div>
                     </div>
+                    {% endfor %}
                 </div>
-                {% endif %}
+            {% else %}
+                <div class="cart-empty-state">
+                    <i class="bi bi-cart-x"></i>
+                    <h4>Tu carrito está vacío</h4>
+                    <p>Agrega productos para empezar a comprar</p>
+                    <a href="/store" class="btn-continue-shopping">
+                        <i class="bi bi-shop me-2"></i>Ir a la tienda
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+        
+        {% if cart_count > 0 %}
+        <div class="cart-sidebar-footer">
+            <div class="cart-total-section">
+                <span class="cart-total-label">Total:</span>
+                <span id="cart-total-amount" class="cart-total-amount">${{ cart_total|floatformat:0|intcomma }} COP</span>
             </div>
-            <div class="cart-preview-footer">
-                <a href="/cart" class="btn-primary-small">
-                    <i class="bi bi-cart-check"></i>
-                    Ver carrito completo
+            <div class="cart-actions">
+                <a href="/cart" class="btn-view-cart">
+                    <i class="bi bi-eye me-2"></i>Ver carrito completo
+                </a>
+                <a href="/checkout" class="btn-checkout-now">
+                    <i class="bi bi-lightning-charge-fill me-2"></i>Finalizar compra
                 </a>
             </div>
         </div>
+        {% endif %}
     </div>
+    
+    <!-- Overlay para cerrar el sidebar -->
+    <div id="cart-sidebar-overlay" class="cart-sidebar-overlay" onclick="toggleCartSidebar()"></div>
 
     <!-- Header Moderno -->
     <header class="modern-header">
@@ -447,6 +507,65 @@
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{% static 'js/store.js' %}"></script>
+
+    <!-- Cart Sidebar Scripts -->
+    <script>
+    // ===== WHATSAPP INTEGRATION =====
+    const whatsappBtn = document.getElementById('whatsapp-chat-float');
+    if (whatsappBtn) {
+        whatsappBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const numero = "573007915262";
+            const mensaje = encodeURIComponent('¡Hola! 👋\nEstoy interesado en conocer más sobre sus productos.\n\n¿Pueden ayudarme?');
+            const url = `https://wa.me/${numero}?text=${mensaje}`;
+            window.open(url, "_blank");
+        });
+    }
+
+    // ===== CART FLOAT BUTTON SCROLL EFFECT =====
+    window.addEventListener('scroll', function() {
+        const cartBtn = document.querySelector('.cart-float-modern');
+        if (cartBtn) {
+            if (window.scrollY > 100) {
+                cartBtn.classList.add('scrolled');
+            } else {
+                cartBtn.classList.remove('scrolled');
+            }
+        }
+    });
+
+    // ===== CART SIDEBAR FUNCTIONALITY =====
+    function toggleCartSidebar() {
+        const sidebar = document.getElementById('cart-sidebar-modern');
+        const overlay = document.getElementById('cart-sidebar-overlay');
+        
+        if (sidebar && overlay) {
+            const isActive = sidebar.classList.contains('active');
+            
+            if (isActive) {
+                // Cerrar
+                sidebar.classList.remove('active');
+                overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            } else {
+                // Abrir
+                sidebar.classList.add('active');
+                overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+        }
+    }
+
+    // Cerrar sidebar con tecla ESC
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            const sidebar = document.getElementById('cart-sidebar-modern');
+            if (sidebar && sidebar.classList.contains('active')) {
+                toggleCartSidebar();
+            }
+        }
+    });
+    </script>
 
     <!-- WebSocket para registrar visitas en tiempo real -->
     <script>

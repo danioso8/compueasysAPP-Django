@@ -99,7 +99,51 @@ def home(request):
         user_agent=user_agent
     )
     
-    return render(request, 'home.html')
+    # Procesar carrito para el sidebar
+    cart = request.session.get('cart', {})
+    cart_count = sum([item['quantity'] if isinstance(item, dict) else item for item in cart.values()])
+    
+    cart_items = []
+    cart_total = Decimal(0)
+    for key, item in cart.items():
+        if '-' in str(key):
+            product_id_cart, variant_id = str(key).split('-')
+        else:
+            product_id_cart = str(key)
+            variant_id = None
+
+        quantity = item['quantity'] if isinstance(item, dict) else item
+
+        try:
+            product_cart = Product.objects.get(id=product_id_cart)
+        except Product.DoesNotExist:
+            continue
+
+        variant = None
+        if variant_id:
+            try:
+                variant = ProductVariant.objects.get(id=variant_id)
+            except ProductVariant.DoesNotExist:
+                variant = None
+
+        price = variant.precio if variant else product_cart.price
+        subtotal = price * quantity
+        cart_items.append({
+            'product': product_cart,
+            'variant': variant,
+            'quantity': quantity,
+            'price': price,
+            'subtotal': subtotal,
+        })
+        cart_total += subtotal
+    
+    context = {
+        'cart_count': cart_count,
+        'cart_items': cart_items,
+        'cart_total': cart_total,
+    }
+    
+    return render(request, 'home.html', context)
 
 # --- Consulta y actualización de estado de transacción Wompi ---
 from django.views.decorators.http import require_GET
@@ -290,14 +334,52 @@ def store(request):
     elif sort_by == 'stock':
         products = products.order_by('-stock')
     
-    # Contar carrito
+    # Procesar carrito completo para el sidebar
     cart = request.session.get('cart', {})
     cart_count = sum([item['quantity'] if isinstance(item, dict) else item for item in cart.values()])
+    
+    cart_items = []
+    cart_total = Decimal(0)
+    for key, item in cart.items():
+        if '-' in str(key):
+            product_id_cart, variant_id = str(key).split('-')
+        else:
+            product_id_cart = str(key)
+            variant_id = None
+
+        quantity = item['quantity'] if isinstance(item, dict) else item
+
+        try:
+            product_cart = Product.objects.get(id=product_id_cart)
+        except Product.DoesNotExist:
+            continue
+
+        variant = None
+        if variant_id:
+            try:
+                variant = ProductVariant.objects.get(id=variant_id)
+            except ProductVariant.DoesNotExist:
+                variant = None
+
+        price = variant.precio if variant else product_cart.price
+        subtotal = price * quantity
+        cart_items.append({
+            'product': product_cart,
+            'variant': variant,
+            'quantity': quantity,
+            'price': price,
+            'subtotal': subtotal,
+        })
+        cart_total += subtotal
     
     # Agrupar productos por categoría
     from collections import defaultdict
     products_by_category = defaultdict(list)
-    for product in products:
+    
+    # Evaluar el queryset y agrupar
+    products_list = list(products)
+    
+    for product in products_list:
         category_name = product.category.nombre if product.category else 'Sin categoría'
         products_by_category[category_name].append(product)
     
@@ -318,10 +400,12 @@ def store(request):
     
     # Context para template
     context = {
-        'products': products,
+        'products': products_list,
         'products_by_category': dict(products_by_category),
         'categories': categories,
         'cart_count': cart_count,
+        'cart_items': cart_items,
+        'cart_total': cart_total,
         'query': query,
         'current_category_id': category_id,
         'price_min': price_min,
@@ -492,10 +576,64 @@ def product_detail(request, product_id):
         Galeria_images = product.galeria.all()
         cart = request.session.get('cart', {})
         cart_count = sum([item['quantity'] if isinstance(item, dict) else item for item in cart.values()])
+        
+        # Procesar items del carrito con información completa
+        cart_items = []
+        cart_total = Decimal(0)
+        for key, item in cart.items():
+            # Soporta claves tipo "17-1" o solo "17"
+            if '-' in str(key):
+                product_id_cart, variant_id = str(key).split('-')
+            else:
+                product_id_cart = str(key)
+                variant_id = None
+
+            quantity = item['quantity'] if isinstance(item, dict) else item
+
+            try:
+                product_cart = Product.objects.get(id=product_id_cart)
+            except Product.DoesNotExist:
+                continue
+
+            variant = None
+            if variant_id:
+                try:
+                    variant = ProductVariant.objects.get(id=variant_id)
+                except ProductVariant.DoesNotExist:
+                    variant = None
+
+            price = variant.precio if variant else product_cart.price
+            subtotal = price * quantity
+            cart_items.append({
+                'product': product_cart,
+                'variant': variant,
+                'quantity': quantity,
+                'price': price,
+                'subtotal': subtotal,
+            })
+            cart_total += subtotal
+        
+        # Obtener productos relacionados
+        related_products = Product.objects.filter(
+            category=product.category
+        ).exclude(id=product.id).filter(stock__gt=0)[:8]  # 8 productos relacionados
+        
+        # Si no hay suficientes de la misma categoría, agregar más productos
+        if related_products.count() < 8:
+            additional_products = Product.objects.exclude(
+                id=product.id
+            ).filter(stock__gt=0).exclude(
+                id__in=related_products.values_list('id', flat=True)
+            )[:8 - related_products.count()]
+            related_products = list(related_products) + list(additional_products)
+        
         context = {
             'product': product, 
             'Galeria_images': Galeria_images,
-            'cart_count': cart_count
+            'cart_count': cart_count,
+            'cart_items': cart_items,
+            'cart_total': cart_total,
+            'related_products': related_products
             }       
         return render(request, 'product_detail.html', context)
     except Product.DoesNotExist:

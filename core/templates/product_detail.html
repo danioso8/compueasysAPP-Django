@@ -5,11 +5,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, maximum-scale=3.0">
-    <title>{{ product.name }} - Tienda Online</title>
-    <link rel="stylesheet" href="{% static 'css/main.css' %}">
-    <link rel="stylesheet" href="{% static 'css/detail.css' %}">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>{{ product.name }} - CompuEasys</title>
+    <link rel="stylesheet" href="{% static 'css/main.css' %}?v=1.1">
+    <link rel="stylesheet" href="{% static 'css/detail.css' %}?v=1.1">
+    <link rel="stylesheet" href="{% static 'css/detail_modern.css' %}?v=1.2">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <!-- Precargar imágenes importantes -->
     <link rel="preload" href="{% if product.imagen %}{{ product.imagen.url }}{% endif %}" as="image">
@@ -19,64 +21,266 @@
     <meta property="og:description" content="{{ product.description|truncatechars:150 }}">
     <meta property="og:image" content="{% if product.imagen %}{{ product.imagen.url }}{% endif %}">
     <meta name="description" content="{{ product.description|truncatechars:150 }}">
+    
+    <style>
+        /* Modern Product Detail Styles - Inline for Performance */
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --success-gradient: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            --danger-gradient: linear-gradient(135deg, #f5576c 0%, #f093fb 100%);
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+            --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+            --shadow-lg: 0 8px 32px rgba(0,0,0,0.16);
+            --shadow-xl: 0 12px 48px rgba(0,0,0,0.2);
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --transition-fast: all 0.2s ease;
+            --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+        
+        .modern-breadcrumb {
+            background: white;
+            padding: 15px 0;
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 30px;
+        }
+        
+        .breadcrumb-item + .breadcrumb-item::before {
+            content: "→";
+            color: #667eea;
+        }
+        
+        .product-detail-container {
+            animation: fadeInUp 0.6s ease-out;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .badge-stock {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        
+        .badge-stock.in-stock {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            color: white;
+        }
+        
+        .badge-stock.low-stock {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            color: white;
+        }
+        
+        .badge-stock.out-stock {
+            background: linear-gradient(135deg, #f5576c 0%, #f093fb 100%);
+            color: white;
+        }
+    </style>
 </head>
 <body>
-    <a href="#" id="whatsapp-chat-float" class="whatsapp-float" title="Chatea por WhatsApp" target="_blank">
-         <img src="{% static 'img/whatsapp-icon.png' %}" alt="WhatsApp" style="width:60px; height:60px; border-radius:50%;">
+    <!-- WhatsApp Floating Button - Modern (abajo a la derecha) -->
+    <a href="#" id="whatsapp-chat-float" class="whatsapp-float-modern" title="Chatea por WhatsApp" target="_blank" style="position: fixed !important; right: 30px !important; bottom: 30px !important; z-index: 9998 !important; width: 60px !important; height: 60px !important; display: flex !important; align-items: center !important; justify-content: center !important; border-radius: 50% !important; background: linear-gradient(135deg, #25d366 0%, #128c7e 100%) !important; color: white !important; font-size: 28px !important; box-shadow: 0 8px 32px rgba(0,0,0,0.16) !important;">
+         <i class="fab fa-whatsapp"></i>
     </a>
+    
+    <!-- Floating Cart Button - Modern (arriba a la derecha) -->
+    <button class="cart-float-modern cart-float-top" title="Ver carrito" onclick="toggleCartSidebar()" style="position: fixed !important; right: 30px !important; top: 20px !important; z-index: 9998 !important; width: 65px !important; height: 65px !important; display: flex !important; align-items: center !important; justify-content: center !important; border-radius: 50% !important; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; color: white !important; font-size: 30px !important; border: none !important; cursor: pointer !important; box-shadow: 0 8px 32px rgba(0,0,0,0.16) !important; transition: all 0.3s ease !important;">
+        <i class="bi bi-cart-plus-fill"></i>
+        {% if cart_count > 0 %}
+        <span id="cart-badge-float" class="badge rounded-pill bg-danger pulse-animation" style="position: absolute !important; top: -5px !important; right: -5px !important; z-index: 9999 !important; font-size: 13px !important; font-weight: 700 !important; padding: 5px 8px !important; min-width: 24px !important;">
+            {{ cart_count }}
+        </span>
+        {% endif %}
+    </button>
+    
+    <!-- Cart Sidebar Modern -->
+    <div id="cart-sidebar-modern" class="cart-sidebar-modern">
+        <div class="cart-sidebar-header">
+            <h3>
+                <i class="bi bi-cart3 me-2"></i>
+                Mi Carrito
+                <span id="cart-count-sidebar" class="cart-count-badge">{{ cart_count }}</span>
+            </h3>
+            <button class="cart-close-btn" onclick="toggleCartSidebar()">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+        
+        <div class="cart-sidebar-content">
+            {% if cart_count > 0 %}
+                <!-- Items del carrito con productos reales -->
+                <div id="cart-items-container" class="cart-items-list">
+                    {% for item in cart_items %}
+                    <div class="cart-item-card">
+                        <div class="cart-item-image">
+                            {% if item.variant and item.variant.imagen %}
+                                <img src="{{ item.variant.imagen.url }}" alt="{{ item.product.name }}">
+                            {% elif item.product.imagen %}
+                                <img src="{{ item.product.imagen.url }}" alt="{{ item.product.name }}">
+                            {% else %}
+                                <div class="cart-item-no-image">
+                                    <i class="bi bi-image"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="cart-item-details">
+                            <h4 class="cart-item-name">{{ item.product.name|truncatechars:35 }}</h4>
+                            {% if item.variant %}
+                            <p class="cart-item-variant">
+                                <i class="bi bi-palette me-1"></i>{{ item.variant.color }}
+                            </p>
+                            {% endif %}
+                            <div class="cart-item-quantity">
+                                <span class="quantity-label">Cantidad:</span>
+                                <span class="quantity-value">{{ item.quantity }}</span>
+                            </div>
+                            <div class="cart-item-price">
+                                <span class="price-label">Precio:</span>
+                                <span class="price-value">${{ item.price|floatformat:0|intcomma }}</span>
+                            </div>
+                            <div class="cart-item-subtotal">
+                                <span class="subtotal-label">Subtotal:</span>
+                                <span class="subtotal-value">${{ item.subtotal|floatformat:0|intcomma }} COP</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="cart-empty-state">
+                    <i class="bi bi-cart-x"></i>
+                    <h4>Tu carrito está vacío</h4>
+                    <p>Agrega productos para empezar a comprar</p>
+                    <a href="/store" class="btn-continue-shopping">
+                        <i class="bi bi-shop me-2"></i>Ir a la tienda
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+        
+        {% if cart_count > 0 %}
+        <div class="cart-sidebar-footer">
+            <div class="cart-total-section">
+                <span class="cart-total-label">Total:</span>
+                <span id="cart-total-amount" class="cart-total-amount">${{ cart_total|floatformat:0|intcomma }} COP</span>
+            </div>
+            <div class="cart-actions">
+                <a href="/cart" class="btn-view-cart">
+                    <i class="bi bi-eye me-2"></i>Ver carrito completo
+                </a>
+                <a href="/checkout" class="btn-checkout-now">
+                    <i class="bi bi-lightning-charge-fill me-2"></i>Finalizar compra
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Overlay para cerrar el sidebar -->
+    <div id="cart-sidebar-overlay" class="cart-sidebar-overlay" onclick="toggleCartSidebar()"></div>
+    
     <header>
         {% include 'navbarr.html' %}
     </header>
+    
+    <!-- Modern Breadcrumb -->
+    <nav class="modern-breadcrumb" aria-label="breadcrumb">
+        <div class="container">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="/store"><i class="bi bi-house-door me-1"></i>Inicio</a></li>
+                {% if product.category %}
+                <li class="breadcrumb-item"><a href="/?category={{ product.category.id }}">{{ product.category.nombre }}</a></li>
+                {% endif %}
+                <li class="breadcrumb-item active" aria-current="page">{{ product.name }}</li>
+            </ol>
+        </div>
+    </nav>
+    
     <main>
-        <div class="container-product-all mt-5">
+        <div class="container-product-all product-detail-container">
             <div class="container_product">
-                <!-- Carrito flotante mejorado -->
-                <div class="car-buy">
-                    <a href="/cart" class="cart-toggle-btn position-relative" title="Ver carrito">
-                        <i class="bi bi-cart-plus-fill"></i>
-                        {% if cart_count > 0 %}
-                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                            {{ cart_count }}
-                        </span>
-                        {% endif %}
-                    </a>
-                </div>
                 
-                <div class="product-Galery">
-                    <!-- Sección de imagen principal y galería mejorada -->
-                    <div class="product-image">
-                        <h1>{{ product.name }}</h1>
-                        
-                        <!-- Slider de imagen principal con controles mejorados -->
-                        <div class="image-slider">
-                            <img id="main-product-image"
-                                 src="{% if Galeria_images %}{{ Galeria_images.0.galeria.url }}{% else %}{{ product.imagen.url }}{% endif %}"
-                                 alt="{{ product.name }}"
-                                 loading="lazy"
-                                 title="Haz clic para ver en pantalla completa">
-                            
-                            {% if Galeria_images|length > 1 %}
-                            <button id="prev-img" class="slider-arrow prev" aria-label="Imagen anterior">
-                                <i class="bi bi-chevron-left"></i>
-                            </button>
-                            <button id="next-img" class="slider-arrow next" aria-label="Imagen siguiente">
-                                <i class="bi bi-chevron-right"></i>
-                            </button>
-                            {% endif %}
-                        </div>
+                <div class="product-Galery row g-4">
+                    <!-- Sección de imagen principal y galería - Lado Izquierdo -->
+                    <div class="col-lg-6">
+                        <div class="product-image-section">
+                            <!-- Slider de imagen principal con controles modernos -->
+                            <div class="image-slider-modern">
+                                <!-- Badges de Producto -->
+                                <div class="product-badges">
+                                    {% if product.descuento > 0 %}
+                                    <span class="badge-discount">
+                                        <i class="bi bi-percent me-1"></i>-{{ product.descuento }}%
+                                    </span>
+                                    {% endif %}
+                                    {% if product.stock <= 10 and product.stock > 0 %}
+                                    <span class="badge-low-stock">
+                                        <i class="bi bi-exclamation-triangle me-1"></i>¡Últimas unidades!
+                                    </span>
+                                    {% elif product.stock == 0 %}
+                                    <span class="badge-out-stock">
+                                        <i class="bi bi-x-circle me-1"></i>Agotado
+                                    </span>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="main-image-container" onclick="openFullscreenGallery()" style="cursor: pointer;">
+                                    <img id="main-product-image"
+                                         src="{% if Galeria_images %}{{ Galeria_images.0.galeria.url }}{% else %}{{ product.imagen.url }}{% endif %}"
+                                         alt="{{ product.name }}"
+                                         loading="lazy"
+                                         class="product-main-image"
+                                         title="Haz clic para ver en pantalla completa">                                   
+                                    
+                                </div>
+                                
+                                {% if Galeria_images|length > 1 %}
+                                <button id="prev-img" class="slider-arrow-modern prev" aria-label="Imagen anterior">
+                                    <i class="bi bi-chevron-left"></i>
+                                </button>
+                                <button id="next-img" class="slider-arrow-modern next" aria-label="Imagen siguiente">
+                                    <i class="bi bi-chevron-right"></i>
+                                </button>
+                                
+                                <!-- Indicadores de slide -->
+                                <div class="slide-indicators">
+                                    {% for imagen in Galeria_images %}
+                                    <span class="indicator {% if forloop.first %}active{% endif %}" data-index="{{ forloop.counter0 }}"></span>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
 
-                        <!-- Galería de thumbnails mejorada -->
-                        {% if Galeria_images %}
-                        <div class="Gallery">
-                            {% for imagen in Galeria_images %}
-                                <img src="{{ imagen.galeria.url }}" 
-                                     alt="Vista {{ forloop.counter }} de {{ product.name }}" 
-                                     class="thumbnail"
-                                     loading="lazy"
-                                     data-index="{{ forloop.counter0 }}">
-                            {% endfor %}
-                        </div>
-                        {% endif %}
+                            <!-- Galería de thumbnails moderna -->
+                            {% if Galeria_images %}
+                            <div class="gallery-thumbnails">
+                                {% for imagen in Galeria_images %}
+                                    <div class="thumbnail-wrapper {% if forloop.first %}active{% endif %}" data-index="{{ forloop.counter0 }}">
+                                        <img src="{{ imagen.galeria.url }}" 
+                                             alt="Vista {{ forloop.counter }} de {{ product.name }}" 
+                                             class="thumbnail-image"
+                                             loading="lazy">
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
 
                         <!-- Características del producto mejoradas -->
                         <div class="product-details">
@@ -140,176 +344,262 @@
                                 </div>
                             </div>
                         </div>
+                        </div>
                     </div>
-                    <!-- Información y acciones de compra mejoradas -->
-                    <div class="product-info">
-                        <div class="description-section">
-                            <h1>{{ product.name }}</h1>
-                            <p class="description">{{ product.description|default:"Descripción no disponible"|safe }}</p>
-                        </div>
-                        
-                        <!-- Precio destacado -->
-                        <div class="price">
-                            <span id="main-product-price" class="amount">${{ product.price|intcomma }} COP</span>
-                            <span class="price-discount">Antes: ${{ product.price|add:"30000"|intcomma }} COP</span>
-                        </div>
-                        
-                        <!-- Sección de compra moderna -->
-                        <div class="car-stock">
-                            <div class="stock-indicator">
-                                <i class="bi bi-box-seam"></i>
-                                <span class="stock-show" id="available-stock">
-                                    {{ product.stock }} disponibles
-                                </span>
+                    
+                    <!-- Información y acciones de compra - Lado Derecho -->
+                    <div class="col-lg-6">
+                        <div class="product-info-modern">
+                            <!-- Header del Producto -->
+                            <div class="product-header">
+                                {% if product.category %}
+                                <div class="product-category">
+                                    <i class="bi bi-tag-fill me-1"></i>{{ product.category.nombre }}
+                                </div>
+                                {% endif %}
+                                
+                                <h1 class="product-title">{{ product.name }}</h1>
+                                
+                                <!-- Rating y Reviews -->
+                                <div class="product-rating">
+                                    <div class="stars">
+                                        <i class="bi bi-star-fill text-warning"></i>
+                                        <i class="bi bi-star-fill text-warning"></i>
+                                        <i class="bi bi-star-fill text-warning"></i>
+                                        <i class="bi bi-star-fill text-warning"></i>
+                                        <i class="bi bi-star-half text-warning"></i>
+                                        <span class="rating-value ms-2">4.5</span>
+                                    </div>
+                                    <span class="reviews-count">({{ product.stock|add:"15" }} reseñas)</span>
+                                </div>
                             </div>
                             
-                            <form class="purchase-form" method="post" action="{% url 'add_to_cart_detail' product.id %}">
-                                {% csrf_token %}
+                            <!-- Descripción del Producto -->
+                            <div class="product-description">
+                                <p>{{ product.description|default:"Producto de alta calidad con excelentes características y rendimiento."|safe }}</p>
+                            </div>
+                            
+                            <!-- Precio Destacado Moderno -->
+                            <div class="price-section-modern">
+                                <div class="price-wrapper">
+                                    <span class="price-label">Precio</span>
+                                    <div class="price-main">
+                                        <span id="main-product-price" class="price-amount">${{ product.price|intcomma }}</span>
+                                        <span class="price-currency">COP</span>
+                                    </div>
+                                    {% if product.descuento > 0 %}
+                                    <div class="price-old">
+                                        <span class="text-decoration-line-through">${{ product.price|add:"30000"|intcomma }} COP</span>
+                                        <span class="badge bg-danger ms-2">-{{ product.descuento }}% OFF</span>
+                                    </div>
+                                    {% endif %}
+                                </div>
                                 
-                                <!-- Selector de variantes mejorado -->
-                                {% if product.variants.all %}
-                                <div class="variant-selection">
-                                    <label class="variant-label"><strong>Elige una variante:</strong></label>
-                                    <div id="variant-swatches" class="variant-swatches">
-                                        {% for variant in product.variants.all %}
-                                            <div class="variant-option" 
+                                <!-- Stock Indicator -->
+                                <div class="stock-indicator-modern">
+                                    {% if product.stock > 10 %}
+                                        <span class="badge-stock in-stock">
+                                            <i class="bi bi-check-circle-fill me-1"></i>
+                                            <span id="available-stock">{{ product.stock }} disponibles</span>
+                                        </span>
+                                    {% elif product.stock > 0 %}
+                                        <span class="badge-stock low-stock">
+                                            <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                                            <span id="available-stock">¡Solo {{ product.stock }} disponibles!</span>
+                                        </span>
+                                    {% else %}
+                                        <span class="badge-stock out-stock">
+                                            <i class="bi bi-x-circle-fill me-1"></i>
+                                            Agotado
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <!-- Formulario de Compra Moderno -->
+                            <div class="purchase-section-modern">
+                                <form class="purchase-form-modern" method="post" action="{% url 'add_to_cart_detail' product.id %}">
+                                    {% csrf_token %}
+                                    
+                                    <!-- Selector de variantes moderno -->
+                                    {% if product.variants.all %}
+                                    <div class="variants-section-modern">
+                                        <label class="section-label">
+                                            <i class="bi bi-palette me-2"></i>Selecciona tu variante
+                                        </label>
+                                        <div id="variant-swatches" class="variant-grid-modern">
+                                            {% for variant in product.variants.all %}
+                                            <div class="variant-card-modern {% if variant.stock == 0 %}out-of-stock{% endif %}" 
                                                  data-variant-id="{{ variant.id }}"
                                                  data-color="{{ variant.color }}"
                                                  data-price="{{ variant.precio }}"
                                                  data-stock="{{ variant.stock }}"
                                                  {% if variant.imagen %}data-img="{{ variant.imagen.url }}"{% endif %}
-                                                 title="{{ variant.color|default:'Variante' }} - Stock: {{ variant.stock }}">
+                                                 title="{{ variant.color|default:'Variante' }} - {{ variant.stock }} disponibles">
                                                 
                                                 {% if variant.imagen %}
                                                     <!-- Variante con imagen -->
-                                                    <div class="variant-image-container">
+                                                    <div class="variant-image-wrapper">
                                                         <img src="{{ variant.imagen.url }}" 
                                                              alt="{{ variant.color }}" 
-                                                             class="variant-image"
+                                                             class="variant-img"
                                                              loading="lazy">
-                                                        <div class="variant-overlay">
-                                                            <span class="variant-color-indicator" style="background-color: {{ variant.color|default:'#ccc' }}"></span>
+                                                        <div class="variant-check-icon">
+                                                            <i class="bi bi-check-lg"></i>
                                                         </div>
-                                                    </div>
-                                                    <div class="variant-info">
-                                                        <span class="variant-color-name">{{ variant.color|default:'Color' }}</span>
-                                                        <span class="variant-stock">Stock: {{ variant.stock }}</span>
-                                                        {% if variant.precio %}
-                                                            <span class="variant-price">${{ variant.precio|floatformat:0 }}</span>
-                                                        {% endif %}
                                                     </div>
                                                 {% else %}
                                                     <!-- Variante solo color -->
-                                                    <div class="variant-color-only" style="background-color: {{ variant.color|default:'#ccc' }}">
-                                                        <div class="variant-color-check">
-                                                            <i class="bi bi-check"></i>
+                                                    <div class="variant-color-swatch" style="background-color: {{ variant.color|default:'#e0e0e0' }}">
+                                                        <div class="variant-check-icon">
+                                                            <i class="bi bi-check-lg"></i>
                                                         </div>
                                                     </div>
-                                                    <div class="variant-info">
-                                                        <span class="variant-color-name">{{ variant.color|default:'Color' }}</span>
-                                                        <span class="variant-stock">{{ variant.stock }}</span>
-                                                    </div>
                                                 {% endif %}
+                                                
+                                                <div class="variant-details">
+                                                    <span class="variant-name">{{ variant.color|default:'Color' }}</span>
+                                                    <span class="variant-stock-badge">
+                                                        {% if variant.stock > 0 %}
+                                                            <i class="bi bi-check-circle-fill text-success"></i> {{ variant.stock }}
+                                                        {% else %}
+                                                            <i class="bi bi-x-circle-fill text-danger"></i> Agotado
+                                                        {% endif %}
+                                                    </span>
+                                                    {% if variant.precio %}
+                                                    <span class="variant-price-tag">${{ variant.precio|floatformat:0 }}</span>
+                                                    {% endif %}
+                                                </div>
                                             </div>
-                                        {% endfor %}
-                                    </div>
-                                    <input type="hidden" name="variant_id" id="variant_id" required>
-                                    
-                                    <!-- Vista previa de la variante seleccionada -->
-                                    <div id="selected-variant-preview" class="selected-variant-preview" style="display: none;">
-                                        <div class="preview-content">
-                                            <img id="variant-preview-image" src="" alt="Variante seleccionada" class="preview-image">
-                                            <div class="preview-info">
-                                                <span id="variant-preview-color" class="preview-color"></span>
-                                                <span id="variant-preview-stock" class="preview-stock"></span>
-                                                <span id="variant-preview-price" class="preview-price"></span>
+                                            {% endfor %}
+                                        </div>
+                                        <input type="hidden" name="variant_id" id="variant_id" required>
+                                        
+                                        <!-- Variante seleccionada - Info moderna -->
+                                        <div id="selected-variant-info" class="selected-variant-modern" style="display: none;">
+                                            <div class="selected-content">
+                                                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                                <span>Seleccionado: <strong id="variant-selected-name"></strong></span>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                                {% endif %}
+                                    {% endif %}
                                 
                              
                         </div>
-                           <!-- Controles de cantidad modernos -->
-                                {% if product.stock > 0 %}
-                                <div class="quantity-controls">
-                                    <div>
-                                        <label class="quantity-label">
-                                            <strong>Cantidad:</strong>
+                        
+                                    <!-- Controles de cantidad modernos -->
+                                    {% if product.stock > 0 %}
+                                    <div class="quantity-section-modern">
+                                        <label class="section-label">
+                                            <i class="bi bi-123 me-2"></i>Cantidad
                                         </label>
+                                        <div class="quantity-control-modern">
+                                            <button type="button" class="qty-btn qty-decrease" aria-label="Disminuir">
+                                                <i class="bi bi-dash-lg"></i>
+                                            </button>
+                                            <input type="number" 
+                                                   name="quantity" 
+                                                   min="1" 
+                                                   value="1" 
+                                                   max="{{ product.stock }}" 
+                                                   class="qty-input"
+                                                   aria-label="Cantidad">
+                                            <button type="button" class="qty-btn qty-increase" aria-label="Aumentar">
+                                                <i class="bi bi-plus-lg"></i>
+                                            </button>
+                                        </div>
                                     </div>
-                                    <div class="quantity-wrapper">
-                                        <button type="button" class="quantity-btn quantity-decrease" aria-label="Disminuir cantidad">
-                                            <i class="bi bi-dash"></i>
+                                    
+                                    <!-- Botones de acción modernos -->
+                                    <div class="action-buttons-modern">
+                                        <button type="submit" id="add_to_cart" class="btn-add-cart-modern">
+                                            <span class="btn-icon">
+                                                <i class="bi bi-cart-plus-fill"></i>
+                                            </span>
+                                            <span class="btn-text">Agregar al Carrito</span>
+                                            <span class="btn-shimmer"></span>
                                         </button>
-                                        <input type="number" 
-                                               name="quantity" 
-                                               min="1" 
-                                               value="1" 
-                                               max="{{ product.stock }}" 
-                                               class="quantity-input"
-                                               aria-label="Cantidad">
-                                        <button type="button" class="quantity-btn quantity-increase" aria-label="Aumentar cantidad">
-                                            <i class="bi bi-plus"></i>
+                                        
+                                        <button type="button" class="btn-buy-now-modern" onclick="document.getElementById('add_to_cart').click(); window.location.href='/cart'">
+                                            <span class="btn-icon">
+                                                <i class="bi bi-lightning-charge-fill"></i>
+                                            </span>
+                                            <span class="btn-text">Comprar Ahora</span>
                                         </button>
                                     </div>
-                                </div>
+                                    
+                                    <!-- Acciones secundarias -->
+                                    <div class="secondary-actions-modern">
+                                        <button type="button" class="btn-wishlist" title="Agregar a favoritos">
+                                            <i class="bi bi-heart"></i>
+                                            <span>Favoritos</span>
+                                        </button>
+                                        <button type="button" class="btn-share" title="Compartir producto" onclick="shareProduct()">
+                                            <i class="bi bi-share"></i>
+                                            <span>Compartir</span>
+                                        </button>
+                                    </div>
+                                    
+                                    {% else %}
+                                    <!-- Estado agotado moderno -->
+                                    <div class="out-of-stock-modern">
+                                        <div class="alert alert-danger d-flex align-items-center mb-3">
+                                            <i class="bi bi-exclamation-triangle-fill me-3 fs-3"></i>
+                                            <div>
+                                                <h5 class="mb-1">Producto Agotado</h5>
+                                                <p class="mb-0 small">Este producto no está disponible actualmente.</p>
+                                            </div>
+                                        </div>
+                                        <button type="button" class="btn-notify-modern" onclick="alert('✅ Te notificaremos cuando esté disponible')">
+                                            <i class="bi bi-bell-fill me-2"></i>
+                                            Notificarme cuando esté disponible
+                                        </button>
+                                    </div>
+                                    {% endif %}
+                                </form>
                                 
-                                <!-- Botones de acción modernos -->
-                                <div class="action-buttons">
-                                    <button type="submit" id="add_to_cart" class="btn btn-success">
-                                        <i class="bi bi-cart-plus"></i>
-                                        Agregar al Carrito
-                                    </button>
-                                   
-                                </div>
-                                
-                                {% else %}
-                                <div class="out-of-stock">
-                                    <div class="stock-alert">
-                                        <i class="bi bi-exclamation-triangle"></i>
-                                        <strong>Producto Agotado</strong>
-                                    </div>
-                                    <p>Este producto no está disponible en este momento. Te notificaremos cuando vuelva a estar en stock.</p>
-                                    <button type="button" class="btn btn-outline" disabled>
-                                        <i class="bi bi-bell"></i>
-                                        Notificarme
-                                    </button>
-                                </div>
-                                {% endif %}
-                            </form>
-                            
-                            <!-- Políticas de compra mejoradas -->
-                            <div class="cart-right-polices">
-                                <h2>Información de Compra</h2>
-                                <div class="policies-grid">
-                                    <div class="policy-item">
-                                        <i class="bi bi-truck"></i>
-                                        <div>
-                                            <strong>Envío Gratis</strong>
-                                            <p>En compras superiores a $200,000 COP. Entrega en 3-5 días hábiles.</p>
+                                <!-- Políticas de compra modernas -->
+                                <div class="policies-section-modern">
+                                    <h3 class="policies-title">
+                                        <i class="bi bi-info-circle me-2"></i>Información de Compra
+                                    </h3>
+                                    <div class="policies-grid-modern">
+                                        <div class="policy-card">
+                                            <div class="policy-icon policy-shipping">
+                                                <i class="bi bi-truck"></i>
+                                            </div>
+                                            <div class="policy-content">
+                                                <h4>Envío Gratis</h4>
+                                                <p>En compras superiores a $200,000</p>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="policy-item">
-                                        <i class="bi bi-shield-check"></i>
-                                        <div>
-                                            <strong>Garantía</strong>
-                                            <p>Garantía de 30 días por defectos de fábrica.</p>
+                                        <div class="policy-card">
+                                            <div class="policy-icon policy-warranty">
+                                                <i class="bi bi-shield-check"></i>
+                                            </div>
+                                            <div class="policy-content">
+                                                <h4>Garantía</h4>
+                                                <p>30 días por defectos de fábrica</p>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="policy-item">
-                                        <i class="bi bi-arrow-left-right"></i>
-                                        <div>
-                                            <strong>Devoluciones</strong>
-                                            <p>Devoluciones gratuitas dentro de los primeros 15 días.</p>
+                                        <div class="policy-card">
+                                            <div class="policy-icon policy-return">
+                                                <i class="bi bi-arrow-left-right"></i>
+                                            </div>
+                                            <div class="policy-content">
+                                                <h4>Devoluciones</h4>
+                                                <p>Devoluciones gratuitas en 15 días</p>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="policy-item">
-                                        <i class="bi bi-credit-card"></i>
-                                        <div>
-                                            <strong>Pago Seguro</strong>
-                                            <p>Múltiples métodos de pago seguros disponibles.</p>
+                                        <div class="policy-card">
+                                            <div class="policy-icon policy-payment">
+                                                <i class="bi bi-credit-card"></i>
+                                            </div>
+                                            <div class="policy-content">
+                                                <h4>Pago Seguro</h4>
+                                                <p>Métodos de pago seguros</p>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -325,228 +615,866 @@
                 </div>
               
             </div>
-            <!-- Publicidad o imágenes adicionales -->
-            <div class="cart-all-img">
-                <div class="img-publicity">
-                    <img src="{{ product.imagen.url }}" alt="Publicidad" style="width:100%; height:100%;">
-                </div >
-                {% for imagen in Galeria_images %}
-                    <div class="img-publicity mt-4">
-                        <img src="{{ imagen.galeria.url }}" alt="Publicidad" style="width:100%; height:100%; margin-bottom:50px;">
-                    </div>
-                {% endfor %}
-            </div>
+            
              
         </div>
+        
+        <!-- Productos Relacionados Modernos -->
+        {% if related_products %}
+        <section class="related-products-section">
+            <div class="container">
+                <div class="section-header-modern">
+                    <div class="section-title-wrapper">
+                        <h2 class="section-title-modern">
+                            <i class="bi bi-stars me-2"></i>
+                            Productos que te pueden interesar
+                        </h2>
+                        <p class="section-subtitle">Descubre más productos increíbles</p>
+                    </div>
+                    <a href="/store" class="btn-view-all-modern">
+                        <span>Ver todos</span>
+                        <i class="bi bi-arrow-right ms-2"></i>
+                    </a>
+                </div>
+                
+                <div class="related-products-grid">
+                    {% for related in related_products %}
+                    <div class="product-card-modern">
+                        <a href="{% url 'product_detail' related.id %}" class="product-card-link">
+                            <!-- Imagen del producto -->
+                            <div class="product-image-wrapper">
+                                {% if related.imagen %}
+                                <img src="{{ related.imagen.url }}" 
+                                     alt="{{ related.name }}" 
+                                     class="product-image"
+                                     loading="lazy">
+                                {% else %}
+                                <div class="product-image-placeholder">
+                                    <i class="bi bi-image"></i>
+                                </div>
+                                {% endif %}
+                                
+                                <!-- Badges -->
+                                <div class="product-badges-mini">
+                                    {% if related.descuento > 0 %}
+                                    <span class="badge-mini badge-discount">-{{ related.descuento }}%</span>
+                                    {% endif %}
+                                    {% if related.stock <= 5 and related.stock > 0 %}
+                                    <span class="badge-mini badge-low">¡Pocas!</span>
+                                    {% elif related.stock == 0 %}
+                                    <span class="badge-mini badge-out">Agotado</span>
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- Quick Actions -->
+                                <div class="product-quick-actions">
+                                    <button class="quick-action-btn" title="Vista rápida" onclick="event.preventDefault(); alert('🔍 Vista rápida - Próximamente')">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                    <button class="quick-action-btn" title="Agregar a favoritos" onclick="event.preventDefault(); alert('❤️ Agregado a favoritos')">
+                                        <i class="bi bi-heart"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Información del producto -->
+                            <div class="product-info-mini">
+                                {% if related.category %}
+                                <span class="product-category-mini">
+                                    <i class="bi bi-tag-fill me-1"></i>{{ related.category.nombre }}
+                                </span>
+                                {% endif %}
+                                
+                                <h3 class="product-name-mini">{{ related.name|truncatechars:50 }}</h3>
+                                
+                                <!-- Rating -->
+                                <div class="product-rating-mini">
+                                    <div class="stars-mini">
+                                        <i class="bi bi-star-fill"></i>
+                                        <i class="bi bi-star-fill"></i>
+                                        <i class="bi bi-star-fill"></i>
+                                        <i class="bi bi-star-fill"></i>
+                                        <i class="bi bi-star-half"></i>
+                                    </div>
+                                    <span class="rating-count">({{ related.stock|add:"8" }})</span>
+                                </div>
+                                
+                                <!-- Precio -->
+                                <div class="product-price-mini">
+                                    <span class="price-current">${{ related.price|intcomma }}</span>
+                                    {% if related.descuento > 0 %}
+                                    <span class="price-old">${{ related.price|add:"15000"|intcomma }}</span>
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- Stock indicator -->
+                                <div class="stock-mini">
+                                    {% if related.stock > 10 %}
+                                    <span class="stock-badge stock-available">
+                                        <i class="bi bi-check-circle-fill"></i> Disponible
+                                    </span>
+                                    {% elif related.stock > 0 %}
+                                    <span class="stock-badge stock-low">
+                                        <i class="bi bi-exclamation-circle-fill"></i> ¡Solo {{ related.stock }}!
+                                    </span>
+                                    {% else %}
+                                    <span class="stock-badge stock-out">
+                                        <i class="bi bi-x-circle-fill"></i> Agotado
+                                    </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <!-- Botón de acción -->
+                            <div class="product-action-mini">
+                                {% if related.stock > 0 %}
+                                <button class="btn-add-mini" onclick="event.preventDefault(); addToCartQuick({{ related.id }}, '{{ related.name }}')">
+                                    <i class="bi bi-cart-plus me-2"></i>
+                                    <span>Agregar</span>
+                                </button>
+                                {% else %}
+                                <button class="btn-add-mini disabled" disabled>
+                                    <i class="bi bi-x-circle me-2"></i>
+                                    <span>Agotado</span>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+        {% endif %}
     </main>
-    <footer>
-        {% include 'footer.html' %}
-    </footer>
    
    
    
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+   
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{% static 'js/detail_product.js' %}"></script>
+    
+    <!-- Modern Product Detail Scripts -->
+    <script>
+    // Utility Functions
+    function shareProduct() {
+        if (navigator.share) {
+            navigator.share({
+                title: '{{ product.name }}',
+                text: '{{ product.description|truncatechars:100 }}',
+                url: window.location.href
+            }).then(() => {
+                console.log('Producto compartido exitosamente');
+            }).catch((error) => {
+                console.log('Error al compartir:', error);
+                fallbackShare();
+            });
+        } else {
+            fallbackShare();
+        }
+    }
+    
+    function fallbackShare() {
+        const url = window.location.href;
+        navigator.clipboard.writeText(url).then(() => {
+            alert('✅ Enlace copiado al portapapeles');
+        });
+    }
+    
+    let fullscreenCurrentIndex = 0;
+    
+    function openFullscreenGallery() {
+        const galleryImages = [
+            {% for imagen in Galeria_images %}
+                "{{ imagen.galeria.url }}",
+            {% endfor %}
+        ];
+        
+        {% if not Galeria_images %}
+            galleryImages.push("{{ product.imagen.url }}");
+        {% endif %}
+        
+        // Obtener índice actual de la imagen mostrada
+        const mainImg = document.getElementById('main-product-image');
+        const currentSrc = mainImg.src;
+        fullscreenCurrentIndex = galleryImages.findIndex(img => currentSrc.includes(img.split('/').pop()));
+        if (fullscreenCurrentIndex === -1) fullscreenCurrentIndex = 0;
+        
+        const overlay = document.createElement('div');
+        overlay.className = 'fullscreen-overlay';
+        overlay.id = 'fullscreen-gallery-overlay';
+        
+        overlay.innerHTML = `
+            <div class="fullscreen-content">
+                <button class="fullscreen-close" onclick="closeFullscreenGallery()">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+                
+                ${galleryImages.length > 1 ? `
+                <button class="fullscreen-nav fullscreen-prev" onclick="changeFullscreenImage(-1)">
+                    <i class="bi bi-chevron-left"></i>
+                </button>
+                <button class="fullscreen-nav fullscreen-next" onclick="changeFullscreenImage(1)">
+                    <i class="bi bi-chevron-right"></i>
+                </button>
+                ` : ''}
+                
+                <img id="fullscreen-image" src="${galleryImages[fullscreenCurrentIndex]}" alt="{{ product.name }}" class="fullscreen-image">
+                
+                ${galleryImages.length > 1 ? `
+                <div class="fullscreen-counter">
+                    <span id="current-image-num">${fullscreenCurrentIndex + 1}</span> / ${galleryImages.length}
+                </div>
+                ` : ''}
+            </div>
+        `;
+        
+        document.body.appendChild(overlay);
+        document.body.style.overflow = 'hidden';
+        
+        // Close on click outside
+        overlay.addEventListener('click', function(e) {
+            if (e.target === overlay) {
+                closeFullscreenGallery();
+            }
+        });
+        
+        // Close on ESC key
+        document.addEventListener('keydown', handleFullscreenKeyboard);
+    }
+    
+    function closeFullscreenGallery() {
+        const overlay = document.getElementById('fullscreen-gallery-overlay');
+        if (overlay) {
+            overlay.remove();
+            document.body.style.overflow = '';
+            document.removeEventListener('keydown', handleFullscreenKeyboard);
+        }
+    }
+    
+    function changeFullscreenImage(direction) {
+        const galleryImages = [
+            {% for imagen in Galeria_images %}
+                "{{ imagen.galeria.url }}",
+            {% endfor %}
+        ];
+        
+        {% if not Galeria_images %}
+            galleryImages.push("{{ product.imagen.url }}");
+        {% endif %}
+        
+        fullscreenCurrentIndex += direction;
+        
+        if (fullscreenCurrentIndex < 0) {
+            fullscreenCurrentIndex = galleryImages.length - 1;
+        } else if (fullscreenCurrentIndex >= galleryImages.length) {
+            fullscreenCurrentIndex = 0;
+        }
+        
+        const fullscreenImg = document.getElementById('fullscreen-image');
+        const counterNum = document.getElementById('current-image-num');
+        
+        if (fullscreenImg) {
+            fullscreenImg.style.opacity = '0';
+            setTimeout(() => {
+                fullscreenImg.src = galleryImages[fullscreenCurrentIndex];
+                fullscreenImg.style.opacity = '1';
+                if (counterNum) {
+                    counterNum.textContent = fullscreenCurrentIndex + 1;
+                }
+            }, 200);
+        }
+    }
+    
+    function handleFullscreenKeyboard(e) {
+        if (e.key === 'Escape') {
+            closeFullscreenGallery();
+        } else if (e.key === 'ArrowLeft') {
+            changeFullscreenImage(-1);
+        } else if (e.key === 'ArrowRight') {
+            changeFullscreenImage(1);
+        }
+    }
+    
+    // Add fullscreen overlay styles
+    const style = document.createElement('style');
+    style.textContent = `
+        .zoom-hint {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            backdrop-filter: blur(10px);
+        }
+        .main-image-container:hover .zoom-hint {
+            opacity: 1;
+        }
+        .fullscreen-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.97);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease;
+        }
+        .fullscreen-content {
+            position: relative;
+            width: 90%;
+            height: 90%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .fullscreen-image {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+            transition: opacity 0.3s ease;
+        }
+        .fullscreen-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 10001;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .fullscreen-close:hover {
+            transform: scale(1.1) rotate(90deg);
+            background: #f5576c;
+            color: white;
+        }
+        .fullscreen-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            font-size: 28px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 10001;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+        }
+        .fullscreen-nav:hover {
+            background: white;
+            transform: translateY(-50%) scale(1.1);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        }
+        .fullscreen-prev {
+            left: 30px;
+        }
+        .fullscreen-next {
+            right: 30px;
+        }
+        .fullscreen-counter {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-size: 16px;
+            font-weight: 700;
+            z-index: 10001;
+            backdrop-filter: blur(10px);
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @media (max-width: 768px) {
+            .fullscreen-nav {
+                width: 50px;
+                height: 50px;
+                font-size: 24px;
+            }
+            .fullscreen-prev {
+                left: 15px;
+            }
+            .fullscreen-next {
+                right: 15px;
+            }
+            .fullscreen-close {
+                width: 45px;
+                height: 45px;
+                font-size: 20px;
+                top: 15px;
+                right: 15px;
+            }
+        }
+    `;
+    document.head.appendChild(style);
+    </script>
+    
     <script>
     document.addEventListener('DOMContentLoaded', function() {
-    // Galería de imágenes
+    console.log('🎨 Inicializando producto moderno...');
+    
+    // ===== GALERÍA DE IMÁGENES MODERNA =====
     const galleryImages = [
         {% for imagen in Galeria_images %}
             "{{ imagen.galeria.url }}",
         {% endfor %}
     ];
+    
     {% if not Galeria_images %}
         galleryImages.push("{{ product.imagen.url }}");
     {% endif %}
 
+    console.log('📸 Imágenes en galería:', galleryImages.length);
+    
     let currentIndex = 0;
     const mainImg = document.getElementById('main-product-image');
     const prevBtn = document.getElementById('prev-img');
     const nextBtn = document.getElementById('next-img');
+    const indicators = document.querySelectorAll('.indicator');
+    const thumbnails = document.querySelectorAll('.thumbnail-wrapper');
+    
+    console.log('🔍 Elementos encontrados:', {
+        mainImg: !!mainImg,
+        prevBtn: !!prevBtn,
+        nextBtn: !!nextBtn,
+        indicators: indicators.length,
+        thumbnails: thumbnails.length
+    });
+    
+    // Agregar transición a la imagen principal
+    if (mainImg) {
+        mainImg.style.transition = 'opacity 0.3s ease';
+    }
 
     function showImage(index) {
-        if (galleryImages.length === 0) return;
-        mainImg.src = galleryImages[index];
-    }
-
-    prevBtn.addEventListener('click', function() {
-        currentIndex = (currentIndex - 1 + galleryImages.length) % galleryImages.length;
-        showImage(currentIndex);
-    });
-
-    nextBtn.addEventListener('click', function() {
-        currentIndex = (currentIndex + 1) % galleryImages.length;
-        showImage(currentIndex);
-    });
-
-    // Cambia la imagen principal al hacer clic en una miniatura
-    document.querySelectorAll('.thumbnail').forEach(function(thumb, idx) {
-        thumb.addEventListener('click', function() {
-            currentIndex = idx;
-            showImage(currentIndex);
-        });
-    });
-
-    // --- Swatches de variantes ---
-    document.querySelectorAll('.variant-swatch').forEach(function(btn) {
-        btn.addEventListener('click', function() {
-            // Quitar selección previa
-            document.querySelectorAll('.variant-swatch').forEach(function(b) {
-                b.style.border = "2px solid #ccc";
-            });
-            // Marcar seleccionada
-            btn.style.border = "2px solid #405cdb";
-            // Actualizar input oculto
-            document.getElementById('variant_id').value = btn.getAttribute('data-variant-id');
-            // Cambiar imagen principal
-            var imgUrl = btn.getAttribute('data-img');
-            if (imgUrl) {
-                mainImg.src = imgUrl;
-            } else {
-                mainImg.src = "{{ product.imagen.url }}";
-            }
-            // Cambiar precio
-            var precio = btn.getAttribute('data-precio');
-            var mainPrice = document.getElementById('main-product-price');
-            if (precio) {
-                mainPrice.textContent = "$" + Number(precio).toLocaleString('es-CO') + " COP";
-            } else {
-                mainPrice.textContent = "${{ product.price|intcomma }} COP";
-            }
-            // Actualizar stock disponible
-            var stock = btn.getAttribute('data-stock');
-            var stockDisplay = document.getElementById('available-stock');
-            if (stockDisplay) {
-                stockDisplay.textContent = "Disponibles " + (stock || 0);
-            }
-            // Actualizar cantidad máxima
-            var quantityInput = document.querySelector('.quantity-input');
-            if (quantityInput) {
-                quantityInput.max = stock || 0;
-            }
-        });
-    });
-});
-
-// WhatsApp Integration
-document.getElementById('whatsapp-chat-float').addEventListener('click', function(e) {
-    e.preventDefault();
-    var numero = "573007915262"; // Cambia por tu número real
-    var nombre = "{{ product.name }}";
-   
-    var mensaje = "Hola, quiero más información sobre el producto: " + nombre ;
-    var url = "https://wa.me/" + numero + "?text=" + mensaje;
-    window.open(url, "_blank");
-});
-
-// Cart Integration
-document.addEventListener('DOMContentLoaded', function () {
-    const cart = document.querySelector('.cart-sidebar, #cart, .cart-widget');
-    const toggleBtn = document.querySelector('.cart-toggle-btn, .open-cart-btn, .btn-cart');
-    
-    if (cart && toggleBtn) {
-        toggleBtn.addEventListener('click', function (e) {
-            e.preventDefault();
-            if (cart.classList.contains('cart-sidebar')) {
-                cart.classList.toggle('open');
-            } else {
-                cart.style.display = (cart.style.display === 'block' ? 'none' : 'block');
-            }
-        });
-
-        // Cerrar al tocar fuera (móvil)
-        document.addEventListener('click', function (e) {
-            if (!cart.contains(e.target) && !toggleBtn.contains(e.target)) {
-                if (cart.classList.contains('open')) cart.classList.remove('open');
-            }
-        });
-    }
-});
-    </script>
-    
-    <!-- Enhanced Variant Selection Script -->
-    <script>
-    // Script adicional para las variantes con imágenes
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log('🎨 Inicializando sistema de variantes mejorado...');
-        
-        // Verificar si hay variantes disponibles
-        const variantOptions = document.querySelectorAll('.variant-option');
-        const variantIdInput = document.getElementById('variant_id');
-        
-        if (variantOptions.length > 0) {
-            console.log(`✅ ${variantOptions.length} variantes encontradas`);
-            
-            // Manejar stock de variantes
-            variantOptions.forEach(variant => {
-                const stock = parseInt(variant.dataset.stock || '0');
-                
-                if (stock <= 0) {
-                    variant.classList.add('out-of-stock');
-                    variant.title += ' - AGOTADO';
-                }
-                
-                // Debugging
-                console.log('Variante:', {
-                    id: variant.dataset.variantId,
-                    color: variant.dataset.color,
-                    stock: variant.dataset.stock,
-                    price: variant.dataset.price,
-                    hasImage: !!variant.dataset.img
-                });
-            });
-            
-            // Auto-seleccionar primera variante disponible
-            const firstAvailable = Array.from(variantOptions).find(v => !v.classList.contains('out-of-stock'));
-            if (firstAvailable) {
-                setTimeout(() => {
-                    firstAvailable.click();
-                    console.log('✅ Primera variante disponible seleccionada automáticamente');
-                }, 300);
-            }
-        } else {
-            console.log('ℹ️ No hay variantes para este producto');
-            // Si no hay variantes, asegurar que el formulario funcione sin variant_id
-            if (variantIdInput) {
-                variantIdInput.removeAttribute('required');
-            }
+        if (galleryImages.length === 0 || !mainImg) {
+            console.warn('⚠️ No hay imágenes o elemento mainImg no encontrado');
+            return;
         }
         
-        // Mejorar experiencia visual
-        const variantImages = document.querySelectorAll('.variant-image');
-        variantImages.forEach(img => {
-            img.addEventListener('load', function() {
-                this.style.opacity = '1';
-            });
-            
-            img.addEventListener('error', function() {
-                console.warn('⚠️ Error cargando imagen de variante:', this.src);
-                this.style.display = 'none';
-                // Mostrar el indicador de color en su lugar
-                const colorIndicator = this.parentElement.querySelector('.variant-color-indicator');
-                if (colorIndicator) {
-                    colorIndicator.style.width = '40px';
-                    colorIndicator.style.height = '40px';
-                }
-            });
+        // Validar índice
+        if (index < 0) index = galleryImages.length - 1;
+        if (index >= galleryImages.length) index = 0;
+        
+        currentIndex = index;
+        console.log('🖼️ Mostrando imagen:', index, galleryImages[index]);
+        
+        // Animación de cambio de imagen
+        mainImg.style.opacity = '0';
+        
+        setTimeout(() => {
+            mainImg.src = galleryImages[index];
+            mainImg.style.opacity = '1';
+        }, 200);
+        
+        // Actualizar indicadores
+        indicators.forEach((ind, idx) => {
+            if (idx === index) {
+                ind.classList.add('active');
+            } else {
+                ind.classList.remove('active');
+            }
         });
         
-        // Añadir efectos de carga
-        variantOptions.forEach(variant => {
-            variant.addEventListener('click', function() {
-                this.classList.add('loading');
-                setTimeout(() => {
-                    this.classList.remove('loading');
-                }, 300);
-            });
+        // Actualizar thumbnails
+        thumbnails.forEach((thumb, idx) => {
+            if (idx === index) {
+                thumb.classList.add('active');
+            } else {
+                thumb.classList.remove('active');
+            }
+        });
+    }
+
+    // Botón anterior
+    if (prevBtn) {
+        prevBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('⬅️ Click en botón anterior');
+            const newIndex = (currentIndex - 1 + galleryImages.length) % galleryImages.length;
+            showImage(newIndex);
+        });
+        console.log('✅ Event listener agregado a prevBtn');
+    } else {
+        console.warn('⚠️ prevBtn no encontrado');
+    }
+
+    // Botón siguiente
+    if (nextBtn) {
+        nextBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('➡️ Click en botón siguiente');
+            const newIndex = (currentIndex + 1) % galleryImages.length;
+            showImage(newIndex);
+        });
+        console.log('✅ Event listener agregado a nextBtn');
+    } else {
+        console.warn('⚠️ nextBtn no encontrado');
+    }
+
+    // Click en thumbnails
+    thumbnails.forEach(function(thumb, idx) {
+        thumb.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('🖱️ Click en thumbnail:', idx);
+            showImage(idx);
         });
     });
+    console.log('✅ Event listeners agregados a', thumbnails.length, 'thumbnails');
+    
+    // Click en indicadores
+    indicators.forEach(function(indicator, idx) {
+        indicator.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('🎯 Click en indicador:', idx);
+            showImage(idx);
+        });
+    });
+    console.log('✅ Event listeners agregados a', indicators.length, 'indicadores');
+
+    // ===== VARIANTES MODERNAS =====
+    const variantCards = document.querySelectorAll('.variant-card-modern');
+    const variantIdInput = document.getElementById('variant_id');
+    const mainPrice = document.getElementById('main-product-price');
+    const stockDisplay = document.getElementById('available-stock');
+    const quantityInput = document.querySelector('.qty-input');
+    const selectedInfo = document.getElementById('selected-variant-info');
+    const selectedName = document.getElementById('variant-selected-name');
+    
+    variantCards.forEach(function(card) {
+        card.addEventListener('click', function() {
+            // No permitir seleccionar agotados
+            if (this.classList.contains('out-of-stock')) {
+                alert('❌ Esta variante está agotada');
+                return;
+            }
+            
+            // Remover selección previa
+            variantCards.forEach(c => c.classList.remove('active'));
+            
+            // Marcar como seleccionada
+            this.classList.add('active');
+            
+            // Obtener datos
+            const variantId = this.dataset.variantId;
+            const color = this.dataset.color;
+            const price = this.dataset.price;
+            const stock = this.dataset.stock;
+            const imgUrl = this.dataset.img;
+            
+            // Actualizar input oculto
+            if (variantIdInput) {
+                variantIdInput.value = variantId;
+            }
+            
+            // Actualizar imagen principal
+            if (imgUrl && mainImg) {
+                mainImg.style.opacity = '0';
+                setTimeout(() => {
+                    mainImg.src = imgUrl;
+                    mainImg.style.opacity = '1';
+                }, 150);
+            }
+            
+            // Actualizar precio
+            if (price && mainPrice) {
+                const formattedPrice = Number(price).toLocaleString('es-CO');
+                mainPrice.textContent = `$${formattedPrice}`;
+            }
+            
+            // Actualizar stock
+            if (stock && stockDisplay) {
+                const stockNum = parseInt(stock);
+                const parent = stockDisplay.closest('.badge-stock');
+                if (parent) {
+                    parent.className = 'badge-stock';
+                    if (stockNum > 10) {
+                        parent.classList.add('in-stock');
+                    } else if (stockNum > 0) {
+                        parent.classList.add('low-stock');
+                    }
+                }
+                stockDisplay.textContent = `${stock} disponibles`;
+            }
+            
+            // Actualizar máximo de cantidad
+            if (quantityInput && stock) {
+                quantityInput.max = stock;
+                if (parseInt(quantityInput.value) > parseInt(stock)) {
+                    quantityInput.value = stock;
+                }
+            }
+            
+            // Mostrar info de selección
+            if (selectedInfo && selectedName) {
+                selectedName.textContent = color || 'Variante';
+                selectedInfo.style.display = 'block';
+            }
+            
+            console.log('✅ Variante seleccionada:', { variantId, color, price, stock });
+        });
+    });
+    
+    // ===== CONTROLES DE CANTIDAD MODERNOS =====
+    const qtyInput = document.querySelector('.qty-input');
+    const qtyDecrease = document.querySelector('.qty-decrease');
+    const qtyIncrease = document.querySelector('.qty-increase');
+    
+    if (qtyDecrease) {
+        qtyDecrease.addEventListener('click', function() {
+            const currentValue = parseInt(qtyInput.value);
+            const minValue = parseInt(qtyInput.min);
+            if (currentValue > minValue) {
+                qtyInput.value = currentValue - 1;
+                this.style.transform = 'scale(0.9)';
+                setTimeout(() => this.style.transform = 'scale(1)', 100);
+            }
+        });
+    }
+    
+    if (qtyIncrease) {
+        qtyIncrease.addEventListener('click', function() {
+            const currentValue = parseInt(qtyInput.value);
+            const maxValue = parseInt(qtyInput.max);
+            if (currentValue < maxValue) {
+                qtyInput.value = currentValue + 1;
+                this.style.transform = 'scale(0.9)';
+                setTimeout(() => this.style.transform = 'scale(1)', 100);
+            } else {
+                alert('⚠️ No hay más stock disponible');
+            }
+        });
+    }
+    
+    // Validar input manual
+    if (qtyInput) {
+        qtyInput.addEventListener('input', function() {
+            const value = parseInt(this.value);
+            const min = parseInt(this.min);
+            const max = parseInt(this.max);
+            
+            if (value < min) this.value = min;
+            if (value > max) this.value = max;
+        });
+    }
+    
+    // ===== ANIMACIÓN AL AGREGAR AL CARRITO =====
+    const addToCartBtn = document.getElementById('add_to_cart');
+    if (addToCartBtn) {
+        addToCartBtn.addEventListener('click', function(e) {
+            const variantCards = document.querySelectorAll('.variant-card-modern');
+            const variantIdInput = document.getElementById('variant_id');
+            
+            // Validar variante si es necesario
+            if (variantCards.length > 0 && !variantIdInput.value) {
+                e.preventDefault();
+                alert('⚠️ Por favor, selecciona una variante del producto');
+                return;
+            }
+            
+            // Animación del botón
+            this.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                this.style.transform = 'scale(1)';
+            }, 150);
+        });
+    }
+    
+    console.log('✅ Sistema de producto moderno completamente inicializado');
+});
+
+// ===== WHATSAPP INTEGRATION MODERNA =====
+const whatsappBtn = document.getElementById('whatsapp-chat-float');
+if (whatsappBtn) {
+    whatsappBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        const numero = "573007915262";
+        const nombre = "{{ product.name }}";
+        const precio = "{{ product.price|intcomma }}";
+        const mensaje = encodeURIComponent(`¡Hola! 👋\nEstoy interesado en el producto:\n📦 ${nombre}\n💰 Precio: $${precio} COP\n\n¿Está disponible?`);
+        const url = `https://wa.me/${numero}?text=${mensaje}`;
+        window.open(url, "_blank");
+    });
+}
+
+// ===== CART FLOAT BUTTON SCROLL EFFECT =====
+window.addEventListener('scroll', function() {
+    const cartBtn = document.querySelector('.cart-float-modern');
+    if (cartBtn) {
+        if (window.scrollY > 100) {
+            cartBtn.classList.add('scrolled');
+        } else {
+            cartBtn.classList.remove('scrolled');
+        }
+    }
+});
+
+// ===== CART SIDEBAR FUNCTIONALITY =====
+function toggleCartSidebar() {
+    const sidebar = document.getElementById('cart-sidebar-modern');
+    const overlay = document.getElementById('cart-sidebar-overlay');
+    
+    if (sidebar && overlay) {
+        const isActive = sidebar.classList.contains('active');
+        
+        if (isActive) {
+            // Cerrar
+            sidebar.classList.remove('active');
+            overlay.classList.remove('active');
+            document.body.style.overflow = '';
+        } else {
+            // Abrir
+            sidebar.classList.add('active');
+            overlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+    }
+}
+
+// Cerrar sidebar con tecla ESC
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        const sidebar = document.getElementById('cart-sidebar-modern');
+        if (sidebar && sidebar.classList.contains('active')) {
+            toggleCartSidebar();
+        }
+    }
+});
+
+// ===== AGREGAR AL CARRITO RÁPIDO DESDE PRODUCTOS RELACIONADOS =====
+function addToCartQuick(productId, productName) {
+    console.log('🛒 Agregando producto al carrito:', productId, productName);
+    
+    // Crear formulario dinámico
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = `/add-to-cart/${productId}/`;
+    
+    // Agregar CSRF token
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    const csrfInput = document.createElement('input');
+    csrfInput.type = 'hidden';
+    csrfInput.name = 'csrfmiddlewaretoken';
+    csrfInput.value = csrfToken;
+    form.appendChild(csrfInput);
+    
+    // Agregar cantidad
+    const quantityInput = document.createElement('input');
+    quantityInput.type = 'hidden';
+    quantityInput.name = 'quantity';
+    quantityInput.value = '1';
+    form.appendChild(quantityInput);
+    
+    // Agregar al body y enviar
+    document.body.appendChild(form);
+    form.submit();
+    
+    // Mostrar notificación visual
+    showQuickNotification(`✅ ${productName} agregado al carrito`);
+}
+
+function showQuickNotification(message) {
+    // Crear notificación estilo toast
+    const notification = document.createElement('div');
+    notification.className = 'quick-notification';
+    notification.innerHTML = `
+        <div class="notification-content">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            <span>${message}</span>
+        </div>
+    `;
+    
+    // Agregar estilos inline
+    notification.style.cssText = `
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        color: white;
+        padding: 16px 24px;
+        border-radius: 12px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.16);
+        z-index: 10000;
+        animation: slideInRight 0.4s ease-out;
+        font-weight: 600;
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Remover después de 3 segundos
+    setTimeout(() => {
+        notification.style.animation = 'slideOutRight 0.4s ease-out';
+        setTimeout(() => notification.remove(), 400);
+    }, 3000);
+}
+
+// Agregar estilos de animación para notificación
+const notificationStyles = document.createElement('style');
+notificationStyles.textContent = `
+    @keyframes slideInRight {
+        from {
+            opacity: 0;
+            transform: translateX(100px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+    
+    @keyframes slideOutRight {
+        from {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        to {
+            opacity: 0;
+            transform: translateX(100px);
+        }
+    }
+    
+    .notification-content {
+        display: flex;
+        align-items: center;
+        font-size: 15px;
+    }
+`;
+document.head.appendChild(notificationStyles);
     </script>
     
-    <!-- Modern Product Detail JavaScript -->
-    <script src="{% static 'js/product_detail.js' %}"></script>
     
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
