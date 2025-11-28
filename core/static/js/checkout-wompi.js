@@ -742,28 +742,78 @@ console.log('🚀 CHECKOUT v4.0 - Cargando...');
                 // Verificar el resultado del widget
                 if (result.transaction) {
                     const status = result.transaction.status;
+                    const transactionId = result.transaction.id;
                     console.log('📊 Estado de la transacción:', status);
+                    console.log('🔑 ID de transacción:', transactionId);
                     
                     if (status === 'APPROVED') {
                         console.log('✅ Pago aprobado');
-                        showMessage('Pago procesado exitosamente', 'success');
+                        showMessage('Pago aprobado! Creando tu pedido...', 'success');
+                        
+                        // Crear el pedido en el backend
+                        const form = document.getElementById('checkoutForm');
+                        if (form) {
+                            // Agregar información de la transacción de Wompi
+                            let metodoPago, formaEntrega;
+                            
+                            switch(checkoutState.selectedOption) {
+                                case 'tarjeta_domicilio':
+                                    metodoPago = 'wompi_tarjeta';
+                                    formaEntrega = 'domicilio';
+                                    break;
+                                case 'recoger_tarjeta':
+                                    metodoPago = 'wompi_tarjeta';
+                                    formaEntrega = 'tienda';
+                                    break;
+                                default:
+                                    metodoPago = 'wompi_tarjeta';
+                                    formaEntrega = 'domicilio';
+                            }
+                            
+                            addHiddenField(form, 'metodo_pago', metodoPago);
+                            addHiddenField(form, 'forma_entrega', formaEntrega);
+                            addHiddenField(form, 'total_final', checkoutState.total);
+                            addHiddenField(form, 'shipping_cost', checkoutState.shipping);
+                            addHiddenField(form, 'wompi_transaction_id', transactionId);
+                            addHiddenField(form, 'wompi_reference', transactionData.reference);
+                            
+                            console.log('📤 Enviando formulario de pedido...');
+                            setTimeout(() => {
+                                form.submit();
+                            }, 1500);
+                        } else {
+                            console.error('❌ Formulario no encontrado');
+                            showMessage('Pago aprobado pero hay un problema. Por favor contacta con soporte citando el ID: ' + transactionId, 'warning');
+                            setButtonProcessing(false);
+                            checkoutState.processing = false;
+                        }
                     } else if (status === 'DECLINED') {
                         console.log('❌ Pago rechazado');
-                        showMessage('No se pudo realizar el pago. Por favor intenta nuevamente o usa otro método de pago.', 'error');
+                        showMessage('Tu tarjeta fue rechazada. Por favor verifica los datos o intenta con otra tarjeta.', 'error');
+                        setButtonProcessing(false);
+                        checkoutState.processing = false;
                     } else if (status === 'ERROR') {
                         console.log('❌ Error en el pago');
-                        showMessage('No se pudo realizar el pago. El servicio de pagos podría estar temporalmente no disponible.', 'error');
-                    } else {
+                        showMessage('Hubo un error procesando el pago. Por favor intenta nuevamente.', 'error');
+                        setButtonProcessing(false);
+                        checkoutState.processing = false;
+                    } else if (status === 'PENDING') {
                         console.log('⏳ Pago pendiente:', status);
-                        showMessage('El pago está en proceso de verificación', 'info');
+                        showMessage('El pago está en proceso de verificación. Recibirás un correo cuando se confirme.', 'info');
+                        setButtonProcessing(false);
+                        checkoutState.processing = false;
+                    } else {
+                        console.log('⏳ Estado desconocido:', status);
+                        showMessage('El pago está en proceso. Por favor verifica tu email.', 'info');
+                        setButtonProcessing(false);
+                        checkoutState.processing = false;
                     }
                 } else {
                     console.log('⚠️ Widget cerrado sin resultado');
-                    showMessage('El proceso de pago fue cancelado', 'warning');
+                    showMessage('Cancelaste el proceso de pago', 'warning');
+                    setButtonProcessing(false);
+                    checkoutState.processing = false;
                 }
-                
-                setButtonProcessing(false);
-                checkoutState.processing = false;
             });
             
         } catch (error) {

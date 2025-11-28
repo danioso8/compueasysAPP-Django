@@ -826,8 +826,18 @@ def pago_exitoso(request):
         metodo_pago = request.POST.get('metodo_pago', 'contraentrega')
         forma_entrega = request.POST.get('forma_entrega', 'domicilio')
         
+        # Obtener información adicional de Wompi
+        wompi_transaction_id = request.POST.get('wompi_transaction_id', '').strip()
+        wompi_reference = request.POST.get('wompi_reference', '').strip()
+        
+        # Si hay transacción de Wompi, usarla como transaction_id principal
+        if wompi_transaction_id:
+            transaction_id = wompi_transaction_id
+        
         # Log para debugging
         print(f"📋 Checkout - Método pago: {metodo_pago}, Forma entrega: {forma_entrega}")
+        if wompi_transaction_id:
+            print(f"💳 Pago Wompi - Transaction ID: {wompi_transaction_id}, Reference: {wompi_reference}")
 
         # Crear o actualizar SimpleUser
         user, created = SimpleUser.objects.get_or_create(email=email, defaults={'telefono': telefono})
@@ -918,8 +928,15 @@ def pago_exitoso(request):
 
         # Determinar estado inicial del pago
         estado_pago_inicial = 'pendiente'
-        if metodo_pago in ['tarjeta', 'wompi'] and transaction_id:
+        if metodo_pago in ['tarjeta', 'wompi', 'wompi_tarjeta'] and transaction_id:
             estado_pago_inicial = 'completado'
+        
+        # Construir nota con información de Wompi si aplica
+        nota_final = nota if nota else ''
+        if wompi_reference:
+            nota_final = f"{nota_final} | Referencia Wompi: {wompi_reference}".strip('| ')
+        if wompi_transaction_id:
+            nota_final = f"{nota_final} | PAGADO - Wompi Transaction: {wompi_transaction_id}".strip('| ')
 
         # Guardar pedido con toda la información nueva
         pedido = Pedido.objects.create(
@@ -936,7 +953,7 @@ def pago_exitoso(request):
             descuento=discount_amount,  # Agregar descuento
             total=cart_total,
             detalles=detalles,
-            nota=nota,  # Usar nota original sin modificar
+            nota=nota_final,  # Nota con información de Wompi
             estado='pendiente',  # Estado inicial
             metodo_pago=metodo_pago,  # Método de pago correcto
             forma_entrega=forma_entrega,  # Forma de entrega
