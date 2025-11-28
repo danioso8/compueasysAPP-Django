@@ -613,46 +613,51 @@ def product_detail(request, product_id):
             })
             cart_total += subtotal
         
-        # Obtener productos relacionados INTELIGENTES
-        # Prioridad 1: Productos de LA MISMA CATEGORÍA (si el usuario ve juguetes, mostrar juguetes)
+        # Obtener productos relacionados: MISMA CATEGORÍA + NOMBRE RELACIONADO
         related_products = []
         
         if product.category:
-            # Obtener TODOS los productos de la misma categoría (máximo 12)
-            related_by_category = Product.objects.filter(
-                category=product.category
-            ).exclude(id=product.id).filter(stock__gt=0).order_by('-created_at')[:12]
+            # Extraer palabras clave del nombre del producto
+            product_words = [word.lower() for word in product.name.split() if len(word) > 3]
             
-            related_products = list(related_by_category)
-            
-            # Si no hay suficientes productos en la categoría (menos de 8)
-            # buscar productos con nombres similares de la misma categoría o categorías relacionadas
-            if len(related_products) < 8:
-                # Obtener palabras clave del nombre del producto
-                product_words = product.name.lower().split()
+            if product_words:
+                # Buscar productos de la MISMA CATEGORÍA con nombres relacionados
+                query = Q(category=product.category)
                 
-                if product_words:
-                    # Buscar por la primera palabra del nombre en la misma categoría o cualquier categoría
-                    related_by_name = Product.objects.filter(
-                        Q(name__icontains=product_words[0]) | 
-                        Q(description__icontains=product_words[0])
-                    ).exclude(id=product.id).filter(stock__gt=0).exclude(
-                        id__in=[p.id for p in related_products]
-                    )[:8 - len(related_products)]
-                    
-                    related_products.extend(list(related_by_name))
-        
-        # Si todavía no hay suficientes productos (menos de 8), agregar productos populares/recientes
-        if len(related_products) < 8:
-            additional_products = Product.objects.exclude(
-                id=product.id
-            ).filter(stock__gt=0).exclude(
-                id__in=[p.id for p in related_products]
-            ).order_by('-created_at')[:8 - len(related_products)]
-            related_products.extend(list(additional_products))
-        
-        # Limitar a máximo 12 productos
-        related_products = related_products[:12]
+                # Agregar condiciones para cada palabra del nombre
+                name_query = Q()
+                for word in product_words:
+                    name_query |= Q(name__icontains=word) | Q(description__icontains=word)
+                
+                related_products = Product.objects.filter(
+                    query & name_query
+                ).exclude(id=product.id).filter(stock__gt=0).order_by('-created_at')[:8]
+                
+                related_products = list(related_products)
+            
+            # Si no hay suficientes con nombres relacionados, llenar con productos de la misma categoría
+            if len(related_products) < 8:
+                additional_category = Product.objects.filter(
+                    category=product.category
+                ).exclude(id=product.id).filter(stock__gt=0).exclude(
+                    id__in=[p.id for p in related_products]
+                ).order_by('-created_at')[:8 - len(related_products)]
+                
+                related_products.extend(list(additional_category))
+        else:
+            # Si no tiene categoría, buscar por nombre similar
+            product_words = [word.lower() for word in product.name.split() if len(word) > 3]
+            
+            if product_words:
+                name_query = Q()
+                for word in product_words:
+                    name_query |= Q(name__icontains=word)
+                
+                related_products = Product.objects.filter(
+                    name_query
+                ).exclude(id=product.id).filter(stock__gt=0).order_by('-created_at')[:8]
+                
+                related_products = list(related_products)
         
         context = {
             'product': product, 

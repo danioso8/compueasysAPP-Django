@@ -619,7 +619,7 @@
              
         </div>
         
-        <!-- Productos Relacionados Modernos con Slider -->
+        <!-- Productos Relacionados -->
         {% if related_products %}
         <section class="related-products-section">
             <div class="container">
@@ -628,35 +628,28 @@
                         <h2 class="section-title-modern">
                             <i class="bi bi-stars me-2"></i>
                             {% if product.category %}
-                            Más productos de {{ product.category.nombre }}
+                            Productos relacionados de {{ product.category.nombre }}
                             {% else %}
-                            Productos que te pueden interesar
+                            Productos relacionados
                             {% endif %}
                         </h2>
                         <p class="section-subtitle">
                             {% if product.category %}
-                            Explora más opciones similares a "{{ product.name|truncatechars:50 }}"
+                            Similar a "{{ product.name|truncatechars:50 }}" en la categoría {{ product.category.nombre }}
                             {% else %}
-                            Descubre productos relacionados
+                            Productos con características similares
                             {% endif %}
                         </p>
                     </div>
                     <div class="slider-controls-detail">
-                        <button class="slider-btn-detail slider-prev-detail" id="detailSliderPrev">
-                            <i class="bi bi-chevron-left"></i>
-                        </button>
-                        <button class="slider-btn-detail slider-next-detail" id="detailSliderNext">
-                            <i class="bi bi-chevron-right"></i>
-                        </button>
-                        <a href="/store" class="btn-view-all-modern ms-3">
+                        <a href="/store" class="btn-view-all-modern">
                             <span>Ver todos</span>
                             <i class="bi bi-arrow-right ms-2"></i>
                         </a>
                     </div>
                 </div>
                 
-                <div class="related-slider-wrapper-detail">
-                    <div class="related-products-grid" id="detailRelatedSlider">
+                <div class="related-products-grid-simple">
                     {% for related in related_products %}
                     <div class="product-card-modern">
                         <a href="{% url 'product_detail' related.id %}" class="product-card-link">
@@ -762,10 +755,6 @@
                     </div>
                     {% endfor %}
                 </div>
-                </div>
-                
-                <!-- Indicadores del slider -->
-                <div class="slider-dots-detail" id="detailSliderDots"></div>
             </div>
         </section>
         {% endif %}
@@ -1585,43 +1574,21 @@ if (buyNowBtn) {
             cursor: not-allowed;
         }
         
-        .related-slider-wrapper-detail {
-            overflow: hidden;
-            margin: 0 -10px;
-        }
-        
-        .related-products-grid {
-            display: flex !important;
+        .related-products-grid-simple {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
             gap: 24px;
-            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
             padding: 8px 10px;
         }
         
         .product-card-modern {
-            flex: 0 0 280px;
+            width: 100%;
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
         
-        .slider-dots-detail {
-            display: flex;
-            justify-content: center;
-            gap: 8px;
-            margin-top: 32px;
-        }
-        
-        .slider-dot-detail {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: #d1d5db;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        
-        .slider-dot-detail.active {
-            background: #667eea;
-            width: 32px;
-            border-radius: 5px;
+        .product-card-modern:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 32px rgba(0,0,0,0.12);
         }
         
         @media (max-width: 992px) {
@@ -1633,33 +1600,25 @@ if (buyNowBtn) {
             
             .slider-controls-detail {
                 width: 100%;
-                justify-content: space-between;
+                justify-content: flex-end;
             }
             
-            .product-card-modern {
-                flex: 0 0 240px;
+            .related-products-grid-simple {
+                grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
             }
         }
         
         @media (max-width: 768px) {
-            .product-card-modern {
-                flex: 0 0 220px;
-            }
-            
-            .slider-btn-detail {
-                width: 40px;
-                height: 40px;
-                font-size: 18px;
+            .related-products-grid-simple {
+                grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+                gap: 16px;
             }
         }
         
         @media (max-width: 576px) {
-            .product-card-modern {
-                flex: 0 0 200px;
-            }
-            
-            .slider-controls-detail .slider-btn-detail {
-                display: none;
+            .related-products-grid-simple {
+                grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+                gap: 12px;
             }
             
             .btn-view-all-modern {
@@ -1668,132 +1627,6 @@ if (buyNowBtn) {
             }
         }
     </style>
-    
-    <!-- Script del slider de productos relacionados -->
-    <script>
-        // Slider de productos relacionados en product detail
-        document.addEventListener('DOMContentLoaded', function() {
-            const slider = document.getElementById('detailRelatedSlider');
-            const prevBtn = document.getElementById('detailSliderPrev');
-            const nextBtn = document.getElementById('detailSliderNext');
-            const dotsContainer = document.getElementById('detailSliderDots');
-            
-            if (!slider || !prevBtn || !nextBtn) return;
-            
-            const cards = slider.querySelectorAll('.product-card-modern');
-            if (cards.length === 0) return;
-            
-            const cardWidth = 280 + 24; // width + gap
-            let currentIndex = 0;
-            
-            // Calcular cuántas tarjetas mostrar según el ancho de pantalla
-            function getVisibleCards() {
-                const containerWidth = slider.parentElement.offsetWidth;
-                const visibleCount = Math.floor(containerWidth / cardWidth);
-                return Math.max(1, visibleCount);
-            }
-            
-            // Calcular número total de páginas
-            function getTotalPages() {
-                const visibleCards = getVisibleCards();
-                return Math.ceil(cards.length / visibleCards);
-            }
-            
-            // Crear dots
-            function createDots() {
-                dotsContainer.innerHTML = '';
-                const totalPages = getTotalPages();
-                
-                for (let i = 0; i < totalPages; i++) {
-                    const dot = document.createElement('div');
-                    dot.className = 'slider-dot-detail' + (i === 0 ? ' active' : '');
-                    dot.addEventListener('click', () => goToPage(i));
-                    dotsContainer.appendChild(dot);
-                }
-            }
-            
-            // Actualizar posición del slider
-            function updateSlider() {
-                const visibleCards = getVisibleCards();
-                const offset = -currentIndex * cardWidth * visibleCards;
-                slider.style.transform = `translateX(${offset}px)`;
-                
-                // Actualizar dots
-                const dots = dotsContainer.querySelectorAll('.slider-dot-detail');
-                dots.forEach((dot, index) => {
-                    dot.classList.toggle('active', index === currentIndex);
-                });
-                
-                // Actualizar botones
-                const totalPages = getTotalPages();
-                prevBtn.disabled = currentIndex === 0;
-                nextBtn.disabled = currentIndex >= totalPages - 1;
-            }
-            
-            // Ir a página específica
-            function goToPage(page) {
-                const totalPages = getTotalPages();
-                if (page < 0 || page >= totalPages) return;
-                currentIndex = page;
-                updateSlider();
-            }
-            
-            // Event listeners
-            prevBtn.addEventListener('click', () => {
-                if (currentIndex > 0) {
-                    currentIndex--;
-                    updateSlider();
-                }
-            });
-            
-            nextBtn.addEventListener('click', () => {
-                const totalPages = getTotalPages();
-                if (currentIndex < totalPages - 1) {
-                    currentIndex++;
-                    updateSlider();
-                }
-            });
-            
-            // Inicializar
-            createDots();
-            updateSlider();
-            
-            // Actualizar en resize
-            let resizeTimer;
-            window.addEventListener('resize', () => {
-                clearTimeout(resizeTimer);
-                resizeTimer = setTimeout(() => {
-                    currentIndex = 0;
-                    createDots();
-                    updateSlider();
-                }, 250);
-            });
-            
-            // Touch/swipe support para móvil
-            let touchStartX = 0;
-            let touchEndX = 0;
-            
-            slider.addEventListener('touchstart', (e) => {
-                touchStartX = e.changedTouches[0].screenX;
-            });
-            
-            slider.addEventListener('touchend', (e) => {
-                touchEndX = e.changedTouches[0].screenX;
-                handleSwipe();
-            });
-            
-            function handleSwipe() {
-                const swipeThreshold = 50;
-                if (touchStartX - touchEndX > swipeThreshold) {
-                    // Swipe left (next)
-                    nextBtn.click();
-                } else if (touchEndX - touchStartX > swipeThreshold) {
-                    // Swipe right (prev)
-                    prevBtn.click();
-                }
-            }
-        });
-    </script>
     
 </body>
 </html>
