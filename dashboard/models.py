@@ -19,6 +19,7 @@ class WompiConfig(models.Model):
     nombre = models.CharField(max_length=100, default='Configuración Wompi')
     public_key = models.CharField(max_length=200)
     private_key = models.CharField(max_length=200)
+    integrity_secret = models.CharField(max_length=200, blank=True, null=True, help_text='Clave secreta de integridad de Wompi')
     environment = models.CharField(max_length=20, choices=[('production', 'Producción'), ('test', 'Pruebas')], default='production')
     base_url = models.CharField(max_length=200, default='https://production.wompi.co/v1')
     created_at = models.DateTimeField(auto_now_add=True)

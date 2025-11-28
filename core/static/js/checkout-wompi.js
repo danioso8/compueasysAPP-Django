@@ -726,6 +726,16 @@ console.log('🚀 CHECKOUT v4.0 - Cargando...');
             widgetConfig.acceptanceToken = acceptanceToken;
             console.log('🔐 Acceptance token agregado:', acceptanceToken.substring(0, 20) + '...');
             
+            // Agregar firma de integridad (REQUERIDO en producción)
+            if (transactionData.integrity) {
+                widgetConfig.signature = {
+                    integrity: transactionData.integrity
+                };
+                console.log('🔐 Firma de integridad agregada:', transactionData.integrity.substring(0, 20) + '...');
+            } else {
+                console.warn('⚠️ No se recibió firma de integridad. Esto es REQUERIDO en producción.');
+            }
+            
             console.log('🔧 Configuración final del widget:', {
                 ...widgetConfig,
                 publicKey: widgetConfig.publicKey?.substring(0, 20) + '...',

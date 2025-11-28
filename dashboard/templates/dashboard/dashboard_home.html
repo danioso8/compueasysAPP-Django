@@ -2198,7 +2198,16 @@
                                                         <span class="badge bg-info">
                                                             <i class="fas fa-store"></i> Recoger en tienda
                                                         </span>
-                                                    {% elif pedido.metodo_pago == 'tarjeta' or pedido.metodo_pago == 'wompi' %}
+                                                    {% elif pedido.metodo_pago == 'wompi_tarjeta' or pedido.metodo_pago == 'wompi' %}
+                                                        <span class="badge bg-success">
+                                                            <i class="fas fa-credit-card"></i> Wompi
+                                                        </span>
+                                                        {% if pedido.transaction_id %}
+                                                            <br><small class="text-success" title="ID de transacción Wompi">
+                                                                <i class="fas fa-check-circle"></i> {{ pedido.transaction_id|slice:":12" }}...
+                                                            </small>
+                                                        {% endif %}
+                                                    {% elif pedido.metodo_pago == 'tarjeta' %}
                                                         <span class="badge bg-primary">
                                                             <i class="fas fa-credit-card"></i> Tarjeta
                                                         </span>
@@ -2341,10 +2350,15 @@
                                             <span class="badge bg-info">
                                                 <i class="fas fa-store"></i> Recoger
                                             </span>
-                                        {% elif pedido.metodo_pago == 'tarjeta' or pedido.metodo_pago == 'wompi' %}
-                                            <span class="badge bg-primary">
-                                                <i class="fas fa-credit-card"></i> Tarjeta
+                                        {% elif pedido.metodo_pago == 'wompi_tarjeta' or pedido.metodo_pago == 'wompi' %}
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-credit-card"></i> Wompi
                                             </span>
+                                            {% if pedido.transaction_id %}
+                                                <br><small class="text-success" title="ID de transacción Wompi">
+                                                    <i class="fas fa-check-circle"></i> {{ pedido.transaction_id|slice:":12" }}...
+                                                </small>
+                                            {% endif %}
                                         {% else %}
                                             <span class="badge bg-secondary">{{ pedido.get_metodo_pago_display }}</span>
                                         {% endif %}

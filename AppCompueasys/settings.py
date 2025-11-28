@@ -165,7 +165,11 @@ CONTACT_EMAIL = os.getenv('CONTACT_EMAIL', EMAIL_HOST_USER)
 EMAIL_TIMEOUT = 30  # Timeout en segundos
 
 # Base URL para enlaces en emails
-BASE_URL = os.getenv('BASE_URL', 'http://127.0.0.1:8000')
+# En producción usa la URL de Render, en desarrollo usa localhost
+if os.getenv('DJANGO_DEVELOPMENT') == 'True':
+    BASE_URL = 'http://127.0.0.1:8000'
+else:
+    BASE_URL = os.getenv('BASE_URL', 'https://compueasys.onrender.com')
 
 # ====== Cloudinary Configuration ======
 # Configuración condicional para producción vs desarrollo

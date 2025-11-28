@@ -1110,13 +1110,18 @@ def send_welcome_email(email, username):
         from django.conf import settings
         import datetime
         
+        # Obtener BASE_URL dinámicamente
+        # En producción será https://compueasys.onrender.com
+        # En desarrollo será http://127.0.0.1:8000
+        base_url = getattr(settings, 'BASE_URL', 'https://compueasys.onrender.com')
+        
         # Contexto para la plantilla
         context = {
             'username': username,
             'email': email,
             'site_name': 'CompuEasys',
             'year': datetime.datetime.now().year,
-            'base_url': getattr(settings, 'BASE_URL', 'http://127.0.0.1:8000')
+            'base_url': base_url
         }
         
         # Renderizar plantilla HTML
@@ -2047,11 +2052,17 @@ def send_stock_notifications(product_id, notification_type='stock_available'):
                     subject = f'Notificación de {product.name} - CompuEasys'
                     template = 'emails/generic_notification.html'
                 
+                # Obtener BASE_URL dinámicamente
+                from django.conf import settings
+                base_url = getattr(settings, 'BASE_URL', 'https://compueasys.onrender.com')
+                product_url = f'{base_url}/product/{product.id}/'
+                
                 # Renderizar email HTML
                 html_message = render_to_string(template, {
                     'product': product,
                     'notification': notification,
-                    'product_url': f'https://tu-dominio.com/product/{product.id}/'
+                    'product_url': product_url,
+                    'base_url': base_url
                 })
                 
                 # Mensaje de texto plano como fallback
@@ -2063,7 +2074,7 @@ Te notificamos que {product.name} ya está disponible.
 Precio: ${product.price:,.0f} COP
 Stock: {product.stock} unidades
 
-Ver producto: https://tu-dominio.com/product/{product.id}/
+Ver producto: {product_url}
 
 ¡No te lo pierdas!
 
@@ -2282,8 +2293,20 @@ def create_wompi_transaction(request):
         # Convertir a centavos para Wompi
         amount_in_cents = int(amount * 100)
         reference = f"compueasys-{int(time.time())}"
+        currency = 'COP'
         
         print(f"💰 WOMPI Final data - Cents: {amount_in_cents}, Reference: {reference}")
+        
+        # Generar firma de integridad (REQUERIDO para producción)
+        integrity = None
+        if wompi_config and wompi_config.integrity_secret:
+            import hashlib
+            # Formato: reference + amount_in_cents + currency + integrity_secret
+            integrity_string = f"{reference}{amount_in_cents}{currency}{wompi_config.integrity_secret}"
+            integrity = hashlib.sha256(integrity_string.encode('utf-8')).hexdigest()
+            print(f"🔐 WOMPI Integrity hash generado: {integrity[:20]}...")
+        else:
+            print("⚠️ WOMPI Warning: No integrity_secret configurado. Esto es REQUERIDO en producción.")
         
         response_data = {
             'success': True,
@@ -2292,10 +2315,11 @@ def create_wompi_transaction(request):
             'customer_email': customer_email,
             'acceptance_token': acceptance_token,
             'public_key': settings.WOMPI_PUBLIC_KEY,
-            'currency': 'COP',
+            'currency': currency,
             'discount_code': discount_code,
             'discount_amount': discount_amount,
-            'environment': settings.WOMPI_ENVIRONMENT
+            'environment': settings.WOMPI_ENVIRONMENT,
+            'integrity': integrity  # Firma de integridad
         }
         
         print(f"🚀 WOMPI Response: {json.dumps(response_data, indent=2, default=str)}")
