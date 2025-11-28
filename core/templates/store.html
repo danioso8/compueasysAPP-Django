@@ -170,13 +170,22 @@
                             <span class="cart-count">{{ cart_count }}</span>
                         </a>
                         
-                        <!-- User -->
-                        {% if user.is_authenticated %}
-                        <div class="user-menu">
-                            <button class="action-btn user-btn">
+                        <!-- User Menu -->
+                        {% if is_logged_in %}
+                        <div class="user-menu" style="position: relative;">
+                            <button class="action-btn user-btn" id="user-menu-btn" style="display: flex; align-items: center; gap: 0.5rem;">
                                 <i class="bi bi-person-circle"></i>
-                                <span>{{ user.first_name|default:user.username }}</span>
+                                <span>{{ user.name|default:user.email|truncatechars:15 }}</span>
+                                <i class="bi bi-chevron-down" style="font-size: 0.8rem;"></i>
                             </button>
+                            <div class="user-dropdown" id="user-dropdown" style="display: none; position: absolute; top: 100%; right: 0; background: white; border-radius: 0.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.15); min-width: 200px; margin-top: 0.5rem; z-index: 1000;">
+                                <a href="{% url 'mis_pedidos' %}" style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; color: #333; text-decoration: none; transition: background 0.2s ease;">
+                                    <i class="bi bi-box-seam"></i> Mis Pedidos
+                                </a>
+                                <a href="{% url 'logout_view' %}" style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; color: #333; text-decoration: none; border-top: 1px solid #e9ecef; transition: background 0.2s ease;">
+                                    <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
+                                </a>
+                            </div>
                         </div>
                         {% else %}
                         <a href="{% url 'login_user' %}" class="action-btn login-btn">
@@ -591,6 +600,35 @@
                 menuOverlay.style.opacity = '0';
                 setTimeout(() => menuOverlay.style.display = 'none', 300);
                 document.body.style.overflow = '';
+            });
+        });
+    }
+
+    // ===== USER MENU DROPDOWN =====
+    const userMenuBtn = document.getElementById('user-menu-btn');
+    const userDropdown = document.getElementById('user-dropdown');
+    
+    if (userMenuBtn && userDropdown) {
+        userMenuBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            userDropdown.style.display = userDropdown.style.display === 'none' ? 'block' : 'none';
+        });
+        
+        // Cerrar al hacer click fuera
+        document.addEventListener('click', function(e) {
+            if (!userMenuBtn.contains(e.target) && !userDropdown.contains(e.target)) {
+                userDropdown.style.display = 'none';
+            }
+        });
+        
+        // Hover effects
+        const dropdownItems = userDropdown.querySelectorAll('a');
+        dropdownItems.forEach(item => {
+            item.addEventListener('mouseenter', function() {
+                this.style.background = '#f8f9fa';
+            });
+            item.addEventListener('mouseleave', function() {
+                this.style.background = 'transparent';
             });
         });
     }

@@ -24,6 +24,30 @@
     
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{% static 'css/checkout.css' %}?v=3.0" />
+    
+    <style>
+        .user-data-summary {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            border: 2px solid #28a745;
+        }
+        .user-data-summary .data-item {
+            padding: 0.75rem;
+            background: white;
+            border-radius: 0.375rem;
+            margin-bottom: 0.5rem;
+        }
+        .user-data-summary .data-item label {
+            display: block;
+            margin-bottom: 0.25rem;
+            font-size: 0.85rem;
+        }
+        .user-data-summary .data-item p {
+            font-size: 1rem;
+            color: #333;
+        }
+    </style>
 </head>
 <body>
     <!-- Header Moderno -->
@@ -96,103 +120,174 @@
                             </div>
                             
                             <div class="section-content">
-                                <!-- Email -->
-                                <div class="form-floating mb-3">
-                                    <input type="email" class="form-control" id="email" name="email" 
-                                           placeholder="correo@ejemplo.com" required 
-                                           value="{{ saved.email|default_if_none:'' }}">
-                                    <label for="email"><i class="bi bi-envelope"></i> Correo Electrónico</label>
-                                </div>
-
-                               
-
-                                <!-- Información Personal -->
-                                <div class="personal-info" id="personalInfo">
-                                    <h5 class="mb-3">Información Personal</h5>
-                                    <div class="row g-3">
-                                        <div class="col-md-6">
-                                            <div class="form-floating">
-                                                <input type="text" class="form-control" id="nombre" name="nombre" 
-                                                       placeholder="Nombre completo" required 
-                                                       value="{{ saved.nombre|default_if_none:'' }}">
-                                                <label for="nombre"><i class="bi bi-person"></i> Nombre Completo</label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-floating">
-                                                <input type="text" class="form-control" id="cedula" name="cedula" 
-                                                       placeholder="Cédula" required 
-                                                       value="{{ saved.cedula|default_if_none:'' }}">
-                                                <label for="cedula"><i class="bi bi-card-text"></i> Cédula</label>
-                                            </div>
-                                        </div>
-                                        <div class="col-12">
-                                            <div class="form-floating">
-                                                <input type="tel" class="form-control" id="telefono" name="telefono" 
-                                                       placeholder="Teléfono" required 
-                                                       value="{{ saved.telefono|default_if_none:'' }}">
-                                                <label for="telefono"><i class="bi bi-phone"></i> Teléfono</label>
+                                {% if is_logged_in %}
+                                    <!-- Usuario Logueado: Mostrar Resumen de Datos -->
+                                    <div class="alert alert-success">
+                                        <div class="d-flex align-items-center mb-3">
+                                            <i class="bi bi-check-circle-fill fs-3 me-3"></i>
+                                            <div>
+                                                <h5 class="mb-0">¡Bienvenido de nuevo!</h5>
+                                                <p class="mb-0 small">Usaremos tu información guardada para este pedido</p>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                <!-- Dirección de Envío -->
-                                <div class="address-section" id="addressSection">
-                                    <h5 class="mb-3">Dirección de Envío</h5>
-                                    <div class="row g-3">
-                                        <div class="col-12">
-                                            <div class="form-floating">
-                                                <input type="text" class="form-control" id="direccion" name="direccion" 
-                                                       placeholder="Dirección" required 
-                                                       value="{{ saved.direccion|default_if_none:'' }}">
-                                                <label for="direccion"><i class="bi bi-geo-alt"></i> Dirección Completa</label>
+                                    <!-- Resumen de Datos del Usuario -->
+                                    <div class="user-data-summary">
+                                        <div class="row g-3">
+                                            <div class="col-md-6">
+                                                <div class="data-item">
+                                                    <label class="text-muted small"><i class="bi bi-person"></i> Nombre:</label>
+                                                    <p class="mb-0 fw-bold">{{ saved.nombre }}</p>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="data-item">
+                                                    <label class="text-muted small"><i class="bi bi-envelope"></i> Email:</label>
+                                                    <p class="mb-0 fw-bold">{{ saved.email }}</p>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="data-item">
+                                                    <label class="text-muted small"><i class="bi bi-phone"></i> Teléfono:</label>
+                                                    <p class="mb-0 fw-bold">{{ saved.telefono }}</p>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="data-item">
+                                                    <label class="text-muted small"><i class="bi bi-geo-alt"></i> Dirección:</label>
+                                                    <p class="mb-0 fw-bold">{{ saved.direccion }}</p>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="data-item">
+                                                    <label class="text-muted small"><i class="bi bi-map"></i> Departamento:</label>
+                                                    <p class="mb-0 fw-bold">{{ saved.departamento }}</p>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="data-item">
+                                                    <label class="text-muted small"><i class="bi bi-building"></i> Ciudad:</label>
+                                                    <p class="mb-0 fw-bold">{{ saved.ciudad }}</p>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div class="col-md-6">
-                                            <div class="form-floating">
-                                                <select class="form-select" id="departament" name="departament" required>
-                                                    <option value="">Seleccionar...</option>
-                                                    {% for dep in departamentos.keys %}
-                                                    <option value="{{ dep }}" {% if dep == departament_selected %}selected{% endif %}>{{ dep }}</option>
-                                                    {% endfor %}
-                                                </select>
-                                                <label for="departament"><i class="bi bi-map"></i> Departamento</label>
-                                            </div>
+                                        
+                                        <div class="mt-3">
+                                            <a href="{% url 'logout_view' %}" class="btn btn-outline-primary btn-sm">
+                                                <i class="bi bi-pencil"></i> Cambiar datos (cerrar sesión primero)
+                                            </a>
                                         </div>
-                                        <div class="col-md-6">
-                                            <div class="form-floating">
-                                                <select class="form-select" id="ciudad" name="ciudad" required>
-                                                    <option value="">Seleccionar...</option>
-                                                    {% for ciudad in ciudades %}
-                                                    <option value="{{ ciudad }}" {% if ciudad == city_selected %}selected{% endif %}>{{ ciudad }}</option>
-                                                    {% endfor %}
-                                                </select>
-                                                <label for="ciudad"><i class="bi bi-building"></i> Ciudad</label>
+                                    </div>
+
+                                    <!-- Campos Hidden para enviar datos -->
+                                    <input type="hidden" id="email" name="email" value="{{ saved.email }}">
+                                    <input type="hidden" id="nombre" name="nombre" value="{{ saved.nombre }}">
+                                    <input type="hidden" id="telefono" name="telefono" value="{{ saved.telefono }}">
+                                    <input type="hidden" id="direccion" name="direccion" value="{{ saved.direccion }}">
+                                    <input type="hidden" id="departament" name="departament" value="{{ saved.departamento }}">
+                                    <input type="hidden" id="ciudad" name="ciudad" value="{{ saved.ciudad }}">
+                                    <input type="hidden" id="codigo_postal" name="codigo_postal" value="{{ saved.codigo_postal }}">
+                                    <input type="hidden" id="cedula" name="cedula" value="{{ saved.cedula|default:'12345678' }}">
+
+                                {% else %}
+                                    <!-- Usuario NO Logueado: Mostrar Formulario Completo -->
+                                    <!-- Email -->
+                                    <div class="form-floating mb-3">
+                                        <input type="email" class="form-control" id="email" name="email" 
+                                               placeholder="correo@ejemplo.com" required 
+                                               value="{{ saved.email|default_if_none:'' }}">
+                                        <label for="email"><i class="bi bi-envelope"></i> Correo Electrónico</label>
+                                    </div>
+
+                                    <!-- Información Personal -->
+                                    <div class="personal-info" id="personalInfo">
+                                        <h5 class="mb-3">Información Personal</h5>
+                                        <div class="row g-3">
+                                            <div class="col-md-6">
+                                                <div class="form-floating">
+                                                    <input type="text" class="form-control" id="nombre" name="nombre" 
+                                                           placeholder="Nombre completo" required 
+                                                           value="{{ saved.nombre|default_if_none:'' }}">
+                                                    <label for="nombre"><i class="bi bi-person"></i> Nombre Completo</label>
+                                                </div>
                                             </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-floating">
-                                                <input type="text" class="form-control" id="codigo_postal" 
-                                                       name="codigo_postal" placeholder="Código postal" required 
-                                                       value="{{ saved.codigo_postal|default_if_none:'' }}">
-                                                <label for="codigo_postal"><i class="bi bi-mailbox"></i> Código Postal</label>
+                                            <div class="col-md-6">
+                                                <div class="form-floating">
+                                                    <input type="text" class="form-control" id="cedula" name="cedula" 
+                                                           placeholder="Cédula" required 
+                                                           value="{{ saved.cedula|default_if_none:'' }}">
+                                                    <label for="cedula"><i class="bi bi-card-text"></i> Cédula</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-12">
+                                                <div class="form-floating">
+                                                    <input type="tel" class="form-control" id="telefono" name="telefono" 
+                                                           placeholder="Teléfono" required 
+                                                           value="{{ saved.telefono|default_if_none:'' }}">
+                                                    <label for="telefono"><i class="bi bi-phone"></i> Teléfono</label>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                <!-- Guardar Información -->
-                                <div class="save-info-section mt-4">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="save_info" 
-                                               name="save_info" checked>
-                                        <label class="form-check-label" for="save_info">
-                                            <i class="bi bi-bookmark"></i>
-                                            Guardar esta información para futuros pedidos
-                                        </label>
+                                    <!-- Dirección de Envío -->
+                                    <div class="address-section" id="addressSection">
+                                        <h5 class="mb-3">Dirección de Envío</h5>
+                                        <div class="row g-3">
+                                            <div class="col-12">
+                                                <div class="form-floating">
+                                                    <input type="text" class="form-control" id="direccion" name="direccion" 
+                                                           placeholder="Dirección" required 
+                                                           value="{{ saved.direccion|default_if_none:'' }}">
+                                                    <label for="direccion"><i class="bi bi-geo-alt"></i> Dirección Completa</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-floating">
+                                                    <select class="form-select" id="departament" name="departament" required>
+                                                        <option value="">Seleccionar...</option>
+                                                        {% for dep in departamentos.keys %}
+                                                        <option value="{{ dep }}" {% if dep == departament_selected %}selected{% endif %}>{{ dep }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                    <label for="departament"><i class="bi bi-map"></i> Departamento</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-floating">
+                                                    <select class="form-select" id="ciudad" name="ciudad" required>
+                                                        <option value="">Seleccionar...</option>
+                                                        {% for ciudad in ciudades %}
+                                                        <option value="{{ ciudad }}" {% if ciudad == city_selected %}selected{% endif %}>{{ ciudad }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                    <label for="ciudad"><i class="bi bi-building"></i> Ciudad</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-floating">
+                                                    <input type="text" class="form-control" id="codigo_postal" 
+                                                           name="codigo_postal" placeholder="Código postal" required 
+                                                           value="{{ saved.codigo_postal|default_if_none:'' }}">
+                                                    <label for="codigo_postal"><i class="bi bi-mailbox"></i> Código Postal</label>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
+
+                                    <!-- Guardar Información -->
+                                    <div class="save-info-section mt-4">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="save_info" 
+                                                   name="save_info" checked>
+                                            <label class="form-check-label" for="save_info">
+                                                <i class="bi bi-bookmark"></i>
+                                                Guardar esta información para futuros pedidos
+                                            </label>
+                                        </div>
+                                    </div>
+                                {% endif %}
                             </div>
                         </div>
 
@@ -228,7 +323,7 @@
                                     </div>
                                     
                                     <!-- Opción 2: Tarjeta + Domicilio -->
-                                    <div class="option-card" >
+                                    <div class="option-card" hidden>
                                         <input type="radio" id="tarjeta_domicilio" name="pago_entrega" 
                                                value="tarjeta_domicilio" class="option-radio">
                                         <label for="tarjeta_domicilio" class="option-label">
@@ -239,12 +334,13 @@
                                                 <div class="option-details">
                                                     <h5>Tarjeta + Domicilio</h5>
                                                     <p class="mb-1">Pago seguro con tarjeta + Entrega a domicilio</p>
-                                                    <small class="text-success">Procesado por Wompi - Envío gratis >$100k</small>
+                                                    <div class="alert alert-warning py-1 px-2 mb-1 mt-2" style="font-size: 0.85rem;">
+                                                        <i class="bi bi-exclamation-triangle-fill"></i>
+                                                        <strong>Incluye recargo del 12%</strong> por comisión de Wompi
+                                                    </div>
+                                                    <small class="text-muted">Envío gratis en compras >$100k</small>
                                                 </div>
-                                                <div class="option-price" id="tarjeta_domicilio_price">
-                                                    <span class="shipping-cost">+ $15.000</span>
-                                                    <small>envío</small>
-                                                </div>
+                                                
                                             </div>
                                         </label>
                                     </div>
@@ -261,18 +357,15 @@
                                                 <div class="option-details">
                                                     <h5>Recoger en Tienda</h5>
                                                     <p class="mb-1">Retira en nuestro punto + Pago en efectivo</p>
-                                                    <small class="text-success">¡Sin costo de envío!</small>
+                                                   
                                                 </div>
-                                                <div class="option-price">
-                                                    <span class="shipping-cost free">GRATIS</span>
-                                                    <small>envío</small>
-                                                </div>
+                                               
                                             </div>
                                         </label>
                                     </div>
                                     
                                     <!-- Opción 4: Recoger en Tienda + Tarjeta -->
-                                    <div class="option-card" >
+                                    <div class="option-card" hidden >
                                         <input type="radio" id="recoger_tarjeta" name="pago_entrega" 
                                                value="recoger_tarjeta" class="option-radio">
                                         <label for="recoger_tarjeta" class="option-label">
@@ -283,12 +376,13 @@
                                                 <div class="option-details">
                                                     <h5>Recoger + Tarjeta</h5>
                                                     <p class="mb-1">Pago seguro con tarjeta + Retira en tienda</p>
-                                                    <small class="text-success">Wompi + Sin envío</small>
+                                                    <div class="alert alert-warning py-1 px-2 mb-1 mt-2" style="font-size: 0.85rem;">
+                                                        <i class="bi bi-exclamation-triangle-fill"></i>
+                                                        <strong>Incluye recargo del 12%</strong> por comisión de Wompi
+                                                    </div>
+                                                   
                                                 </div>
-                                                <div class="option-price">
-                                                    <span class="shipping-cost free">GRATIS</span>
-                                                    <small>envío</small>
-                                                </div>
+                                                
                                             </div>
                                         </label>
                                     </div>
@@ -487,6 +581,13 @@
                                             0
                                         </span>
                                     </div>
+                                    <div class="total-row d-none" id="wompi_fee_row">
+                                        <span>
+                                            <i class="bi bi-credit-card text-warning"></i>
+                                            Comisión Wompi (12%)
+                                        </span>
+                                        <span class="text-warning" id="wompi_fee_amount">+$0</span>
+                                    </div>
                                     <hr>
                                     <div class="total-row total-final">
                                         <span><strong>Total a Pagar</strong></span>
@@ -634,6 +735,80 @@
         
         // Inicializar departamentos cuando el DOM esté listo
         document.addEventListener('DOMContentLoaded', initializeDepartments);
+    </script>
+    
+    <!-- AUTOCOMPLETAR DATOS DE USUARIO -->
+    <script>
+        // Datos del usuario para autocompletar
+        window.userData = {
+            nombre: "{{ user_data.nombre|default:'' }}",
+            email: "{{ user_data.email|default:'' }}",
+            telefono: "{{ user_data.telefono|default:'' }}",
+            direccion: "{{ user_data.direccion|default:'' }}",
+            ciudad: "{{ user_data.ciudad|default:'' }}",
+            departamento: "{{ user_data.departamento|default:'' }}",
+            codigo_postal: "{{ user_data.codigo_postal|default:'' }}",
+            isLoggedIn: {{ is_logged_in|yesno:"true,false" }}
+        };
+
+        // Autocompletar campos cuando el DOM esté listo
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.userData.isLoggedIn) {
+                console.log('✅ Usuario logueado, autocompletando datos...');
+                
+                // Autocompletar campos de texto
+                const fields = ['nombre', 'email', 'telefono', 'direccion', 'codigo_postal'];
+                fields.forEach(field => {
+                    const input = document.getElementById(field);
+                    if (input && window.userData[field] && !input.value) {
+                        input.value = window.userData[field];
+                        console.log(`   - ${field}: ${window.userData[field]}`);
+                    }
+                });
+
+                // Autocompletar departamento y ciudad
+                if (window.userData.departamento) {
+                    const deptSelect = document.getElementById('departament');
+                    if (deptSelect && !deptSelect.value) {
+                        deptSelect.value = window.userData.departamento;
+                        // Disparar evento change para cargar ciudades
+                        deptSelect.dispatchEvent(new Event('change'));
+                        
+                        // Esperar a que se carguen las ciudades y seleccionar
+                        setTimeout(() => {
+                            if (window.userData.ciudad) {
+                                const citySelect = document.getElementById('ciudad');
+                                if (citySelect) {
+                                    citySelect.value = window.userData.ciudad;
+                                    console.log(`   - departamento: ${window.userData.departamento}`);
+                                    console.log(`   - ciudad: ${window.userData.ciudad}`);
+                                }
+                            }
+                        }, 100);
+                    }
+                }
+                
+                // Mostrar mensaje de confirmación
+                const emailInput = document.getElementById('email');
+                if (emailInput && window.userData.email) {
+                    const successMsg = document.createElement('div');
+                    successMsg.className = 'alert alert-success alert-dismissible fade show mt-2';
+                    successMsg.innerHTML = `
+                        <i class="bi bi-check-circle-fill"></i>
+                        <strong>¡Bienvenido de nuevo!</strong> 
+                        Tus datos han sido cargados automáticamente.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    `;
+                    emailInput.parentElement.insertAdjacentElement('afterend', successMsg);
+                    
+                    // Auto-ocultar después de 5 segundos
+                    setTimeout(() => {
+                        successMsg.classList.remove('show');
+                        setTimeout(() => successMsg.remove(), 150);
+                    }, 5000);
+                }
+            }
+        });
     </script>
     
     <!-- CHECKOUT SCRIPT - DEBE IR DESPUÉS DE LA CONFIGURACIÓN -->

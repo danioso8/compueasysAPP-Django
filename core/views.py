@@ -141,6 +141,8 @@ def home(request):
         'cart_count': cart_count,
         'cart_items': cart_items,
         'cart_total': cart_total,
+        'user': user_obj,
+        'is_logged_in': bool(user_obj)
     }
     
     return render(request, 'home.html', context)
@@ -229,6 +231,7 @@ def login_user(request):
                 print("Debug - Simple user password correct")
                 # Crear sesión de usuario simple
                 request.session['simple_user_id'] = simple_user.id
+                request.session['user_id'] = simple_user.id  # Alias para compatibilidad
                 request.session['simple_user_email'] = simple_user.email
                 request.session['simple_user_name'] = simple_user.name
                 return redirect('/mis-pedidos/')
@@ -256,8 +259,8 @@ def store(request):
     session_key = request.session.session_key
     user_obj = None
     
-    # Verificar si hay usuario autenticado
-    user_id = request.session.get('user_id')
+    # Verificar si hay usuario autenticado (soportar ambos nombres de sesión)
+    user_id = request.session.get('user_id') or request.session.get('simple_user_id')
     if user_id:
         try:
             user_obj = SimpleUser.objects.get(id=user_id)
@@ -418,7 +421,9 @@ def store(request):
             'price_max': price_max,
             'in_stock': in_stock,
             'out_of_stock': out_of_stock,
-        }
+        },
+        'user': user_obj,
+        'is_logged_in': bool(user_obj)
     }
     
     return render(request, 'store.html', context)
@@ -680,7 +685,8 @@ def checkout(request, note=None):
     
     session_key = request.session.session_key
     user_obj = None
-    user_id = request.session.get('user_id')
+    # Verificar si hay usuario autenticado (soportar ambos nombres de sesión)
+    user_id = request.session.get('user_id') or request.session.get('simple_user_id')
     if user_id:
         try:
             user_obj = SimpleUser.objects.get(id=user_id)
@@ -755,7 +761,37 @@ def checkout(request, note=None):
     if departament_selected and departament_selected in DEPARTAMENTOS_CIUDADES:
        ciudades = DEPARTAMENTOS_CIUDADES[departament_selected]
 
+    # Datos del usuario para autocompletar
+    user_data = {}
+    user_has_complete_data = False
     
+    if user_obj:
+        user_data = {
+            'nombre': user_obj.name or '',
+            'email': user_obj.email or '',
+            'telefono': user_obj.telefono or '',
+            'direccion': user_obj.address or '',
+            'ciudad': user_obj.city or '',
+            'departamento': user_obj.departamento or '',
+            'codigo_postal': user_obj.codigo_postal or '',
+        }
+        
+        # Verificar si el usuario tiene TODOS los datos necesarios
+        required_fields = ['nombre', 'email', 'telefono', 'direccion', 'ciudad', 'departamento']
+        user_has_complete_data = all(user_data.get(field) for field in required_fields)
+        
+        # Actualizar 'saved' con los datos del usuario
+        if user_has_complete_data:
+            saved = user_data.copy()
+            request.session['saved_checkout'] = saved
+        
+        # Si el usuario tiene datos, usar sus datos como valores seleccionados
+        if user_obj.departamento and not departament_selected:
+            departament_selected = user_obj.departamento
+            if departament_selected in DEPARTAMENTOS_CIUDADES:
+                ciudades = DEPARTAMENTOS_CIUDADES[departament_selected]
+        if user_obj.city and not city_selected:
+            city_selected = user_obj.city
 
     context = {
         'cart_items': cart_items,
@@ -766,7 +802,9 @@ def checkout(request, note=None):
         'ciudades': ciudades,
         'cart_count': sum([item['quantity'] if isinstance(item, dict) else item for item in cart.values()]),
         'saved': saved,
-        'wompi_public_key': settings.WOMPI_PUBLIC_KEY
+        'wompi_public_key': settings.WOMPI_PUBLIC_KEY,
+        'user_data': user_data,
+        'is_logged_in': bool(user_obj) and user_has_complete_data  # Solo mostrar resumen si tiene datos completos
     }
     return render(request, 'checkout.html', context)
 
@@ -839,11 +877,31 @@ def pago_exitoso(request):
         if wompi_transaction_id:
             print(f"💳 Pago Wompi - Transaction ID: {wompi_transaction_id}, Reference: {wompi_reference}")
 
-        # Crear o actualizar SimpleUser
-        user, created = SimpleUser.objects.get_or_create(email=email, defaults={'telefono': telefono})
+        # Crear o actualizar SimpleUser con todos los datos del checkout
+        user, created = SimpleUser.objects.get_or_create(
+            email=email, 
+            defaults={
+                'telefono': telefono,
+                'name': nombre,
+                'username': email,
+                'password': telefono,  # Temporal
+                'address': direccion,
+                'city': ciudad,
+                'departamento': departamento,
+                'codigo_postal': codigo_postal
+            }
+        )
+        
+        # Si el usuario ya existe, actualizar sus datos con la info del checkout
         if not created:
             user.telefono = telefono
+            user.name = nombre
+            user.address = direccion
+            user.city = ciudad
+            user.departamento = departamento
+            user.codigo_postal = codigo_postal
             user.save()
+            print(f"✅ Datos de usuario {email} actualizados con información del checkout")
 
         # Crear usuario Django si no existe
         if not User.objects.filter(username=email).exists():
@@ -1656,7 +1714,9 @@ def mis_pedidos(request):
         'pedidos_pendientes': pedidos_pendientes,
         'total_gastado': total_gastado,
         'user_profile': user_profile,
-        'message': message
+        'message': message,
+        'user': user_profile,
+        'is_logged_in': bool(user_profile)
     }
 
     return render(request, 'mis_pedidos_modern.html', context)
@@ -1666,6 +1726,8 @@ def logout_view(request):
     # Limpiar sesión de usuarios simples
     if 'simple_user_id' in request.session:
         del request.session['simple_user_id']
+    if 'user_id' in request.session:
+        del request.session['user_id']
     if 'simple_user_email' in request.session:
         del request.session['simple_user_email'] 
     if 'simple_user_name' in request.session:

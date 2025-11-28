@@ -21,6 +21,7 @@ console.log('🚀 CHECKOUT v4.0 - Cargando...');
         subtotal: 0,
         shipping: 0,
         discount: 0,
+        wompiFee: 0, // Comisión del 12% de Wompi para pagos con tarjeta
         total: 0,
         processing: false
     };
@@ -150,17 +151,31 @@ console.log('🚀 CHECKOUT v4.0 - Cargando...');
         // Calcular envío según opción seleccionada
         checkoutState.shipping = calculateShipping(checkoutState.selectedOption, checkoutState.subtotal);
         
+        // Calcular comisión de Wompi (12%) solo para pagos con tarjeta
+        const requiresWompiFee = checkoutState.selectedOption === 'tarjeta_domicilio' || 
+                                  checkoutState.selectedOption === 'recoger_tarjeta';
+        
+        if (requiresWompiFee) {
+            // Calcular 12% sobre el subtotal después del descuento
+            const baseForFee = checkoutState.subtotal - checkoutState.discount;
+            checkoutState.wompiFee = Math.round(baseForFee * 0.12);
+        } else {
+            checkoutState.wompiFee = 0;
+        }
+        
         // Calcular total
-        checkoutState.total = checkoutState.subtotal - checkoutState.discount + checkoutState.shipping;
+        checkoutState.total = checkoutState.subtotal - checkoutState.discount + checkoutState.shipping + checkoutState.wompiFee;
         
         console.log(`🧾 Cálculo final:`);
         console.log(`   Subtotal: ${checkoutState.subtotal}`);
         console.log(`   Descuento: ${checkoutState.discount}`);
         console.log(`   Envío: ${checkoutState.shipping}`);
+        console.log(`   Comisión Wompi (12%): ${checkoutState.wompiFee}`);
         console.log(`   TOTAL: ${checkoutState.total}`);
         
         // Actualizar DOM
         updateShippingDisplay();
+        updateWompiFeeDisplay();
         updateTotalDisplay();
         updateOptionPrices();
         
@@ -176,6 +191,20 @@ console.log('🚀 CHECKOUT v4.0 - Cargando...');
             } else {
                 shippingElement.textContent = formatCurrency(checkoutState.shipping);
                 shippingElement.className = 'shipping-amount';
+            }
+        }
+    }
+    
+    function updateWompiFeeDisplay() {
+        const wompiFeeRow = document.getElementById('wompi_fee_row');
+        const wompiFeeAmount = document.getElementById('wompi_fee_amount');
+        
+        if (wompiFeeRow && wompiFeeAmount) {
+            if (checkoutState.wompiFee > 0) {
+                wompiFeeRow.classList.remove('d-none');
+                wompiFeeAmount.textContent = `+${formatCurrency(checkoutState.wompiFee)}`;
+            } else {
+                wompiFeeRow.classList.add('d-none');
             }
         }
     }
