@@ -619,7 +619,7 @@
              
         </div>
         
-        <!-- Productos Relacionados Modernos -->
+        <!-- Productos Relacionados Modernos con Slider -->
         {% if related_products %}
         <section class="related-products-section">
             <div class="container">
@@ -627,17 +627,36 @@
                     <div class="section-title-wrapper">
                         <h2 class="section-title-modern">
                             <i class="bi bi-stars me-2"></i>
+                            {% if product.category %}
+                            Más productos de {{ product.category.nombre }}
+                            {% else %}
                             Productos que te pueden interesar
+                            {% endif %}
                         </h2>
-                        <p class="section-subtitle">Descubre más productos increíbles</p>
+                        <p class="section-subtitle">
+                            {% if product.category %}
+                            Explora más opciones similares a "{{ product.name|truncatechars:50 }}"
+                            {% else %}
+                            Descubre productos relacionados
+                            {% endif %}
+                        </p>
                     </div>
-                    <a href="/store" class="btn-view-all-modern">
-                        <span>Ver todos</span>
-                        <i class="bi bi-arrow-right ms-2"></i>
-                    </a>
+                    <div class="slider-controls-detail">
+                        <button class="slider-btn-detail slider-prev-detail" id="detailSliderPrev">
+                            <i class="bi bi-chevron-left"></i>
+                        </button>
+                        <button class="slider-btn-detail slider-next-detail" id="detailSliderNext">
+                            <i class="bi bi-chevron-right"></i>
+                        </button>
+                        <a href="/store" class="btn-view-all-modern ms-3">
+                            <span>Ver todos</span>
+                            <i class="bi bi-arrow-right ms-2"></i>
+                        </a>
+                    </div>
                 </div>
                 
-                <div class="related-products-grid">
+                <div class="related-slider-wrapper-detail">
+                    <div class="related-products-grid" id="detailRelatedSlider">
                     {% for related in related_products %}
                     <div class="product-card-modern">
                         <a href="{% url 'product_detail' related.id %}" class="product-card-link">
@@ -743,6 +762,10 @@
                     </div>
                     {% endfor %}
                 </div>
+                </div>
+                
+                <!-- Indicadores del slider -->
+                <div class="slider-dots-detail" id="detailSliderDots"></div>
             </div>
         </section>
         {% endif %}
@@ -1526,6 +1549,251 @@ if (buyNowBtn) {
 }
     </script>
     
+    <!-- Estilos para el slider de productos relacionados -->
+    <style>
+        /* Slider controls para product detail */
+        .slider-controls-detail {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .slider-btn-detail {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 20px;
+        }
+        
+        .slider-btn-detail:hover:not(:disabled) {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transform: scale(1.1);
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+        }
+        
+        .slider-btn-detail:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+        
+        .related-slider-wrapper-detail {
+            overflow: hidden;
+            margin: 0 -10px;
+        }
+        
+        .related-products-grid {
+            display: flex !important;
+            gap: 24px;
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 8px 10px;
+        }
+        
+        .product-card-modern {
+            flex: 0 0 280px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .slider-dots-detail {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 32px;
+        }
+        
+        .slider-dot-detail {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #d1d5db;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .slider-dot-detail.active {
+            background: #667eea;
+            width: 32px;
+            border-radius: 5px;
+        }
+        
+        @media (max-width: 992px) {
+            .section-header-modern {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 20px;
+            }
+            
+            .slider-controls-detail {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .product-card-modern {
+                flex: 0 0 240px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .product-card-modern {
+                flex: 0 0 220px;
+            }
+            
+            .slider-btn-detail {
+                width: 40px;
+                height: 40px;
+                font-size: 18px;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .product-card-modern {
+                flex: 0 0 200px;
+            }
+            
+            .slider-controls-detail .slider-btn-detail {
+                display: none;
+            }
+            
+            .btn-view-all-modern {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+    
+    <!-- Script del slider de productos relacionados -->
+    <script>
+        // Slider de productos relacionados en product detail
+        document.addEventListener('DOMContentLoaded', function() {
+            const slider = document.getElementById('detailRelatedSlider');
+            const prevBtn = document.getElementById('detailSliderPrev');
+            const nextBtn = document.getElementById('detailSliderNext');
+            const dotsContainer = document.getElementById('detailSliderDots');
+            
+            if (!slider || !prevBtn || !nextBtn) return;
+            
+            const cards = slider.querySelectorAll('.product-card-modern');
+            if (cards.length === 0) return;
+            
+            const cardWidth = 280 + 24; // width + gap
+            let currentIndex = 0;
+            
+            // Calcular cuántas tarjetas mostrar según el ancho de pantalla
+            function getVisibleCards() {
+                const containerWidth = slider.parentElement.offsetWidth;
+                const visibleCount = Math.floor(containerWidth / cardWidth);
+                return Math.max(1, visibleCount);
+            }
+            
+            // Calcular número total de páginas
+            function getTotalPages() {
+                const visibleCards = getVisibleCards();
+                return Math.ceil(cards.length / visibleCards);
+            }
+            
+            // Crear dots
+            function createDots() {
+                dotsContainer.innerHTML = '';
+                const totalPages = getTotalPages();
+                
+                for (let i = 0; i < totalPages; i++) {
+                    const dot = document.createElement('div');
+                    dot.className = 'slider-dot-detail' + (i === 0 ? ' active' : '');
+                    dot.addEventListener('click', () => goToPage(i));
+                    dotsContainer.appendChild(dot);
+                }
+            }
+            
+            // Actualizar posición del slider
+            function updateSlider() {
+                const visibleCards = getVisibleCards();
+                const offset = -currentIndex * cardWidth * visibleCards;
+                slider.style.transform = `translateX(${offset}px)`;
+                
+                // Actualizar dots
+                const dots = dotsContainer.querySelectorAll('.slider-dot-detail');
+                dots.forEach((dot, index) => {
+                    dot.classList.toggle('active', index === currentIndex);
+                });
+                
+                // Actualizar botones
+                const totalPages = getTotalPages();
+                prevBtn.disabled = currentIndex === 0;
+                nextBtn.disabled = currentIndex >= totalPages - 1;
+            }
+            
+            // Ir a página específica
+            function goToPage(page) {
+                const totalPages = getTotalPages();
+                if (page < 0 || page >= totalPages) return;
+                currentIndex = page;
+                updateSlider();
+            }
+            
+            // Event listeners
+            prevBtn.addEventListener('click', () => {
+                if (currentIndex > 0) {
+                    currentIndex--;
+                    updateSlider();
+                }
+            });
+            
+            nextBtn.addEventListener('click', () => {
+                const totalPages = getTotalPages();
+                if (currentIndex < totalPages - 1) {
+                    currentIndex++;
+                    updateSlider();
+                }
+            });
+            
+            // Inicializar
+            createDots();
+            updateSlider();
+            
+            // Actualizar en resize
+            let resizeTimer;
+            window.addEventListener('resize', () => {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(() => {
+                    currentIndex = 0;
+                    createDots();
+                    updateSlider();
+                }, 250);
+            });
+            
+            // Touch/swipe support para móvil
+            let touchStartX = 0;
+            let touchEndX = 0;
+            
+            slider.addEventListener('touchstart', (e) => {
+                touchStartX = e.changedTouches[0].screenX;
+            });
+            
+            slider.addEventListener('touchend', (e) => {
+                touchEndX = e.changedTouches[0].screenX;
+                handleSwipe();
+            });
+            
+            function handleSwipe() {
+                const swipeThreshold = 50;
+                if (touchStartX - touchEndX > swipeThreshold) {
+                    // Swipe left (next)
+                    nextBtn.click();
+                } else if (touchEndX - touchStartX > swipeThreshold) {
+                    // Swipe right (prev)
+                    prevBtn.click();
+                }
+            }
+        });
+    </script>
     
 </body>
 </html>

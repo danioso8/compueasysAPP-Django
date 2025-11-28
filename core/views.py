@@ -613,19 +613,46 @@ def product_detail(request, product_id):
             })
             cart_total += subtotal
         
-        # Obtener productos relacionados
-        related_products = Product.objects.filter(
-            category=product.category
-        ).exclude(id=product.id).filter(stock__gt=0)[:8]  # 8 productos relacionados
+        # Obtener productos relacionados INTELIGENTES
+        # Prioridad 1: Productos de LA MISMA CATEGORÍA (si el usuario ve juguetes, mostrar juguetes)
+        related_products = []
         
-        # Si no hay suficientes de la misma categoría, agregar más productos
-        if related_products.count() < 8:
+        if product.category:
+            # Obtener TODOS los productos de la misma categoría (máximo 12)
+            related_by_category = Product.objects.filter(
+                category=product.category
+            ).exclude(id=product.id).filter(stock__gt=0).order_by('-created_at')[:12]
+            
+            related_products = list(related_by_category)
+            
+            # Si no hay suficientes productos en la categoría (menos de 8)
+            # buscar productos con nombres similares de la misma categoría o categorías relacionadas
+            if len(related_products) < 8:
+                # Obtener palabras clave del nombre del producto
+                product_words = product.name.lower().split()
+                
+                if product_words:
+                    # Buscar por la primera palabra del nombre en la misma categoría o cualquier categoría
+                    related_by_name = Product.objects.filter(
+                        Q(name__icontains=product_words[0]) | 
+                        Q(description__icontains=product_words[0])
+                    ).exclude(id=product.id).filter(stock__gt=0).exclude(
+                        id__in=[p.id for p in related_products]
+                    )[:8 - len(related_products)]
+                    
+                    related_products.extend(list(related_by_name))
+        
+        # Si todavía no hay suficientes productos (menos de 8), agregar productos populares/recientes
+        if len(related_products) < 8:
             additional_products = Product.objects.exclude(
                 id=product.id
             ).filter(stock__gt=0).exclude(
-                id__in=related_products.values_list('id', flat=True)
-            )[:8 - related_products.count()]
-            related_products = list(related_products) + list(additional_products)
+                id__in=[p.id for p in related_products]
+            ).order_by('-created_at')[:8 - len(related_products)]
+            related_products.extend(list(additional_products))
+        
+        # Limitar a máximo 12 productos
+        related_products = related_products[:12]
         
         context = {
             'product': product, 
@@ -1275,10 +1302,17 @@ def cart(request):
             except Exception:
                 pass
 
+    # Obtener productos relacionados para mostrar en el carrito
+    # Productos aleatorios de diferentes categorías
+    related_products = Product.objects.filter(
+        stock__gt=0
+    ).order_by('?')[:12]  # 12 productos aleatorios para el slider
+    
     context = {
         'cart_items': cart_items,
         'cart_total': cart_total,
-        'cart_count': cart_count
+        'cart_count': cart_count,
+        'related_products': related_products
     }
     return render(request, 'cart.html', context)
 # ...existing code...

@@ -431,6 +431,138 @@
         </div>
         {% endif %}
       </div>
+      
+      <!-- Productos Relacionados con Slider -->
+      {% if related_products %}
+      <section class="related-products-cart-section">
+        <div class="container-fluid">
+          <div class="section-header-cart">
+            <div class="section-title-wrapper">
+              <h2 class="section-title-cart">
+                <i class="bi bi-stars me-2"></i>
+                También te puede interesar
+              </h2>
+              <p class="section-subtitle-cart">Descubre más productos increíbles</p>
+            </div>
+            <div class="slider-controls">
+              <button class="slider-btn slider-prev" id="cartSliderPrev">
+                <i class="bi bi-chevron-left"></i>
+              </button>
+              <button class="slider-btn slider-next" id="cartSliderNext">
+                <i class="bi bi-chevron-right"></i>
+              </button>
+            </div>
+          </div>
+          
+          <div class="related-slider-wrapper">
+            <div class="related-slider-cart" id="cartRelatedSlider">
+              {% for related in related_products %}
+              <div class="product-card-slider">
+                <a href="{% url 'product_detail' related.id %}" class="product-card-link">
+                  <!-- Imagen del producto -->
+                  <div class="product-image-wrapper-slider">
+                    {% if related.imagen %}
+                    <img src="{{ related.imagen.url }}" 
+                         alt="{{ related.name }}" 
+                         class="product-image-slider"
+                         loading="lazy">
+                    {% else %}
+                    <div class="product-image-placeholder-slider">
+                      <i class="bi bi-image"></i>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Badges -->
+                    <div class="product-badges-slider">
+                      {% if related.descuento > 0 %}
+                      <span class="badge-slider badge-discount">-{{ related.descuento }}%</span>
+                      {% endif %}
+                      {% if related.stock <= 5 and related.stock > 0 %}
+                      <span class="badge-slider badge-low">¡Pocas!</span>
+                      {% elif related.stock == 0 %}
+                      <span class="badge-slider badge-out">Agotado</span>
+                      {% endif %}
+                    </div>
+                    
+                    <!-- Quick view button -->
+                    <div class="quick-view-btn" onclick="event.preventDefault(); quickView({{ related.id }})">
+                      <i class="bi bi-eye-fill"></i>
+                    </div>
+                  </div>
+                  
+                  <!-- Información del producto -->
+                  <div class="product-info-slider">
+                    {% if related.category %}
+                    <span class="product-category-slider">
+                      <i class="bi bi-tag-fill me-1"></i>{{ related.category.nombre }}
+                    </span>
+                    {% endif %}
+                    
+                    <h3 class="product-name-slider">{{ related.name|truncatechars:45 }}</h3>
+                    
+                    <!-- Rating -->
+                    <div class="product-rating-slider">
+                      <div class="stars-slider">
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-half"></i>
+                      </div>
+                      <span class="rating-count-slider">({{ related.stock|add:"8" }})</span>
+                    </div>
+                    
+                    <!-- Precio -->
+                    <div class="product-price-slider">
+                      <span class="price-current-slider">${{ related.price|intcomma }}</span>
+                      {% if related.descuento > 0 %}
+                      <span class="price-old-slider">${{ related.price|add:"15000"|intcomma }}</span>
+                      {% endif %}
+                    </div>
+                    
+                    <!-- Stock indicator -->
+                    <div class="stock-slider">
+                      {% if related.stock > 10 %}
+                      <span class="stock-badge-slider stock-available">
+                        <i class="bi bi-check-circle-fill"></i> Disponible
+                      </span>
+                      {% elif related.stock > 0 %}
+                      <span class="stock-badge-slider stock-low">
+                        <i class="bi bi-exclamation-circle-fill"></i> ¡Solo {{ related.stock }}!
+                      </span>
+                      {% else %}
+                      <span class="stock-badge-slider stock-out">
+                        <i class="bi bi-x-circle-fill"></i> Agotado
+                      </span>
+                      {% endif %}
+                    </div>
+                  </div>
+                  
+                  <!-- Botón de acción -->
+                  <div class="product-action-slider">
+                    {% if related.stock > 0 %}
+                    <button class="btn-add-slider" onclick="event.preventDefault(); addToCartQuick({{ related.id }}, '{{ related.name }}')">
+                      <i class="bi bi-cart-plus me-2"></i>
+                      <span>Agregar</span>
+                    </button>
+                    {% else %}
+                    <button class="btn-add-slider disabled" disabled>
+                      <i class="bi bi-x-circle me-2"></i>
+                      <span>Agotado</span>
+                    </button>
+                    {% endif %}
+                  </div>
+                </a>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+          
+          <!-- Indicadores del slider -->
+          <div class="slider-dots" id="cartSliderDots"></div>
+        </div>
+      </section>
+      {% endif %}
     </main>
 
     <!-- Confirmación de eliminación -->
@@ -457,11 +589,561 @@
 
     {% include "footer.html" %}
     
+    <!-- Estilos para productos relacionados en carrito -->
+    <style>
+      /* Sección de productos relacionados en carrito */
+      .related-products-cart-section {
+        background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+        padding: 80px 0;
+        margin-top: 60px;
+        border-top: 1px solid #e9ecef;
+      }
+      
+      .section-header-cart {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 40px;
+        padding: 0 15px;
+      }
+      
+      .section-title-wrapper {
+        flex: 1;
+      }
+      
+      .section-title-cart {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1a1a1a;
+        margin: 0 0 8px 0;
+        display: flex;
+        align-items: center;
+      }
+      
+      .section-title-cart i {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      
+      .section-subtitle-cart {
+        color: #6c757d;
+        margin: 0;
+        font-size: 1rem;
+      }
+      
+      .slider-controls {
+        display: flex;
+        gap: 12px;
+      }
+      
+      .slider-btn {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        border: 2px solid #667eea;
+        background: white;
+        color: #667eea;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 20px;
+      }
+      
+      .slider-btn:hover:not(:disabled) {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        transform: scale(1.1);
+        box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+      }
+      
+      .slider-btn:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+      }
+      
+      .related-slider-wrapper {
+        overflow: hidden;
+        padding: 0 15px;
+      }
+      
+      .related-slider-cart {
+        display: flex;
+        gap: 24px;
+        transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        padding: 8px 0;
+      }
+      
+      .product-card-slider {
+        flex: 0 0 280px;
+        background: white;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+      }
+      
+      .product-card-slider:hover {
+        transform: translateY(-12px);
+        box-shadow: 0 20px 48px rgba(0, 0, 0, 0.12);
+      }
+      
+      .product-card-link {
+        text-decoration: none;
+        color: inherit;
+        display: block;
+      }
+      
+      .product-image-wrapper-slider {
+        position: relative;
+        width: 100%;
+        height: 280px;
+        overflow: hidden;
+        background: #f8f9fa;
+      }
+      
+      .product-image-slider {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.6s ease;
+      }
+      
+      .product-card-slider:hover .product-image-slider {
+        transform: scale(1.1);
+      }
+      
+      .product-image-placeholder-slider {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 48px;
+        color: #dee2e6;
+      }
+      
+      .product-badges-slider {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        z-index: 2;
+      }
+      
+      .badge-slider {
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 700;
+        backdrop-filter: blur(10px);
+      }
+      
+      .badge-discount {
+        background: rgba(239, 68, 68, 0.95);
+        color: white;
+      }
+      
+      .badge-low {
+        background: rgba(251, 146, 60, 0.95);
+        color: white;
+      }
+      
+      .badge-out {
+        background: rgba(107, 114, 128, 0.95);
+        color: white;
+      }
+      
+      .quick-view-btn {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.95);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #667eea;
+        font-size: 18px;
+        opacity: 0;
+        transform: scale(0.8);
+        transition: all 0.3s ease;
+        cursor: pointer;
+        z-index: 2;
+      }
+      
+      .product-card-slider:hover .quick-view-btn {
+        opacity: 1;
+        transform: scale(1);
+      }
+      
+      .quick-view-btn:hover {
+        background: #667eea;
+        color: white;
+        transform: scale(1.1);
+      }
+      
+      .product-info-slider {
+        padding: 20px;
+      }
+      
+      .product-category-slider {
+        display: inline-block;
+        padding: 4px 12px;
+        background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+        color: #667eea;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        margin-bottom: 12px;
+      }
+      
+      .product-name-slider {
+        font-size: 16px;
+        font-weight: 600;
+        color: #1a1a1a;
+        margin: 0 0 12px 0;
+        line-height: 1.4;
+        height: 44px;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+      }
+      
+      .product-rating-slider {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+      
+      .stars-slider {
+        color: #fbbf24;
+        font-size: 14px;
+      }
+      
+      .rating-count-slider {
+        color: #9ca3af;
+        font-size: 13px;
+      }
+      
+      .product-price-slider {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 12px;
+      }
+      
+      .price-current-slider {
+        font-size: 24px;
+        font-weight: 700;
+        color: #667eea;
+      }
+      
+      .price-old-slider {
+        font-size: 16px;
+        color: #9ca3af;
+        text-decoration: line-through;
+      }
+      
+      .stock-slider {
+        margin-bottom: 12px;
+      }
+      
+      .stock-badge-slider {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+      }
+      
+      .stock-available {
+        background: #d1fae5;
+        color: #065f46;
+      }
+      
+      .stock-low {
+        background: #fed7aa;
+        color: #92400e;
+      }
+      
+      .stock-out {
+        background: #f3f4f6;
+        color: #6b7280;
+      }
+      
+      .product-action-slider {
+        padding: 0 20px 20px;
+      }
+      
+      .btn-add-slider {
+        width: 100%;
+        padding: 12px;
+        border: none;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        font-weight: 600;
+        font-size: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+      
+      .btn-add-slider:hover:not(.disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+      }
+      
+      .btn-add-slider.disabled {
+        background: #e5e7eb;
+        color: #9ca3af;
+        cursor: not-allowed;
+      }
+      
+      .slider-dots {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 32px;
+      }
+      
+      .slider-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #d1d5db;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+      
+      .slider-dot.active {
+        background: #667eea;
+        width: 32px;
+        border-radius: 5px;
+      }
+      
+      /* Responsive */
+      @media (max-width: 1200px) {
+        .product-card-slider {
+          flex: 0 0 260px;
+        }
+      }
+      
+      @media (max-width: 992px) {
+        .section-header-cart {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 20px;
+        }
+        
+        .product-card-slider {
+          flex: 0 0 240px;
+        }
+        
+        .section-title-cart {
+          font-size: 1.75rem;
+        }
+      }
+      
+      @media (max-width: 768px) {
+        .related-products-cart-section {
+          padding: 60px 0;
+        }
+        
+        .product-card-slider {
+          flex: 0 0 220px;
+        }
+        
+        .section-title-cart {
+          font-size: 1.5rem;
+        }
+        
+        .slider-btn {
+          width: 40px;
+          height: 40px;
+          font-size: 18px;
+        }
+      }
+      
+      @media (max-width: 576px) {
+        .product-card-slider {
+          flex: 0 0 200px;
+        }
+        
+        .product-image-wrapper-slider {
+          height: 200px;
+        }
+        
+        .slider-controls {
+          display: none;
+        }
+      }
+    </style>
+    
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.5/dist/sweetalert2.all.min.js"></script>
       <!-- Scripts específicos del carrito moderno -->
   <script src="{% static 'js/cart.js' %}"></script>
+  
+  <!-- Script para el slider de productos relacionados -->
+  <script>
+    // Slider de productos relacionados en carrito
+    document.addEventListener('DOMContentLoaded', function() {
+      const slider = document.getElementById('cartRelatedSlider');
+      const prevBtn = document.getElementById('cartSliderPrev');
+      const nextBtn = document.getElementById('cartSliderNext');
+      const dotsContainer = document.getElementById('cartSliderDots');
+      
+      if (!slider || !prevBtn || !nextBtn) return;
+      
+      const cards = slider.querySelectorAll('.product-card-slider');
+      const cardWidth = 280 + 24; // width + gap
+      let currentIndex = 0;
+      
+      // Calcular cuántas tarjetas mostrar según el ancho de pantalla
+      function getVisibleCards() {
+        const containerWidth = slider.parentElement.offsetWidth;
+        return Math.floor(containerWidth / cardWidth);
+      }
+      
+      // Calcular número total de páginas
+      function getTotalPages() {
+        const visibleCards = getVisibleCards();
+        return Math.ceil(cards.length / visibleCards);
+      }
+      
+      // Crear dots
+      function createDots() {
+        dotsContainer.innerHTML = '';
+        const totalPages = getTotalPages();
+        
+        for (let i = 0; i < totalPages; i++) {
+          const dot = document.createElement('div');
+          dot.className = 'slider-dot' + (i === 0 ? ' active' : '');
+          dot.addEventListener('click', () => goToPage(i));
+          dotsContainer.appendChild(dot);
+        }
+      }
+      
+      // Actualizar posición del slider
+      function updateSlider() {
+        const offset = -currentIndex * cardWidth * getVisibleCards();
+        slider.style.transform = `translateX(${offset}px)`;
+        
+        // Actualizar dots
+        const dots = dotsContainer.querySelectorAll('.slider-dot');
+        dots.forEach((dot, index) => {
+          dot.classList.toggle('active', index === currentIndex);
+        });
+        
+        // Actualizar botones
+        const totalPages = getTotalPages();
+        prevBtn.disabled = currentIndex === 0;
+        nextBtn.disabled = currentIndex >= totalPages - 1;
+      }
+      
+      // Ir a página específica
+      function goToPage(page) {
+        const totalPages = getTotalPages();
+        if (page < 0 || page >= totalPages) return;
+        currentIndex = page;
+        updateSlider();
+      }
+      
+      // Event listeners
+      prevBtn.addEventListener('click', () => {
+        if (currentIndex > 0) {
+          currentIndex--;
+          updateSlider();
+        }
+      });
+      
+      nextBtn.addEventListener('click', () => {
+        const totalPages = getTotalPages();
+        if (currentIndex < totalPages - 1) {
+          currentIndex++;
+          updateSlider();
+        }
+      });
+      
+      // Inicializar
+      createDots();
+      updateSlider();
+      
+      // Actualizar en resize
+      let resizeTimer;
+      window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+          currentIndex = 0;
+          createDots();
+          updateSlider();
+        }, 250);
+      });
+      
+      // Touch/swipe support para móvil
+      let touchStartX = 0;
+      let touchEndX = 0;
+      
+      slider.addEventListener('touchstart', (e) => {
+        touchStartX = e.changedTouches[0].screenX;
+      });
+      
+      slider.addEventListener('touchend', (e) => {
+        touchEndX = e.changedTouches[0].screenX;
+        handleSwipe();
+      });
+      
+      function handleSwipe() {
+        const swipeThreshold = 50;
+        if (touchStartX - touchEndX > swipeThreshold) {
+          // Swipe left (next)
+          nextBtn.click();
+        } else if (touchEndX - touchStartX > swipeThreshold) {
+          // Swipe right (prev)
+          prevBtn.click();
+        }
+      }
+    });
+    
+    // Función para agregar al carrito rápidamente
+    function addToCartQuick(productId, productName) {
+      Swal.fire({
+        title: '¡Agregando al carrito!',
+        html: `<strong>${productName}</strong>`,
+        icon: 'success',
+        timer: 1500,
+        showConfirmButton: false,
+        customClass: {
+          popup: 'animate__animated animate__fadeInDown'
+        }
+      }).then(() => {
+        window.location.href = `/product/${productId}`;
+      });
+    }
+    
+    // Función para vista rápida
+    function quickView(productId) {
+      window.location.href = `/product/${productId}`;
+    }
+  </script>
   </body>
 </html>
