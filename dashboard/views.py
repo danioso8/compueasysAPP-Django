@@ -84,21 +84,49 @@ def dashboard_home(request):
     # Filtros y paginación para productos
     view_param = request.GET.get('view', 'ventas')  # 'ventas' por defecto
 
-    # Si el usuario selecciona 'Configurar Wompi', preparar config para el contexto
+    # Configuración de Wompi - SOLO SUPERUSER
     config = None
     if view_param == 'wompi_config':
+        # Verificar que sea superuser
+        if not is_superuser:
+            messages.error(request, 'No tienes permisos para acceder a la configuración de Wompi.')
+            return redirect('/?view=usuarios')
+        
         from .models import WompiConfig
         config = WompiConfig.objects.first()
         if not config:
             config = WompiConfig.objects.create(
                 public_key='', private_key='', environment='production', base_url='https://production.wompi.co/v1')
+        
         if request.method == 'POST':
             config.public_key = request.POST.get('public_key', config.public_key)
             config.private_key = request.POST.get('private_key', config.private_key)
             config.environment = request.POST.get('environment', config.environment)
             config.base_url = request.POST.get('base_url', config.base_url)
+            config.is_active = request.POST.get('is_active') == 'on'
             config.save()
-            messages.success(request, 'Configuración Wompi actualizada correctamente.')
+            messages.success(request, 'Configuración de Wompi actualizada correctamente.')
+    
+    # Configuración de WhatsApp - SOLO SUPERUSER
+    whatsapp_config = None
+    if view_param == 'whatsapp_config':
+        # Verificar que sea superuser
+        if not is_superuser:
+            messages.error(request, 'No tienes permisos para acceder a la configuración de WhatsApp.')
+            return redirect('/?view=usuarios')
+        
+        from core.models import WhatsAppConfig
+        whatsapp_config = WhatsAppConfig.get_config()
+        
+        if request.method == 'POST':
+            whatsapp_config.admin_phone = request.POST.get('admin_phone', whatsapp_config.admin_phone)
+            whatsapp_config.notify_new_order = request.POST.get('notify_new_order') == 'on'
+            whatsapp_config.notify_status_change = request.POST.get('notify_status_change') == 'on'
+            whatsapp_config.notify_low_stock = request.POST.get('notify_low_stock') == 'on'
+            whatsapp_config.message_template = request.POST.get('message_template', whatsapp_config.message_template)
+            whatsapp_config.is_active = request.POST.get('is_active') == 'on'
+            whatsapp_config.save()
+            messages.success(request, 'Configuración de WhatsApp actualizada correctamente.')
 
     # Si el usuario selecciona 'Datos de mi tienda', puedes preparar datos aquí si lo necesitas
 
@@ -962,6 +990,8 @@ def dashboard_home(request):
         'is_superuser': is_superuser,
         'is_staff': is_staff,
         'selected_category': selected_category,
+        'config': config,
+        'whatsapp_config': whatsapp_config,
 
     })
 # ...existing code...

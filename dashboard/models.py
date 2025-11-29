@@ -22,6 +22,7 @@ class WompiConfig(models.Model):
     integrity_secret = models.CharField(max_length=200, blank=True, null=True, help_text='Clave secreta de integridad de Wompi')
     environment = models.CharField(max_length=20, choices=[('production', 'Producción'), ('test', 'Pruebas')], default='production')
     base_url = models.CharField(max_length=200, default='https://production.wompi.co/v1')
+    is_active = models.BooleanField(default=True, verbose_name='Activar Wompi', help_text='Activar/desactivar Wompi como método de pago')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

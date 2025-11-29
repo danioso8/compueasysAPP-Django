@@ -577,3 +577,66 @@ class Project(models.Model):
     def get_components_list(self):
         """Devuelve los componentes como una lista"""
         return [comp.strip() for comp in self.main_components.split('\n') if comp.strip()]
+
+
+class WhatsAppConfig(models.Model):
+    """
+    Configuración de WhatsApp para notificaciones
+    Solo debe existir un registro (Singleton)
+    """
+    tenant = models.ForeignKey('Tenant', on_delete=models.CASCADE, null=True, blank=True)
+    
+    # Número de WhatsApp del administrador
+    admin_phone = models.CharField(
+        max_length=20, 
+        verbose_name="Número WhatsApp Admin",
+        help_text="Formato: +57XXXXXXXXXX (incluir código de país)"
+    )
+    
+    # Configuración de notificaciones
+    notify_new_order = models.BooleanField(
+        default=True, 
+        verbose_name="Notificar Nuevos Pedidos"
+    )
+    notify_status_change = models.BooleanField(
+        default=True, 
+        verbose_name="Notificar Cambios de Estado"
+    )
+    notify_low_stock = models.BooleanField(
+        default=False, 
+        verbose_name="Notificar Stock Bajo"
+    )
+    
+    # Plantilla de mensaje
+    message_template = models.TextField(
+        default="🛒 *Nuevo Pedido #{order_id}*\n\n"
+                "👤 Cliente: {customer_name}\n"
+                "📞 Teléfono: {customer_phone}\n"
+                "💰 Total: ${total}\n"
+                "📦 Método: {payment_method}\n"
+                "📍 Dirección: {address}\n\n"
+                "¡Revisa el dashboard para más detalles!",
+        verbose_name="Plantilla de Mensaje",
+        help_text="Variables disponibles: {order_id}, {customer_name}, {customer_phone}, {total}, {payment_method}, {address}"
+    )
+    
+    # Control
+    is_active = models.BooleanField(default=True, verbose_name="Activar Notificaciones")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Configuración WhatsApp"
+        verbose_name_plural = "Configuración WhatsApp"
+    
+    def __str__(self):
+        return f"WhatsApp: {self.admin_phone}"
+    
+    @classmethod
+    def get_config(cls):
+        """Obtiene o crea la configuración (Singleton)"""
+        config, created = cls.objects.get_or_create(
+            id=1,
+            defaults={'admin_phone': '+57'}
+        )
+        return config
