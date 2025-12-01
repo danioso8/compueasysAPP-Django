@@ -377,14 +377,21 @@
                         {% if products %}
                         <!-- Productos agrupados por categoría -->
                         {% for category_name, category_products in products_by_category.items %}
-                        <div class="category-section mb-5">
-                            <div class="category-header mb-4">
-                                <h2 class="category-title">
-                                    <i class="bi bi-tag-fill"></i> {{ category_name }}
-                                </h2>
-                                <span class="category-count badge bg-primary">
-                                    {{ category_products|length }} producto{{ category_products|length|pluralize }}
-                                </span>
+                        <div class="category-section mb-5" data-category-id="{{ forloop.counter }}">
+                            <div class="category-header mb-4 d-flex justify-content-between align-items-center">
+                                <div class="d-flex align-items-center gap-3">
+                                    <h2 class="category-title mb-0">
+                                        <i class="bi bi-tag-fill"></i> {{ category_name }}
+                                    </h2>
+                                    <span class="category-count badge bg-primary">
+                                        {{ category_products|length }} producto{{ category_products|length|pluralize }}
+                                    </span>
+                                </div>
+                                <button class="btn btn-outline-primary btn-sm share-category-btn" 
+                                        onclick="shareCategoryLink('{{ category_name|escapejs }}', this)"
+                                        title="Compartir categoría">
+                                    <i class="bi bi-share-fill me-1"></i> Compartir
+                                </button>
                             </div>
                             
                             <div class="products-grid" id="products-grid-{{ forloop.counter }}">
@@ -687,6 +694,102 @@
             console.log('[WebSocket] Desconectado');
         };
     })();
+    
+    // ===== COMPARTIR CATEGORÍA =====
+    function shareCategoryLink(categoryName, buttonElement) {
+        // Obtener el ID de categoría desde el elemento padre
+        const categorySection = buttonElement.closest('[data-category-id]');
+        
+        // Si no hay data-category-id, buscar en el filtro lateral
+        let categoryId = null;
+        const currentUrl = new URL(window.location.href);
+        categoryId = currentUrl.searchParams.get('category');
+        
+        // Si aún no hay ID, tratar de obtenerlo del nombre
+        if (!categoryId) {
+            // Buscar en el filtro lateral por el nombre de categoría
+            const categoryInputs = document.querySelectorAll('input[name="category"]');
+            categoryInputs.forEach(input => {
+                const label = input.closest('label');
+                if (label && label.textContent.includes(categoryName)) {
+                    categoryId = input.value;
+                }
+            });
+        }
+        
+        // Construir URL completa
+        const baseUrl = window.location.origin + window.location.pathname;
+        const shareUrl = categoryId ? `${baseUrl}?category=${categoryId}` : window.location.href;
+        
+        // Intentar usar Web Share API
+        if (navigator.share) {
+            navigator.share({
+                title: `${categoryName} - CompuEasys`,
+                text: `Mira nuestros productos en ${categoryName}`,
+                url: shareUrl
+            }).then(() => {
+                showShareToast('¡Enlace compartido!', 'success');
+            }).catch((error) => {
+                if (error.name !== 'AbortError') {
+                    copyToClipboard(shareUrl, categoryName);
+                }
+            });
+        } else {
+            copyToClipboard(shareUrl, categoryName);
+        }
+    }
+    
+    function copyToClipboard(url, categoryName) {
+        navigator.clipboard.writeText(url).then(() => {
+            showShareToast(`Enlace de ${categoryName} copiado al portapapeles`, 'success');
+        }).catch(() => {
+            // Fallback para navegadores antiguos
+            const tempInput = document.createElement('input');
+            tempInput.value = url;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+            showShareToast(`Enlace de ${categoryName} copiado`, 'success');
+        });
+    }
+    
+    function showShareToast(message, type) {
+        const toast = document.createElement('div');
+        toast.className = `alert alert-${type} position-fixed top-0 start-50 translate-middle-x mt-3`;
+        toast.style.cssText = 'z-index: 9999; animation: slideDown 0.3s ease;';
+        toast.innerHTML = `
+            <i class="bi bi-${type === 'success' ? 'check-circle' : 'info-circle'}-fill me-2"></i>
+            ${message}
+        `;
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.style.animation = 'slideUp 0.3s ease';
+            setTimeout(() => toast.remove(), 300);
+        }, 2500);
+    }
+    
+    // Estilos de animación
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes slideDown {
+            from { transform: translate(-50%, -100%); opacity: 0; }
+            to { transform: translate(-50%, 0); opacity: 1; }
+        }
+        @keyframes slideUp {
+            from { transform: translate(-50%, 0); opacity: 1; }
+            to { transform: translate(-50%, -100%); opacity: 0; }
+        }
+        .share-category-btn {
+            white-space: nowrap;
+            transition: all 0.3s ease;
+        }
+        .share-category-btn:hover {
+            transform: scale(1.05);
+        }
+    `;
+    document.head.appendChild(style);
     </script>
 </body>
 </html>
