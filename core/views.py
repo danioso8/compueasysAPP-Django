@@ -281,7 +281,7 @@ def store(request):
     price_min = request.GET.get('price_min', '')
     price_max = request.GET.get('price_max', '')
     in_stock = request.GET.get('in_stock', 'true')
-    out_of_stock = request.GET.get('out_of_stock', 'false')
+    out_of_stock = request.GET.get('out_of_stock', 'true')  # Cambiar a 'true' para mostrar agotados
     sort_by = request.GET.get('sort', 'name')
     page = request.GET.get('page', 1)
 
@@ -618,51 +618,94 @@ def product_detail(request, product_id):
             })
             cart_total += subtotal
         
-        # Obtener productos relacionados: MISMA CATEGORÍA + NOMBRE RELACIONADO
+        # Obtener productos relacionados con lógica mejorada
+        # ORDEN EXACTO: 1) Nombre similar, 2) Misma categoría, 3) Todas las categorías
+        # CADA GRUPO: Primero con stock, luego agotados
         related_products = []
+        used_ids = [product.id]
         
+        # ===== PASO 1: Productos relacionados por NOMBRE =====
+        product_words = [word.lower() for word in product.name.split() if len(word) > 3]
+        
+        if product_words:
+            name_query = Q()
+            for word in product_words:
+                name_query |= Q(name__icontains=word)
+            
+            # 1A) Con stock - nombres similares
+            name_with_stock = list(Product.objects.filter(
+                name_query, stock__gt=0
+            ).exclude(id__in=used_ids).order_by('-created_at')[:5])
+            
+            for p in name_with_stock:
+                related_products.append(p)
+                used_ids.append(p.id)
+            
+            # 1B) Agotados - nombres similares
+            name_no_stock = list(Product.objects.filter(
+                name_query, stock=0
+            ).exclude(id__in=used_ids).order_by('-created_at')[:3])
+            
+            for p in name_no_stock:
+                related_products.append(p)
+                used_ids.append(p.id)
+        
+        # ===== PASO 2: Productos de la MISMA CATEGORÍA =====
         if product.category:
-            # Extraer palabras clave del nombre del producto
-            product_words = [word.lower() for word in product.name.split() if len(word) > 3]
+            # 2A) Con stock - misma categoría
+            category_with_stock = list(Product.objects.filter(
+                category=product.category, stock__gt=0
+            ).exclude(id__in=used_ids).order_by('-created_at')[:8])
             
-            if product_words:
-                # Buscar productos de la MISMA CATEGORÍA con nombres relacionados
-                query = Q(category=product.category)
-                
-                # Agregar condiciones para cada palabra del nombre
-                name_query = Q()
-                for word in product_words:
-                    name_query |= Q(name__icontains=word) | Q(description__icontains=word)
-                
-                related_products = Product.objects.filter(
-                    query & name_query
-                ).exclude(id=product.id).filter(stock__gt=0).order_by('-created_at')[:8]
-                
-                related_products = list(related_products)
+            for p in category_with_stock:
+                related_products.append(p)
+                used_ids.append(p.id)
             
-            # Si no hay suficientes con nombres relacionados, llenar con productos de la misma categoría
-            if len(related_products) < 8:
-                additional_category = Product.objects.filter(
-                    category=product.category
-                ).exclude(id=product.id).filter(stock__gt=0).exclude(
-                    id__in=[p.id for p in related_products]
-                ).order_by('-created_at')[:8 - len(related_products)]
-                
-                related_products.extend(list(additional_category))
-        else:
-            # Si no tiene categoría, buscar por nombre similar
-            product_words = [word.lower() for word in product.name.split() if len(word) > 3]
+            # 2B) Agotados - misma categoría
+            category_no_stock = list(Product.objects.filter(
+                category=product.category, stock=0
+            ).exclude(id__in=used_ids).order_by('-created_at')[:4])
             
-            if product_words:
-                name_query = Q()
-                for word in product_words:
-                    name_query |= Q(name__icontains=word)
-                
-                related_products = Product.objects.filter(
-                    name_query
-                ).exclude(id=product.id).filter(stock__gt=0).order_by('-created_at')[:8]
-                
-                related_products = list(related_products)
+            for p in category_no_stock:
+                related_products.append(p)
+                used_ids.append(p.id)
+        
+        # ===== PASO 3: TODAS las demás categorías =====
+        # 3A) Con stock - todas las categorías
+        all_with_stock = list(Product.objects.filter(
+            stock__gt=0
+        ).exclude(id__in=used_ids).order_by('category', '-created_at')[:15])
+        
+        for p in all_with_stock:
+            related_products.append(p)
+            used_ids.append(p.id)
+        
+        # 3B) Agotados - todas las categorías
+        all_no_stock = list(Product.objects.filter(
+            stock=0
+        ).exclude(id__in=used_ids).order_by('category', '-created_at')[:15])
+        
+        for p in all_no_stock:
+            related_products.append(p)
+            used_ids.append(p.id)
+        
+        # Fallback: Si no hay productos relacionados
+        if len(related_products) == 0:
+            related_products = list(Product.objects.exclude(
+                id=product.id
+            ).order_by('-stock', '-created_at')[:30])
+        
+        # Preparar URLs de galería de forma segura para JavaScript
+        import json
+        gallery_urls = []
+        if Galeria_images:
+            for img in Galeria_images:
+                if img.galeria and img.galeria.url:
+                    gallery_urls.append(img.galeria.url)
+        elif product.imagen and product.imagen.url:
+            gallery_urls.append(product.imagen.url)
+        
+        gallery_urls_json = json.dumps(gallery_urls)
         
         context = {
             'product': product, 
@@ -670,7 +713,8 @@ def product_detail(request, product_id):
             'cart_count': cart_count,
             'cart_items': cart_items,
             'cart_total': cart_total,
-            'related_products': related_products
+            'related_products': related_products,
+            'gallery_urls_json': gallery_urls_json
             }       
         return render(request, 'product_detail.html', context)
     except Product.DoesNotExist:

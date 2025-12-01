@@ -241,13 +241,16 @@
                                     {% endif %}
                                 </div>
                                 
-                                <div class="main-image-container" onclick="openFullscreenGallery()" style="cursor: pointer;">
+                                <div class="main-image-container" 
+                                     id="main-image-container"
+                                     data-has-gallery="{% if Galeria_images or product.imagen %}true{% else %}false{% endif %}"
+                                     style="{% if Galeria_images or product.imagen %}cursor: pointer;{% endif %}">
                                     <img id="main-product-image"
-                                         src="{% if Galeria_images %}{{ Galeria_images.0.galeria.url }}{% else %}{{ product.imagen.url }}{% endif %}"
+                                         src="{% if Galeria_images %}{{ Galeria_images.0.galeria.url }}{% elif product.imagen %}{{ product.imagen.url }}{% else %}{% static 'img/no-image.png' %}{% endif %}"
                                          alt="{{ product.name }}"
                                          loading="lazy"
                                          class="product-main-image"
-                                         title="Haz clic para ver en pantalla completa">                                   
+                                         title="{% if Galeria_images or product.imagen %}Haz clic para ver en pantalla completa{% else %}Sin imagen{% endif %}">                                   
                                     
                                 </div>
                                 
@@ -571,24 +574,19 @@
                 <div class="section-header-modern">
                     <div class="section-title-wrapper">
                         <h2 class="section-title-modern">
-                            <i class="bi bi-stars me-2"></i>
-                            {% if product.category %}
-                            Productos relacionados de {{ product.category.nombre }}
-                            {% else %}
-                            Productos relacionados
-                            {% endif %}
+                            <i class="bi bi-grid-3x3-gap-fill me-2"></i>
+                            También te puede interesar
                         </h2>
                         <p class="section-subtitle">
+                            Productos seleccionados especialmente para ti
                             {% if product.category %}
-                            Similar a "{{ product.name|truncatechars:50 }}" en la categoría {{ product.category.nombre }}
-                            {% else %}
-                            Productos con características similares
+                            - {{ product.category.nombre }} y más
                             {% endif %}
                         </p>
                     </div>
                     <div class="slider-controls-detail">
                         <a href="/store" class="btn-view-all-modern">
-                            <span>Ver todos</span>
+                            <span>Ver catálogo completo</span>
                             <i class="bi bi-arrow-right ms-2"></i>
                         </a>
                     </div>
@@ -690,9 +688,9 @@
                                     <span>Agregar</span>
                                 </button>
                                 {% else %}
-                                <button class="btn-add-mini disabled" disabled>
-                                    <i class="bi bi-x-circle me-2"></i>
-                                    <span>Agotado</span>
+                                <button class="btn-add-mini btn-notify-stock" onclick="event.preventDefault(); notifyStockProduct({{ related.id }}, '{{ related.name }}')">
+                                    <i class="bi bi-bell me-2"></i>
+                                    <span>Notificarme</span>
                                 </button>
                                 {% endif %}
                             </div>
@@ -708,6 +706,12 @@
    
    
    
+    <!-- Inicializar datos de galería PRIMERO -->
+    <script>
+    window.PRODUCT_GALLERY_IMAGES = {{ gallery_urls_json|safe }};
+    console.log('🎬 Galería pre-inicializada con', window.PRODUCT_GALLERY_IMAGES.length, 'imágenes');
+    </script>
+    
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{% static 'js/detail_product.js' %}"></script>
     
@@ -717,8 +721,8 @@
     function shareProduct() {
         if (navigator.share) {
             navigator.share({
-                title: '{{ product.name }}',
-                text: '{{ product.description|truncatechars:100 }}',
+                title: '{{ product.name|escapejs }}',
+                text: '{{ product.description|truncatechars:100|escapejs }}',
                 url: window.location.href
             }).then(() => {
                 console.log('Producto compartido exitosamente');
@@ -739,23 +743,34 @@
     }
     
     let fullscreenCurrentIndex = 0;
+    let fullscreenGalleryImages = [];
     
-    function openFullscreenGallery() {
-        const galleryImages = [
-            {% for imagen in Galeria_images %}
-                "{{ imagen.galeria.url }}",
-            {% endfor %}
-        ];
+    window.openFullscreenGallery = function() {
+        console.log('🔍 DEBUG: Iniciando openFullscreenGallery');
         
-        {% if not Galeria_images %}
-            galleryImages.push("{{ product.imagen.url }}");
-        {% endif %}
+        // Usar imágenes pre-inicializadas
+        if (fullscreenGalleryImages.length === 0 && window.PRODUCT_GALLERY_IMAGES) {
+            fullscreenGalleryImages = window.PRODUCT_GALLERY_IMAGES.filter(url => url && url.trim() !== '');
+            console.log('✅ Usando imágenes pre-inicializadas:', fullscreenGalleryImages.length);
+        }
+        
+        console.log('📸 Imágenes disponibles:', fullscreenGalleryImages.length);
+        
+        if (fullscreenGalleryImages.length === 0) {
+            console.error('❌ No hay imágenes disponibles');
+            alert('No hay imágenes disponibles para mostrar');
+            return;
+        }
         
         // Obtener índice actual de la imagen mostrada
         const mainImg = document.getElementById('main-product-image');
-        const currentSrc = mainImg.src;
-        fullscreenCurrentIndex = galleryImages.findIndex(img => currentSrc.includes(img.split('/').pop()));
-        if (fullscreenCurrentIndex === -1) fullscreenCurrentIndex = 0;
+        if (mainImg) {
+            const currentSrc = mainImg.src;
+            fullscreenCurrentIndex = fullscreenGalleryImages.findIndex(img => currentSrc.includes(img.split('/').pop()));
+            if (fullscreenCurrentIndex === -1) fullscreenCurrentIndex = 0;
+        } else {
+            fullscreenCurrentIndex = 0;
+        }
         
         const overlay = document.createElement('div');
         overlay.className = 'fullscreen-overlay';
@@ -767,7 +782,7 @@
                     <i class="bi bi-x-lg"></i>
                 </button>
                 
-                ${galleryImages.length > 1 ? `
+                ${fullscreenGalleryImages.length > 1 ? `
                 <button class="fullscreen-nav fullscreen-prev" onclick="changeFullscreenImage(-1)">
                     <i class="bi bi-chevron-left"></i>
                 </button>
@@ -776,11 +791,11 @@
                 </button>
                 ` : ''}
                 
-                <img id="fullscreen-image" src="${galleryImages[fullscreenCurrentIndex]}" alt="{{ product.name }}" class="fullscreen-image">
+                <img id="fullscreen-image" src="${fullscreenGalleryImages[fullscreenCurrentIndex]}" alt="{{ product.name|escapejs }}" class="fullscreen-image">
                 
-                ${galleryImages.length > 1 ? `
+                ${fullscreenGalleryImages.length > 1 ? `
                 <div class="fullscreen-counter">
-                    <span id="current-image-num">${fullscreenCurrentIndex + 1}</span> / ${galleryImages.length}
+                    <span id="current-image-num">${fullscreenCurrentIndex + 1}</span> / ${fullscreenGalleryImages.length}
                 </div>
                 ` : ''}
             </div>
@@ -800,7 +815,7 @@
         document.addEventListener('keydown', handleFullscreenKeyboard);
     }
     
-    function closeFullscreenGallery() {
+    window.closeFullscreenGallery = function() {
         const overlay = document.getElementById('fullscreen-gallery-overlay');
         if (overlay) {
             overlay.remove();
@@ -809,24 +824,24 @@
         }
     }
     
-    function changeFullscreenImage(direction) {
-        const galleryImages = [
-            {% for imagen in Galeria_images %}
-                "{{ imagen.galeria.url }}",
-            {% endfor %}
-        ];
+    window.changeFullscreenImage = function(direction) {
+        console.log('🔄 Cambiando imagen, dirección:', direction);
+        console.log('📸 Total imágenes:', fullscreenGalleryImages.length);
         
-        {% if not Galeria_images %}
-            galleryImages.push("{{ product.imagen.url }}");
-        {% endif %}
+        if (fullscreenGalleryImages.length === 0) {
+            console.error('❌ No hay imágenes para navegar');
+            return;
+        }
         
         fullscreenCurrentIndex += direction;
         
         if (fullscreenCurrentIndex < 0) {
-            fullscreenCurrentIndex = galleryImages.length - 1;
-        } else if (fullscreenCurrentIndex >= galleryImages.length) {
+            fullscreenCurrentIndex = fullscreenGalleryImages.length - 1;
+        } else if (fullscreenCurrentIndex >= fullscreenGalleryImages.length) {
             fullscreenCurrentIndex = 0;
         }
+        
+        console.log('➡️ Nuevo índice:', fullscreenCurrentIndex);
         
         const fullscreenImg = document.getElementById('fullscreen-image');
         const counterNum = document.getElementById('current-image-num');
@@ -834,7 +849,7 @@
         if (fullscreenImg) {
             fullscreenImg.style.opacity = '0';
             setTimeout(() => {
-                fullscreenImg.src = galleryImages[fullscreenCurrentIndex];
+                fullscreenImg.src = fullscreenGalleryImages[fullscreenCurrentIndex];
                 fullscreenImg.style.opacity = '1';
                 if (counterNum) {
                     counterNum.textContent = fullscreenCurrentIndex + 1;
@@ -843,7 +858,7 @@
         }
     }
     
-    function handleFullscreenKeyboard(e) {
+    window.handleFullscreenKeyboard = function(e) {
         if (e.key === 'Escape') {
             closeFullscreenGallery();
         } else if (e.key === 'ArrowLeft') {
@@ -997,23 +1012,26 @@
         }
     `;
     document.head.appendChild(style);
-    </script>
     
-    <script>
+    // ===== INICIALIZACIÓN DEL DOCUMENTO =====
     document.addEventListener('DOMContentLoaded', function() {
     console.log('🎨 Inicializando producto moderno...');
     
-    // ===== GALERÍA DE IMÁGENES MODERNA =====
-    const galleryImages = [
-        {% for imagen in Galeria_images %}
-            "{{ imagen.galeria.url }}",
-        {% endfor %}
-    ];
+    // Agregar event listener para galería fullscreen
+    const mainImageContainer = document.getElementById('main-image-container');
+    if (mainImageContainer && mainImageContainer.dataset.hasGallery === 'true') {
+        mainImageContainer.addEventListener('click', function() {
+            if (typeof window.openFullscreenGallery === 'function') {
+                window.openFullscreenGallery();
+            } else {
+                console.error('❌ openFullscreenGallery no está definida');
+            }
+        });
+        console.log('✅ Event listener de galería agregado');
+    }
     
-    {% if not Galeria_images %}
-        galleryImages.push("{{ product.imagen.url }}");
-    {% endif %}
-
+    // ===== GALERÍA DE IMÁGENES MODERNA =====
+    const galleryImages = window.PRODUCT_GALLERY_IMAGES || [];
     console.log('📸 Imágenes en galería:', galleryImages.length);
     
     let currentIndex = 0;
@@ -1279,7 +1297,7 @@ if (whatsappBtn) {
     whatsappBtn.addEventListener('click', function(e) {
         e.preventDefault();
         const numero = "573007915262";
-        const nombre = "{{ product.name }}";
+        const nombre = "{{ product.name|escapejs }}";
         const precio = "{{ product.price|intcomma }}";
         const mensaje = encodeURIComponent(`¡Hola! 👋\nEstoy interesado en el producto:\n📦 ${nombre}\n💰 Precio: $${precio} COP\n\n¿Está disponible?`);
         const url = `https://wa.me/${numero}?text=${mensaje}`;
@@ -1332,35 +1350,254 @@ document.addEventListener('keydown', function(e) {
 });
 
 // ===== AGREGAR AL CARRITO RÁPIDO DESDE PRODUCTOS RELACIONADOS =====
-function addToCartQuick(productId, productName) {
+async function addToCartQuick(productId, productName) {
     console.log('🛒 Agregando producto al carrito:', productId, productName);
     
-    // Crear formulario dinámico
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = `/add-to-cart/${productId}/`;
+    try {
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        
+        // Enviar petición AJAX
+        const response = await fetch(`/add-to-cart/${productId}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': csrfToken
+            },
+            body: new URLSearchParams({
+                'quantity': '1'
+            })
+        });
+        
+        if (response.ok) {
+            // Actualizar contador del carrito flotante
+            const cartBadge = document.getElementById('cart-badge-float');
+            if (cartBadge) {
+                const currentCount = parseInt(cartBadge.textContent) || 0;
+                cartBadge.textContent = currentCount + 1;
+                
+                // Animación de rebote
+                cartBadge.style.animation = 'none';
+                setTimeout(() => {
+                    cartBadge.style.animation = 'pulse-animation 0.5s ease';
+                }, 10);
+            }
+            
+            // Mostrar notificación de éxito
+            showQuickNotification(`✅ ${productName} agregado al carrito`);
+            
+            // Opcional: Recargar el sidebar del carrito si está abierto
+            const cartSidebar = document.getElementById('cart-sidebar-modern');
+            if (cartSidebar && cartSidebar.classList.contains('active')) {
+                // Recargar la página para actualizar el sidebar
+                setTimeout(() => {
+                    location.reload();
+                }, 1000);
+            }
+        } else {
+            showQuickNotification('❌ Error al agregar al carrito');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showQuickNotification('❌ Error al agregar al carrito');
+    }
+}
+
+// ===== NOTIFICAR STOCK PRODUCTOS AGOTADOS =====
+function notifyStockProduct(productId, productName) {
+    console.log('🔔 Notificación de stock solicitada:', productId, productName);
     
-    // Agregar CSRF token
-    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-    const csrfInput = document.createElement('input');
-    csrfInput.type = 'hidden';
-    csrfInput.name = 'csrfmiddlewaretoken';
-    csrfInput.value = csrfToken;
-    form.appendChild(csrfInput);
+    // Crear modal
+    const modal = createStockNotificationModal(productId, productName);
+    document.body.appendChild(modal);
     
-    // Agregar cantidad
-    const quantityInput = document.createElement('input');
-    quantityInput.type = 'hidden';
-    quantityInput.name = 'quantity';
-    quantityInput.value = '1';
-    form.appendChild(quantityInput);
+    // Mostrar modal con Bootstrap
+    const bsModal = new bootstrap.Modal(modal);
+    bsModal.show();
     
-    // Agregar al body y enviar
-    document.body.appendChild(form);
-    form.submit();
+    // Limpiar modal cuando se cierre
+    modal.addEventListener('hidden.bs.modal', () => {
+        document.body.removeChild(modal);
+    });
+}
+
+// Crear modal de notificación de stock
+function createStockNotificationModal(productId, productName) {
+    const modal = document.createElement('div');
+    modal.className = 'modal fade';
+    modal.id = 'stockNotificationModal';
+    modal.innerHTML = `
+        <div class="modal-dialog modal-lg">
+          <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+              <h5 class="modal-title">
+                <i class="bi bi-bell"></i> Notificarme cuando esté disponible
+              </h5>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+              <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i>
+                Te enviaremos un email cuando <strong>${productName}</strong> esté disponible nuevamente.
+              </div>
+              
+              <form id="notificationForm">
+                <div class="mb-3">
+                  <label for="email" class="form-label">
+                    <i class="bi bi-envelope"></i> Email de notificación
+                  </label>
+                  <input type="email" class="form-control" id="email" required 
+                         placeholder="tu-email@ejemplo.com">
+                  <div class="form-text">
+                    Recibirás notificaciones en este email
+                  </div>
+                </div>
+                
+                <div class="notification-options">
+                  <h6><i class="bi bi-gear"></i> Opciones adicionales</h6>
+                  
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="notifyPriceDrop">
+                    <label class="form-check-label" for="notifyPriceDrop">
+                      <i class="bi bi-tag"></i> Notificarme también si baja el precio
+                    </label>
+                  </div>
+                  
+                  <div class="price-target" style="display: none;">
+                    <label for="targetPrice" class="form-label">
+                      <i class="bi bi-currency-dollar"></i> Notificar si el precio es menor a:
+                    </label>
+                    <div class="input-group">
+                      <span class="input-group-text">$</span>
+                      <input type="number" class="form-control" id="targetPrice" 
+                             placeholder="Precio objetivo">
+                      <span class="input-group-text">COP</span>
+                    </div>
+                  </div>
+                  
+                  <div class="form-check mt-2">
+                    <input class="form-check-input" type="checkbox" id="notifyLowStock">
+                    <label class="form-check-label" for="notifyLowStock">
+                      <i class="bi bi-exclamation-triangle text-warning"></i> Notificarme cuando haya poco stock
+                    </label>
+                  </div>
+                </div>
+              </form>
+              
+              <div id="notificationFeedback"></div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                <i class="bi bi-x"></i> Cancelar
+              </button>
+              <button type="button" class="btn btn-primary" id="submitNotification">
+                <i class="bi bi-bell"></i> Activar Notificaciones
+              </button>
+            </div>
+          </div>
+        </div>
+    `;
     
-    // Mostrar notificación visual
-    showQuickNotification(`✅ ${productName} agregado al carrito`);
+    // Configurar event listeners
+    setupStockNotificationListeners(modal, productId);
+    
+    return modal;
+}
+
+// Configurar listeners del modal
+function setupStockNotificationListeners(modal, productId) {
+    const form = modal.querySelector('#notificationForm');
+    const submitBtn = modal.querySelector('#submitNotification');
+    const priceDrop = modal.querySelector('#notifyPriceDrop');
+    const priceTarget = modal.querySelector('.price-target');
+    
+    // Mostrar/ocultar precio objetivo
+    priceDrop.addEventListener('change', () => {
+        priceTarget.style.display = priceDrop.checked ? 'block' : 'none';
+    });
+    
+    // Enviar notificación
+    submitBtn.addEventListener('click', async () => {
+        await submitStockNotification(modal, productId);
+    });
+    
+    // Enter en el form
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        submitBtn.click();
+    });
+}
+
+// Enviar registro de notificación
+async function submitStockNotification(modal, productId) {
+    const email = modal.querySelector('#email').value.trim();
+    const notifyPriceDrop = modal.querySelector('#notifyPriceDrop').checked;
+    const targetPrice = modal.querySelector('#targetPrice').value;
+    const notifyLowStock = modal.querySelector('#notifyLowStock').checked;
+    const submitBtn = modal.querySelector('#submitNotification');
+    const feedback = modal.querySelector('#notificationFeedback');
+    
+    if (!email) {
+        showModalFeedback(feedback, 'Por favor ingresa tu email', 'danger');
+        return;
+    }
+    
+    // Mostrar loading
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="spinner-border spinner-border-sm"></i> Registrando...';
+    submitBtn.disabled = true;
+    
+    try {
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const response = await fetch('/api/stock-notification/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({
+                product_id: productId,
+                email: email,
+                notification_type: 'stock_available',
+                notify_price_drop: notifyPriceDrop,
+                target_price: targetPrice || null,
+                notify_low_stock: notifyLowStock
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showModalFeedback(feedback, data.message, 'success');
+            showQuickNotification('¡Notificación activada exitosamente!');
+            
+            // Cerrar modal después de 2 segundos
+            setTimeout(() => {
+                const bsModal = bootstrap.Modal.getInstance(modal);
+                if (bsModal) bsModal.hide();
+            }, 2000);
+            
+        } else {
+            showModalFeedback(feedback, data.message, 'danger');
+        }
+        
+    } catch (error) {
+        console.error('❌ Error submitting notification:', error);
+        showModalFeedback(feedback, 'Error de conexión. Intenta nuevamente.', 'danger');
+    } finally {
+        // Restaurar botón
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    }
+}
+
+// Mostrar feedback en el modal
+function showModalFeedback(container, message, type) {
+    container.innerHTML = `
+        <div class="alert alert-${type} alert-dismissible fade show mt-3">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
 }
 
 function showQuickNotification(message) {
