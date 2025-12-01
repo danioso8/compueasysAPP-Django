@@ -128,7 +128,39 @@ def dashboard_home(request):
             whatsapp_config.save()
             messages.success(request, 'Configuración de WhatsApp actualizada correctamente.')
 
-    # Si el usuario selecciona 'Datos de mi tienda', puedes preparar datos aquí si lo necesitas
+    # Configuración de Datos de Tienda - SOLO SUPERUSER
+    store_config = None
+    if view_param == 'datos_tienda':
+        # Verificar que sea superuser
+        if not is_superuser:
+            messages.error(request, 'No tienes permisos para acceder a la configuración de la tienda.')
+            return redirect('/?view=usuarios')
+        
+        from .models import StoreConfig
+        store_config = StoreConfig.get_config()
+        
+        if request.method == 'POST':
+            store_config.nombre_tienda = request.POST.get('nombre_tienda', store_config.nombre_tienda)
+            store_config.slogan = request.POST.get('slogan', store_config.slogan)
+            store_config.email_tienda = request.POST.get('email_tienda', store_config.email_tienda)
+            store_config.telefono_tienda = request.POST.get('telefono_tienda', store_config.telefono_tienda)
+            store_config.direccion_tienda = request.POST.get('direccion_tienda', store_config.direccion_tienda)
+            store_config.ciudad_tienda = request.POST.get('ciudad_tienda', store_config.ciudad_tienda)
+            store_config.pais_tienda = request.POST.get('pais_tienda', store_config.pais_tienda)
+            store_config.facebook = request.POST.get('facebook', store_config.facebook)
+            store_config.instagram = request.POST.get('instagram', store_config.instagram)
+            store_config.twitter = request.POST.get('twitter', store_config.twitter)
+            store_config.whatsapp = request.POST.get('whatsapp', store_config.whatsapp)
+            store_config.horario_semana = request.POST.get('horario_semana', store_config.horario_semana)
+            store_config.horario_sabado = request.POST.get('horario_sabado', store_config.horario_sabado)
+            store_config.horario_domingo = request.POST.get('horario_domingo', store_config.horario_domingo)
+            
+            # Manejar logo si se sube
+            if request.FILES.get('logo'):
+                store_config.logo = request.FILES['logo']
+            
+            store_config.save()
+            messages.success(request, 'Información de la tienda actualizada correctamente.')
 
     # Obtener filtros para productos
     categoria_filter = request.GET.get('categoria_filter', '')
@@ -992,6 +1024,7 @@ def dashboard_home(request):
         'selected_category': selected_category,
         'config': config,
         'whatsapp_config': whatsapp_config,
+        'store_config': store_config,
 
     })
 # ...existing code...

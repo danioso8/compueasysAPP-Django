@@ -72,6 +72,9 @@ urlpatterns = [
     path('projects/', views.projects, name='projects'),
     path('projects/<slug:slug>/', views.project_detail, name='project_detail'),
     
+    # Página de políticas de compras
+    path('politicas-compras/', views.politicas_compras, name='politicas_compras'),
+    
     # URLs del servidor relay para soporte remoto
     path('api/relay/', include('core.relay_urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

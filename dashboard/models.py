@@ -30,6 +30,50 @@ class WompiConfig(models.Model):
         return f"WompiConfig ({self.environment})"
 
 
+class StoreConfig(models.Model):
+    """
+    Configuración de la tienda (Singleton)
+    """
+    # Información Básica
+    nombre_tienda = models.CharField(max_length=200, default='CompuEasys', verbose_name='Nombre de la Tienda')
+    slogan = models.CharField(max_length=300, blank=True, null=True, verbose_name='Slogan')
+    email_tienda = models.EmailField(blank=True, null=True, verbose_name='Email de Contacto')
+    telefono_tienda = models.CharField(max_length=20, blank=True, null=True, verbose_name='Teléfono')
+    
+    # Ubicación
+    direccion_tienda = models.CharField(max_length=500, blank=True, null=True, verbose_name='Dirección')
+    ciudad_tienda = models.CharField(max_length=100, blank=True, null=True, verbose_name='Ciudad')
+    pais_tienda = models.CharField(max_length=100, default='Colombia', verbose_name='País')
+    
+    # Redes Sociales
+    facebook = models.URLField(blank=True, null=True, verbose_name='Facebook')
+    instagram = models.URLField(blank=True, null=True, verbose_name='Instagram')
+    twitter = models.URLField(blank=True, null=True, verbose_name='Twitter/X')
+    whatsapp = models.CharField(max_length=20, blank=True, null=True, verbose_name='WhatsApp')
+    
+    # Horarios
+    horario_semana = models.CharField(max_length=100, default='8:00 AM - 6:00 PM', verbose_name='Horario Lunes a Viernes')
+    horario_sabado = models.CharField(max_length=100, default='9:00 AM - 2:00 PM', verbose_name='Horario Sábado')
+    horario_domingo = models.CharField(max_length=100, default='Cerrado', verbose_name='Horario Domingo')
+    
+    # Logo y assets
+    logo = models.ImageField(upload_to='store/', blank=True, null=True, verbose_name='Logo de la Tienda')
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = 'Configuración de Tienda'
+        verbose_name_plural = 'Configuración de Tienda'
+    
+    @classmethod
+    def get_config(cls):
+        """Obtiene o crea la configuración (Singleton)"""
+        config, created = cls.objects.get_or_create(id=1)
+        return config
+    
+    def __str__(self):
+        return f"Configuración - {self.nombre_tienda}"
 
 
 class register_superuser(models.Model):

@@ -282,28 +282,7 @@
                             </div>
                             {% endif %}
 
-                        <!-- Características del producto mejoradas -->
-                        <div class="product-details">
-                            <div class="cart-left">
-                                <h2>Características del Producto</h2>
-                                <div class="product-specs">
-                                    <div class="spec-item">
-                                        <span class="spec-label">Producto:</span>
-                                        <span class="spec-value text-success">{{ product.name }}</span>
-                                    </div>
-                                    <div class="spec-item">
-                                        <span class="spec-label">Descripción:</span>
-                                        <span class="spec-value">{{ product.description|default:"Sin descripción disponible" }}</span>
-                                    </div>
-                                    {% if product.category %}
-                                    <div class="spec-item">
-                                        <span class="spec-label">Categoría:</span>
-                                        <span class="spec-value text-primary">{{ product.category.nombre }}</span>
-                                    </div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
+                        
 
                         <!-- Reseñas de clientes mejoradas -->
                         <div class="product-reviews">
@@ -559,56 +538,22 @@
                                     {% endif %}
                                 </form>
                                 
-                                <!-- Políticas de compra modernas -->
-                                <div class="policies-section-modern">
-                                    <h3 class="policies-title">
-                                        <i class="bi bi-info-circle me-2"></i>Información de Compra
-                                    </h3>
-                                    <div class="policies-grid-modern">
-                                        <div class="policy-card">
-                                            <div class="policy-icon policy-shipping">
-                                                <i class="bi bi-truck"></i>
-                                            </div>
-                                            <div class="policy-content">
-                                                <h4>Envío Gratis</h4>
-                                                <p>En compras superiores a $200,000</p>
-                                            </div>
-                                        </div>
-                                        <div class="policy-card">
-                                            <div class="policy-icon policy-warranty">
-                                                <i class="bi bi-shield-check"></i>
-                                            </div>
-                                            <div class="policy-content">
-                                                <h4>Garantía</h4>
-                                                <p>30 días por defectos de fábrica</p>
-                                            </div>
-                                        </div>
-                                        <div class="policy-card">
-                                            <div class="policy-icon policy-return">
-                                                <i class="bi bi-arrow-left-right"></i>
-                                            </div>
-                                            <div class="policy-content">
-                                                <h4>Devoluciones</h4>
-                                                <p>Devoluciones gratuitas en 15 días</p>
-                                            </div>
-                                        </div>
-                                        <div class="policy-card">
-                                            <div class="policy-icon policy-payment">
-                                                <i class="bi bi-credit-card"></i>
-                                            </div>
-                                            <div class="policy-content">
-                                                <h4>Pago Seguro</h4>
-                                                <p>Métodos de pago seguros</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                               
                             </div>
                     </div>
                 </div>
-                                <li><strong>Devoluciones:</strong> Aceptamos devoluciones dentro de los 30 días posteriores a la compra. El producto debe estar en su estado original.</li>
-                                <li><strong>Garantía:</strong> Todos nuestros productos cuentan con una garantía de 3 meses contra defectos de fabricación.</li>
-                                <li><strong>Soporte:</strong> Nuestro equipo de soporte está disponible para ayudarte con cualquier consulta o problema relacionado con tu compra.</li>
+                                
+                                <!-- Enlace a Políticas de Compras -->
+                                <div class="text-center my-4 py-3">
+                                    <a href="{% url 'politicas_compras' %}" class="btn btn-outline-primary btn-lg shadow-sm" style="border-radius: 25px; padding: 12px 35px;">
+                                        <i class="bi bi-shield-check me-2"></i>
+                                        Ver Políticas de Compras Completas
+                                    </a>
+                                    <p class="text-muted small mt-3 mb-0">
+                                        <i class="bi bi-info-circle me-1"></i>
+                                        Devoluciones, garantías, soporte y más información
+                                    </p>
+                                </div>
                             </ul>
                         </div>
                     </div>

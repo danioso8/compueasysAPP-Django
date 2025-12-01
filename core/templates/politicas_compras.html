@@ -1,0 +1,357 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Políticas de Compras - CompuEasys</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 40px 0;
+        }
+        
+        .policy-container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .policy-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            padding: 60px 40px;
+            text-align: center;
+        }
+        
+        .policy-header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .policy-header p {
+            font-size: 1.1rem;
+            opacity: 0.95;
+        }
+        
+        .policy-content {
+            padding: 50px 40px;
+        }
+        
+        .policy-section {
+            margin-bottom: 40px;
+        }
+        
+        .policy-section h2 {
+            color: var(--primary-color);
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .policy-section h2 i {
+            font-size: 2rem;
+        }
+        
+        .policy-section h3 {
+            color: var(--secondary-color);
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+        
+        .policy-section p {
+            color: #4b5563;
+            font-size: 1.05rem;
+            line-height: 1.8;
+            margin-bottom: 15px;
+        }
+        
+        .policy-section ul {
+            list-style: none;
+            padding: 0;
+            margin: 20px 0;
+        }
+        
+        .policy-section ul li {
+            color: #4b5563;
+            font-size: 1.05rem;
+            line-height: 1.8;
+            padding: 12px 0 12px 40px;
+            position: relative;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        
+        .policy-section ul li:last-child {
+            border-bottom: none;
+        }
+        
+        .policy-section ul li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--success-color);
+            font-weight: bold;
+            font-size: 1.3rem;
+        }
+        
+        .policy-section strong {
+            color: #1f2937;
+            font-weight: 600;
+        }
+        
+        .alert-info-custom {
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            border: none;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 25px 0;
+        }
+        
+        .alert-info-custom i {
+            font-size: 1.5rem;
+            color: #2563eb;
+        }
+        
+        .btn-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-back:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+            color: white;
+        }
+        
+        .highlight-box {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border-left: 4px solid var(--warning-color);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .contact-box {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            border-radius: 12px;
+            padding: 30px;
+            margin-top: 40px;
+            text-align: center;
+        }
+        
+        .contact-box h3 {
+            color: var(--success-color);
+            margin-bottom: 15px;
+        }
+        
+        .contact-box p {
+            margin-bottom: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .policy-header {
+                padding: 40px 20px;
+            }
+            
+            .policy-header h1 {
+                font-size: 2rem;
+            }
+            
+            .policy-content {
+                padding: 30px 20px;
+            }
+            
+            .policy-section h2 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="policy-container">
+        <div class="policy-header">
+            <h1><i class="bi bi-shield-check"></i> Políticas de Compras</h1>
+            <p>Términos y condiciones para tus compras en CompuEasys</p>
+        </div>
+        
+        <div class="policy-content">
+            <!-- Devoluciones -->
+            <div class="policy-section">
+                <h2><i class="bi bi-arrow-return-left"></i> Políticas de Devoluciones</h2>
+                
+                <h3>Plazo de Devolución</h3>
+                <p>Aceptamos devoluciones dentro de los <strong>30 días posteriores a la compra</strong>. El producto debe estar en su estado original, sin uso, con todos sus accesorios, empaques y etiquetas.</p>
+                
+                <h3>Condiciones para Devoluciones</h3>
+                <ul>
+                    <li>El producto debe estar en perfectas condiciones, sin señales de uso</li>
+                    <li>Debe incluir todos los accesorios, manuales y empaques originales</li>
+                    <li>La factura de compra original debe ser presentada</li>
+                    <li>Productos en oferta o liquidación tienen políticas especiales</li>
+                    <li>No se aceptan devoluciones de productos personalizados o bajo pedido</li>
+                </ul>
+                
+                <div class="highlight-box">
+                    <strong><i class="bi bi-exclamation-triangle me-2"></i>Importante:</strong> 
+                    Los gastos de envío para devoluciones corren por cuenta del cliente, excepto en casos de productos defectuosos o errores en el envío.
+                </div>
+                
+                <h3>Proceso de Devolución</h3>
+                <p><strong>Paso 1:</strong> Contacta nuestro servicio al cliente dentro de los 30 días posteriores a la compra.</p>
+                <p><strong>Paso 2:</strong> Proporciona tu número de orden y motivo de devolución.</p>
+                <p><strong>Paso 3:</strong> Recibe la autorización de devolución y la dirección de envío.</p>
+                <p><strong>Paso 4:</strong> Envía el producto en su empaque original.</p>
+                <p><strong>Paso 5:</strong> Una vez recibido y verificado, procesaremos el reembolso en 5-7 días hábiles.</p>
+            </div>
+            
+            <!-- Garantías -->
+            <div class="policy-section">
+                <h2><i class="bi bi-shield-fill-check"></i> Garantías</h2>
+                
+                <h3>Cobertura de Garantía</h3>
+                <p>Todos nuestros productos cuentan con una <strong>garantía de 2 meses</strong> contra defectos de fabricación a partir de la fecha de compra.</p>
+                
+                <h3>¿Qué cubre la garantía?</h3>
+                <ul>
+                    <li>Defectos de fabricación en materiales y mano de obra</li>
+                    <li>Fallas técnicas no causadas por mal uso</li>
+                    <li>Problemas de funcionamiento bajo uso normal</li>
+                    <li>Piezas defectuosas o componentes internos</li>
+                </ul>
+                
+                <h3>¿Qué NO cubre la garantía?</h3>
+                <ul>
+                    <li>Daños causados por mal uso, negligencia o accidentes</li>
+                    <li>Daños por agua, caídas o golpes</li>
+                    <li>Modificaciones no autorizadas o reparaciones por terceros</li>
+                    <li>Desgaste normal por uso regular</li>
+                    <li>Accesorios como cables, cargadores o empaques</li>
+                </ul>
+                
+                <div class="alert-info-custom">
+                    <div class="d-flex align-items-start gap-3">
+                        <i class="bi bi-info-circle-fill"></i>
+                        <div>
+                            <strong>Garantía Extendida:</strong> Ofrecemos opciones de garantía extendida de hasta 12 meses adicionales. 
+                            Consulta disponibilidad y precios al momento de tu compra.
+                        </div>
+                    </div>
+                </div>
+                
+                <h3>Proceso de Garantía</h3>
+                <p><strong>1.</strong> Contacta nuestro servicio técnico con tu número de orden y descripción del problema.</p>
+                <p><strong>2.</strong> Envía el producto a nuestro centro de servicio autorizado.</p>
+                <p><strong>3.</strong> Nuestros técnicos evaluarán el producto (2-5 días hábiles).</p>
+                <p><strong>4.</strong> Si aplica garantía, repararemos o reemplazaremos el producto sin costo.</p>
+                <p><strong>5.</strong> Recibirás tu producto reparado o uno nuevo en 7-15 días hábiles.</p>
+            </div>
+            
+            <!-- Soporte -->
+            <div class="policy-section">
+                <h2><i class="bi bi-headset"></i> Soporte al Cliente</h2>
+                
+                <h3>Canales de Atención</h3>
+                <p>Nuestro equipo de soporte está disponible para ayudarte con cualquier consulta o problema relacionado con tu compra.</p>
+                
+                <ul>
+                    <li><strong>WhatsApp:</strong> Atención inmediata por chat (Lun-Vie 8AM-6PM, Sáb 9AM-2PM)</li>
+                    <li><strong>Email:</strong> Respuesta en menos de 24 horas hábiles</li>
+                    <li><strong>Teléfono:</strong> Línea directa de atención (Lun-Vie 8AM-6PM)</li>
+                    <li><strong>Chat en línea:</strong> Disponible en nuestra tienda online</li>
+                </ul>
+                
+                <h3>Servicios de Soporte</h3>
+                <ul>
+                    <li>Asesoría técnica y consultas sobre productos</li>
+                    <li>Seguimiento de pedidos y envíos</li>
+                    <li>Gestión de devoluciones y garantías</li>
+                    <li>Soporte post-venta y configuración de productos</li>
+                    <li>Resolución de problemas y reclamos</li>
+                </ul>
+                
+                <div class="highlight-box">
+                    <strong><i class="bi bi-clock-history me-2"></i>Tiempo de Respuesta:</strong> 
+                    Nos comprometemos a responder todas las consultas en un plazo máximo de 24 horas hábiles.
+                </div>
+            </div>
+            
+            <!-- Métodos de Pago -->
+            <div class="policy-section">
+                <h2><i class="bi bi-credit-card"></i> Métodos de Pago</h2>
+                
+                <h3>Opciones Disponibles</h3>
+                <ul>
+                    <li><strong>Tarjetas de Crédito/Débito:</strong> Visa, Mastercard, American Express</li>
+                    <li><strong>Pagos en línea:</strong> PSE, Wompi, PayU</li>
+                    <li><strong>Contra Entrega:</strong> Pago en efectivo al recibir (aplican cargos adicionales)</li>
+                    <li><strong>Transferencia Bancaria:</strong> Con confirmación del pago</li>
+                </ul>
+                
+                <h3>Seguridad en Pagos</h3>
+                <p>Todas las transacciones son procesadas con encriptación SSL de 256 bits. No almacenamos información de tarjetas de crédito en nuestros servidores.</p>
+            </div>
+            
+            <!-- Envíos -->
+            <div class="policy-section">
+                <h2><i class="bi bi-truck"></i> Envíos y Entregas</h2>
+                
+                <h3>Tiempos de Entrega</h3>
+                <ul>
+                    <li><strong>Bogotá:</strong> 1-4 días hábiles</li>
+                    <li><strong>Ciudades principales:</strong> 3-5 días hábiles</li>
+                    <li><strong>Resto del país:</strong> 5-8 días hábiles</li>
+                </ul>
+                
+                <h3>Costos de Envío</h3>
+                <p><strong>Envío GRATIS</strong> en compras superiores a $100.000 COP. Para compras menores, el costo se calcula según destino y peso.</p>
+            </div>
+            
+            <!-- Contacto -->
+            <div class="contact-box">
+                <h3><i class="bi bi-envelope-heart"></i> ¿Necesitas Ayuda?</h3>
+                <p><strong>Email:</strong> compueasys@gmail.com</p>
+                <p><strong>WhatsApp:</strong> +57 300 791 5262</p>
+                <p><strong>Horario:</strong> Lunes a Viernes 8:00 AM - 6:00 PM, Sábados 9:00 AM - 2:00 PM</p>
+            </div>
+            
+            <div class="text-center mt-5">
+                <a href="/store" class="btn-back">
+                    <i class="bi bi-arrow-left"></i>
+                    Volver a la Tienda
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

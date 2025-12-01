@@ -3396,6 +3396,11 @@ def projects(request):
     return render(request, 'projects.html', context)
 
 
+def politicas_compras(request):
+    """Vista pública para las políticas de compras"""
+    return render(request, 'politicas_compras.html')
+
+
 def project_detail(request, slug):
     """Vista pública para el detalle de un proyecto"""
     from .models import Project
