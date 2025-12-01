@@ -262,16 +262,30 @@
         hidden.value = id;
         formEl.appendChild(hidden);
       }
-      this.closest(".variante-row")?.remove();
+      // Buscar tanto .variante-row como .variante-row-mobile
+      const row = this.closest(".variante-row") || this.closest(".variante-row-mobile");
+      if (row) {
+        row.remove();
+        showToast('Variante eliminada. Guarda los cambios para confirmar.', 'info');
+      }
     }
     function variantRemoveNewHandler(e) {
-      this.closest(".variante-row")?.remove();
+      const row = this.closest(".variante-row") || this.closest(".variante-row-mobile");
+      if (row) {
+        row.remove();
+        showToast('Variante removida', 'info');
+      }
     }
     initVariantRemoveHandlers();
 
     // global agregarVariante exposed for template buttons
     window.agregarVariante = function () {
       if (!variantesContainer) return;
+      
+      // Calcular el índice basado en el número de variantes existentes
+      const existingVariants = variantesContainer.querySelectorAll('.variante-row-mobile').length;
+      const variantIndex = existingVariants;
+      
       const row = document.createElement("div");
       row.className = "variante-row-mobile mb-3 p-3 border rounded position-relative";
       row.style.background = "#f8f9fa";
@@ -300,7 +314,13 @@
           </div>
           <div class="col-12">
             <label class="small">Imagen</label>
-            <input type="file" name="variante_imagen[]" class="form-control form-control-sm" accept="image/*" />
+            <div class="image-preview-container mb-2" id="preview_${variantIndex}" style="display:none;">
+              <img src="" alt="Preview" class="img-thumbnail" style="max-width:120px; max-height:120px; object-fit:cover;" />
+              <button type="button" class="btn btn-sm btn-danger ms-2" onclick="clearImagePreview(${variantIndex})">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+            <input type="file" name="variante_imagen_${variantIndex}" class="form-control form-control-sm variant-image-input" accept="image/*" data-variant-index="${variantIndex}" data-preview-id="preview_${variantIndex}" />
           </div>
         </div>
       `;
@@ -308,6 +328,10 @@
       // attach new-button handler
       const del = row.querySelector(".variant-remove-btn-new");
       if (del) del.addEventListener("click", variantRemoveNewHandler);
+      
+      // Attach image preview handler
+      const imgInput = row.querySelector('.variant-image-input');
+      if (imgInput) imgInput.addEventListener('change', handleVariantImagePreview);
     };
 
     /* ---------- Fill form from fetched product data (used on edit click) ---------- */
@@ -438,55 +462,135 @@
           ? data.variants
           : data.variants_list || [];
         if (vs.length) {
-          vs.forEach(function (v) {
+          vs.forEach(function (v, index) {
             const rowDiv = document.createElement("div");
             rowDiv.className =
-              "variante-row d-flex gap-2 mb-2 align-items-center";
+              "variante-row-mobile mb-3 p-3 border rounded position-relative";
             rowDiv.dataset.variantId = v.id || "";
-            rowDiv.innerHTML =
-              `<button type="button" class="btn btn-sm btn-danger variant-remove-btn" data-variant-id="${
-                v.id || ""
-              }" style="margin-right:6px;">×</button>` +
-              `<input type="text" name="variante_nombre[]" class="form-control" value="${escapeHtml(
-                v.nombre
-              )}" placeholder="Nombre variante">` +
-              `<input type="number" name="variante_precio[]" class="form-control" value="${escapeHtml(
-                v.precio
-              )}" step="0.01" placeholder="Precio">` +
-              `<input type="number" name="variante_stock[]" class="form-control" value="${escapeHtml(
-                v.stock
-              )}" placeholder="Stock">` +
-              `<input type="text" name="variante_color[]" class="form-control" value="${escapeHtml(
-                v.color
-              )}" placeholder="Color">` +
-              `<input type="text" name="variante_talla[]" class="form-control" value="${escapeHtml(
-                v.talla
-              )}" placeholder="Talla">` +
-              `<input type="file" name="variante_imagen[]" class="form-control">`;
+            
+            // Construir el HTML con los nombres de campo únicos
+            rowDiv.innerHTML = `
+              <input type="hidden" name="variante_id[]" value="${v.id || ''}" />
+              <button type="button" class="btn btn-sm btn-danger variant-remove-btn position-absolute top-0 end-0 m-2" 
+                      data-variant-id="${v.id || ''}" title="Eliminar variante">
+                <i class="fas fa-trash"></i>
+              </button>
+              <div class="row g-2">
+                <div class="col-12 col-md-6">
+                  <label class="small">Nombre</label>
+                  <input type="text" name="variante_nombre[]" class="form-control form-control-sm" 
+                         value="${escapeHtml(v.nombre)}" placeholder="Nombre variante">
+                </div>
+                <div class="col-6 col-md-3">
+                  <label class="small">Precio</label>
+                  <input type="number" name="variante_precio[]" class="form-control form-control-sm" 
+                         value="${escapeHtml(v.precio)}" step="0.01" placeholder="Precio">
+                </div>
+                <div class="col-6 col-md-3">
+                  <label class="small">Stock</label>
+                  <input type="number" name="variante_stock[]" class="form-control form-control-sm" 
+                         value="${escapeHtml(v.stock)}" placeholder="Stock">
+                </div>
+                <div class="col-6 col-md-6">
+                  <label class="small">Color</label>
+                  <input type="text" name="variante_color[]" class="form-control form-control-sm" 
+                         value="${escapeHtml(v.color)}" placeholder="Color">
+                </div>
+                <div class="col-6 col-md-6">
+                  <label class="small">Talla</label>
+                  <input type="text" name="variante_talla[]" class="form-control form-control-sm" 
+                         value="${escapeHtml(v.talla)}" placeholder="Talla">
+                </div>
+                <div class="col-12">
+                  <label class="small">Imagen</label>
+                  ${v.imagen ? `
+                    <div class="current-variant-image mb-2">
+                      <img src="${v.imagen}" alt="Imagen actual" class="img-thumbnail" 
+                           style="max-width:120px; max-height:120px; object-fit:cover;" />
+                      <span class="small text-muted d-block">Imagen actual</span>
+                    </div>
+                  ` : ''}
+                  <div class="image-preview-container mb-2" id="preview_${index}" style="display:none;">
+                    <img src="" alt="Nueva" class="img-thumbnail" 
+                         style="max-width:120px; max-height:120px; object-fit:cover;" />
+                    <button type="button" class="btn btn-sm btn-danger ms-1" 
+                            onclick="clearImagePreview(${index})">
+                      <i class="fas fa-times"></i>
+                    </button>
+                  </div>
+                  <input type="file" name="variante_imagen_${index}" 
+                         class="form-control form-control-sm variant-image-input" 
+                         accept="image/*" 
+                         data-variant-index="${index}" 
+                         data-preview-id="preview_${index}" />
+                  <small class="text-muted">Selecciona una imagen para reemplazar la actual</small>
+                </div>
+              </div>
+            `;
+            
             variantesContainer.appendChild(rowDiv);
-            if (v.imagen) {
-              const img = document.createElement("img");
-              img.src = v.imagen;
-              img.style.maxWidth = "80px";
-              img.style.objectFit = "cover";
-              img.style.marginLeft = "6px";
-              rowDiv.appendChild(img);
+            
+            // Attach image preview handler
+            const imgInput = rowDiv.querySelector('.variant-image-input');
+            if (imgInput) {
+              imgInput.addEventListener('change', handleVariantImagePreview);
             }
           });
         } else {
           // add an empty row
           const emptyRow = document.createElement("div");
           emptyRow.className =
-            "variante-row d-flex gap-2 mb-2 align-items-center";
-          emptyRow.innerHTML =
-            '<button type="button" class="btn btn-sm btn-danger variant-remove-btn-new" style="display:none; margin-right:6px;">×</button>' +
-            '<input type="text" name="variante_nombre[]" class="form-control" placeholder="Nombre variante">' +
-            '<input type="number" name="variante_precio[]" class="form-control" placeholder="Precio" step="0.01">' +
-            '<input type="number" name="variante_stock[]" class="form-control" placeholder="Stock">' +
-            '<input type="text" name="variante_color[]" class="form-control" placeholder="Color">' +
-            '<input type="text" name="variante_talla[]" class="form-control" placeholder="Talla">' +
-            '<input type="file" name="variante_imagen[]" class="form-control">';
+            "variante-row-mobile mb-3 p-3 border rounded position-relative";
+          emptyRow.innerHTML = `
+            <button type="button" class="btn btn-sm btn-danger variant-remove-btn-new position-absolute top-0 end-0 m-2" 
+                    title="Eliminar variante" style="display:none;">
+              <i class="fas fa-trash"></i>
+            </button>
+            <div class="row g-2">
+              <div class="col-12 col-md-6">
+                <label class="small">Nombre</label>
+                <input type="text" name="variante_nombre[]" class="form-control form-control-sm" placeholder="Nombre variante">
+              </div>
+              <div class="col-6 col-md-3">
+                <label class="small">Precio</label>
+                <input type="number" name="variante_precio[]" class="form-control form-control-sm" placeholder="Precio" step="0.01">
+              </div>
+              <div class="col-6 col-md-3">
+                <label class="small">Stock</label>
+                <input type="number" name="variante_stock[]" class="form-control form-control-sm" placeholder="Stock">
+              </div>
+              <div class="col-6 col-md-6">
+                <label class="small">Color</label>
+                <input type="text" name="variante_color[]" class="form-control form-control-sm" placeholder="Color">
+              </div>
+              <div class="col-6 col-md-6">
+                <label class="small">Talla</label>
+                <input type="text" name="variante_talla[]" class="form-control form-control-sm" placeholder="Talla">
+              </div>
+              <div class="col-12">
+                <label class="small">Imagen</label>
+                <div class="image-preview-container mb-2" id="preview_0" style="display:none;">
+                  <img src="" alt="Preview" class="img-thumbnail" 
+                       style="max-width:120px; max-height:120px; object-fit:cover;" />
+                  <button type="button" class="btn btn-sm btn-danger ms-1" onclick="clearImagePreview(0)">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+                <input type="file" name="variante_imagen_0" 
+                       class="form-control form-control-sm variant-image-input" 
+                       accept="image/*" 
+                       data-variant-index="0" 
+                       data-preview-id="preview_0" />
+              </div>
+            </div>
+          `;
           variantesContainer.appendChild(emptyRow);
+          
+          // Attach image preview handler
+          const imgInput = emptyRow.querySelector('.variant-image-input');
+          if (imgInput) {
+            imgInput.addEventListener('change', handleVariantImagePreview);
+          }
         }
         initVariantRemoveHandlers();
       }
@@ -1770,5 +1874,55 @@ document.addEventListener('DOMContentLoaded', function() {
   window.debugUserManagement = function() {
     initUserManagement();
   };
+
+  // ===== FUNCIONES DE PREVISUALIZACIÓN DE IMÁGENES PARA VARIANTES =====
+  
+  // Función para manejar la previsualización de imagen de variante
+  function handleVariantImagePreview(event) {
+    const input = event.target;
+    const previewId = input.dataset.previewId;
+    const previewContainer = document.getElementById(previewId);
+    
+    if (!previewContainer) return;
+    
+    const file = input.files[0];
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = previewContainer.querySelector('img');
+        if (img) {
+          img.src = e.target.result;
+          previewContainer.style.display = 'block';
+        }
+      };
+      reader.readAsDataURL(file);
+    } else {
+      previewContainer.style.display = 'none';
+    }
+  }
+  
+  // Función global para limpiar previsualización
+  window.clearImagePreview = function(variantIndex) {
+    const previewContainer = document.getElementById(`preview_${variantIndex}`);
+    const input = document.querySelector(`input[name="variante_imagen_${variantIndex}"]`);
+    
+    if (previewContainer) {
+      previewContainer.style.display = 'none';
+      const img = previewContainer.querySelector('img');
+      if (img) img.src = '';
+    }
+    
+    if (input) {
+      input.value = '';
+    }
+  };
+  
+  // Inicializar previsualizaciones para inputs existentes
+  document.addEventListener('DOMContentLoaded', function() {
+    const variantInputs = document.querySelectorAll('.variant-image-input');
+    variantInputs.forEach(input => {
+      input.addEventListener('change', handleVariantImagePreview);
+    });
+  });
 
 });

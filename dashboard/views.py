@@ -605,8 +605,13 @@ def dashboard_home(request):
                     stock_v = variante_stocks[i] if i < len(variante_stocks) else None
                     color = variante_colores[i] if i < len(variante_colores) else ''
                     talla = variante_tallas[i] if i < len(variante_tallas) else ''
-                    img_v = variante_imagenes[i] if i < len(variante_imagenes) else None
                     var_id = variante_ids[i] if i < len(variante_ids) else None
+                    
+                    # Buscar imagen específica para este índice usando el nombre único
+                    img_v = None
+                    img_field_name = f'variante_imagen_{i}'
+                    if img_field_name in request.FILES:
+                        img_v = request.FILES[img_field_name]
                     
                     # Saltar si no hay nombre ni precio
                     if not nombre and not precio_v:
@@ -668,20 +673,24 @@ def dashboard_home(request):
             # crear variantes
             variante_nombres = request.POST.getlist('variante_nombre[]')
             variante_precios = request.POST.getlist('variante_precio[]')
-            variante_imagenes = request.FILES.getlist('variante_imagen[]')
             variante_stocks = request.POST.getlist('variante_stock[]')
             variante_colores = request.POST.getlist('variante_color[]')
             variante_tallas = request.POST.getlist('variante_talla[]')
 
-            max_len = max(len(variante_nombres), len(variante_precios), len(variante_stocks),
-                          len(variante_colores), len(variante_tallas), len(variante_imagenes))
-            for i in range(max_len):
+            # Procesar cada variante
+            for i in range(len(variante_nombres)):
                 nombre = variante_nombres[i] if i < len(variante_nombres) else ''
                 precio_v = variante_precios[i] if i < len(variante_precios) else None
                 stock_v = variante_stocks[i] if i < len(variante_stocks) else None
                 color = variante_colores[i] if i < len(variante_colores) else ''
                 talla = variante_tallas[i] if i < len(variante_tallas) else ''
-                img_v = variante_imagenes[i] if i < len(variante_imagenes) else None
+                
+                # Buscar la imagen específica para este índice
+                img_v = None
+                img_field_name = f'variante_imagen_{i}'
+                if img_field_name in request.FILES:
+                    img_v = request.FILES[img_field_name]
+                
                 if nombre or precio_v:
                     ProductVariant.objects.create(
                         product=product,

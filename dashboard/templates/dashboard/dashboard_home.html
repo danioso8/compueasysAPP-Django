@@ -1885,8 +1885,17 @@
                 <i class="fas fa-image text-muted"></i>
               </div>
             {% endif %}
-            <input type="file" name="variante_imagen[]" class="form-control form-control-sm mt-2" accept="image/*" />
-            <small class="text-muted" style="font-size:10px;">Nueva imagen</small>
+            
+            <div class="image-preview-container mt-2 mb-2" id="preview_{{ forloop.counter0 }}" style="display:none;">
+              <img src="" alt="Nueva" class="img-thumbnail" style="max-width:100px; max-height:100px; object-fit:cover;" />
+              <button type="button" class="btn btn-sm btn-danger ms-1" onclick="clearImagePreview({{ forloop.counter0 }})">
+                <i class="fas fa-times"></i>
+              </button>
+              <small class="d-block text-success" style="font-size:10px;">Nueva imagen</small>
+            </div>
+            
+            <input type="file" name="variante_imagen_{{ forloop.counter0 }}" class="form-control form-control-sm mt-2 variant-image-input" accept="image/*" data-variant-index="{{ forloop.counter0 }}" data-preview-id="preview_{{ forloop.counter0 }}" />
+            <small class="text-muted" style="font-size:10px;">Cambiar imagen</small>
           </div>
           
           <!-- Campos en grid responsive -->
@@ -1944,7 +1953,13 @@
         </div>
         <div class="col-12">
           <label class="small">Imagen</label>
-          <input type="file" name="variante_imagen[]" class="form-control form-control-sm" accept="image/*" />
+          <div class="image-preview-container mb-2" id="preview_0" style="display:none;">
+            <img src="" alt="Preview" class="img-thumbnail" style="max-width:120px; max-height:120px; object-fit:cover;" />
+            <button type="button" class="btn btn-sm btn-danger ms-2" onclick="clearImagePreview(0)">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          <input type="file" name="variante_imagen_0" class="form-control form-control-sm variant-image-input" accept="image/*" data-variant-index="0" data-preview-id="preview_0" />
         </div>
       </div>
     </div>
