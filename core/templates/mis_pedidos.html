@@ -709,13 +709,58 @@
                 padding: 0.75rem 1rem;
             }
         }
+
+        /* Navbar Custom Styles */
+        .btn-logout-nav:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .navbar-brand:hover {
+            transform: translateX(-3px);
+            transition: transform 0.3s ease;
+        }
+
+        body {
+            padding-top: 0 !important;
+        }
     </style>
 </head>
 <body>
-    {% include 'navbarr.html' %}
+    <!-- Custom Navbar for Account Page -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top shadow-sm">
+        <div class="container-fluid px-4">
+            <!-- Left: Back to Store -->
+            <a class="navbar-brand d-flex align-items-center" href="{% url 'store' %}" style="font-weight: 700; font-size: 1.2rem;">
+                <i class="fas fa-arrow-left me-2"></i>
+                <span class="d-none d-md-inline">Volver a la Tienda</span>
+                <span class="d-inline d-md-none">Tienda</span>
+            </a>
+
+            <!-- Center: CompuEasys Logo -->
+            <a class="navbar-brand position-absolute start-50 translate-middle-x d-none d-lg-block" href="{% url 'home' %}" style="font-weight: 800; font-size: 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                CompuEasys
+            </a>
+
+            <!-- Right: User Info + Logout -->
+            <div class="d-flex align-items-center ms-auto">
+                {% if user %}
+                    <span class="text-white me-3 d-none d-sm-inline">
+                        <i class="fas fa-user-circle me-2"></i>
+                        {{ user.name|default:user.email }}
+                    </span>
+                    <a href="{% url 'logout_view' %}" class="btn btn-sm btn-logout-nav" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 20px; padding: 0.4rem 1rem; font-weight: 600; transition: all 0.3s ease; text-decoration: none; font-size: 0.875rem;">
+                        <i class="fas fa-power-off me-2"></i>
+                        <span class="d-none d-sm-inline">Cerrar Sesión</span>
+                        <span class="d-inline d-sm-none">Salir</span>
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
     
     <!-- Hero Section -->
-    <div class="orders-hero">
+    <div class="orders-hero" style="margin-top: 56px;">
         <div class="container">
             <div class="row align-items-center">
                 <div class="col-md-8">
@@ -784,19 +829,6 @@
                                 <i class="fas fa-comments"></i>
                                 <span>Mensajes</span>
                                 <span class="badge bg-warning ms-auto d-none" id="unread-count">0</span>
-                            </a>
-                        </li>
-                        <li class="nav-divider"></li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'store' %}">
-                                <i class="fas fa-store"></i>
-                                <span>Volver a la Tienda</span>
-                            </a>
-                        </li>
-                        <li class="nav-item mt-3">
-                            <a class="nav-link btn-logout-modern" href="{% url 'logout_view' %}">
-                                <i class="fas fa-power-off"></i>
-                                <span>Cerrar Sesión</span>
                             </a>
                         </li>
                     </ul>
@@ -1535,8 +1567,8 @@
                 });
             });
 
-            // Handle logout confirmation
-            const logoutBtn = document.querySelector('.btn-logout-modern');
+            // Handle logout confirmation from navbar
+            const logoutBtn = document.querySelector('.btn-logout-nav');
             if (logoutBtn) {
                 logoutBtn.addEventListener('click', function(e) {
                     e.preventDefault();
@@ -1545,7 +1577,7 @@
                         text: "¿Estás seguro que deseas salir?",
                         icon: 'question',
                         showCancelButton: true,
-                        confirmButtonColor: '#f5576c',
+                        confirmButtonColor: '#667eea',
                         cancelButtonColor: '#6b7280',
                         confirmButtonText: 'Sí, cerrar sesión',
                         cancelButtonText: 'Cancelar'
