@@ -8,7 +8,7 @@ from typing import Optional, Dict
 
 def get_location_from_ip(ip_address: str) -> Dict[str, Optional[str]]:
     """
-    Obtiene la ubicación geográfica de una IP usando ipapi.co
+    Obtiene la ubicación geográfica de una IP usando múltiples APIs
     
     Args:
         ip_address: Dirección IP a consultar
@@ -30,29 +30,49 @@ def get_location_from_ip(ip_address: str) -> Dict[str, Optional[str]]:
     if not ip_address or ip_address in ['127.0.0.1', 'localhost'] or ip_address.startswith('192.168.'):
         return result
     
-    try:
-        # API gratuita sin necesidad de API key (1000 requests/día)
-        url = f'https://ipapi.co/{ip_address}/json/'
-        
-        # Timeout corto para no afectar rendimiento
-        response = requests.get(url, timeout=2)
-        
-        if response.status_code == 200:
-            data = response.json()
-            
-            # Extraer solo la información que necesitamos
-            result['city'] = data.get('city')
-            result['country'] = data.get('country_name')
-            result['latitude'] = data.get('latitude')
-            result['longitude'] = data.get('longitude')
-            
-    except requests.RequestException:
-        # Si falla la API, simplemente continuar sin ubicación
-        pass
-    except Exception:
-        # Cualquier otro error, continuar silenciosamente
-        pass
+    # Lista de APIs para intentar (en orden de prioridad)
+    apis = [
+        {
+            'url': f'https://ipapi.co/{ip_address}/json/',
+            'timeout': 3,
+            'extract': lambda data: {
+                'city': data.get('city'),
+                'country': data.get('country_name'),
+                'latitude': data.get('latitude'),
+                'longitude': data.get('longitude')
+            }
+        },
+        {
+            'url': f'http://ip-api.com/json/{ip_address}',
+            'timeout': 3,
+            'extract': lambda data: {
+                'city': data.get('city'),
+                'country': data.get('country'),
+                'latitude': data.get('lat'),
+                'longitude': data.get('lon')
+            }
+        }
+    ]
     
+    # Intentar con cada API hasta que una funcione
+    for api in apis:
+        try:
+            response = requests.get(api['url'], timeout=api['timeout'])
+            
+            if response.status_code == 200:
+                data = response.json()
+                result = api['extract'](data)
+                
+                # Si obtuvimos al menos ciudad o país, retornar
+                if result.get('city') or result.get('country'):
+                    return result
+                    
+        except requests.RequestException:
+            continue
+        except Exception:
+            continue
+    
+    # Si todas las APIs fallaron, retornar resultado vacío
     return result
 
 
@@ -114,7 +134,7 @@ def create_visit_with_location(request, visit_type, user_obj=None, product_id=No
         product_id: ID del producto si es product_detail (opcional)
         
     Returns:
-        Objeto StoreVisit creado
+        Objeto StoreVisit creado o None si es un bot
         
     Nota: Esta función es modular - si se elimina el archivo, usar el código directo
     """
@@ -127,6 +147,31 @@ def create_visit_with_location(request, visit_type, user_obj=None, product_id=No
     session_key = request.session.session_key
     ip_address = get_client_ip(request)
     user_agent = request.META.get('HTTP_USER_AGENT', '')
+    
+    # Filtrar bots conocidos para no contaminar las estadísticas
+    bot_ips_prefixes = [
+        '173.252.',  # Facebook/Meta
+        '69.171.',   # Facebook/Meta  
+        '69.63.',    # Facebook/Meta
+        '66.220.',   # Facebook/Meta
+    ]
+    
+    bot_user_agents = [
+        'facebookexternalhit',
+        'Facebot',
+        'Twitterbot',
+        'LinkedInBot',
+        'WhatsApp',
+        'Slackbot',
+        'TelegramBot'
+    ]
+    
+    # No registrar si es un bot conocido
+    if any(ip_address.startswith(prefix) for prefix in bot_ips_prefixes):
+        return None
+    
+    if any(bot in user_agent for bot in bot_user_agents):
+        return None
     
     # Preparar datos base de la visita
     visit_data = {
