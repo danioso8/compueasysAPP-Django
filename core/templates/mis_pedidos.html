@@ -1407,8 +1407,19 @@
             const modal = new bootstrap.Modal(document.getElementById('orderDetailsModal'));
             modal.show();
             
-            // Find the order card
-            const orderCard = document.querySelector(`[data-pedido-id="${orderId}"]`).closest('.order-card');
+            // Find the order card using the button's data attribute
+            const button = document.querySelector(`[data-pedido-id="${orderId}"]`);
+            if (!button) {
+                console.error('Button not found for order:', orderId);
+                return;
+            }
+            
+            const orderCard = button.closest('.order-card');
+            if (!orderCard) {
+                console.error('Order card not found');
+                return;
+            }
+            
             const orderData = extractOrderData(orderCard, orderId);
             
             // Update modal content
@@ -1419,17 +1430,42 @@
             const header = orderCard.querySelector('.order-card-header');
             const body = orderCard.querySelector('.order-card-body');
             
+            // Extract data more safely
+            const orderNumber = header.querySelector('.order-number')?.textContent.trim() || `Pedido #${orderId}`;
+            const orderDate = header.querySelector('.order-date')?.textContent.trim() || 'Fecha no disponible';
+            const statusBadge = header.querySelector('.order-status-badge');
+            const orderStatus = statusBadge?.textContent.trim() || 'Pendiente';
+            const statusClass = statusBadge?.className || 'order-status-badge status-pendiente';
+            
+            // Extract summary items
+            const summaryValues = body.querySelectorAll('.summary-item-value');
+            const productos = summaryValues[0]?.textContent.trim() || '0';
+            const total = summaryValues[1]?.textContent.trim() || '$0';
+            const metodoPago = summaryValues[2]?.textContent.trim() || 'Pendiente';
+            
+            // Extract product details
+            const productItems = body.querySelectorAll('.product-item h6');
+            const detalles = Array.from(productItems).map(h => h.textContent.trim());
+            
+            // Extract note if exists
+            const noteElement = body.querySelector('.order-note p');
+            const nota = noteElement ? noteElement.textContent.trim() : null;
+            
+            // Extract timeline
+            const timeline = extractTimeline(body);
+            
             return {
                 id: orderId,
-                number: header.querySelector('.order-number').textContent.trim(),
-                date: header.querySelector('.order-date').textContent.trim(),
-                status: header.querySelector('.order-status-badge').textContent.trim(),
-                statusClass: header.querySelector('.order-status-badge').className,
-                total: body.querySelector('.summary-item-value:nth-of-type(2)').textContent.trim(),
-                metodoPago: body.querySelectorAll('.summary-item-value')[2].textContent.trim(),
-                detalles: Array.from(body.querySelectorAll('.product-item h6')).map(h => h.textContent.trim()),
-                nota: body.querySelector('.order-note p')?.textContent.trim() || null,
-                timeline: extractTimeline(body)
+                number: orderNumber,
+                date: orderDate,
+                status: orderStatus,
+                statusClass: statusClass,
+                total: total,
+                productos: productos,
+                metodoPago: metodoPago,
+                detalles: detalles.length > 0 ? detalles : ['Sin detalles disponibles'],
+                nota: nota,
+                timeline: timeline
             };
         }
         
