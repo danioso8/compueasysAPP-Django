@@ -816,6 +816,25 @@
                             </li>
                             <li><hr class="dropdown-divider my-2"></li>
                             <li>
+                                <a class="dropdown-item d-flex align-items-center" href="#profile" data-bs-toggle="pill"
+                                   style="border-radius: 10px; padding: 0.6rem 1rem; transition: all 0.2s ease;"
+                                   onmouseover="this.style.background='#f8f9fa'"
+                                   onmouseout="this.style.background='transparent'">
+                                    <i class="fas fa-user-edit me-2" style="color: #667eea;"></i>
+                                    <span>Mi Perfil</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center" href="#security" data-bs-toggle="pill"
+                                   style="border-radius: 10px; padding: 0.6rem 1rem; transition: all 0.2s ease;"
+                                   onmouseover="this.style.background='#f8f9fa'"
+                                   onmouseout="this.style.background='transparent'">
+                                    <i class="fas fa-shield-alt me-2" style="color: #48bb78;"></i>
+                                    <span>Seguridad</span>
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider my-2"></li>
+                            <li>
                                 <a class="dropdown-item btn-logout-nav d-flex align-items-center" href="{% url 'logout_view' %}" 
                                    style="border-radius: 10px; padding: 0.6rem 1rem; transition: all 0.2s ease;"
                                    onmouseover="this.style.background='#f8f9fa'"
@@ -852,20 +871,6 @@
                                 {% if pedidos.count > 0 %}
                                     <span class="badge bg-primary ms-auto">{{ pedidos.count }}</span>
                                 {% endif %}
-                            </a>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <a class="nav-link" id="profile-tab" data-bs-toggle="pill" 
-                               href="#profile" role="tab" aria-controls="profile" aria-selected="false">
-                                <i class="fas fa-user-edit"></i>
-                                <span>Mi Perfil</span>
-                            </a>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <a class="nav-link" id="security-tab" data-bs-toggle="pill" 
-                               href="#security" role="tab" aria-controls="security" aria-selected="false">
-                                <i class="fas fa-shield-alt"></i>
-                                <span>Seguridad</span>
                             </a>
                         </li>
                         <li class="nav-item" role="presentation">
