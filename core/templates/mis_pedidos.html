@@ -709,65 +709,129 @@
             }
         }
 
-        /* Navbar Custom Styles */
-        .btn-logout-nav:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        /* Modern Navbar Styles */
+        .navbar {
+            min-height: 70px;
+        }
+
+        .avatar-circle {
+            transition: transform 0.3s ease;
+        }
+
+        .dropdown:hover .avatar-circle {
+            transform: scale(1.1);
+        }
+
+        .dropdown-menu {
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .btn-outline-light:hover {
+            transform: translateX(-5px);
+        }
+
+        .navbar-brand {
+            transition: all 0.3s ease;
         }
 
         .navbar-brand:hover {
-            transform: translateX(-3px);
-            transition: transform 0.3s ease;
+            transform: scale(1.05);
         }
 
         body {
             padding-top: 0 !important;
         }
+
+        /* Responsive navbar */
+        @media (max-width: 768px) {
+            .navbar {
+                min-height: 60px;
+            }
+            
+            .navbar-brand {
+                font-size: 1.2rem !important;
+            }
+        }
     </style>
 </head>
 <body>
-    <!-- Custom Navbar for Account Page -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top shadow-sm">
-        <div class="container-fluid px-4">
-            <!-- Left: Back to Store -->
-            <a class="navbar-brand d-flex align-items-center" href="{% url 'store' %}" style="font-weight: 700; font-size: 1.2rem;">
-                <i class="fas fa-arrow-left me-2"></i>
-                <span class="d-none d-md-inline">Volver a la Tienda</span>
-                <span class="d-inline d-md-none">Tienda</span>
-            </a>
+    <!-- Modern Navbar -->
+    <nav class="navbar navbar-expand-lg fixed-top" style="background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%); box-shadow: 0 2px 20px rgba(0,0,0,0.1); backdrop-filter: blur(10px);">
+        <div class="container-fluid px-4 py-2">
+            <div class="d-flex align-items-center justify-content-between w-100">
+                
+                <!-- Left Section: Back to Store -->
+                <div class="d-flex align-items-center">
+                    <a class="btn btn-outline-light btn-sm d-flex align-items-center me-4" href="{% url 'store' %}" 
+                       style="border-radius: 25px; padding: 0.5rem 1.2rem; border: 2px solid rgba(255,255,255,0.2); transition: all 0.3s ease;"
+                       onmouseover="this.style.background='rgba(255,255,255,0.1)'; this.style.borderColor='rgba(255,255,255,0.4)'"
+                       onmouseout="this.style.background='transparent'; this.style.borderColor='rgba(255,255,255,0.2)'">
+                        <i class="fas fa-arrow-left me-2"></i>
+                        <span class="fw-semibold">Tienda</span>
+                    </a>
+                    
+                    <!-- Logo -->
+                    <a class="navbar-brand mb-0 d-none d-md-flex align-items-center" href="{% url 'home' %}" style="font-weight: 800; font-size: 1.4rem;">
+                        <div class="d-flex align-items-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+                            <i class="fas fa-laptop-code me-2" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>
+                            CompuEasys
+                        </div>
+                    </a>
+                </div>
 
-            <!-- Center: CompuEasys Logo -->
-            <a class="navbar-brand position-absolute start-50 translate-middle-x d-none d-lg-block" href="{% url 'home' %}" style="font-weight: 800; font-size: 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
-                CompuEasys
-            </a>
-
-            <!-- Right: User Dropdown -->
-            <div class="dropdown ms-auto">
-                {% if user %}
-                    <button class="btn btn-dark dropdown-toggle d-flex align-items-center" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="border: 1px solid rgba(255,255,255,0.1); padding: 0.5rem 1rem;">
-                        <i class="fas fa-user-circle me-2" style="font-size: 1.2rem;"></i>
-                        <span>{{ user.name|default:user.email }}</span>
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown" style="min-width: 200px;">
-                        <li>
-                            <span class="dropdown-item-text">
-                                <small class="text-muted">{{ user.email }}</small>
-                            </span>
-                        </li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li>
-                            <a class="dropdown-item btn-logout-nav" href="{% url 'logout_view' %}">
-                                <i class="fas fa-power-off me-2"></i>
-                                Cerrar Sesión
-                            </a>
-                        </li>
-                    </ul>
-                {% endif %}
+                <!-- Right Section: User Menu -->
+                <div class="dropdown">
+                    {% if user %}
+                        <button class="btn btn-light dropdown-toggle d-flex align-items-center" type="button" id="userDropdown" 
+                                data-bs-toggle="dropdown" aria-expanded="false" 
+                                style="border-radius: 25px; padding: 0.5rem 1.2rem; background: rgba(255,255,255,0.95); border: none; box-shadow: 0 2px 10px rgba(0,0,0,0.1); font-weight: 500;">
+                            <div class="avatar-circle me-2" style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 0.9rem;">
+                                {{ user.name|slice:":1"|upper|default:"U" }}
+                            </div>
+                            <span class="d-none d-sm-inline">{{ user.name|default:user.email|truncatechars:20 }}</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-lg" aria-labelledby="userDropdown" 
+                            style="border-radius: 15px; border: none; padding: 0.5rem; min-width: 250px; margin-top: 10px;">
+                            <li class="px-3 py-2">
+                                <div class="d-flex align-items-center mb-2">
+                                    <div class="avatar-circle me-3" style="width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 1.2rem;">
+                                        {{ user.name|slice:":1"|upper|default:"U" }}
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold text-dark">{{ user.name|default:"Usuario" }}</div>
+                                        <small class="text-muted">{{ user.email }}</small>
+                                    </div>
+                                </div>
+                            </li>
+                            <li><hr class="dropdown-divider my-2"></li>
+                            <li>
+                                <a class="dropdown-item btn-logout-nav d-flex align-items-center" href="{% url 'logout_view' %}" 
+                                   style="border-radius: 10px; padding: 0.6rem 1rem; transition: all 0.2s ease;"
+                                   onmouseover="this.style.background='#f8f9fa'"
+                                   onmouseout="this.style.background='transparent'">
+                                    <i class="fas fa-power-off me-2" style="color: #e53e3e;"></i>
+                                    <span>Cerrar Sesión</span>
+                                </a>
+                            </li>
+                        </ul>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </nav>
     
-    <div class="container" style="margin-top: 80px; margin-bottom: 40px;">
+    <div class="container" style="margin-top: 100px; margin-bottom: 40px;">
         <div class="row">
             <!-- Sidebar Navigation -->
             <div class="col-lg-3 col-md-4 mb-4">
