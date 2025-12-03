@@ -838,15 +838,15 @@
                 <div class="sidebar-nav">
                     <ul class="nav nav-pills flex-column" id="account-tabs" role="tablist">
                         <li class="nav-item" role="presentation">
-                            <a class="nav-link" id="dashboard-tab" data-bs-toggle="pill" 
-                               href="#dashboard" role="tab" aria-controls="dashboard" aria-selected="false">
+                            <a class="nav-link active" id="dashboard-tab" data-bs-toggle="pill" 
+                               href="#dashboard" role="tab" aria-controls="dashboard" aria-selected="true">
                                 <i class="fas fa-chart-line"></i>
                                 <span>Dashboard</span>
                             </a>
                         </li>
                         <li class="nav-item" role="presentation">
-                            <a class="nav-link active" id="orders-tab" data-bs-toggle="pill" 
-                               href="#orders" role="tab" aria-controls="orders" aria-selected="true">
+                            <a class="nav-link" id="orders-tab" data-bs-toggle="pill" 
+                               href="#orders" role="tab" aria-controls="orders" aria-selected="false">
                                 <i class="fas fa-shopping-bag"></i>
                                 <span>Mis Pedidos</span>
                                 {% if pedidos.count > 0 %}
@@ -885,7 +885,7 @@
                 <div class="tab-content" id="account-content">
                     
                     <!-- Dashboard Tab -->
-                    <div class="tab-pane fade" id="dashboard" role="tabpanel" aria-labelledby="dashboard-tab">
+                    <div class="tab-pane fade show active" id="dashboard" role="tabpanel" aria-labelledby="dashboard-tab">
                         <div class="row mb-4">
                             <div class="col-md-4 mb-3">
                                 <div class="card border-0 shadow-sm h-100">
@@ -967,7 +967,7 @@
                     </div>
 
                     <!-- Orders Tab -->
-                    <div class="tab-pane fade show active" id="orders" role="tabpanel" aria-labelledby="orders-tab">
+                    <div class="tab-pane fade" id="orders" role="tabpanel" aria-labelledby="orders-tab">
         {% if pedidos %}
             <!-- Filtros -->
             <div class="filters-section">
