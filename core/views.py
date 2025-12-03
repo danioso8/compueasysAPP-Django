@@ -1819,6 +1819,215 @@ def mis_pedidos(request):
     }
 
     return render(request, 'mis_pedidos.html', context)
+
+
+from django.http import FileResponse
+from reportlab.lib.pagesizes import letter, A4
+from reportlab.lib import colors
+from reportlab.lib.units import mm
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
+from io import BytesIO
+from datetime import datetime
+
+
+def download_receipt(request, pedido_id):
+    """
+    Vista para generar y descargar el recibo de un pedido en formato PDF (ticket térmico)
+    """
+    try:
+        # Obtener el pedido
+        pedido = Pedido.objects.get(id=pedido_id)
+        
+        # Verificar que el usuario tenga acceso a este pedido
+        if 'simple_user_id' in request.session:
+            simple_user_id = request.session['simple_user_id']
+            if pedido.user.id != simple_user_id:
+                return JsonResponse({'error': 'No tienes permiso para ver este pedido'}, status=403)
+        elif request.user.is_authenticated:
+            try:
+                simple_user = SimpleUser.objects.get(email=request.user.email)
+                if pedido.user.id != simple_user.id:
+                    return JsonResponse({'error': 'No tienes permiso para ver este pedido'}, status=403)
+            except SimpleUser.DoesNotExist:
+                return JsonResponse({'error': 'Usuario no encontrado'}, status=404)
+        else:
+            return redirect('login_user')
+        
+        # Crear el PDF en memoria
+        buffer = BytesIO()
+        
+        # Configurar el documento con tamaño de ticket (80mm de ancho)
+        width = 80 * mm
+        height = 297 * mm  # Largo variable tipo A4
+        doc = SimpleDocTemplate(
+            buffer,
+            pagesize=(width, height),
+            rightMargin=5*mm,
+            leftMargin=5*mm,
+            topMargin=5*mm,
+            bottomMargin=5*mm
+        )
+        
+        # Contenedor para los elementos del PDF
+        elements = []
+        styles = getSampleStyleSheet()
+        
+        # Estilos personalizados
+        title_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Heading1'],
+            fontSize=14,
+            textColor=colors.black,
+            spaceAfter=3,
+            alignment=TA_CENTER,
+            fontName='Helvetica-Bold'
+        )
+        
+        normal_center = ParagraphStyle(
+            'NormalCenter',
+            parent=styles['Normal'],
+            fontSize=8,
+            alignment=TA_CENTER,
+            spaceAfter=2
+        )
+        
+        small_style = ParagraphStyle(
+            'Small',
+            parent=styles['Normal'],
+            fontSize=8,
+            spaceAfter=2
+        )
+        
+        bold_style = ParagraphStyle(
+            'Bold',
+            parent=styles['Normal'],
+            fontSize=9,
+            fontName='Helvetica-Bold'
+        )
+        
+        # Encabezado
+        elements.append(Paragraph("COMPUEASYS", title_style))
+        elements.append(Paragraph("Tecnología y Soluciones", normal_center))
+        elements.append(Paragraph("Tel: (601) 123-4567", normal_center))
+        elements.append(Paragraph("www.compueasys.com", normal_center))
+        elements.append(Spacer(1, 5*mm))
+        
+        # Línea separadora
+        line_data = [['─' * 30]]
+        line_table = Table(line_data, colWidths=[width-10*mm])
+        line_table.setStyle(TableStyle([
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 0), (-1, -1), 8),
+        ]))
+        elements.append(line_table)
+        elements.append(Spacer(1, 3*mm))
+        
+        # Información del pedido
+        info_data = [
+            ['Pedido:', f'#{pedido.id}'],
+            ['Fecha:', pedido.fecha.strftime('%d/%m/%Y %H:%M')],
+            ['Estado:', pedido.estado or 'Pendiente'],
+            ['Pago:', pedido.metodo_pago or 'Por confirmar'],
+        ]
+        
+        info_table = Table(info_data, colWidths=[20*mm, 50*mm])
+        info_table.setStyle(TableStyle([
+            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+            ('FONTNAME', (1, 0), (1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 0), (-1, -1), 8),
+            ('ALIGN', (0, 0), (0, -1), 'LEFT'),
+            ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
+        ]))
+        elements.append(info_table)
+        elements.append(Spacer(1, 5*mm))
+        
+        # Línea separadora
+        elements.append(line_table)
+        elements.append(Spacer(1, 3*mm))
+        
+        # Título de productos
+        elements.append(Paragraph("<b>PRODUCTOS</b>", normal_center))
+        elements.append(Spacer(1, 3*mm))
+        
+        # Parsear detalles del pedido
+        detalles_lineas = pedido.detalles.split('\n') if pedido.detalles else []
+        productos_data = []
+        
+        for detalle in detalles_lineas:
+            if detalle.strip():
+                # Intentar parsear formato "Producto x cantidad - precio"
+                import re
+                match = re.match(r'(.+?)\s*x\s*(\d+)\s*-\s*\$([\\d,]+)', detalle)
+                if match:
+                    nombre = match.group(1).strip()
+                    cantidad = match.group(2)
+                    precio = match.group(3)
+                    
+                    # Agregar línea del producto
+                    productos_data.append([nombre, ''])
+                    productos_data.append([f'{cantidad} x ${precio}', ''])
+                else:
+                    # Formato simple
+                    productos_data.append([detalle.strip(), ''])
+        
+        if productos_data:
+            productos_table = Table(productos_data, colWidths=[width-10*mm])
+            productos_table.setStyle(TableStyle([
+                ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+                ('FONTSIZE', (0, 0), (-1, -1), 8),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('LEFTPADDING', (0, 0), (-1, -1), 2),
+                ('RIGHTPADDING', (0, 0), (-1, -1), 2),
+            ]))
+            elements.append(productos_table)
+        
+        elements.append(Spacer(1, 5*mm))
+        elements.append(line_table)
+        elements.append(Spacer(1, 3*mm))
+        
+        # Total
+        total_data = [
+            ['TOTAL:', f"${pedido.total:,.0f}"]
+        ]
+        total_table = Table(total_data, colWidths=[35*mm, 35*mm])
+        total_table.setStyle(TableStyle([
+            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 12),
+            ('ALIGN', (0, 0), (0, -1), 'LEFT'),
+            ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
+        ]))
+        elements.append(total_table)
+        
+        elements.append(Spacer(1, 5*mm))
+        elements.append(line_table)
+        elements.append(Spacer(1, 3*mm))
+        
+        # Footer
+        elements.append(Paragraph("<b>¡Gracias por tu compra!</b>", normal_center))
+        elements.append(Paragraph("Conserva este recibo", normal_center))
+        elements.append(Spacer(1, 3*mm))
+        elements.append(Paragraph("═" * 25, normal_center))
+        
+        # Construir el PDF
+        doc.build(elements)
+        
+        # Preparar la respuesta
+        buffer.seek(0)
+        response = FileResponse(buffer, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="recibo_pedido_{pedido.id}.pdf"'
+        
+        return response
+        
+    except Pedido.DoesNotExist:
+        return JsonResponse({'error': 'Pedido no encontrado'}, status=404)
+    except Exception as e:
+        print(f"Error generando PDF: {str(e)}")
+        return JsonResponse({'error': f'Error generando el recibo: {str(e)}'}, status=500)
+
+
 # ...existing code...
 
 def logout_view(request):

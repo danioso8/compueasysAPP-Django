@@ -11,7 +11,7 @@ from core.views import (
     create_wompi_transaction, wompi_webhook, wompi_test, wompi_widget_test, validate_discount_code,
     send_verification_email, verify_code, resend_verification_code,
     order_details, cancel_order, start_conversation, get_conversations,
-    get_conversation, send_message, wompi_check_transaction
+    get_conversation, send_message, wompi_check_transaction, download_receipt
 )
 from core import views
 from django.conf import settings
@@ -38,6 +38,7 @@ urlpatterns = [
    
     path('pago_exitoso/', pago_exitoso, name='pago_exitoso'),  # URL pattern for processing payment
     path('mis-pedidos/', mis_pedidos, name='mis_pedidos'),  # URL pattern for viewing user orders
+    path('download_receipt/<int:pedido_id>/', download_receipt, name='download_receipt'),  # URL pattern for downloading order receipt
     path('login_user/', login_user, name='login_user'),  # URL pattern for user login
     path('logout_view/', logout_view, name='logout_view'),  # URL pattern for user logout
     

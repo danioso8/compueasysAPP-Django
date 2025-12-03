@@ -1171,7 +1171,17 @@
                         
                         <!-- Action Buttons -->
                         <div class="action-buttons">
-                            <button class="btn btn-action btn-track" onclick="showOrderDetails({{ pedido.id }})" data-pedido-id="{{ pedido.id }}">
+                            <button class="btn btn-action btn-track" 
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#orderDetailsModal"
+                                    data-order-id="{{ pedido.id }}"
+                                    data-order-number="Pedido {{ pedido.id }}"
+                                    data-order-date="{{ pedido.fecha|date:'d/m/Y H:i' }}"
+                                    data-order-status="{{ pedido.estado|default:'pendiente' }}"
+                                    data-order-total="{{ pedido.total }}"
+                                    data-order-metodo="{{ pedido.metodo_pago|default:'Pendiente' }}"
+                                    data-order-detalles="{{ pedido.detalles|escapejs }}"
+                                    data-order-nota="{{ pedido.nota|default:''|escapejs }}">
                                 <i class="fas fa-eye"></i>
                                 Ver Detalles Completos
                             </button>
@@ -1402,194 +1412,230 @@
             });
         });
         
-        // Show order details in modal
-        function showOrderDetails(orderId) {
-            const modal = new bootstrap.Modal(document.getElementById('orderDetailsModal'));
-            modal.show();
-            
-            // Find the order card using the button's data attribute
-            const button = document.querySelector(`[data-pedido-id="${orderId}"]`);
-            if (!button) {
-                console.error('Button not found for order:', orderId);
-                return;
-            }
-            
-            const orderCard = button.closest('.order-card');
-            if (!orderCard) {
-                console.error('Order card not found');
-                return;
-            }
-            
-            const orderData = extractOrderData(orderCard, orderId);
-            
-            // Update modal content
-            document.getElementById('orderDetailsContent').innerHTML = generateOrderDetailsHTML(orderData);
-        }
-        
-        function extractOrderData(orderCard, orderId) {
-            const header = orderCard.querySelector('.order-card-header');
-            const body = orderCard.querySelector('.order-card-body');
-            
-            // Extract data more safely
-            const orderNumber = header.querySelector('.order-number')?.textContent.trim() || `Pedido #${orderId}`;
-            const orderDate = header.querySelector('.order-date')?.textContent.trim() || 'Fecha no disponible';
-            const statusBadge = header.querySelector('.order-status-badge');
-            const orderStatus = statusBadge?.textContent.trim() || 'Pendiente';
-            const statusClass = statusBadge?.className || 'order-status-badge status-pendiente';
-            
-            // Extract summary items
-            const summaryValues = body.querySelectorAll('.summary-item-value');
-            const productos = summaryValues[0]?.textContent.trim() || '0';
-            const total = summaryValues[1]?.textContent.trim() || '$0';
-            const metodoPago = summaryValues[2]?.textContent.trim() || 'Pendiente';
-            
-            // Extract product details
-            const productItems = body.querySelectorAll('.product-item h6');
-            const detalles = Array.from(productItems).map(h => h.textContent.trim());
-            
-            // Extract note if exists
-            const noteElement = body.querySelector('.order-note p');
-            const nota = noteElement ? noteElement.textContent.trim() : null;
-            
-            // Extract timeline
-            const timeline = extractTimeline(body);
-            
-            return {
-                id: orderId,
-                number: orderNumber,
-                date: orderDate,
-                status: orderStatus,
-                statusClass: statusClass,
-                total: total,
-                productos: productos,
-                metodoPago: metodoPago,
-                detalles: detalles.length > 0 ? detalles : ['Sin detalles disponibles'],
-                nota: nota,
-                timeline: timeline
-            };
-        }
-        
-        function extractTimeline(body) {
-            const timelineSteps = body.querySelectorAll('.timeline-step');
-            return Array.from(timelineSteps).map(step => ({
-                title: step.querySelector('strong').textContent,
-                description: step.querySelector('small').textContent,
-                completed: step.classList.contains('completed'),
-                active: step.classList.contains('active')
-            }));
-        }
-        
-        function generateOrderDetailsHTML(order) {
-            return `
-                <div class="container-fluid">
-                    <div class="row">
-                        <!-- Información Principal -->
-                        <div class="col-md-8">
-                            <div class="card mb-3 border-0 shadow-sm">
-                                <div class="card-body">
-                                    <div class="d-flex justify-content-between align-items-start mb-4">
-                                        <div>
-                                            <h4 class="mb-2">${order.number}</h4>
-                                            <p class="text-muted mb-0">
-                                                <i class="far fa-calendar-alt me-2"></i>
-                                                ${order.date}
-                                            </p>
+        // Handle modal open event to populate with order data
+        const orderDetailsModal = document.getElementById('orderDetailsModal');
+        if (orderDetailsModal) {
+            orderDetailsModal.addEventListener('show.bs.modal', function (event) {
+                const button = event.relatedTarget;
+                const orderId = button.getAttribute('data-order-id');
+                const orderNumber = button.getAttribute('data-order-number');
+                const orderDate = button.getAttribute('data-order-date');
+                const orderStatus = button.getAttribute('data-order-status');
+                const orderTotal = button.getAttribute('data-order-total');
+                const orderMetodo = button.getAttribute('data-order-metodo');
+                const orderDetalles = button.getAttribute('data-order-detalles');
+                const orderNota = button.getAttribute('data-order-nota');
+                
+                // Parse detalles (viene como string con saltos de línea)
+                const detallesList = orderDetalles ? orderDetalles.split('\\n').filter(d => d.trim()) : [];
+                
+                // Generate status badge class
+                const statusClass = `order-status-badge status-${orderStatus}`;
+                const statusText = getStatusText(orderStatus);
+                
+                // Parse products - cada línea puede tener formato "Producto x cantidad - precio"
+                const productos = detallesList.map(detalle => {
+                    const match = detalle.match(/(.+?)\s*x\s*(\d+)\s*-\s*\$([\d,]+)/);
+                    if (match) {
+                        return {
+                            nombre: match[1].trim(),
+                            cantidad: match[2],
+                            precio: match[3]
+                        };
+                    }
+                    return {
+                        nombre: detalle.trim(),
+                        cantidad: '1',
+                        precio: '-'
+                    };
+                });
+                
+                // Build HTML content
+                const content = `
+                    <div class="container-fluid">
+                        <div class="row">
+                            <!-- Main Information -->
+                            <div class="col-md-7">
+                                <div class="card mb-3 border-0 shadow-sm">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-start mb-4">
+                                            <div>
+                                                <h4 class="mb-2">${orderNumber}</h4>
+                                                <p class="text-muted mb-0">
+                                                    <i class="far fa-calendar-alt me-2"></i>
+                                                    ${orderDate}
+                                                </p>
+                                            </div>
+                                            <span class="${statusClass}">
+                                                <i class="${getStatusIcon(orderStatus)}"></i>
+                                                ${statusText}
+                                            </span>
                                         </div>
-                                        <span class="${order.statusClass}">${order.status}</span>
-                                    </div>
-                                    
-                                    <h5 class="mb-3">
-                                        <i class="fas fa-box-open me-2 text-primary"></i>
-                                        Productos del Pedido
-                                    </h5>
-                                    <div class="table-responsive">
-                                        <table class="table table-hover">
-                                            <thead class="table-light">
-                                                <tr>
-                                                    <th>#</th>
-                                                    <th>Producto</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                ${order.detalles.map((detalle, index) => `
+                                        
+                                        <h5 class="mb-3">
+                                            <i class="fas fa-box-open me-2 text-primary"></i>
+                                            Productos Comprados
+                                        </h5>
+                                        <div class="table-responsive">
+                                            <table class="table table-hover align-middle">
+                                                <thead class="table-light">
                                                     <tr>
-                                                        <td><strong>${index + 1}</strong></td>
-                                                        <td>${detalle}</td>
+                                                        <th width="50">#</th>
+                                                        <th>Producto</th>
+                                                        <th width="80" class="text-center">Cant.</th>
+                                                        <th width="120" class="text-end">Precio</th>
                                                     </tr>
-                                                `).join('')}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                    
-                                    ${order.nota ? `
-                                    <div class="alert alert-warning mt-3">
-                                        <h6 class="alert-heading">
-                                            <i class="fas fa-sticky-note me-2"></i>
-                                            Nota del Pedido
-                                        </h6>
-                                        <p class="mb-0">${order.nota}</p>
-                                    </div>
-                                    ` : ''}
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Sidebar Derecho -->
-                        <div class="col-md-4">
-                            <!-- Resumen de Pago -->
-                            <div class="card mb-3 border-0 shadow-sm">
-                                <div class="card-header bg-light">
-                                    <h6 class="mb-0">
-                                        <i class="fas fa-dollar-sign me-2 text-success"></i>
-                                        Resumen de Pago
-                                    </h6>
-                                </div>
-                                <div class="card-body">
-                                    <div class="d-flex justify-content-between mb-3">
-                                        <span class="text-muted">Método de Pago:</span>
-                                        <strong>${order.metodoPago}</strong>
-                                    </div>
-                                    <div class="d-flex justify-content-between mb-3 pb-3 border-bottom">
-                                        <span class="text-muted">Productos:</span>
-                                        <strong>${order.detalles.length} item(s)</strong>
-                                    </div>
-                                    <div class="d-flex justify-content-between">
-                                        <h5 class="mb-0">Total:</h5>
-                                        <h4 class="mb-0 text-primary">${order.total}</h4>
+                                                </thead>
+                                                <tbody>
+                                                    ${productos.map((prod, index) => `
+                                                        <tr>
+                                                            <td><span class="badge bg-primary">${index + 1}</span></td>
+                                                            <td><strong>${prod.nombre}</strong></td>
+                                                            <td class="text-center"><span class="badge bg-secondary">${prod.cantidad}</span></td>
+                                                            <td class="text-end">${prod.precio !== '-' ? '$' + prod.precio : 'N/A'}</td>
+                                                        </tr>
+                                                    `).join('')}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        
+                                        ${orderNota ? `
+                                        <div class="alert alert-info mt-3">
+                                            <h6 class="alert-heading">
+                                                <i class="fas fa-sticky-note me-2"></i>
+                                                Nota del Pedido
+                                            </h6>
+                                            <p class="mb-0">${orderNota}</p>
+                                        </div>
+                                        ` : ''}
                                     </div>
                                 </div>
                             </div>
                             
-                            <!-- Timeline de Seguimiento -->
-                            <div class="card border-0 shadow-sm">
-                                <div class="card-header bg-light">
-                                    <h6 class="mb-0">
-                                        <i class="fas fa-route me-2 text-info"></i>
-                                        Seguimiento del Pedido
-                                    </h6>
-                                </div>
-                                <div class="card-body">
-                                    <div class="timeline-tracker">
-                                        ${order.timeline.map((step, index) => `
-                                            <div class="timeline-step ${step.completed ? 'completed' : ''} ${step.active ? 'active' : ''}">
-                                                <div class="step-icon">
-                                                    ${step.completed ? '<i class="fas fa-check-circle"></i>' : 
-                                                      step.active ? '<i class="fas fa-spinner fa-pulse"></i>' : 
-                                                      '<i class="far fa-circle"></i>'}
+                            <!-- Right Sidebar - Receipt Ticket -->
+                            <div class="col-md-5">
+                                <div class="card border-0 shadow-sm mb-3">
+                                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                        <h6 class="mb-0">
+                                            <i class="fas fa-receipt me-2 text-primary"></i>
+                                            Recibo de Compra
+                                        </h6>
+                                        <div>
+                                            <button class="btn btn-sm btn-primary me-1" onclick="printReceipt()" title="Imprimir">
+                                                <i class="fas fa-print"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-primary" onclick="downloadReceipt(${orderId})" title="Descargar PDF">
+                                                <i class="fas fa-download"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="card-body p-2" style="background: #f8f9fa;">
+                                        <div id="printableReceipt" class="receipt-ticket">
+                                            <div class="receipt-header">
+                                                <h3>COMPUEASYS</h3>
+                                                <p>Tecnología y Soluciones</p>
+                                                <p>Tel: (601) 123-4567</p>
+                                                <p>www.compueasys.com</p>
+                                            </div>
+                                            
+                                            <div class="receipt-info">
+                                                <div class="receipt-info-row">
+                                                    <span><strong>Pedido:</strong></span>
+                                                    <span>#${orderId}</span>
                                                 </div>
-                                                <div class="step-content">
-                                                    <strong>${step.title}</strong>
-                                                    <small class="d-block text-muted">${step.description}</small>
+                                                <div class="receipt-info-row">
+                                                    <span><strong>Fecha:</strong></span>
+                                                    <span>${orderDate}</span>
+                                                </div>
+                                                <div class="receipt-info-row">
+                                                    <span><strong>Estado:</strong></span>
+                                                    <span>${statusText}</span>
+                                                </div>
+                                                <div class="receipt-info-row">
+                                                    <span><strong>Pago:</strong></span>
+                                                    <span>${orderMetodo}</span>
                                                 </div>
                                             </div>
-                                        `).join('')}
+                                            
+                                            <div class="receipt-products">
+                                                <div style="text-align: center; font-weight: bold; margin-bottom: 10px;">PRODUCTOS</div>
+                                                ${productos.map(prod => `
+                                                    <div class="receipt-product">
+                                                        <div class="receipt-product-name">${prod.nombre}</div>
+                                                        <div class="receipt-product-details">
+                                                            <span>${prod.cantidad} x ${prod.precio !== '-' ? '$' + prod.precio : 'Ver total'}</span>
+                                                        </div>
+                                                    </div>
+                                                `).join('')}
+                                            </div>
+                                            
+                                            <div class="receipt-total">
+                                                <div class="receipt-total-row">
+                                                    <span>TOTAL:</span>
+                                                    <span>$${parseFloat(orderTotal).toLocaleString('es-CO')}</span>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="receipt-footer">
+                                                <p><strong>¡Gracias por tu compra!</strong></p>
+                                                <p>Conserva este recibo</p>
+                                                <p style="margin-top: 10px;">═══════════════════</p>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            `;
+                `;
+                
+                document.getElementById('orderDetailsContent').innerHTML = content;
+            });
+        }
+        
+        function getStatusText(status) {
+            const statusMap = {
+                'pendiente': 'Pendiente',
+                'confirmado': 'Confirmado',
+                'enviado': 'Enviado',
+                'entregado': 'Entregado',
+                'cancelado': 'Cancelado'
+            };
+            return statusMap[status] || status;
+        }
+        
+        function getStatusIcon(status) {
+            const iconMap = {
+                'pendiente': 'fas fa-clock',
+                'confirmado': 'fas fa-check-circle',
+                'enviado': 'fas fa-truck',
+                'entregado': 'fas fa-box-check',
+                'cancelado': 'fas fa-times-circle'
+            };
+            return iconMap[status] || 'fas fa-info-circle';
+        }
+        
+        function printReceipt() {
+            // Imprimir solo el recibo
+            window.print();
+        }
+        
+        function downloadReceipt(orderId) {
+            // Generar PDF del recibo usando html2canvas + jsPDF o redirigir a endpoint
+            Swal.fire({
+                title: 'Generando PDF...',
+                html: 'Preparando tu recibo para descargar',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+            
+            // Redirigir a vista de descarga PDF
+            setTimeout(() => {
+                window.location.href = `/download_receipt/${orderId}/`;
+                Swal.close();
+            }, 1000);
         }
         
         // Cancel order function with SweetAlert
