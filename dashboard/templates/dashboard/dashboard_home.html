@@ -6077,7 +6077,10 @@
         .then(data => {
             if (data.success) {
                 console.log('✅ Visitas actualizadas:', data.visitas.length);
+                
+                // Actualizar AMBAS versiones: desktop Y mobile
                 updateVisitasTable(data.visitas);
+                updateVisitasCards(data.visitas);
                 updateVisitasStats(data.stats);
                 
                 // Animar indicador en vivo
@@ -6095,56 +6098,166 @@
         });
     };
     
-    // Función para actualizar tabla de visitas
+    // Función auxiliar para parsear timestamp del API
+    function parseTimestamp(timestamp) {
+        // Formato del API: "05/12/2025 14:30:45"
+        const parts = timestamp.split(' ');
+        const datePart = parts[0]; // "05/12/2025"
+        const timePart = parts[1]; // "14:30:45"
+        const timeShort = timePart.substring(0, 5); // "14:30"
+        
+        return {
+            date: datePart,
+            time: timeShort,
+            full: timestamp
+        };
+    }
+    
+    // Función auxiliar para generar badge de tipo de visita
+    function generateVisitTypeBadge(visita) {
+        const types = {
+            'home': { gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', icon: 'fa-home', label: 'Home' },
+            'store': { gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', icon: 'fa-store', label: 'Tienda' },
+            'product_detail': { gradient: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)', icon: 'fa-box', label: visita.product_name || `Producto ${visita.product_id ? '#' + visita.product_id : ''}` },
+            'cart': { gradient: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)', icon: 'fa-shopping-basket', label: 'Carrito' },
+            'checkout': { gradient: 'linear-gradient(135deg, #ffd89b 0%, #19547b 100%)', icon: 'fa-shopping-cart', label: 'Checkout' }
+        };
+        
+        const type = types[visita.visit_type] || { gradient: '#6c757d', icon: 'fa-question', label: '-' };
+        return `<span class="badge rounded-pill" style="background: ${type.gradient};"><i class="fas ${type.icon}"></i> ${type.label}</span>`;
+    }
+    
+    // Función auxiliar para generar info de usuario
+    function generateUserInfo(visita) {
+        if (visita.is_authenticated) {
+            const userName = visita.user_name || visita.user_email || 'Usuario';
+            const initial = userName.charAt(0).toUpperCase();
+            return {
+                avatar: `<div class="user-avatar me-2" style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 12px;">${initial}</div>`,
+                name: userName,
+                status: '✅ Autenticado',
+                simple: `<span class="badge bg-primary"><i class="fas fa-user"></i> ${userName}</span>`
+            };
+        } else {
+            return {
+                avatar: `<div class="user-avatar me-2" style="width: 32px; height: 32px; border-radius: 50%; background: #6c757d; display: flex; align-items: center; justify-content: center; color: white;"><i class="fas fa-user-secret"></i></div>`,
+                name: 'Anónimo',
+                status: '🔒 No identificado',
+                simple: '<span class="text-secondary small">Anónimo</span>'
+            };
+        }
+    }
+    
+    // Función auxiliar para color del border según tipo
+    function getBorderColor(visitType) {
+        const colors = {
+            'home': '#667eea',
+            'store': '#4facfe',
+            'product_detail': '#43e97b',
+            'cart': '#fa709a',
+            'checkout': '#ffd89b'
+        };
+        return colors[visitType] || '#6c757d';
+    }
+    
+    // Función para actualizar tabla de visitas (DESKTOP)
     function updateVisitasTable(visitas) {
         const tbody = document.getElementById('visitas-tbody');
         if (!tbody) return;
         
         if (visitas.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Sin visitas recientes</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4"><i class="fas fa-eye-slash me-2"></i>Sin visitas recientes</td></tr>';
             return;
         }
         
         tbody.innerHTML = visitas.map(visita => {
-            let visitType = '';
-            if (visita.visit_type === 'home') {
-                visitType = '<span class="badge bg-primary"><i class="fas fa-home"></i> Home</span>';
-            } else if (visita.visit_type === 'store') {
-                visitType = '<span class="badge bg-info"><i class="fas fa-store"></i> Tienda</span>';
-            } else if (visita.visit_type === 'product_detail') {
-                const productInfo = visita.product_name ? 
-                    `<br><small class="text-muted">${visita.product_name}</small>` : '';
-                visitType = `<span class="badge bg-success"><i class="fas fa-box"></i> Producto #${visita.product_id || ''}</span>${productInfo}`;
-            } else if (visita.visit_type === 'cart') {
-                visitType = '<span class="badge bg-purple text-white"><i class="fas fa-shopping-basket"></i> Carrito</span>';
-            } else if (visita.visit_type === 'checkout') {
-                visitType = '<span class="badge bg-warning text-dark"><i class="fas fa-shopping-cart"></i> Checkout</span>';
-            } else {
-                visitType = '<span class="badge bg-secondary">-</span>';
-            }
-            
-            let userInfo = '';
-            if (visita.is_authenticated) {
-                userInfo = `<span class="badge bg-primary"><i class="fas fa-user"></i> ${visita.user_name || visita.user_email}</span>`;
-            } else {
-                userInfo = '<span class="text-secondary small">Anónimo</span>';
-            }
-            
-            let location = '';
-            if (visita.city || visita.country) {
-                location = `<span class="small"><i class="fas fa-map-marker-alt text-danger"></i> ${visita.city || ''}${visita.city && visita.country ? ', ' : ''}${visita.country || ''}</span>`;
-            } else {
-                location = '<span class="text-muted small">-</span>';
-            }
+            const timestamp = parseTimestamp(visita.timestamp);
+            const userInfo = generateUserInfo(visita);
+            const location = (visita.city || visita.country) 
+                ? `<div class="d-flex align-items-center"><i class="fas fa-map-marker-alt text-danger me-2"></i><div><div class="fw-semibold">${visita.city || 'Desconocida'}</div>${visita.country ? `<small class="text-muted">${visita.country}</small>` : ''}</div></div>`
+                : '<small class="text-muted"><i class="fas fa-question-circle"></i> No disponible</small>';
             
             return `
-                <tr>
-                    <td><span class="text-muted small">${visita.timestamp}</span></td>
-                    <td>${visitType}</td>
-                    <td>${userInfo}</td>
+                <tr class="visita-row" style="transition: all 0.3s ease;">
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <div class="visit-time-badge">
+                                <div class="fw-bold">${timestamp.time}</div>
+                                <small class="text-muted">${timestamp.date}</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td>${generateVisitTypeBadge(visita)}</td>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            ${userInfo.avatar}
+                            <div>
+                                <div class="fw-semibold">${userInfo.name}</div>
+                                <small class="text-muted">${userInfo.status}</small>
+                            </div>
+                        </div>
+                    </td>
                     <td>${location}</td>
                     <td><code class="small">${visita.ip_address || '-'}</code></td>
                 </tr>
+            `;
+        }).join('');
+    }
+    
+    // Función para actualizar cards móviles (MOBILE)
+    function updateVisitasCards(visitas) {
+        // Buscar el contenedor de cards móviles
+        const mobileContainer = document.querySelector('.col-12.d-lg-none > div[style*="max-height"]');
+        if (!mobileContainer) return;
+        
+        if (visitas.length === 0) {
+            mobileContainer.innerHTML = `
+                <div class="text-center text-muted py-5">
+                    <i class="fas fa-eye-slash fa-3x mb-3 d-block"></i>
+                    <p class="mb-0">No hay visitas con los filtros seleccionados</p>
+                </div>
+            `;
+            return;
+        }
+        
+        mobileContainer.innerHTML = visitas.map(visita => {
+            const timestamp = parseTimestamp(visita.timestamp);
+            const userInfo = generateUserInfo(visita);
+            const borderColor = getBorderColor(visita.visit_type);
+            const location = (visita.city || visita.country)
+                ? `<small class="text-muted"><i class="fas fa-map-marker-alt text-danger"></i> ${visita.city || 'Desconocida'}${visita.country ? ', ' + visita.country : ''}</small>`
+                : '<small class="text-muted"><i class="fas fa-question-circle"></i> No disponible</small>';
+            
+            return `
+                <div class="card mb-3 shadow-sm border-0" style="border-left: 4px solid ${borderColor} !important;">
+                    <div class="card-body p-3">
+                        <!-- Header de la card -->
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>${generateVisitTypeBadge(visita)}</div>
+                            <div class="text-end">
+                                <div class="fw-bold">${timestamp.time}</div>
+                                <small class="text-muted">${timestamp.date}</small>
+                            </div>
+                        </div>
+                        
+                        <!-- Usuario -->
+                        <div class="mb-2">
+                            <div class="d-flex align-items-center">
+                                ${userInfo.avatar.replace('32px', '40px')}
+                                <div>
+                                    <div class="fw-semibold">${userInfo.name}</div>
+                                    <small class="text-muted">${userInfo.status}</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Footer con ubicación e IP -->
+                        <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                            <div>${location}</div>
+                            <code class="small bg-light px-2 py-1 rounded">${visita.ip_address || '-'}</code>
+                        </div>
+                    </div>
+                </div>
             `;
         }).join('');
     }
