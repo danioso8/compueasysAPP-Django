@@ -527,78 +527,81 @@
             </div>
             
             {% elif request.GET.view == 'visitas' %}
-            <!-- Sección Visitas Recientes responsive -->
+            <!-- Sección Visitas Recientes responsive y moderna -->
              <section class="mb-4">
-                <div class="card modern-card">
-                    <div class="card-header modern-header">
+                <div class="card modern-card shadow-sm">
+                    <div class="card-header modern-header bg-gradient" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                         <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3">
-                            <div>
-                                <i class="fas fa-eye me-2"></i>
-                                <strong>Visitas a la Tienda</strong>
-                                <span class="badge bg-success ms-2" id="live-indicator">
-                                    <i class="fas fa-circle pulse-animation"></i> En vivo
-                                </span>
+                            <div class="text-white">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-chart-line me-2"></i>
+                                    Análisis de Visitas
+                                    <span class="badge bg-white text-primary ms-2 pulse-animation">
+                                        <i class="fas fa-circle" style="font-size: 8px;"></i> En vivo
+                                    </span>
+                                </h5>
+                                <small class="opacity-75">Monitoreo en tiempo real de tu tienda</small>
                             </div>
                             <form method="get" class="d-flex flex-wrap gap-2 align-items-center mb-0 w-100 w-md-auto" id="visitas-filter-form">
                                 <input type="hidden" name="view" value="visitas">
-                                <select name="visitas_filter" class="form-select form-select-sm flex-fill flex-md-grow-0" id="visitas_filter" onchange="this.form.submit()" style="min-width: 100px;">
-                                    <option value="all" {% if request.GET.visitas_filter == 'all' or not request.GET.visitas_filter %}selected{% endif %}>Todas</option>
-                                    <option value="today" {% if request.GET.visitas_filter == 'today' %}selected{% endif %}>Hoy</option>
-                                    <option value="week" {% if request.GET.visitas_filter == 'week' %}selected{% endif %}>Semana</option>
-                                    <option value="month" {% if request.GET.visitas_filter == 'month' %}selected{% endif %}>Mes</option>
+                                <select name="visitas_filter" class="form-select form-select-sm flex-fill flex-md-grow-0 shadow-sm" id="visitas_filter" onchange="this.form.submit()" style="min-width: 100px;">
+                                    <option value="all" {% if request.GET.visitas_filter == 'all' or not request.GET.visitas_filter %}selected{% endif %}>📅 Todas</option>
+                                    <option value="today" {% if request.GET.visitas_filter == 'today' %}selected{% endif %}>🌟 Hoy</option>
+                                    <option value="week" {% if request.GET.visitas_filter == 'week' %}selected{% endif %}>📊 Semana</option>
+                                    <option value="month" {% if request.GET.visitas_filter == 'month' %}selected{% endif %}>📈 Mes</option>
                                 </select>
-                                <select name="visitas_user" class="form-select form-select-sm flex-fill flex-md-grow-0" id="visitas_user" onchange="this.form.submit()" style="min-width: 100px;">
-                                    <option value="all" {% if request.GET.visitas_user == 'all' or not request.GET.visitas_user %}selected{% endif %}>Usuarios</option>
-                                    <option value="auth" {% if request.GET.visitas_user == 'auth' %}selected{% endif %}>Autenticados</option>
-                                    <option value="anon" {% if request.GET.visitas_user == 'anon' %}selected{% endif %}>Anónimos</option>
+                                <select name="visitas_user" class="form-select form-select-sm flex-fill flex-md-grow-0 shadow-sm" id="visitas_user" onchange="this.form.submit()" style="min-width: 100px;">
+                                    <option value="all" {% if request.GET.visitas_user == 'all' or not request.GET.visitas_user %}selected{% endif %}>👥 Todos</option>
+                                    <option value="auth" {% if request.GET.visitas_user == 'auth' %}selected{% endif %}>✅ Autenticados</option>
+                                    <option value="anon" {% if request.GET.visitas_user == 'anon' %}selected{% endif %}>🔒 Anónimos</option>
                                 </select>
-                                <select name="visitas_type" class="form-select form-select-sm flex-fill flex-md-grow-0" id="visitas_type" onchange="this.form.submit()" style="min-width: 100px;">
-                                    <option value="all" {% if request.GET.visitas_type == 'all' or not request.GET.visitas_type %}selected{% endif %}>Tipos</option>
-                                    <option value="home" {% if request.GET.visitas_type == 'home' %}selected{% endif %}>Home</option>
-                                    <option value="store" {% if request.GET.visitas_type == 'store' %}selected{% endif %}>Tienda</option>
-                                    <option value="product_detail" {% if request.GET.visitas_type == 'product_detail' %}selected{% endif %}>Productos</option>
-                                    <option value="cart" {% if request.GET.visitas_type == 'cart' %}selected{% endif %}>Carrito</option>
-                                    <option value="checkout" {% if request.GET.visitas_type == 'checkout' %}selected{% endif %}>Checkout</option>
+                                <select name="visitas_type" class="form-select form-select-sm flex-fill flex-md-grow-0 shadow-sm" id="visitas_type" onchange="this.form.submit()" style="min-width: 100px;">
+                                    <option value="all" {% if request.GET.visitas_type == 'all' or not request.GET.visitas_type %}selected{% endif %}>🌐 Todos</option>
+                                    <option value="home" {% if request.GET.visitas_type == 'home' %}selected{% endif %}>🏠 Home</option>
+                                    <option value="store" {% if request.GET.visitas_type == 'store' %}selected{% endif %}>🏪 Tienda</option>
+                                    <option value="product_detail" {% if request.GET.visitas_type == 'product_detail' %}selected{% endif %}>📦 Productos</option>
+                                    <option value="cart" {% if request.GET.visitas_type == 'cart' %}selected{% endif %}>🛒 Carrito</option>
+                                    <option value="checkout" {% if request.GET.visitas_type == 'checkout' %}selected{% endif %}>💳 Checkout</option>
                                 </select>
-                                <button type="button" class="btn btn-sm btn-outline-primary" id="refresh-visitas" title="Refrescar ahora">
+                                <button type="button" class="btn btn-sm btn-light shadow-sm" id="refresh-visitas" title="Refrescar ahora">
                                     <i class="fas fa-sync-alt"></i>
                                 </button>
                             </form>
                         </div>
                     </div>
                     <div class="card-body p-0">
-                        <!-- Estadísticas en cards responsive (solo móvil) -->
-                        <div class="d-lg-none p-3">
+                        <!-- Estadísticas en cards responsive modernos (solo móvil) -->
+                        <div class="d-lg-none p-3 bg-light">
                             <div class="row g-2 mb-3">
                                 <div class="col-6">
-                                    <div class="card bg-light text-center h-100">
-                                        <div class="card-body p-2">
-                                            <h6 class="mb-1">{{ visitas_count }}</h6>
-                                            <small class="text-muted">Total</small>
+                                    <div class="card text-center h-100 border-0 shadow-sm" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                                        <div class="card-body p-3 text-white">
+                                            <h5 class="mb-1 fw-bold">{{ visitas_count }}</h5>
+                                            <small class="opacity-75">📊 Total Filtrado</small>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="col-6">
-                                    <div class="card bg-light text-center h-100">
-                                        <div class="card-body p-2">
-                                            <h6 class="mb-1">{{ visitas_count_today }}</h6>
-                                            <small class="text-muted">Hoy</small>
+                                    <div class="card text-center h-100 border-0 shadow-sm" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                                        <div class="card-body p-3 text-white">
+                                            <h5 class="mb-1 fw-bold">{{ visitas_count_today }}</h5>
+                                            <small class="opacity-75">🌟 Hoy</small>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="col-6">
-                                    <div class="card bg-light text-center h-100">
-                                        <div class="card-body p-2">
-                                            <h6 class="mb-1">{{ visitas_count_auth }}</h6>
-                                            <small class="text-muted">Autenticados</small>
+                                    <div class="card text-center h-100 border-0 shadow-sm" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                                        <div class="card-body p-3 text-white">
+                                            <h5 class="mb-1 fw-bold">{{ visitas_count_auth }}</h5>
+                                            <small class="opacity-75">✅ Autenticados</small>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="col-6">
-                                    <div class="card bg-light text-center h-100">
-                                        <div class="card-body p-2">
-                                            <h6 class="mb-1">{{ visitas_count_anon }}</h6>
-                                            <small class="text-muted">Anónimos</small>
+                                    <div class="card text-center h-100 border-0 shadow-sm" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                                        <div class="card-body p-3 text-white">
+                                            <h5 class="mb-1 fw-bold">{{ visitas_count_anon }}</h5>
+                                            <small class="opacity-75">🔒 Anónimos</small>
                                         </div>
                                     </div>
                                 </div>
@@ -606,137 +609,301 @@
                         </div>
 
                         <div class="row g-0">
-                            <!-- Sidebar de estadísticas (solo desktop) -->
-                            <div class="col-lg-3 d-none d-lg-block border-end">
+                            <!-- Sidebar de estadísticas modernizado (solo desktop) -->
+                            <div class="col-lg-3 d-none d-lg-block border-end bg-light">
                                 <div class="p-3">
-                                    <div class="mb-3"><span class="fw-bold">Total filtrado:</span> <span class="badge bg-info fs-6">{{ visitas_count }}</span></div>
-                                    <h6 class="mb-2 text-muted"><i class="fas fa-calendar-alt"></i> Por Período</h6>
-                                    <div class="mb-1 small">Hoy: <span class="badge bg-primary">{{ visitas_count_today }}</span></div>
-                                    <div class="mb-1 small">Esta semana: <span class="badge bg-success">{{ visitas_count_week }}</span></div>
-                                    <div class="mb-3 small">Este mes: <span class="badge bg-warning text-dark">{{ visitas_count_month }}</span></div>
-                                    <h6 class="mb-2 text-muted"><i class="fas fa-users"></i> Por Usuario</h6>
-                                    <div class="mb-1 small">Autenticados: <span class="badge bg-secondary">{{ visitas_count_auth }}</span></div>
-                                    <div class="mb-3 small">Anónimos: <span class="badge bg-dark">{{ visitas_count_anon }}</span></div>
-                                    <h6 class="mb-2 text-muted"><i class="fas fa-map-signs"></i> Por Tipo</h6>
-                                    <div class="mb-1 small">Home: <span class="badge bg-primary">{{ visitas_count_home }}</span></div>
-                                    <div class="mb-1 small">Tienda: <span class="badge bg-info">{{ visitas_count_store }}</span></div>
-                                    <div class="mb-1 small">Productos: <span class="badge bg-success">{{ visitas_count_product }}</span></div>
-                                    <div class="mb-1 small">Carrito: <span class="badge bg-purple">{{ visitas_count_cart }}</span></div>
-                                    <div class="mb-1 small">Checkout: <span class="badge bg-warning text-dark">{{ visitas_count_checkout }}</span></div>
+                                    <!-- Total filtrado destacado -->
+                                    <div class="card border-0 shadow-sm mb-3" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                                        <div class="card-body text-center text-white p-3">
+                                            <h4 class="mb-1 fw-bold">{{ visitas_count }}</h4>
+                                            <small class="opacity-75">📊 Total Filtrado</small>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Por Período -->
+                                    <div class="mb-3">
+                                        <h6 class="mb-2 text-primary fw-bold"><i class="fas fa-calendar-alt me-1"></i> Por Período</h6>
+                                        <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-white rounded shadow-sm">
+                                            <span class="small">🌟 Hoy:</span>
+                                            <span class="badge" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">{{ visitas_count_today }}</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-white rounded shadow-sm">
+                                            <span class="small">📊 Semana:</span>
+                                            <span class="badge" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">{{ visitas_count_week }}</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-white rounded shadow-sm">
+                                            <span class="small">📈 Mes:</span>
+                                            <span class="badge" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">{{ visitas_count_month }}</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Por Usuario -->
+                                    <div class="mb-3">
+                                        <h6 class="mb-2 text-success fw-bold"><i class="fas fa-users me-1"></i> Por Usuario</h6>
+                                        <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-white rounded shadow-sm">
+                                            <span class="small">✅ Autenticados:</span>
+                                            <span class="badge bg-success">{{ visitas_count_auth }}</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-white rounded shadow-sm">
+                                            <span class="small">🔒 Anónimos:</span>
+                                            <span class="badge bg-secondary">{{ visitas_count_anon }}</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Por Tipo -->
+                                    <div>
+                                        <h6 class="mb-2 text-info fw-bold"><i class="fas fa-map-signs me-1"></i> Por Tipo</h6>
+                                        <div class="d-flex justify-content-between align-items-center mb-1 p-2 bg-white rounded shadow-sm">
+                                            <span class="small">🏠 Home:</span>
+                                            <span class="badge bg-primary">{{ visitas_count_home }}</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center mb-1 p-2 bg-white rounded shadow-sm">
+                                            <span class="small">🏪 Tienda:</span>
+                                            <span class="badge bg-info">{{ visitas_count_store }}</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center mb-1 p-2 bg-white rounded shadow-sm">
+                                            <span class="small">📦 Productos:</span>
+                                            <span class="badge bg-success">{{ visitas_count_product }}</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center mb-1 p-2 bg-white rounded shadow-sm">
+                                            <span class="small">🛒 Carrito:</span>
+                                            <span class="badge" style="background: #6f42c1;">{{ visitas_count_cart }}</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center mb-1 p-2 bg-white rounded shadow-sm">
+                                            <span class="small">💳 Checkout:</span>
+                                            <span class="badge bg-warning text-dark">{{ visitas_count_checkout }}</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             
-                            <!-- Tabla desktop -->
+                            <!-- Contenedor de visitas con scroll moderno (desktop) -->
                             <div class="col-lg-9 d-none d-lg-block">
-                                <div class="table-responsive">
+                                <!-- Header con contador -->
+                                <div class="p-3 border-bottom bg-white sticky-top">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <span class="text-muted">Mostrando</span>
+                                            <span class="badge bg-primary">{{ visitas_count }}</span>
+                                            <span class="text-muted">visitas</span>
+                                        </div>
+                                        <small class="text-muted">
+                                            <i class="fas fa-arrow-down me-1"></i>Desplázate para ver más
+                                        </small>
+                                    </div>
+                                </div>
+                                
+                                <!-- Contenedor con scroll -->
+                                <div style="max-height: 600px; overflow-y: auto; overflow-x: hidden;" class="custom-scrollbar">
                                     <table class="table table-sm table-hover mb-0">
-                                        <thead class="table-light">
+                                        <thead class="table-light" style="position: sticky; top: 0; z-index: 10;">
                                             <tr>
-                                                <th>Fecha/Hora</th>
-                                                <th>Tipo de Visita</th>
-                                                <th>Usuario</th>
-                                                <th>Ubicación</th>
-                                                <th>IP</th>
+                                                <th style="min-width: 140px;">
+                                                    <i class="fas fa-clock text-primary"></i> Fecha/Hora
+                                                </th>
+                                                <th style="min-width: 120px;">
+                                                    <i class="fas fa-tag text-success"></i> Tipo
+                                                </th>
+                                                <th style="min-width: 150px;">
+                                                    <i class="fas fa-user text-info"></i> Usuario
+                                                </th>
+                                                <th style="min-width: 180px;">
+                                                    <i class="fas fa-map-marker-alt text-danger"></i> Ubicación
+                                                </th>
+                                                <th style="min-width: 120px;">
+                                                    <i class="fas fa-network-wired text-secondary"></i> IP
+                                                </th>
                                             </tr>
                                         </thead>
                                         <tbody id="visitas-tbody">
                                             {% for visita in visitas_recientes %}
-                                            <tr>
-                                                <td><span class="text-muted small">{{ visita.timestamp|date:"d/m/Y H:i:s" }}</span></td>
+                                            <tr class="visita-row" style="transition: all 0.3s ease;">
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="visit-time-badge">
+                                                            <div class="fw-bold">{{ visita.timestamp|date:"H:i" }}</div>
+                                                            <small class="text-muted">{{ visita.timestamp|date:"d/m/Y" }}</small>
+                                                        </div>
+                                                    </div>
+                                                </td>
                                                 <td>
                                                     {% if visita.visit_type == 'home' %}
-                                                        <span class="badge bg-primary"><i class="fas fa-home"></i> Home</span>
+                                                        <span class="badge rounded-pill" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"><i class="fas fa-home"></i> Home</span>
                                                     {% elif visita.visit_type == 'store' %}
-                                                        <span class="badge bg-info"><i class="fas fa-store"></i> Tienda</span>
+                                                        <span class="badge rounded-pill" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);"><i class="fas fa-store"></i> Tienda</span>
                                                     {% elif visita.visit_type == 'product_detail' %}
-                                                        <span class="badge bg-success"><i class="fas fa-box"></i> Producto 
-                                                            {% if visita.product_id %}#{{ visita.product_id }}{% endif %}
+                                                        <span class="badge rounded-pill" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                                                            <i class="fas fa-box"></i> 
+                                                            {% if visita.product %}
+                                                                {{ visita.product.name|truncatewords:3 }}
+                                                            {% elif visita.product_id %}
+                                                                Producto #{{ visita.product_id }}
+                                                            {% else %}
+                                                                Producto
+                                                            {% endif %}
                                                         </span>
                                                     {% elif visita.visit_type == 'cart' %}
-                                                        <span class="badge bg-purple text-white"><i class="fas fa-shopping-basket"></i> Carrito</span>
+                                                        <span class="badge rounded-pill" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);"><i class="fas fa-shopping-basket"></i> Carrito</span>
                                                     {% elif visita.visit_type == 'checkout' %}
-                                                        <span class="badge bg-warning text-dark"><i class="fas fa-shopping-cart"></i> Checkout</span>
+                                                        <span class="badge rounded-pill" style="background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%);"><i class="fas fa-shopping-cart"></i> Checkout</span>
                                                     {% else %}
-                                                        <span class="badge bg-secondary">-</span>
+                                                        <span class="badge bg-secondary rounded-pill">-</span>
                                                     {% endif %}
                                                 </td>
                                                 <td>
                                                     {% if visita.user %}
-                                                        <span class="badge bg-primary"><i class="fas fa-user"></i> {{ visita.user.name|default:visita.user.email }}</span>
+                                                        <div class="d-flex align-items-center">
+                                                            <div class="user-avatar me-2" style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 12px;">
+                                                                {{ visita.user.name|default:visita.user.email|first|upper }}
+                                                            </div>
+                                                            <div>
+                                                                <div class="fw-semibold">{{ visita.user.name|default:visita.user.email|truncatewords:2 }}</div>
+                                                                <small class="text-muted">✅ Autenticado</small>
+                                                            </div>
+                                                        </div>
                                                     {% else %}
-                                                        <span class="text-secondary small">Anónimo</span>
+                                                        <div class="d-flex align-items-center">
+                                                            <div class="user-avatar me-2" style="width: 32px; height: 32px; border-radius: 50%; background: #6c757d; display: flex; align-items: center; justify-content: center; color: white;">
+                                                                <i class="fas fa-user-secret"></i>
+                                                            </div>
+                                                            <div>
+                                                                <div class="text-secondary">Anónimo</div>
+                                                                <small class="text-muted">🔒 No identificado</small>
+                                                            </div>
+                                                        </div>
                                                     {% endif %}
                                                 </td>
                                                 <td>
                                                     {% if visita.city or visita.country %}
-                                                        <span class="small"><i class="fas fa-map-marker-alt text-danger"></i> {{ visita.city|default:'' }}{% if visita.city and visita.country %}, {% endif %}{{ visita.country|default:'' }}</span>
+                                                        <div class="d-flex align-items-center">
+                                                            <i class="fas fa-map-marker-alt text-danger me-2"></i>
+                                                            <div>
+                                                                <div class="fw-semibold">{{ visita.city|default:'Desconocida' }}</div>
+                                                                <small class="text-muted">{{ visita.country|default:'-' }}</small>
+                                                            </div>
+                                                        </div>
                                                     {% else %}
-                                                        <span class="text-muted small">-</span>
+                                                        <div class="text-muted">
+                                                            <i class="fas fa-question-circle me-1"></i>No disponible
+                                                        </div>
                                                     {% endif %}
                                                 </td>
-                                                <td><code class="small">{{ visita.ip_address|default:'-' }}</code></td>
+                                                <td>
+                                                    <code class="px-2 py-1 bg-light rounded">{{ visita.ip_address|default:'-' }}</code>
+                                                </td>
                                             </tr>
                                             {% empty %}
-                                            <tr><td colspan="5" class="text-center text-muted">Sin visitas recientes</td></tr>
+                                            <tr>
+                                                <td colspan="5" class="text-center py-5">
+                                                    <i class="fas fa-eye-slash fa-3x text-muted mb-3 d-block"></i>
+                                                    <p class="text-muted">No hay visitas con los filtros seleccionados</p>
+                                                </td>
+                                            </tr>
                                             {% endfor %}
                                         </tbody>
                                     </table>
                                 </div>
                             </div>
 
-                            <!-- Tarjetas móviles -->
+                            <!-- Tarjetas móviles con scroll moderno -->
                             <div class="col-12 d-lg-none">
-                                <div class="p-3">
+                                <!-- Header contador móvil -->
+                                <div class="p-3 border-bottom bg-white sticky-top">
+                                    <div class="text-center">
+                                        <span class="badge bg-primary">{{ visitas_count }}</span>
+                                        <span class="text-muted small">visitas totales</span>
+                                        <div class="mt-1">
+                                            <small class="text-muted">
+                                                <i class="fas fa-arrow-down me-1"></i>Desliza para ver más
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Contenedor con scroll -->
+                                <div style="max-height: 500px; overflow-y: auto; overflow-x: hidden;" class="custom-scrollbar p-3">
                                     {% for visita in visitas_recientes %}
-                                    <div class="card visita-card-mobile mb-3">
+                                    <div class="card mb-3 shadow-sm border-0" style="border-left: 4px solid {% if visita.visit_type == 'home' %}#667eea{% elif visita.visit_type == 'store' %}#4facfe{% elif visita.visit_type == 'product_detail' %}#43e97b{% elif visita.visit_type == 'cart' %}#fa709a{% elif visita.visit_type == 'checkout' %}#ffd89b{% else %}#6c757d{% endif %} !important;">
                                         <div class="card-body p-3">
-                                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <!-- Header de la card -->
+                                            <div class="d-flex justify-content-between align-items-start mb-3">
                                                 <div>
                                                     {% if visita.visit_type == 'home' %}
-                                                        <span class="badge bg-primary"><i class="fas fa-home"></i> Home</span>
+                                                        <span class="badge rounded-pill" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"><i class="fas fa-home"></i> Home</span>
                                                     {% elif visita.visit_type == 'store' %}
-                                                        <span class="badge bg-info"><i class="fas fa-store"></i> Tienda</span>
+                                                        <span class="badge rounded-pill" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);"><i class="fas fa-store"></i> Tienda</span>
                                                     {% elif visita.visit_type == 'product_detail' %}
-                                                        <span class="badge bg-success"><i class="fas fa-box"></i> Producto {% if visita.product_id %}#{{ visita.product_id }}{% endif %}</span>
+                                                        <span class="badge rounded-pill" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                                                            <i class="fas fa-box"></i> 
+                                                            {% if visita.product %}
+                                                                {{ visita.product.name|truncatewords:3 }}
+                                                            {% elif visita.product_id %}
+                                                                Producto #{{ visita.product_id }}
+                                                            {% else %}
+                                                                Producto
+                                                            {% endif %}
+                                                        </span>
                                                     {% elif visita.visit_type == 'cart' %}
-                                                        <span class="badge bg-purple text-white"><i class="fas fa-shopping-basket"></i> Carrito</span>
+                                                        <span class="badge rounded-pill" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);"><i class="fas fa-shopping-basket"></i> Carrito</span>
                                                     {% elif visita.visit_type == 'checkout' %}
-                                                        <span class="badge bg-warning text-dark"><i class="fas fa-shopping-cart"></i> Checkout</span>
+                                                        <span class="badge rounded-pill" style="background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%);"><i class="fas fa-shopping-cart"></i> Checkout</span>
                                                     {% else %}
-                                                        <span class="badge bg-secondary">-</span>
+                                                        <span class="badge bg-secondary rounded-pill">-</span>
                                                     {% endif %}
                                                 </div>
-                                                <small class="text-muted">{{ visita.timestamp|date:"d/m/Y H:i" }}</small>
+                                                <div class="text-end">
+                                                    <div class="fw-bold">{{ visita.timestamp|date:"H:i" }}</div>
+                                                    <small class="text-muted">{{ visita.timestamp|date:"d/m/Y" }}</small>
+                                                </div>
                                             </div>
+                                            
+                                            <!-- Usuario -->
                                             <div class="mb-2">
                                                 {% if visita.user %}
-                                                    <div class="mb-1">
-                                                        <i class="fas fa-user text-primary"></i>
-                                                        <strong>{{ visita.user.name|default:visita.user.email }}</strong>
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="user-avatar me-2" style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">
+                                                            {{ visita.user.name|default:visita.user.email|first|upper }}
+                                                        </div>
+                                                        <div>
+                                                            <div class="fw-semibold">{{ visita.user.name|default:visita.user.email|truncatewords:2 }}</div>
+                                                            <small class="text-muted">✅ Autenticado</small>
+                                                        </div>
                                                     </div>
                                                 {% else %}
-                                                    <div class="mb-1">
-                                                        <i class="fas fa-user-secret text-secondary"></i>
-                                                        <span class="text-muted">Anónimo</span>
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="user-avatar me-2" style="width: 40px; height: 40px; border-radius: 50%; background: #6c757d; display: flex; align-items: center; justify-content: center; color: white;">
+                                                            <i class="fas fa-user-secret"></i>
+                                                        </div>
+                                                        <div>
+                                                            <div class="text-secondary">Anónimo</div>
+                                                            <small class="text-muted">🔒 No identificado</small>
+                                                        </div>
                                                     </div>
                                                 {% endif %}
                                             </div>
-                                            <div class="d-flex justify-content-between align-items-center">
+                                            
+                                            <!-- Footer con ubicación e IP -->
+                                            <div class="d-flex justify-content-between align-items-center pt-2 border-top">
                                                 <div>
                                                     {% if visita.city or visita.country %}
-                                                        <small><i class="fas fa-map-marker-alt text-danger"></i> {{ visita.city|default:'' }}{% if visita.city and visita.country %}, {% endif %}{{ visita.country|default:'' }}</small>
+                                                        <small class="text-muted">
+                                                            <i class="fas fa-map-marker-alt text-danger"></i> 
+                                                            {{ visita.city|default:'Desconocida' }}{% if visita.country %}, {{ visita.country }}{% endif %}
+                                                        </small>
                                                     {% else %}
-                                                        <small class="text-muted">-</small>
+                                                        <small class="text-muted">
+                                                            <i class="fas fa-question-circle"></i> No disponible
+                                                        </small>
                                                     {% endif %}
                                                 </div>
-                                                <code class="small">{{ visita.ip_address|default:'-' }}</code>
+                                                <code class="small bg-light px-2 py-1 rounded">{{ visita.ip_address|default:'-' }}</code>
                                             </div>
                                         </div>
                                     </div>
                                     {% empty %}
-                                    <div class="text-center text-muted py-4">
-                                        <i class="fas fa-eye-slash fa-2x mb-2"></i>
-                                        <p>Sin visitas recientes</p>
+                                    <div class="text-center text-muted py-5">
+                                        <i class="fas fa-eye-slash fa-3x mb-3 d-block"></i>
+                                        <p class="mb-0">No hay visitas con los filtros seleccionados</p>
                                     </div>
                                     {% endfor %}
                                 </div>
@@ -754,13 +921,16 @@
                             <div>
                                 <i class="fas fa-fire me-2 text-danger"></i>
                                 <strong>Productos Más Visitados</strong>
+                                {% if productos_visitados_page %}
+                                <span class="badge bg-info ms-2">{{ productos_visitados_page.paginator.count }} productos</span>
+                                {% endif %}
                             </div>
                             <div class="d-flex gap-2 align-items-center w-100 w-sm-auto">
                                 <select class="form-select form-select-sm flex-fill flex-sm-grow-0" id="periodo-productos" style="min-width: 120px;">
-                                    <option value="all">Todo</option>
-                                    <option value="today">Hoy</option>
-                                    <option value="week">Semana</option>
-                                    <option value="month">Mes</option>
+                                    <option value="all" {% if request.GET.periodo_productos == 'all' or not request.GET.periodo_productos %}selected{% endif %}>Todo</option>
+                                    <option value="today" {% if request.GET.periodo_productos == 'today' %}selected{% endif %}>Hoy</option>
+                                    <option value="week" {% if request.GET.periodo_productos == 'week' %}selected{% endif %}>Semana</option>
+                                    <option value="month" {% if request.GET.periodo_productos == 'month' %}selected{% endif %}>Mes</option>
                                 </select>
                                 <button type="button" class="btn btn-sm btn-outline-success" id="refresh-productos" title="Refrescar productos">
                                     <i class="fas fa-sync-alt"></i>
@@ -769,8 +939,20 @@
                         </div>
                     </div>
                     <div class="card-body">
+                        {% if productos_visitados_page %}
+                        <!-- Información de paginación -->
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <small class="text-muted">
+                                Mostrando {{ productos_visitados_page.start_index }} - {{ productos_visitados_page.end_index }} 
+                                de {{ productos_visitados_page.paginator.count }} productos
+                            </small>
+                            <small class="text-muted">
+                                Página {{ productos_visitados_page.number }} de {{ productos_visitados_page.paginator.num_pages }}
+                            </small>
+                        </div>
+                        
                         <div class="row g-3" id="productos-visitados-container">
-                            {% for item in productos_mas_visitados %}
+                            {% for item in productos_visitados_page %}
                             <div class="col-12 col-sm-6 col-lg-4">
                                 <div class="card h-100 shadow-sm">
                                     <div class="card-body">
@@ -814,6 +996,73 @@
                             </div>
                             {% endfor %}
                         </div>
+                        
+                        <!-- Paginación de productos visitados -->
+                        {% if productos_visitados_page.paginator.num_pages > 1 %}
+                        <nav aria-label="Paginación de productos visitados" class="mt-4">
+                            <ul class="pagination justify-content-center">
+                                <!-- Primera página -->
+                                {% if productos_visitados_page.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?view=visitas&productos_page=1{% if request.GET.visitas_filter %}&visitas_filter={{ request.GET.visitas_filter }}{% endif %}{% if request.GET.visitas_user %}&visitas_user={{ request.GET.visitas_user }}{% endif %}{% if request.GET.visitas_type %}&visitas_type={{ request.GET.visitas_type }}{% endif %}{% if request.GET.periodo_productos %}&periodo_productos={{ request.GET.periodo_productos }}{% endif %}">
+                                        <i class="fas fa-angle-double-left"></i>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?view=visitas&productos_page={{ productos_visitados_page.previous_page_number }}{% if request.GET.visitas_filter %}&visitas_filter={{ request.GET.visitas_filter }}{% endif %}{% if request.GET.visitas_user %}&visitas_user={{ request.GET.visitas_user }}{% endif %}{% if request.GET.visitas_type %}&visitas_type={{ request.GET.visitas_type }}{% endif %}{% if request.GET.periodo_productos %}&periodo_productos={{ request.GET.periodo_productos }}{% endif %}">
+                                        <i class="fas fa-angle-left"></i> Anterior
+                                    </a>
+                                </li>
+                                {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link"><i class="fas fa-angle-double-left"></i></span>
+                                </li>
+                                <li class="page-item disabled">
+                                    <span class="page-link"><i class="fas fa-angle-left"></i> Anterior</span>
+                                </li>
+                                {% endif %}
+
+                                <!-- Páginas numeradas -->
+                                {% for num in productos_visitados_page.paginator.page_range %}
+                                    {% if productos_visitados_page.number == num %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ num }}</span>
+                                    </li>
+                                    {% elif num > productos_visitados_page.number|add:'-3' and num < productos_visitados_page.number|add:'3' %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?view=visitas&productos_page={{ num }}{% if request.GET.visitas_filter %}&visitas_filter={{ request.GET.visitas_filter }}{% endif %}{% if request.GET.visitas_user %}&visitas_user={{ request.GET.visitas_user }}{% endif %}{% if request.GET.visitas_type %}&visitas_type={{ request.GET.visitas_type }}{% endif %}{% if request.GET.periodo_productos %}&periodo_productos={{ request.GET.periodo_productos }}{% endif %}">{{ num }}</a>
+                                    </li>
+                                    {% endif %}
+                                {% endfor %}
+
+                                <!-- Última página -->
+                                {% if productos_visitados_page.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?view=visitas&productos_page={{ productos_visitados_page.next_page_number }}{% if request.GET.visitas_filter %}&visitas_filter={{ request.GET.visitas_filter }}{% endif %}{% if request.GET.visitas_user %}&visitas_user={{ request.GET.visitas_user }}{% endif %}{% if request.GET.visitas_type %}&visitas_type={{ request.GET.visitas_type }}{% endif %}{% if request.GET.periodo_productos %}&periodo_productos={{ request.GET.periodo_productos }}{% endif %}">
+                                        Siguiente <i class="fas fa-angle-right"></i>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?view=visitas&productos_page={{ productos_visitados_page.paginator.num_pages }}{% if request.GET.visitas_filter %}&visitas_filter={{ request.GET.visitas_filter }}{% endif %}{% if request.GET.visitas_user %}&visitas_user={{ request.GET.visitas_user }}{% endif %}{% if request.GET.visitas_type %}&visitas_type={{ request.GET.visitas_type }}{% endif %}{% if request.GET.periodo_productos %}&periodo_productos={{ request.GET.periodo_productos }}{% endif %}">
+                                        <i class="fas fa-angle-double-right"></i>
+                                    </a>
+                                </li>
+                                {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">Siguiente <i class="fas fa-angle-right"></i></span>
+                                </li>
+                                <li class="page-item disabled">
+                                    <span class="page-link"><i class="fas fa-angle-double-right"></i></span>
+                                </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                        {% endif %}
+                        {% else %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> No hay datos de productos visitados
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
             </section>
@@ -5955,29 +6204,50 @@
     
     // Event listeners
     document.addEventListener('DOMContentLoaded', function() {
-        // Botón de refresh manual
+        // Botón de refresh manual de visitas
         const refreshBtn = document.getElementById('refresh-visitas');
         if (refreshBtn) {
             refreshBtn.addEventListener('click', function() {
-                console.log('🔄 Refresh manual solicitado');
-                refreshVisitas();
-                refreshProductosMasVisitados();
+                console.log('🔄 Refresh manual de visitas solicitado');
                 
-                // Feedback visual
-                const icon = this.querySelector('i');
-                if (icon) {
-                    icon.classList.add('fa-spin');
-                    setTimeout(() => icon.classList.remove('fa-spin'), 1000);
+                // Verificar si hay paginación de productos activa
+                const urlParams = new URLSearchParams(window.location.search);
+                const hasProductosPagination = urlParams.has('productos_page');
+                
+                if (hasProductosPagination) {
+                    // Si hay paginación, recargar toda la página para mantener el estado
+                    const icon = this.querySelector('i');
+                    if (icon) {
+                        icon.classList.add('fa-spin');
+                    }
+                    window.location.reload();
+                } else {
+                    // Si no hay paginación, usar AJAX normal
+                    refreshVisitas();
+                    
+                    // Feedback visual
+                    const icon = this.querySelector('i');
+                    if (icon) {
+                        icon.classList.add('fa-spin');
+                        setTimeout(() => icon.classList.remove('fa-spin'), 1000);
+                    }
                 }
             });
         }
         
-        // Selector de período de productos
+        // Selector de período de productos - Usar recarga de página para mantener paginación
         const periodoSelect = document.getElementById('periodo-productos');
         if (periodoSelect) {
             periodoSelect.addEventListener('change', function() {
                 console.log('📊 Cambiando período de productos:', this.value);
-                refreshProductosMasVisitados();
+                
+                // Construir URL con parámetros actuales
+                const url = new URL(window.location);
+                url.searchParams.set('periodo_productos', this.value);
+                url.searchParams.delete('productos_page'); // Reset a primera página
+                
+                // Redirigir con nuevos parámetros
+                window.location.href = url.toString();
             });
         }
         
@@ -5986,30 +6256,54 @@
         if (refreshProductosBtn) {
             refreshProductosBtn.addEventListener('click', function() {
                 console.log('🔄 Refresh manual de productos');
-                refreshProductosMasVisitados();
                 
                 // Feedback visual
                 const icon = this.querySelector('i');
                 if (icon) {
                     icon.classList.add('fa-spin');
-                    setTimeout(() => icon.classList.remove('fa-spin'), 1000);
                 }
+                
+                // Recargar página actual
+                window.location.reload();
             });
         }
         
-        // Iniciar auto-refresh
-        refreshInterval = setInterval(() => {
-            refreshVisitas();
-            refreshProductosMasVisitados();
-        }, REFRESH_INTERVAL);
+        // Verificar si hay paginación activa en productos
+        const urlParams = new URLSearchParams(window.location.search);
+        const hasProductosPagination = urlParams.has('productos_page');
         
-        console.log(`✅ Auto-refresh iniciado (cada ${REFRESH_INTERVAL/1000}s)`);
-        
-        // Refresh inicial después de 2 segundos
-        setTimeout(() => {
-            refreshVisitas();
-            refreshProductosMasVisitados();
-        }, 2000);
+        // Solo iniciar auto-refresh si NO hay paginación de productos activa
+        if (!hasProductosPagination) {
+            // Iniciar auto-refresh solo para visitas (no productos)
+            refreshInterval = setInterval(() => {
+                refreshVisitas();
+                // NO refrescar productos si hay paginación
+            }, REFRESH_INTERVAL);
+            
+            console.log(`✅ Auto-refresh iniciado solo para visitas (cada ${REFRESH_INTERVAL/1000}s)`);
+            
+            // Refresh inicial después de 2 segundos
+            setTimeout(() => {
+                refreshVisitas();
+            }, 2000);
+        } else {
+            console.log('⏸️ Auto-refresh deshabilitado - Paginación de productos activa');
+            
+            // Agregar mensaje informativo
+            const infoMsg = document.createElement('div');
+            infoMsg.className = 'alert alert-info alert-dismissible fade show mt-3';
+            infoMsg.innerHTML = `
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>Auto-actualización pausada:</strong> La actualización automática está deshabilitada mientras navegas por las páginas. 
+                Usa el botón <i class="fas fa-sync-alt"></i> para actualizar manualmente.
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            const productosSection = document.querySelector('.card.modern-card .card-body');
+            if (productosSection && productosSection.querySelector('.row.g-3')) {
+                productosSection.insertBefore(infoMsg, productosSection.firstChild);
+            }
+        }
     });
     
     // Limpiar interval al salir de la página
@@ -6023,12 +6317,68 @@
     // CSS para animación del indicador en vivo
     const style = document.createElement('style');
     style.textContent = `
+        /* Animación de pulso */
         @keyframes pulse-animation {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
         }
         .pulse-animation {
             animation: pulse-animation 2s ease-in-out infinite;
+        }
+        
+        /* Scrollbar personalizado moderno */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+        }
+        
+        /* Animación suave para filas de tabla */
+        .visita-row:hover {
+            background-color: #f8f9fa !important;
+            transform: scale(1.01);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        /* Estilo para tiempo de visita */
+        .visit-time-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 6px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        }
+        
+        /* Animación de entrada para cards móviles */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .card {
+            animation: fadeInUp 0.3s ease-out;
+        }
+        
+        /* Efecto hover mejorado para cards */
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+            transition: all 0.3s ease;
         }
     `;
     document.head.appendChild(style);
@@ -7059,8 +7409,75 @@
 })();
 </script>
 
-<!-- Estilos adicionales para impresión -->
+<!-- Estilos adicionales para visitas y impresión -->
 <style>
+/* Estilos para scroll de visitas - Desktop */
+.visitas-table-scroll {
+    max-height: 600px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scroll-behavior: smooth;
+}
+
+.visitas-table-scroll::-webkit-scrollbar {
+    width: 10px;
+}
+
+.visitas-table-scroll::-webkit-scrollbar-track {
+    background: #e9ecef;
+    border-radius: 10px;
+}
+
+.visitas-table-scroll::-webkit-scrollbar-thumb {
+    background: #6c757d;
+    border-radius: 10px;
+    border: 2px solid #e9ecef;
+}
+
+.visitas-table-scroll::-webkit-scrollbar-thumb:hover {
+    background: #495057;
+}
+
+/* Headers sticky para tabla de visitas */
+.visitas-thead-sticky {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background-color: #f8f9fa !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.visitas-thead-sticky th {
+    background-color: #f8f9fa !important;
+}
+
+/* Scroll suave para tarjetas móviles */
+.visitas-mobile-scroll {
+    max-height: 600px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scroll-behavior: smooth;
+}
+
+.visitas-mobile-scroll::-webkit-scrollbar {
+    width: 8px;
+}
+
+.visitas-mobile-scroll::-webkit-scrollbar-track {
+    background: #e9ecef;
+    border-radius: 10px;
+}
+
+.visitas-mobile-scroll::-webkit-scrollbar-thumb {
+    background: #6c757d;
+    border-radius: 10px;
+    border: 2px solid #e9ecef;
+}
+
+.visitas-mobile-scroll::-webkit-scrollbar-thumb:hover {
+    background: #495057;
+}
+
 @media print {
     /* Ocultar elementos innecesarios */
     .sidebar, 

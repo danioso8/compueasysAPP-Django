@@ -294,9 +294,24 @@ def dashboard_home(request):
     visitas_count_cart = StoreVisit.objects.filter(visit_type='cart').count()
     visitas_count_checkout = StoreVisit.objects.filter(visit_type='checkout').count()
     
+    # Obtener todas las visitas filtradas (sin paginación, usar scroll)
+    # Incluir producto para mostrar el nombre cuando visit_type='product_detail'
+    visitas_recientes = visitas_qs.select_related('user').order_by('-timestamp')[:500]  # Limitar a 500 para rendimiento
+    
+    # Agregar información del producto a cada visita
+    for visita in visitas_recientes:
+        if visita.visit_type == 'product_detail' and visita.product_id:
+            try:
+                visita.product = ProductStore.objects.get(id=visita.product_id)
+            except ProductStore.DoesNotExist:
+                visita.product = None
+        else:
+            visita.product = None
+    
     # ESTADÍSTICAS DE PRODUCTOS MÁS VISITADOS
     from django.db.models import Count
     productos_mas_visitados = []
+    productos_visitados_page = None
     if view_param == 'visitas':
         periodo_productos = request.GET.get('periodo_productos', 'all')
         visitas_productos_qs = StoreVisit.objects.filter(
@@ -313,8 +328,9 @@ def dashboard_home(request):
         
         productos_stats = visitas_productos_qs.values('product_id').annotate(
             total_visitas=Count('id')
-        ).order_by('-total_visitas')[:10]
+        ).order_by('-total_visitas')
         
+        # Construir lista completa de productos visitados
         for item in productos_stats:
             try:
                 product = ProductStore.objects.get(id=item['product_id'])
@@ -324,6 +340,16 @@ def dashboard_home(request):
                 })
             except ProductStore.DoesNotExist:
                 pass
+        
+        # Aplicar paginación a productos visitados
+        productos_page_num = request.GET.get('productos_page', 1)
+        productos_paginator = Paginator(productos_mas_visitados, 12)  # 12 productos por página
+        try:
+            productos_visitados_page = productos_paginator.page(productos_page_num)
+        except PageNotAnInteger:
+            productos_visitados_page = productos_paginator.page(1)
+        except EmptyPage:
+            productos_visitados_page = productos_paginator.page(productos_paginator.num_pages)
     
     # Aplicar filtros para pedidos
     if view_param == 'pedidos':
@@ -1013,7 +1039,7 @@ def dashboard_home(request):
         'search_query': search_query,
         'conversations': conversations,
         'conversations_stats': conversations_stats,
-        'visitas_recientes': visitas_qs.select_related('user').order_by('-timestamp')[:20],
+        'visitas_recientes': visitas_recientes,  # Ya contiene las visitas filtradas
         'visitas_count': visitas_count,
         'visitas_count_today': visitas_count_today,
         'visitas_count_week': visitas_count_week,
@@ -1026,6 +1052,7 @@ def dashboard_home(request):
         'visitas_count_cart': visitas_count_cart,
         'visitas_count_checkout': visitas_count_checkout,
         'productos_mas_visitados': productos_mas_visitados,
+        'productos_visitados_page': productos_visitados_page,
         'view': view_param,
         'current_user': current_user,
         'is_superuser': is_superuser,

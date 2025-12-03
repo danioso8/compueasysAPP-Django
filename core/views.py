@@ -14,6 +14,14 @@ from django.http import HttpResponse
 from django.db.models import Q, Sum
 from django.db import models
 from django.http import JsonResponse
+
+# Geolocalización opcional - puede ser removido sin afectar funcionalidad
+try:
+    from .geolocation_helper import create_visit_with_location
+    GEOLOCATION_ENABLED = True
+except ImportError:
+    GEOLOCATION_ENABLED = False
+    create_visit_with_location = None
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.core.mail import send_mail  
@@ -87,17 +95,24 @@ def home(request):
             ip = request.META.get('REMOTE_ADDR')
         return ip
     
-    ip_address = get_client_ip(request)
-    user_agent = request.META.get('HTTP_USER_AGENT', '')
-    
-    # Registrar visita al home
-    StoreVisit.objects.create(
-        session_key=session_key,
-        user=user_obj,
-        visit_type='home',
-        ip_address=ip_address,
-        user_agent=user_agent
-    )
+    # Registrar visita con geolocalización opcional
+    if GEOLOCATION_ENABLED and create_visit_with_location:
+        try:
+            create_visit_with_location(request, 'home', user_obj)
+        except:
+            # Fallback: registrar sin geolocalización
+            StoreVisit.objects.create(
+                session_key=session_key,
+                user=user_obj,
+                visit_type='home'
+            )
+    else:
+        # Sin geolocalización (normal)
+        StoreVisit.objects.create(
+            session_key=session_key,
+            user=user_obj,
+            visit_type='home'
+        )
     
     # Procesar carrito para el sidebar
     cart = request.session.get('cart', {})
@@ -267,12 +282,14 @@ def store(request):
         except SimpleUser.DoesNotExist:
             pass
     
-    # Registrar la visita
-    StoreVisit.objects.create(
-        session_key=session_key,
-        user=user_obj,
-        visit_type='store'
-    )
+    # Registrar visita con geolocalización opcional
+    if GEOLOCATION_ENABLED and create_visit_with_location:
+        try:
+            create_visit_with_location(request, 'store', user_obj)
+        except:
+            StoreVisit.objects.create(session_key=session_key, user=user_obj, visit_type='store')
+    else:
+        StoreVisit.objects.create(session_key=session_key, user=user_obj, visit_type='store')
     
     # Obtener parámetros de filtro
     query = request.GET.get('q', '')
@@ -566,15 +583,28 @@ def product_detail(request, product_id):
     ip_address = get_client_ip(request)
     user_agent = request.META.get('HTTP_USER_AGENT', '')
     
-    # Registrar la visita con toda la información
-    StoreVisit.objects.create(
-        session_key=session_key,
-        user=user_obj,
-        visit_type='product_detail',
-        product_id=product_id,
-        ip_address=ip_address,
-        user_agent=user_agent
-    )
+    # Registrar visita con geolocalización opcional
+    if GEOLOCATION_ENABLED and create_visit_with_location:
+        try:
+            create_visit_with_location(request, 'product_detail', user_obj, product_id=product_id)
+        except:
+            StoreVisit.objects.create(
+                session_key=session_key,
+                user=user_obj,
+                visit_type='product_detail',
+                product_id=product_id,
+                ip_address=ip_address,
+                user_agent=user_agent
+            )
+    else:
+        StoreVisit.objects.create(
+            session_key=session_key,
+            user=user_obj,
+            visit_type='product_detail',
+            product_id=product_id,
+            ip_address=ip_address,
+            user_agent=user_agent
+        )
     
     try:
         product = Product.objects.get(id=product_id)        
@@ -748,13 +778,26 @@ def checkout(request, note=None):
     ip_address = get_client_ip(request)
     user_agent = request.META.get('HTTP_USER_AGENT', '')
     
-    StoreVisit.objects.create(
-        session_key=session_key,
-        user=user_obj,
-        visit_type='checkout',
-        ip_address=ip_address,
-        user_agent=user_agent
-    )
+    # Registrar visita con geolocalización opcional
+    if GEOLOCATION_ENABLED and create_visit_with_location:
+        try:
+            create_visit_with_location(request, 'checkout', user_obj)
+        except:
+            StoreVisit.objects.create(
+                session_key=session_key,
+                user=user_obj,
+                visit_type='checkout',
+                ip_address=ip_address,
+                user_agent=user_agent
+            )
+    else:
+        StoreVisit.objects.create(
+            session_key=session_key,
+            user=user_obj,
+            visit_type='checkout',
+            ip_address=ip_address,
+            user_agent=user_agent
+        )
     
     saved = request.session.get('saved_checkout', {})   
     departament_selected = saved.get('departamento', '') 
@@ -1364,14 +1407,26 @@ def cart(request):
     ip_address = get_client_ip(request)
     user_agent = request.META.get('HTTP_USER_AGENT', '')
     
-    # Registrar la visita al carrito
-    StoreVisit.objects.create(
-        session_key=session_key,
-        user=user_obj,
-        visit_type='cart',
-        ip_address=ip_address,
-        user_agent=user_agent
-    )
+    # Registrar visita con geolocalización opcional
+    if GEOLOCATION_ENABLED and create_visit_with_location:
+        try:
+            create_visit_with_location(request, 'cart', user_obj)
+        except:
+            StoreVisit.objects.create(
+                session_key=session_key,
+                user=user_obj,
+                visit_type='cart',
+                ip_address=ip_address,
+                user_agent=user_agent
+            )
+    else:
+        StoreVisit.objects.create(
+            session_key=session_key,
+            user=user_obj,
+            visit_type='cart',
+            ip_address=ip_address,
+            user_agent=user_agent
+        )
     
     cart = request.session.get('cart', {})
     cart_items = []
