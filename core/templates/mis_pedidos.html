@@ -946,7 +946,7 @@
                                         </div>
                                     {% endfor %}
                                     <div class="text-center mt-3">
-                                        <button class="btn btn-primary" onclick="document.querySelector('a[href=\"#orders\"]').click()" type="button">
+                                        <button id="viewAllOrdersBtn" class="btn btn-primary" type="button">
                                             <i class="fas fa-box me-2"></i>
                                             Ver Todos los Pedidos
                                         </button>
@@ -1617,6 +1617,18 @@
                     history.pushState(null, null, href);
                 });
             });
+
+            // Handle "Ver Todos los Pedidos" button
+            const viewAllOrdersBtn = document.getElementById('viewAllOrdersBtn');
+            if (viewAllOrdersBtn) {
+                viewAllOrdersBtn.addEventListener('click', function() {
+                    const ordersTab = document.querySelector('a[href="#orders"]');
+                    if (ordersTab) {
+                        const tabInstance = new bootstrap.Tab(ordersTab);
+                        tabInstance.show();
+                    }
+                });
+            }
 
             // Handle logout confirmation from navbar
             const logoutBtn = document.querySelector('.btn-logout-nav');
