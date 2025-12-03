@@ -3492,32 +3492,138 @@
                         </div>
                     </div>
 
+                    <!-- Ventas por Categoría Cards -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-12">
+                            <div class="card shadow-sm" id="ventasCategoriasCard">
+                                <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-layer-group text-primary me-2"></i>
+                                        Valor Vendido por Categoría
+                                    </h5>
+                                    <button class="btn btn-sm btn-outline-primary" id="toggleVentasCategorias" type="button">
+                                        <i class="fas fa-chevron-up" id="iconVentasCategorias"></i>
+                                    </button>
+                                </div>
+                                <div class="card-body" id="ventasCategoriasContent">
+                                    {% if ventas_por_categoria %}
+                                    <div class="row g-3">
+                                        {% for categoria in ventas_por_categoria %}
+                                        <div class="col-12 col-md-6 col-lg-4 col-xl-3">
+                                            <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                                                <div class="card-body text-white">
+                                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                                        <div>
+                                                            <h6 class="text-white mb-1 fw-bold">{{ categoria.nombre }}</h6>
+                                                            <small class="opacity-75">
+                                                                <i class="fas fa-shopping-bag me-1"></i>{{ categoria.cantidad_pedidos }} pedido{{ categoria.cantidad_pedidos|pluralize }}
+                                                            </small>
+                                                        </div>
+                                                        <div class="text-end">
+                                                            <i class="fas fa-chart-line fa-2x opacity-50"></i>
+                                                        </div>
+                                                    </div>
+                                                    <div class="mt-3">
+                                                        <div class="d-flex justify-content-between align-items-end">
+                                                            <div>
+                                                                <div class="h3 mb-0 fw-bold">${{ categoria.total_ingresos|floatformat:0 }}</div>
+                                                                <small class="opacity-75">Total vendido</small>
+                                                            </div>
+                                                            <div class="text-end">
+                                                                <div class="badge bg-white bg-opacity-25">
+                                                                    {{ categoria.cantidad_productos }} und
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="mt-3 pt-3 border-top border-white border-opacity-25">
+                                                        <div class="d-flex justify-content-between align-items-center">
+                                                            <small class="opacity-75">
+                                                                <i class="fas fa-percentage me-1"></i>
+                                                                {% widthratio categoria.total_ingresos total_ventas_general 100 as porcentaje %}
+                                                                {{ porcentaje|floatformat:1 }}% del total
+                                                            </small>
+                                                            <button class="btn btn-sm btn-light" 
+                                                                    data-bs-toggle="collapse" 
+                                                                    data-bs-target="#detalles-{{ forloop.counter }}"
+                                                                    aria-expanded="false">
+                                                                <i class="fas fa-eye"></i>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="collapse" id="detalles-{{ forloop.counter }}">
+                                                    <div class="card-footer bg-white bg-opacity-10 border-0">
+                                                        <small class="text-white d-block mb-2 fw-bold">
+                                                            <i class="fas fa-box-open me-1"></i>Productos vendidos:
+                                                        </small>
+                                                        <div class="list-group list-group-flush bg-transparent">
+                                                            {% for producto in categoria.productos_vendidos|slice:":5" %}
+                                                            <div class="list-group-item bg-transparent text-white border-white border-opacity-25 p-2">
+                                                                <div class="d-flex justify-content-between align-items-center">
+                                                                    <small class="text-truncate me-2">{{ producto.nombre }}</small>
+                                                                    <span class="badge bg-white text-dark">{{ producto.cantidad }}x</span>
+                                                                </div>
+                                                            </div>
+                                                            {% endfor %}
+                                                            {% if categoria.productos_vendidos|length > 5 %}
+                                                            <div class="list-group-item bg-transparent text-white border-0 p-2">
+                                                                <small class="opacity-75">
+                                                                    <i class="fas fa-ellipsis-h me-1"></i>
+                                                                    y {{ categoria.productos_vendidos|length|add:"-5" }} más...
+                                                                </small>
+                                                            </div>
+                                                            {% endif %}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    {% else %}
+                                    <div class="text-center text-muted py-5">
+                                        <i class="fas fa-shopping-cart fa-3x mb-3 opacity-50"></i>
+                                        <h5>No hay ventas registradas</h5>
+                                        <p class="mb-0">Las ventas por categoría aparecerán aquí</p>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                    
                     <!-- Gráficos de Análisis -->
                     <div class="row g-3 mb-4">
                         <!-- Gráfico de Ventas por Categoría -->
                         <div class="col-lg-8">
-                            <div class="card shadow-sm">
+                            <div class="card shadow-sm" id="graficoVentasCard">
                                 <div class="card-header bg-white border-bottom">
                                     <div class="d-flex justify-content-between align-items-center">
                                         <h5 class="mb-0">
                                             <i class="fas fa-chart-bar text-primary me-2"></i>
                                             Ventas por Categoría
                                         </h5>
-                                        <div class="btn-group btn-group-sm" role="group">
-                                            <button type="button" class="btn btn-outline-secondary active" data-chart-type="bar">
-                                                <i class="fas fa-chart-bar"></i>
-                                            </button>
-                                            <button type="button" class="btn btn-outline-secondary" data-chart-type="pie">
-                                                <i class="fas fa-chart-pie"></i>
-                                            </button>
-                                            <button type="button" class="btn btn-outline-secondary" data-chart-type="doughnut">
-                                                <i class="fas fa-dot-circle"></i>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="btn-group btn-group-sm" role="group">
+                                                <button type="button" class="btn btn-outline-secondary active" data-chart-type="bar">
+                                                    <i class="fas fa-chart-bar"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-outline-secondary" data-chart-type="pie">
+                                                    <i class="fas fa-chart-pie"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-outline-secondary" data-chart-type="doughnut">
+                                                    <i class="fas fa-dot-circle"></i>
+                                                </button>
+                                            </div>
+                                            <button class="btn btn-sm btn-outline-primary" id="toggleGraficoVentas" type="button">
+                                                <i class="fas fa-chevron-up" id="iconGraficoVentas"></i>
                                             </button>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="card-body" style="height: 400px;">
+                                <div class="card-body" id="graficoVentasContent" style="height: 400px;">
                                     <canvas id="ventasCategoriaChart"></canvas>
                                 </div>
                             </div>
@@ -3525,14 +3631,17 @@
 
                         <!-- Top 5 Categorías -->
                         <div class="col-lg-4">
-                            <div class="card shadow-sm">
-                                <div class="card-header bg-white border-bottom">
+                            <div class="card shadow-sm" id="topCategoriasCard">
+                                <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
                                     <h5 class="mb-0">
                                         <i class="fas fa-trophy text-warning me-2"></i>
                                         Top 5 Categorías
                                     </h5>
+                                    <button class="btn btn-sm btn-outline-primary" id="toggleTopCategorias" type="button">
+                                        <i class="fas fa-chevron-up" id="iconTopCategorias"></i>
+                                    </button>
                                 </div>
-                                <div class="card-body p-0">
+                                <div class="card-body p-0" id="topCategoriasContent">
                                     <div class="list-group list-group-flush">
                                         {% for categoria in ventas_por_categoria|slice:":5" %}
                                         <div class="list-group-item">
@@ -7769,4 +7878,103 @@
     animation: slideInDown 0.3s ease-out;
 }
 </style>
+
+<script>
+// Autofocus en el campo nombre del producto al crear o editar
+document.addEventListener('DOMContentLoaded', function() {
+    // Verificar si estamos en la vista de productos y en modo crear o editar
+    const urlParams = new URLSearchParams(window.location.search);
+    const isProductView = urlParams.get('view') === 'productos';
+    const isCreating = urlParams.has('crear');
+    const isEditing = urlParams.has('editar');
+    
+    if (isProductView && (isCreating || isEditing)) {
+        const productNameInput = document.getElementById('producto_name');
+        if (productNameInput) {
+            // Hacer focus después de un pequeño delay para asegurar que el DOM esté listo
+            setTimeout(() => {
+                productNameInput.focus();
+                // Seleccionar todo el texto si estamos editando
+                if (isEditing && productNameInput.value) {
+                    productNameInput.select();
+                }
+            }, 100);
+        }
+    }
+});
+
+// Sistema de colapso de cards del dashboard
+document.addEventListener('DOMContentLoaded', function() {
+    // Configuración de cards colapsables
+    const collapsibleCards = [
+        {
+            id: 'ventasCategorias',
+            toggleBtn: 'toggleVentasCategorias',
+            content: 'ventasCategoriasContent',
+            icon: 'iconVentasCategorias',
+            storageKey: 'ventasCategoriasCollapsed'
+        },
+        {
+            id: 'graficoVentas',
+            toggleBtn: 'toggleGraficoVentas',
+            content: 'graficoVentasContent',
+            icon: 'iconGraficoVentas',
+            storageKey: 'graficoVentasCollapsed'
+        },
+        {
+            id: 'topCategorias',
+            toggleBtn: 'toggleTopCategorias',
+            content: 'topCategoriasContent',
+            icon: 'iconTopCategorias',
+            storageKey: 'topCategoriasCollapsed'
+        }
+    ];
+
+    // Función para colapsar/expandir un card
+    function setupCollapsibleCard(config) {
+        const toggleBtn = document.getElementById(config.toggleBtn);
+        const content = document.getElementById(config.content);
+        const icon = document.getElementById(config.icon);
+        
+        if (!toggleBtn || !content || !icon) return;
+
+        // Restaurar estado desde localStorage
+        const isCollapsed = localStorage.getItem(config.storageKey) === 'true';
+        if (isCollapsed) {
+            content.style.display = 'none';
+            icon.classList.remove('fa-chevron-up');
+            icon.classList.add('fa-chevron-down');
+        }
+
+        // Agregar transición suave
+        content.style.transition = 'all 0.3s ease-in-out';
+        icon.style.transition = 'transform 0.3s ease-in-out';
+
+        // Manejar click en el botón
+        toggleBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const currentlyHidden = content.style.display === 'none';
+            
+            if (currentlyHidden) {
+                // Expandir
+                content.style.display = 'block';
+                icon.classList.remove('fa-chevron-down');
+                icon.classList.add('fa-chevron-up');
+                localStorage.setItem(config.storageKey, 'false');
+            } else {
+                // Colapsar
+                content.style.display = 'none';
+                icon.classList.remove('fa-chevron-up');
+                icon.classList.add('fa-chevron-down');
+                localStorage.setItem(config.storageKey, 'true');
+            }
+        });
+    }
+
+    // Inicializar todos los cards colapsables
+    collapsibleCards.forEach(config => setupCollapsibleCard(config));
+});
+</script>
 </html>

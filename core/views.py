@@ -219,31 +219,23 @@ def login_user(request):
         username = request.POST['username']        
         password = request.POST['password']
         
-        print(f"Debug - Login attempt: username={username}, password={password}")
-        
         # Primero verificar si es un superusuario
         superuser_qs = register_superuser.objects.filter(username=username)
         if superuser_qs.exists():
-            print(f"Debug - Found superuser: {username}")           
             superuser = superuser_qs.first()
             if superuser.password == password:
-                print("Debug - Superuser password correct")
                 request.session['superuser_id'] = superuser.id
                 request.session['superuser_username'] = superuser.username
                 return redirect('/dashboard/dashboard_home')  
             else:
-                print("Debug - Superuser password incorrect")
                 return render(request, 'login_user.html', {'error_message': 'Contraseña incorrecta'})
         
         # Si no es superusuario, verificar si es usuario simple (usando email)
         simple_user_qs = SimpleUser.objects.filter(email=username)
         if simple_user_qs.exists():
-            print(f"Debug - Found simple user: {username}")
             simple_user = simple_user_qs.first()
-            print(f"Debug - Simple user password in DB: '{simple_user.password}', provided: '{password}'")
             # Verificar contraseña (nota: en producción debería usar hash)
             if simple_user.password == password:
-                print("Debug - Simple user password correct")
                 # Crear sesión de usuario simple
                 request.session['simple_user_id'] = simple_user.id
                 request.session['user_id'] = simple_user.id  # Alias para compatibilidad
@@ -251,11 +243,9 @@ def login_user(request):
                 request.session['simple_user_name'] = simple_user.name
                 return redirect('/mis-pedidos/')
             else:
-                print("Debug - Simple user password incorrect")
                 return render(request, 'login_user.html', {'error_message': 'Contraseña incorrecta'})
         
         # Si no se encontró el usuario en ninguna tabla
-        print(f"Debug - User not found: {username}")
         return render(request, 'login_user.html', {'error_message': 'Usuario no encontrado'})
         
     return render(request, 'login_user.html')

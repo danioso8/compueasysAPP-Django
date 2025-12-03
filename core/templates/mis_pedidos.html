@@ -1433,22 +1433,41 @@
                 const statusClass = `order-status-badge status-${orderStatus}`;
                 const statusText = getStatusText(orderStatus);
                 
-                // Parse products - cada línea puede tener formato "Producto x cantidad - precio"
+                // Parse products - soporta múltiples formatos
                 const productos = detallesList.map(detalle => {
-                    const match = detalle.match(/(.+?)\s*x\s*(\d+)\s*-\s*\$([\d,]+)/);
+                    detalle = detalle.trim();
+                    if (!detalle) return null;
+                    
+                    // Formato: "Producto x cantidad - $precio"
+                    let match = detalle.match(/(.+?)\s*x\s*(\d+)\s*-\s*\$([\d,]+)/);
                     if (match) {
                         return {
                             nombre: match[1].trim(),
                             cantidad: match[2],
-                            precio: match[3]
+                            precio: match[3],
+                            subtotal: parseFloat(match[3].replace(/,/g, '')) * parseInt(match[2])
                         };
                     }
+                    
+                    // Formato: "Producto - $precio"
+                    match = detalle.match(/(.+?)\s*-\s*\$([\d,]+)/);
+                    if (match) {
+                        return {
+                            nombre: match[1].trim(),
+                            cantidad: '1',
+                            precio: match[2],
+                            subtotal: parseFloat(match[2].replace(/,/g, ''))
+                        };
+                    }
+                    
+                    // Formato simple: solo nombre del producto
                     return {
-                        nombre: detalle.trim(),
+                        nombre: detalle,
                         cantidad: '1',
-                        precio: '-'
+                        precio: 'Ver total',
+                        subtotal: 0
                     };
-                });
+                }).filter(p => p !== null);
                 
                 // Build HTML content
                 const content = `
@@ -1472,29 +1491,47 @@
                                             </span>
                                         </div>
                                         
-                                        <h5 class="mb-3">
-                                            <i class="fas fa-box-open me-2 text-primary"></i>
-                                            Productos Comprados
+                                        <h5 class="mb-4" style="font-size: 1.25rem; font-weight: 600;">
+                                            <i class="fas fa-shopping-cart me-2 text-primary"></i>
+                                            Productos del Pedido
                                         </h5>
                                         <div class="table-responsive">
-                                            <table class="table table-hover align-middle">
-                                                <thead class="table-light">
+                                            <table class="table table-striped align-middle" style="font-size: 0.95rem;">
+                                                <thead style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
                                                     <tr>
-                                                        <th width="50">#</th>
+                                                        <th width="50" class="text-center">#</th>
                                                         <th>Producto</th>
                                                         <th width="80" class="text-center">Cant.</th>
-                                                        <th width="120" class="text-end">Precio</th>
+                                                        <th width="130" class="text-end">Precio Unit.</th>
+                                                        <th width="130" class="text-end">Subtotal</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
                                                     ${productos.map((prod, index) => `
-                                                        <tr>
-                                                            <td><span class="badge bg-primary">${index + 1}</span></td>
-                                                            <td><strong>${prod.nombre}</strong></td>
-                                                            <td class="text-center"><span class="badge bg-secondary">${prod.cantidad}</span></td>
-                                                            <td class="text-end">${prod.precio !== '-' ? '$' + prod.precio : 'N/A'}</td>
+                                                        <tr style="border-bottom: 1px solid #e5e7eb;">
+                                                            <td class="text-center">
+                                                                <span class="badge" style="background: #667eea; font-size: 0.85rem; padding: 0.4rem 0.6rem;">${index + 1}</span>
+                                                            </td>
+                                                            <td>
+                                                                <div style="font-weight: 600; color: #1f2937; font-size: 1rem;">${prod.nombre}</div>
+                                                            </td>
+                                                            <td class="text-center">
+                                                                <span class="badge bg-info" style="font-size: 0.9rem; padding: 0.4rem 0.7rem;">${prod.cantidad}</span>
+                                                            </td>
+                                                            <td class="text-end" style="font-weight: 500; color: #059669;">
+                                                                ${prod.precio !== 'Ver total' ? '$' + Number(prod.precio.replace(/,/g, '')).toLocaleString('es-CO') : '-'}
+                                                            </td>
+                                                            <td class="text-end" style="font-weight: 600; color: #0891b2; font-size: 1.05rem;">
+                                                                ${prod.subtotal > 0 ? '$' + prod.subtotal.toLocaleString('es-CO') : '-'}
+                                                            </td>
                                                         </tr>
                                                     `).join('')}
+                                                    <tr style="background: #f9fafb; border-top: 2px solid #667eea;">
+                                                        <td colspan="4" class="text-end" style="font-weight: 700; font-size: 1.1rem; padding: 1rem;">TOTAL:</td>
+                                                        <td class="text-end" style="font-weight: 700; font-size: 1.3rem; color: #667eea; padding: 1rem;">
+                                                            $${parseFloat(orderTotal).toLocaleString('es-CO')}
+                                                        </td>
+                                                    </tr>
                                                 </tbody>
                                             </table>
                                         </div>
@@ -1529,13 +1566,13 @@
                                             </button>
                                         </div>
                                     </div>
-                                    <div class="card-body p-2" style="background: #f8f9fa;">
-                                        <div id="printableReceipt" class="receipt-ticket">
+                                    <div class="card-body p-3" style="background: #ffffff;">
+                                        <div id="printableReceipt" class="receipt-ticket" style="background: white; padding: 20px;">
                                             <div class="receipt-header">
-                                                <h3>COMPUEASYS</h3>
-                                                <p>Tecnología y Soluciones</p>
-                                                <p>Tel: (601) 123-4567</p>
-                                                <p>www.compueasys.com</p>
+                                                <h3 style="font-size: 20px; margin-bottom: 5px;">COMPUEASYS</h3>
+                                                <p style="font-size: 12px; margin: 3px 0;">Tecnología y Soluciones</p>
+                                                <p style="font-size: 11px; margin: 2px 0;">Tel: (601) 123-4567</p>
+                                                <p style="font-size: 11px; margin: 2px 0;">www.compueasys.com</p>
                                             </div>
                                             
                                             <div class="receipt-info">
@@ -1558,12 +1595,13 @@
                                             </div>
                                             
                                             <div class="receipt-products">
-                                                <div style="text-align: center; font-weight: bold; margin-bottom: 10px;">PRODUCTOS</div>
+                                                <div style="text-align: center; font-weight: bold; margin-bottom: 12px; font-size: 13px;">PRODUCTOS</div>
                                                 ${productos.map(prod => `
-                                                    <div class="receipt-product">
-                                                        <div class="receipt-product-name">${prod.nombre}</div>
-                                                        <div class="receipt-product-details">
-                                                            <span>${prod.cantidad} x ${prod.precio !== '-' ? '$' + prod.precio : 'Ver total'}</span>
+                                                    <div class="receipt-product" style="margin-bottom: 10px;">
+                                                        <div class="receipt-product-name" style="font-size: 12px; font-weight: bold; margin-bottom: 3px;">${prod.nombre}</div>
+                                                        <div class="receipt-product-details" style="font-size: 11px; padding-left: 10px;">
+                                                            <span>${prod.cantidad} x ${prod.precio !== 'Ver total' ? '$' + Number(prod.precio.replace(/,/g, '')).toLocaleString('es-CO') : ''}</span>
+                                                            ${prod.subtotal > 0 ? `<span style="font-weight: bold;">$${prod.subtotal.toLocaleString('es-CO')}</span>` : ''}
                                                         </div>
                                                     </div>
                                                 `).join('')}

@@ -1,0 +1,57 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.Python
+
+# Django
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+/media
+/staticfiles
+
+# Environment
+.env
+venv/
+venv_new/
+ENV/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test y Debug
+test_*.py
+debug_*.py
+check_*.py
+verify_*.py
+show_*.py
+diagnose_*.py
+
+# Documentation temporal
+*_README.md
+*_SETUP.md
+*_STATUS.md
+DIAGNOSTICO_*.md
+SOLUCION_*.md
+MIGRACION_*.md
+
+# Backups y temporales
+*.bak
+*.tmp
+*.old

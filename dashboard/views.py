@@ -1505,13 +1505,10 @@ def pedido_detalle(request, pedido_id):
     try:
         pedido = get_object_or_404(Pedido, id=pedido_id)
         
-        # Obtener detalles de productos - manejo más robusto
+        # Obtener detalles de productos
         items = []
         try:
-            # Intentar obtener desde PedidoDetalle usando pedidodetalle_set
-            print(f"🔍 Buscando detalles para pedido {pedido_id}")
             detalles = pedido.pedidodetalle_set.all()
-            print(f"📦 Encontrados {detalles.count()} detalles")
             
             for detalle in detalles:
                 variante_info = ''
@@ -1525,7 +1522,6 @@ def pedido_detalle(request, pedido_id):
                     'variante': variante_info if variante_info else None
                 }
                 items.append(item)
-                print(f"  ✅ Item: {item['nombre']} x{item['cantidad']}")
             
             # Si no hay detalles específicos, usar el campo detalles del pedido
             if not items and pedido.detalles:
@@ -1650,7 +1646,6 @@ def update_pedido_estado(request):
                         variante = detalle.variante
                         variante.stock += detalle.cantidad
                         variante.save()
-                        print(f"✅ Stock devuelto - Variante {variante.id}: +{detalle.cantidad} unidades")
                     else:
                         # Si es producto principal, devolver stock al producto
                         producto = detalle.producto
