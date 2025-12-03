@@ -1818,7 +1818,7 @@ def mis_pedidos(request):
         'is_logged_in': bool(user_profile)
     }
 
-    return render(request, 'mis_pedidos_modern.html', context)
+    return render(request, 'mis_pedidos.html', context)
 # ...existing code...
 
 def logout_view(request):

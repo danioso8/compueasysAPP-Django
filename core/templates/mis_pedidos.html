@@ -2,43 +2,1564 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="es">
-    <link rel="stylesheet" href="{% static 'css/mis_pedidos.css' %}">
 <head>
     <meta charset="UTF-8">
-    <title>Mis Pedidos</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Pedidos - CompuEasys</title>
+    
+    <!-- Bootstrap 5.3 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/mis_pedidos.css' %}">
+    
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --success-gradient: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            --warning-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --info-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --danger-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+        
+        * {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding-top: 80px;
+            padding-bottom: 60px;
+        }
+        
+        .orders-hero {
+            background: var(--primary-gradient);
+            padding: 3rem 0;
+            margin-bottom: 3rem;
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .orders-hero h1 {
+            color: white;
+            font-weight: 800;
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .orders-hero p {
+            color: rgba(255,255,255,0.9);
+            font-size: 1.1rem;
+            margin-bottom: 0;
+        }
+        
+        .order-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            margin-bottom: 2rem;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            border: none;
+        }
+        
+        .order-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+        }
+        
+        .order-card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 1.5rem;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .order-number {
+            font-size: 1.3rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .order-date {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .order-status-badge {
+            padding: 0.5rem 1.2rem;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            animation: pulse-badge 2s infinite;
+        }
+        
+        .status-pendiente {
+            background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%);
+            color: white;
+        }
+        
+        .status-confirmado {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+        
+        .status-enviado {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+        
+        .status-entregado {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            color: white;
+        }
+        
+        .status-cancelado {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            color: white;
+        }
+        
+        @keyframes pulse-badge {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .order-card-body {
+            padding: 2rem;
+        }
+        
+        .order-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .summary-item {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 20%);
+            padding: 1.2rem;
+            border-radius: 15px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .summary-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .summary-item-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .summary-item-label {
+            font-size: 0.85rem;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            margin-bottom: 0.3rem;
+        }
+        
+        .summary-item-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2d3436;
+        }
+        
+        .order-details-section {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 15px;
+            margin-bottom: 1.5rem;
+        }
+        
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #2d3436;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .section-title i {
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .product-item {
+            background: white;
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 0.8rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        
+        .product-item:hover {
+            border-color: #667eea;
+            transform: translateX(5px);
+        }
+        
+        .product-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex: 1;
+        }
+        
+        .product-icon {
+            width: 50px;
+            height: 50px;
+            background: var(--primary-gradient);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.3rem;
+            flex-shrink: 0;
+        }
+        
+        .product-details h6 {
+            margin: 0 0 0.3rem 0;
+            font-weight: 600;
+            color: #2d3436;
+            font-size: 1rem;
+        }
+        
+        .product-quantity {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        
+        .product-price {
+            font-size: 1.2rem;
+            font-weight: 700;
+            background: var(--success-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .order-note {
+            background: linear-gradient(135deg, #fff5e6 0%, #ffe4b3 100%);
+            padding: 1.2rem;
+            border-radius: 12px;
+            border-left: 4px solid #ffa500;
+            margin-bottom: 1.5rem;
+        }
+        
+        .order-note-icon {
+            color: #ffa500;
+            margin-right: 0.5rem;
+        }
+        
+        .order-total-section {
+            background: var(--primary-gradient);
+            padding: 1.5rem;
+            border-radius: 15px;
+            color: white;
+            text-align: center;
+        }
+        
+        .total-label {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .total-amount {
+            font-size: 2.5rem;
+            font-weight: 800;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .btn-action {
+            flex: 1;
+            min-width: 150px;
+            padding: 0.8rem 1.5rem;
+            border-radius: 12px;
+            font-weight: 600;
+            border: none;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-track {
+            background: var(--info-gradient);
+            color: white;
+        }
+        
+        .btn-track:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(79, 172, 254, 0.4);
+        }
+        
+        .btn-cancel {
+            background: linear-gradient(135deg, #e0e0e0 0%, #bdbdbd 100%);
+            color: #2d3436;
+        }
+        
+        .btn-cancel:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            margin-top: 3rem;
+        }
+        
+        .empty-state-icon {
+            font-size: 5rem;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1.5rem;
+        }
+        
+        .empty-state h3 {
+            color: #2d3436;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+        
+        .empty-state p {
+            color: #6c757d;
+            margin-bottom: 2rem;
+        }
+        
+        .btn-primary-gradient {
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            padding: 1rem 2.5rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-primary-gradient:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+            color: white;
+        }
+        
+        .filters-section {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .filter-buttons {
+            display: flex;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+        }
+        
+        .filter-btn {
+            padding: 0.6rem 1.2rem;
+            border-radius: 25px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            color: #6c757d;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .filter-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+            transform: translateY(-2px);
+        }
+        
+        .filter-btn.active {
+            background: var(--primary-gradient);
+            color: white;
+            border-color: transparent;
+        }
+        
+        @media (max-width: 768px) {
+            .orders-hero h1 {
+                font-size: 1.8rem;
+            }
+            
+            .order-card-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .order-summary {
+                grid-template-columns: 1fr;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .btn-action {
+                width: 100%;
+            }
+            
+            .product-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+            
+            .product-price {
+                align-self: flex-end;
+            }
+        }
+        
+        .timeline-tracker {
+            padding: 2rem 0;
+        }
+        
+        .timeline-step {
+            display: flex;
+            align-items: flex-start;
+            position: relative;
+            padding-bottom: 2rem;
+        }
+        
+        .timeline-step:last-child {
+            padding-bottom: 0;
+        }
+        
+        .timeline-step::before {
+            content: '';
+            position: absolute;
+            left: 20px;
+            top: 40px;
+            bottom: -10px;
+            width: 2px;
+            background: #e0e0e0;
+        }
+        
+        .timeline-step:last-child::before {
+            display: none;
+        }
+        
+        .timeline-step.completed::before {
+            background: var(--success-gradient);
+        }
+        
+        .timeline-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #e0e0e0;
+            color: white;
+            font-size: 1.2rem;
+            margin-right: 1.5rem;
+            position: relative;
+            z-index: 1;
+            flex-shrink: 0;
+        }
+        
+        .timeline-step.completed .timeline-icon {
+            background: var(--success-gradient);
+        }
+        
+        .timeline-step.active .timeline-icon {
+            background: var(--primary-gradient);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.7); }
+            50% { box-shadow: 0 0 0 10px rgba(102, 126, 234, 0); }
+        }
+        
+        .timeline-content h6 {
+            margin: 0 0 0.3rem 0;
+            font-weight: 600;
+            color: #2d3436;
+        }
+        
+        .timeline-content p {
+            margin: 0;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+        /* Sidebar Navigation Styles */
+        .sidebar-nav {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 1.5rem;
+        }
+
+        .sidebar-nav .nav-link {
+            color: #4a5568;
+            padding: 0.875rem 1.25rem;
+            margin-bottom: 0.5rem;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .sidebar-nav .nav-link i {
+            font-size: 1.25rem;
+            width: 24px;
+            text-align: center;
+        }
+
+        .sidebar-nav .nav-link:hover {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transform: translateX(5px);
+        }
+
+        .sidebar-nav .nav-link.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .sidebar-nav .btn-logout,
+        .sidebar-nav .btn-store {
+            padding: 0.875rem 1.25rem;
+            margin-top: 0.5rem;
+            border-radius: 10px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            text-decoration: none;
+            width: 100%;
+        }
+
+        .sidebar-nav .btn-logout {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border: none;
+        }
+
+        .sidebar-nav .btn-logout:hover {
+            box-shadow: 0 4px 15px rgba(245, 87, 108, 0.4);
+            transform: translateY(-2px);
+            color: white;
+        }
+
+        .sidebar-nav .btn-store {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+
+        .sidebar-nav .btn-store:hover {
+            box-shadow: 0 4px 15px rgba(79, 172, 254, 0.4);
+            transform: translateY(-2px);
+            color: white;
+        }
+
+        /* Tab Content Styles */
+        .tab-content > .tab-pane {
+            animation: fadeInContent 0.4s ease;
+        }
+
+        @keyframes fadeInContent {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Profile Avatar */
+        .profile-avatar {
+            animation: pulseAvatar 2s infinite;
+        }
+
+        @keyframes pulseAvatar {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.7);
+            }
+            50% {
+                box-shadow: 0 0 0 15px rgba(102, 126, 234, 0);
+            }
+        }
+
+        /* Responsive Sidebar */
+        @media (max-width: 991px) {
+            .sidebar-nav {
+                margin-bottom: 2rem;
+            }
+
+            .sidebar-nav .nav-link {
+                padding: 0.75rem 1rem;
+            }
+        }
+    </style>
 </head>
 <body>
-   
     {% include 'navbarr.html' %}
+    
+    <!-- Hero Section -->
+    <div class="orders-hero">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1>
+                        <i class="fas fa-user-circle me-3"></i>
+                        Mi Cuenta
+                    </h1>
+                    <p>Gestiona tu perfil, pedidos y configuración</p>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    {% if user %}
+                        <p class="mb-1">
+                            <i class="fas fa-user me-2"></i>
+                            <strong>{{ user.name|default:user.email }}</strong>
+                        </p>
+                        <p class="mb-0 opacity-75">
+                            <i class="fas fa-envelope me-2"></i>
+                            {{ user.email }}
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="row">
+            <!-- Sidebar Navigation -->
+            <div class="col-lg-3 col-md-4 mb-4">
+                <div class="sidebar-nav">
+                    <ul class="nav nav-pills flex-column" id="account-tabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <a class="nav-link" id="dashboard-tab" data-bs-toggle="pill" 
+                               href="#dashboard" role="tab" aria-controls="dashboard" aria-selected="false">
+                                <i class="fas fa-chart-line"></i>
+                                <span>Dashboard</span>
+                            </a>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <a class="nav-link active" id="orders-tab" data-bs-toggle="pill" 
+                               href="#orders" role="tab" aria-controls="orders" aria-selected="true">
+                                <i class="fas fa-shopping-bag"></i>
+                                <span>Mis Pedidos</span>
+                                {% if pedidos.count > 0 %}
+                                    <span class="badge bg-primary ms-auto">{{ pedidos.count }}</span>
+                                {% endif %}
+                            </a>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <a class="nav-link" id="profile-tab" data-bs-toggle="pill" 
+                               href="#profile" role="tab" aria-controls="profile" aria-selected="false">
+                                <i class="fas fa-user-edit"></i>
+                                <span>Mi Perfil</span>
+                            </a>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <a class="nav-link" id="security-tab" data-bs-toggle="pill" 
+                               href="#security" role="tab" aria-controls="security" aria-selected="false">
+                                <i class="fas fa-shield-alt"></i>
+                                <span>Seguridad</span>
+                            </a>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <a class="nav-link" id="messages-tab" data-bs-toggle="pill" 
+                               href="#messages" role="tab" aria-controls="messages" aria-selected="false">
+                                <i class="fas fa-comments"></i>
+                                <span>Mensajes</span>
+                                <span class="badge bg-warning ms-auto d-none" id="unread-count">0</span>
+                            </a>
+                        </li>
+                        <li class="nav-divider"></li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'store' %}">
+                                <i class="fas fa-store"></i>
+                                <span>Volver a la Tienda</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-danger" href="{% url 'logout_user' %}" onclick="return confirm('¿Estás seguro de que deseas cerrar sesión?')">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span>Cerrar Sesión</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
 
+            <!-- Main Content -->
+            <div class="col-lg-9 col-md-8">
+                <div class="tab-content" id="account-content">
+                    
+                    <!-- Dashboard Tab -->
+                    <div class="tab-pane fade" id="dashboard" role="tabpanel" aria-labelledby="dashboard-tab">
+                        <div class="row mb-4">
+                            <div class="col-md-4 mb-3">
+                                <div class="card border-0 shadow-sm h-100">
+                                    <div class="card-body text-center">
+                                        <div class="stat-icon mb-3" style="font-size: 2.5rem; color: #667eea;">
+                                            <i class="fas fa-shopping-bag"></i>
+                                        </div>
+                                        <h3 class="mb-2">{{ pedidos.count }}</h3>
+                                        <p class="text-muted mb-0">Pedidos Totales</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="card border-0 shadow-sm h-100">
+                                    <div class="card-body text-center">
+                                        <div class="stat-icon mb-3" style="font-size: 2.5rem; color: #43e97b;">
+                                            <i class="fas fa-clock"></i>
+                                        </div>
+                                        <h3 class="mb-2">{{ pedidos_pendientes }}</h3>
+                                        <p class="text-muted mb-0">Pedidos Pendientes</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="card border-0 shadow-sm h-100">
+                                    <div class="card-body text-center">
+                                        <div class="stat-icon mb-3" style="font-size: 2.5rem; color: #f093fb;">
+                                            <i class="fas fa-dollar-sign"></i>
+                                        </div>
+                                        <h3 class="mb-2">${{ total_gastado|intcomma }}</h3>
+                                        <p class="text-muted mb-0">Total Gastado</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
-    <h1>Mis Pedidos</h1>
-    {% if pedidos %}
-        <table>
-            <thead>
-                <tr>
-                    <th>Fecha</th>
-                    <th>Detalle</th>
-                    <th>Nota</th>
-                    <th>Total</th>
-                    <th>Estado</th>
-                </tr>
-            </thead>
-            <tbody>
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-header bg-white border-bottom">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-clock-rotate-left me-2 text-primary"></i>
+                                    Pedidos Recientes
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                {% if pedidos %}
+                                    {% for pedido in pedidos|slice:":3" %}
+                                        <div class="d-flex justify-content-between align-items-center py-3 {% if not forloop.last %}border-bottom{% endif %}">
+                                            <div class="flex-grow-1">
+                                                <h6 class="mb-1">Pedido #{{ pedido.id }}</h6>
+                                                <p class="mb-1 text-muted small">{{ pedido.fecha|date:"d/m/Y H:i" }}</p>
+                                            </div>
+                                            <div class="text-end">
+                                                <span class="order-status-badge status-{{ pedido.estado|default:'pendiente' }}">
+                                                    {{ pedido.estado|default:"Pendiente"|title }}
+                                                </span>
+                                                <p class="mb-0 fw-bold mt-2">${{ pedido.total|intcomma }}</p>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                    <div class="text-center mt-3">
+                                        <button class="btn btn-primary" onclick="showTab('orders')">
+                                            Ver Todos los Pedidos
+                                        </button>
+                                    </div>
+                                {% else %}
+                                    <div class="text-center py-5">
+                                        <i class="fas fa-shopping-bag" style="font-size: 4rem; color: #e0e0e0;"></i>
+                                        <h5 class="mt-3">No tienes pedidos aún</h5>
+                                        <p class="text-muted">¡Explora nuestra tienda y haz tu primer pedido!</p>
+                                        <a href="{% url 'store' %}" class="btn btn-primary mt-2">
+                                            <i class="fas fa-store me-2"></i>
+                                            Ir a la Tienda
+                                        </a>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Orders Tab -->
+                    <div class="tab-pane fade show active" id="orders" role="tabpanel" aria-labelledby="orders-tab">
+        {% if pedidos %}
+            <!-- Filtros -->
+            <div class="filters-section">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0">
+                        <i class="fas fa-filter me-2"></i>
+                        Filtrar por estado
+                    </h5>
+                    <span class="badge bg-primary">{{ pedidos|length }} pedido{{ pedidos|length|pluralize }}</span>
+                </div>
+                <div class="filter-buttons">
+                    <button class="filter-btn active" data-filter="all">
+                        <i class="fas fa-list me-1"></i> Todos
+                    </button>
+                    <button class="filter-btn" data-filter="pendiente">
+                        <i class="fas fa-clock me-1"></i> Pendientes
+                    </button>
+                    <button class="filter-btn" data-filter="confirmado">
+                        <i class="fas fa-check me-1"></i> Confirmados
+                    </button>
+                    <button class="filter-btn" data-filter="enviado">
+                        <i class="fas fa-truck me-1"></i> Enviados
+                    </button>
+                    <button class="filter-btn" data-filter="entregado">
+                        <i class="fas fa-box-check me-1"></i> Entregados
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Orders List -->
+            <div class="orders-list">
                 {% for pedido in pedidos %}
-                <tr>
-                    <td>{{ pedido.fecha|date:"d/m/Y H:i" }}</td>
-                    <td><pre>{{ pedido.detalles }}</pre></td>
-                    <td>{{ pedido.nota }}</td>
-                    <td>${{ pedido.total|intcomma }}</td>
-                    <td>Pendiente</td>
-                </tr>
+                <div class="order-card" data-order-status="{{ pedido.estado|default:'pendiente' }}">
+                    <!-- Card Header -->
+                    <div class="order-card-header">
+                        <div>
+                            <div class="order-number">
+                                <i class="fas fa-hashtag"></i>
+                                Pedido {{ pedido.id }}
+                            </div>
+                            <div class="order-date">
+                                <i class="far fa-calendar-alt"></i>
+                                {{ pedido.fecha|date:"d/m/Y H:i" }}
+                            </div>
+                        </div>
+                        <div>
+                            <span class="order-status-badge status-{{ pedido.estado|default:'pendiente' }}">
+                                {% if pedido.estado == 'pendiente' or not pedido.estado %}
+                                    <i class="fas fa-clock"></i> Pendiente
+                                {% elif pedido.estado == 'confirmado' %}
+                                    <i class="fas fa-check-circle"></i> Confirmado
+                                {% elif pedido.estado == 'enviado' %}
+                                    <i class="fas fa-truck"></i> Enviado
+                                {% elif pedido.estado == 'entregado' %}
+                                    <i class="fas fa-box-check"></i> Entregado
+                                {% elif pedido.estado == 'cancelado' %}
+                                    <i class="fas fa-times-circle"></i> Cancelado
+                                {% else %}
+                                    <i class="fas fa-info-circle"></i> {{ pedido.estado }}
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <!-- Card Body -->
+                    <div class="order-card-body">
+                        <!-- Order Summary -->
+                        <div class="order-summary">
+                            <div class="summary-item">
+                                <div class="summary-item-icon">
+                                    <i class="fas fa-box"></i>
+                                </div>
+                                <div class="summary-item-label">Productos</div>
+                                <div class="summary-item-value">{{ pedido.detalles.splitlines|length }}</div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="summary-item-icon">
+                                    <i class="fas fa-dollar-sign"></i>
+                                </div>
+                                <div class="summary-item-label">Total</div>
+                                <div class="summary-item-value">${{ pedido.total|intcomma }}</div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="summary-item-icon">
+                                    <i class="fas fa-credit-card"></i>
+                                </div>
+                                <div class="summary-item-label">Método de Pago</div>
+                                <div class="summary-item-value">
+                                    {% if pedido.metodo_pago %}
+                                        {{ pedido.metodo_pago }}
+                                    {% else %}
+                                        Pendiente
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Resumen breve del pedido -->
+                        <div class="order-details-section">
+                            <div class="section-title">
+                                <i class="fas fa-list-ul"></i>
+                                Resumen del Pedido
+                            </div>
+                            <div class="products-list">
+                                {% if pedido.detalles %}
+                                    {% for linea in pedido.detalles.splitlines|slice:":3" %}
+                                        {% if linea.strip %}
+                                        <div class="product-item">
+                                            <div class="product-info">
+                                                <div class="product-icon">
+                                                    <i class="fas fa-box-open"></i>
+                                                </div>
+                                                <div class="product-details">
+                                                    <h6>{{ linea|truncatechars:50 }}</h6>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                    {% if pedido.detalles.splitlines|length > 3 %}
+                                    <div class="text-center mt-2">
+                                        <small class="text-muted">
+                                            <i class="fas fa-ellipsis-h"></i> 
+                                            Y {{ pedido.detalles.splitlines|length|add:"-3" }} producto(s) más
+                                        </small>
+                                    </div>
+                                    {% endif %}
+                                {% else %}
+                                    <p class="text-muted">Sin detalles disponibles</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Order Note -->
+                        {% if pedido.nota %}
+                        <div class="order-note">
+                            <strong>
+                                <i class="fas fa-sticky-note order-note-icon"></i>
+                                Nota del pedido:
+                            </strong>
+                            <p class="mb-0 mt-2">{{ pedido.nota }}</p>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Timeline Tracker -->
+                        <div class="order-details-section">
+                            <div class="section-title">
+                                <i class="fas fa-route"></i>
+                                Seguimiento del Pedido
+                            </div>
+                            <div class="timeline-tracker">
+                                <div class="timeline-step completed">
+                                    <div class="timeline-icon">
+                                        <i class="fas fa-check"></i>
+                                    </div>
+                                    <div class="timeline-content">
+                                        <h6>Pedido Recibido</h6>
+                                        <p>{{ pedido.fecha|date:"d/m/Y H:i" }}</p>
+                                    </div>
+                                </div>
+                                <div class="timeline-step {% if pedido.estado == 'confirmado' or pedido.estado == 'enviado' or pedido.estado == 'entregado' %}completed{% elif pedido.estado == 'pendiente' or not pedido.estado %}active{% endif %}">
+                                    <div class="timeline-icon">
+                                        <i class="fas fa-clipboard-check"></i>
+                                    </div>
+                                    <div class="timeline-content">
+                                        <h6>Pedido Confirmado</h6>
+                                        <p>Tu pedido está siendo procesado</p>
+                                    </div>
+                                </div>
+                                <div class="timeline-step {% if pedido.estado == 'enviado' or pedido.estado == 'entregado' %}completed{% elif pedido.estado == 'confirmado' %}active{% endif %}">
+                                    <div class="timeline-icon">
+                                        <i class="fas fa-truck"></i>
+                                    </div>
+                                    <div class="timeline-content">
+                                        <h6>Pedido Enviado</h6>
+                                        <p>Tu pedido está en camino</p>
+                                    </div>
+                                </div>
+                                <div class="timeline-step {% if pedido.estado == 'entregado' %}completed{% elif pedido.estado == 'enviado' %}active{% endif %}">
+                                    <div class="timeline-icon">
+                                        <i class="fas fa-home"></i>
+                                    </div>
+                                    <div class="timeline-content">
+                                        <h6>Pedido Entregado</h6>
+                                        <p>Tu pedido ha llegado a su destino</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Total Section -->
+                        <div class="order-total-section">
+                            <div class="total-label">Total a Pagar</div>
+                            <div class="total-amount">${{ pedido.total|intcomma }}</div>
+                        </div>
+                        
+                        <!-- Action Buttons -->
+                        <div class="action-buttons">
+                            <button class="btn btn-action btn-track" onclick="showOrderDetails({{ pedido.id }})" data-pedido-id="{{ pedido.id }}">
+                                <i class="fas fa-eye"></i>
+                                Ver Detalles Completos
+                            </button>
+                            {% if pedido.estado == 'pendiente' or not pedido.estado %}
+                            <button class="btn btn-action btn-cancel" onclick="cancelOrder({{ pedido.id }})">
+                                <i class="fas fa-times"></i>
+                                Cancelar Pedido
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
                 {% endfor %}
-            </tbody>
-        </table>
-    {% else %}
-        <p>No tienes pedidos registrados.</p>
-    {% endif %}
-    <a href="{% url 'store' %}">Volver a la tienda</a>
+            </div>
+            
+        {% else %}
+            <!-- Empty State -->
+            <div class="empty-state">
+                <div class="empty-state-icon">
+                    <i class="fas fa-shopping-bag"></i>
+                </div>
+                <h3>No tienes pedidos aún</h3>
+                <p>¡Comienza a explorar nuestros productos y realiza tu primer pedido!</p>
+                <a href="{% url 'store' %}" class="btn-primary-gradient text-decoration-none">
+                    <i class="fas fa-store"></i>
+                    Ir a la Tienda
+                </a>
+            </div>
+        {% endif %}
+        
+                    </div>
+
+                    <!-- Profile Tab -->
+                    <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
+                        <div class="row">
+                            <div class="col-md-4 mb-4">
+                                <div class="card border-0 shadow-sm text-center">
+                                    <div class="card-body">
+                                        <div class="profile-avatar mb-3" style="width: 120px; height: 120px; margin: 0 auto; background: var(--primary-gradient); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 3rem; font-weight: bold;">
+                                            {% if user.name %}
+                                                {{ user.name|slice:":1"|upper }}
+                                            {% else %}
+                                                {{ user.email|slice:":1"|upper }}
+                                            {% endif %}
+                                        </div>
+                                        <h4 class="mb-1">{{ user.name|default:"Usuario" }}</h4>
+                                        <p class="text-muted mb-3">{{ user.email }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-8">
+                                <div class="card border-0 shadow-sm">
+                                    <div class="card-header bg-white border-bottom">
+                                        <h5 class="mb-0">
+                                            <i class="fas fa-user-edit me-2 text-primary"></i>
+                                            Información Personal
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <form>
+                                            <div class="mb-3">
+                                                <label class="form-label">Nombre Completo</label>
+                                                <input type="text" class="form-control" value="{{ user.name|default:'' }}" placeholder="Tu nombre completo">
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Email</label>
+                                                <input type="email" class="form-control" value="{{ user.email }}" readonly>
+                                                <small class="text-muted">El email no se puede modificar</small>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Teléfono</label>
+                                                <input type="tel" class="form-control" value="{{ user.telefono|default:'' }}" placeholder="300 123 4567">
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Dirección</label>
+                                                <input type="text" class="form-control" value="{{ user.address|default:'' }}" placeholder="Calle 123 # 45-67">
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Ciudad</label>
+                                                <input type="text" class="form-control" value="{{ user.city|default:'' }}" placeholder="Bogotá">
+                                            </div>
+                                            <div class="text-end">
+                                                <button type="submit" class="btn btn-primary">
+                                                    <i class="fas fa-save me-2"></i>
+                                                    Guardar Cambios
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Security Tab -->
+                    <div class="tab-pane fade" id="security" role="tabpanel" aria-labelledby="security-tab">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-header bg-white border-bottom">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-shield-alt me-2 text-primary"></i>
+                                    Seguridad y Contraseña
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <form>
+                                    <div class="mb-3">
+                                        <label class="form-label">Contraseña Actual</label>
+                                        <input type="password" class="form-control" placeholder="Ingresa tu contraseña actual">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Nueva Contraseña</label>
+                                        <input type="password" class="form-control" placeholder="Mínimo 8 caracteres">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Confirmar Nueva Contraseña</label>
+                                        <input type="password" class="form-control" placeholder="Repite la nueva contraseña">
+                                    </div>
+                                    <div class="text-end">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-key me-2"></i>
+                                            Cambiar Contraseña
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Messages Tab -->
+                    <div class="tab-pane fade" id="messages" role="tabpanel" aria-labelledby="messages-tab">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-header bg-white border-bottom">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-comments me-2 text-primary"></i>
+                                        Centro de Mensajes
+                                    </h5>
+                                    <button class="btn btn-primary btn-sm">
+                                        <i class="fas fa-plus me-2"></i>
+                                        Nueva Consulta
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="text-center py-5">
+                                    <i class="fas fa-comments" style="font-size: 4rem; color: #e0e0e0;"></i>
+                                    <h5 class="mt-3">No hay mensajes aún</h5>
+                                    <p class="text-muted">Inicia una conversación para contactar con soporte</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>    <!-- Modal de Detalles del Pedido -->
+    <div class="modal fade" id="orderDetailsModal" tabindex="-1" aria-labelledby="orderDetailsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header" style="background: var(--primary-gradient); color: white;">
+                    <h5 class="modal-title" id="orderDetailsModalLabel">
+                        <i class="fas fa-receipt me-2"></i>
+                        Detalles del Pedido
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="orderDetailsContent">
+                    <div class="text-center py-5">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                        <p class="mt-3 text-muted">Cargando detalles del pedido...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <!-- Custom JS -->
+    <script>
+        // Filter functionality
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                // Update active button
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                
+                const filter = this.dataset.filter;
+                const orders = document.querySelectorAll('.order-card');
+                
+                orders.forEach(order => {
+                    if (filter === 'all') {
+                        order.style.display = 'block';
+                        setTimeout(() => {
+                            order.style.opacity = '1';
+                            order.style.transform = 'translateY(0)';
+                        }, 10);
+                    } else {
+                        const status = order.dataset.orderStatus;
+                        if (status === filter) {
+                            order.style.display = 'block';
+                            setTimeout(() => {
+                                order.style.opacity = '1';
+                                order.style.transform = 'translateY(0)';
+                            }, 10);
+                        } else {
+                            order.style.opacity = '0';
+                            order.style.transform = 'translateY(20px)';
+                            setTimeout(() => {
+                                order.style.display = 'none';
+                            }, 300);
+                        }
+                    }
+                });
+            });
+        });
+        
+        // Show order details in modal
+        function showOrderDetails(orderId) {
+            const modal = new bootstrap.Modal(document.getElementById('orderDetailsModal'));
+            modal.show();
+            
+            // Find the order card
+            const orderCard = document.querySelector(`[data-pedido-id="${orderId}"]`).closest('.order-card');
+            const orderData = extractOrderData(orderCard, orderId);
+            
+            // Update modal content
+            document.getElementById('orderDetailsContent').innerHTML = generateOrderDetailsHTML(orderData);
+        }
+        
+        function extractOrderData(orderCard, orderId) {
+            const header = orderCard.querySelector('.order-card-header');
+            const body = orderCard.querySelector('.order-card-body');
+            
+            return {
+                id: orderId,
+                number: header.querySelector('.order-number').textContent.trim(),
+                date: header.querySelector('.order-date').textContent.trim(),
+                status: header.querySelector('.order-status-badge').textContent.trim(),
+                statusClass: header.querySelector('.order-status-badge').className,
+                total: body.querySelector('.summary-item-value:nth-of-type(2)').textContent.trim(),
+                metodoPago: body.querySelectorAll('.summary-item-value')[2].textContent.trim(),
+                detalles: Array.from(body.querySelectorAll('.product-item h6')).map(h => h.textContent.trim()),
+                nota: body.querySelector('.order-note p')?.textContent.trim() || null,
+                timeline: extractTimeline(body)
+            };
+        }
+        
+        function extractTimeline(body) {
+            const timelineSteps = body.querySelectorAll('.timeline-step');
+            return Array.from(timelineSteps).map(step => ({
+                title: step.querySelector('strong').textContent,
+                description: step.querySelector('small').textContent,
+                completed: step.classList.contains('completed'),
+                active: step.classList.contains('active')
+            }));
+        }
+        
+        function generateOrderDetailsHTML(order) {
+            return `
+                <div class="container-fluid">
+                    <div class="row">
+                        <!-- Información Principal -->
+                        <div class="col-md-8">
+                            <div class="card mb-3 border-0 shadow-sm">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-4">
+                                        <div>
+                                            <h4 class="mb-2">${order.number}</h4>
+                                            <p class="text-muted mb-0">
+                                                <i class="far fa-calendar-alt me-2"></i>
+                                                ${order.date}
+                                            </p>
+                                        </div>
+                                        <span class="${order.statusClass}">${order.status}</span>
+                                    </div>
+                                    
+                                    <h5 class="mb-3">
+                                        <i class="fas fa-box-open me-2 text-primary"></i>
+                                        Productos del Pedido
+                                    </h5>
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>#</th>
+                                                    <th>Producto</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                ${order.detalles.map((detalle, index) => `
+                                                    <tr>
+                                                        <td><strong>${index + 1}</strong></td>
+                                                        <td>${detalle}</td>
+                                                    </tr>
+                                                `).join('')}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    
+                                    ${order.nota ? `
+                                    <div class="alert alert-warning mt-3">
+                                        <h6 class="alert-heading">
+                                            <i class="fas fa-sticky-note me-2"></i>
+                                            Nota del Pedido
+                                        </h6>
+                                        <p class="mb-0">${order.nota}</p>
+                                    </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Sidebar Derecho -->
+                        <div class="col-md-4">
+                            <!-- Resumen de Pago -->
+                            <div class="card mb-3 border-0 shadow-sm">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-dollar-sign me-2 text-success"></i>
+                                        Resumen de Pago
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between mb-3">
+                                        <span class="text-muted">Método de Pago:</span>
+                                        <strong>${order.metodoPago}</strong>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-3 pb-3 border-bottom">
+                                        <span class="text-muted">Productos:</span>
+                                        <strong>${order.detalles.length} item(s)</strong>
+                                    </div>
+                                    <div class="d-flex justify-content-between">
+                                        <h5 class="mb-0">Total:</h5>
+                                        <h4 class="mb-0 text-primary">${order.total}</h4>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Timeline de Seguimiento -->
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-route me-2 text-info"></i>
+                                        Seguimiento del Pedido
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="timeline-tracker">
+                                        ${order.timeline.map((step, index) => `
+                                            <div class="timeline-step ${step.completed ? 'completed' : ''} ${step.active ? 'active' : ''}">
+                                                <div class="step-icon">
+                                                    ${step.completed ? '<i class="fas fa-check-circle"></i>' : 
+                                                      step.active ? '<i class="fas fa-spinner fa-pulse"></i>' : 
+                                                      '<i class="far fa-circle"></i>'}
+                                                </div>
+                                                <div class="step-content">
+                                                    <strong>${step.title}</strong>
+                                                    <small class="d-block text-muted">${step.description}</small>
+                                                </div>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Cancel order function with SweetAlert
+        function cancelOrder(orderId) {
+            Swal.fire({
+                title: '¿Cancelar pedido?',
+                text: "Esta acción no se puede deshacer. ¿Estás seguro?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Sí, cancelar pedido',
+                cancelButtonText: 'No, mantener'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // TODO: Implementar cancelación via AJAX
+                    Swal.fire({
+                        title: 'Cancelando pedido...',
+                        text: 'Por favor espera',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+                    
+                    // Simulación de request
+                    setTimeout(() => {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Pedido cancelado',
+                            text: 'Tu pedido ha sido cancelado exitosamente',
+                            confirmButtonColor: '#667eea'
+                        }).then(() => {
+                            window.location.reload();
+                        });
+                    }, 2000);
+                }
+            });
+        }
+        
+        // Add entrance animation
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.order-card');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(30px)';
+                setTimeout(() => {
+                    card.style.transition = 'all 0.5s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+
+            // Initialize tabs and handle URL hash
+            const hash = window.location.hash || '#dashboard';
+            const tab = document.querySelector(`.nav-link[href="${hash}"]`);
+            if (tab) {
+                const tabInstance = new bootstrap.Tab(tab);
+                tabInstance.show();
+            }
+
+            // Update URL hash on tab change
+            document.querySelectorAll('.nav-link[data-bs-toggle="pill"]').forEach(link => {
+                link.addEventListener('shown.bs.tab', function (e) {
+                    const href = e.target.getAttribute('href');
+                    history.pushState(null, null, href);
+                });
+            });
+
+            // Handle logout confirmation
+            const logoutBtn = document.querySelector('.btn-logout');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    Swal.fire({
+                        title: '¿Cerrar sesión?',
+                        text: "¿Estás seguro que deseas salir?",
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonColor: '#f5576c',
+                        cancelButtonColor: '#6b7280',
+                        confirmButtonText: 'Sí, cerrar sesión',
+                        cancelButtonText: 'Cancelar'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = this.getAttribute('href');
+                        }
+                    });
+                });
+            }
+
+            // Profile form submission
+            const profileForm = document.querySelector('#profile form');
+            if (profileForm) {
+                profileForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Perfil actualizado',
+                        text: 'Tus datos han sido guardados exitosamente',
+                        confirmButtonColor: '#667eea'
+                    });
+                });
+            }
+
+            // Security form submission
+            const securityForm = document.querySelector('#security form');
+            if (securityForm) {
+                securityForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const currentPass = this.querySelector('input[type="password"]:nth-of-type(1)').value;
+                    const newPass = this.querySelector('input[type="password"]:nth-of-type(2)').value;
+                    const confirmPass = this.querySelector('input[type="password"]:nth-of-type(3)').value;
+
+                    if (newPass !== confirmPass) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Las contraseñas no coinciden',
+                            confirmButtonColor: '#ef4444'
+                        });
+                        return;
+                    }
+
+                    if (newPass.length < 8) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'La contraseña debe tener al menos 8 caracteres',
+                            confirmButtonColor: '#ef4444'
+                        });
+                        return;
+                    }
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Contraseña actualizada',
+                        text: 'Tu contraseña ha sido cambiada exitosamente',
+                        confirmButtonColor: '#667eea'
+                    });
+                });
+            }
+        });
+    </script>
 </body>
 </html>

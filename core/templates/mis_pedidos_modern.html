@@ -388,7 +388,7 @@
     <!-- Toast Container -->
     <div class="toast-container" id="toast-container"></div>
 
-    {% include 'navbarr.html' %}
+   
 
     <!-- Header -->
     <div class="account-header">
@@ -402,8 +402,25 @@
                     <p class="mb-0 opacity-75">Gestiona tu perfil, pedidos y configuración</p>
                 </div>
                 <div class="col-md-4 text-md-end">
-                    <p class="mb-1"><strong>{{ request.user.first_name }} {{ request.user.last_name }}</strong></p>
-                    <p class="mb-0 opacity-75">{{ request.user.email }}</p>
+                    {% if user_profile %}
+                        <p class="mb-1">
+                            <i class="bi bi-person-circle me-2"></i>
+                            <strong>{{ user_profile.name|default:user_profile.email }}</strong>
+                        </p>
+                        <p class="mb-0 opacity-75">
+                            <i class="bi bi-envelope me-2"></i>
+                            {{ user_profile.email }}
+                        </p>
+                        {% if user_profile.telefono %}
+                        <p class="mb-0 opacity-75">
+                            <i class="bi bi-telephone me-2"></i>
+                            {{ user_profile.telefono }}
+                        </p>
+                        {% endif %}
+                    {% else %}
+                        <p class="mb-1"><strong>{{ request.user.first_name }} {{ request.user.last_name }}</strong></p>
+                        <p class="mb-0 opacity-75">{{ request.user.email }}</p>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -785,74 +802,128 @@
 
                     <!-- Profile Tab -->
                     <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
-                        <div class="account-card">
-                            <div class="card-header-custom">
-                                <i class="bi bi-person-gear me-2"></i>
-                                Mi Perfil
-                            </div>
-                            <div class="card-body">
-                                <form id="profile-form">
-                                    {% csrf_token %}
-                                    <div class="row">
-                                        <div class="col-md-6 mb-3">
-                                            <label for="first_name" class="form-label">Nombres</label>
-                                            <input type="text" class="form-control" id="first_name" name="first_name" 
-                                                   value="{{ request.user.first_name }}" required>
+                        <div class="row">
+                            <!-- Información del Usuario -->
+                            <div class="col-md-4 mb-4">
+                                <div class="account-card text-center">
+                                    <div class="card-body">
+                                        <div class="profile-avatar mb-3" style="width: 120px; height: 120px; margin: 0 auto; background: linear-gradient(135deg, var(--primary-color) 0%, #1d4ed8 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 3rem; font-weight: bold; box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);">
+                                            {% if user_profile.name %}
+                                                {{ user_profile.name|slice:":1"|upper }}
+                                            {% else %}
+                                                {{ user_profile.email|slice:":1"|upper }}
+                                            {% endif %}
                                         </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label for="last_name" class="form-label">Apellidos</label>
-                                            <input type="text" class="form-control" id="last_name" name="last_name" 
-                                                   value="{{ request.user.last_name }}" required>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="row">
-                                        <div class="col-md-6 mb-3">
-                                            <label for="email" class="form-label">Email</label>
-                                            <input type="email" class="form-control" id="email" name="email" 
-                                                   value="{{ request.user.email }}" readonly>
-                                            <div class="form-text">
-                                                <i class="bi bi-info-circle me-1"></i>
-                                                Para cambiar el email, contacta soporte
+                                        <h4 class="mb-1">{{ user_profile.name|default:"Usuario" }}</h4>
+                                        <p class="text-muted mb-3">{{ user_profile.email }}</p>
+                                        
+                                        <div class="profile-stats mt-4">
+                                            <div class="stat-item py-2 border-top">
+                                                <small class="text-muted d-block">Miembro desde</small>
+                                                <strong>{{ user_profile.date_joined|date:"d/m/Y"|default:"No disponible" }}</strong>
+                                            </div>
+                                            <div class="stat-item py-2 border-top">
+                                                <small class="text-muted d-block">Total de Pedidos</small>
+                                                <strong>{{ pedidos.count }}</strong>
+                                            </div>
+                                            <div class="stat-item py-2 border-top border-bottom">
+                                                <small class="text-muted d-block">Total Gastado</small>
+                                                <strong class="text-success">${{ total_gastado|intcomma }}</strong>
                                             </div>
                                         </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label for="phone" class="form-label">Teléfono</label>
-                                            <input type="tel" class="form-control" id="phone" name="phone" 
-                                                   value="{{ user_profile.telefono|default:'' }}" placeholder="300 123 4567">
-                                        </div>
                                     </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Formulario de Perfil -->
+                            <div class="col-md-8">
+                                <div class="account-card">
+                                    <div class="card-header-custom">
+                                        <i class="bi bi-person-gear me-2"></i>
+                                        Información Personal
+                                    </div>
+                                    <div class="card-body">
+                                        <form id="profile-form">
+                                            {% csrf_token %}
+                                            
+                                            <div class="mb-4">
+                                                <h6 class="text-muted mb-3">
+                                                    <i class="bi bi-person me-2"></i>
+                                                    Datos Personales
+                                                </h6>
+                                                <div class="row">
+                                                    <div class="col-md-12 mb-3">
+                                                        <label for="name" class="form-label">Nombre Completo</label>
+                                                        <input type="text" class="form-control" id="name" name="name" 
+                                                               value="{{ user_profile.name|default:'' }}" 
+                                                               placeholder="Ej: Juan Pérez" required>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="mb-4">
+                                                <h6 class="text-muted mb-3">
+                                                    <i class="bi bi-envelope me-2"></i>
+                                                    Datos de Contacto
+                                                </h6>
+                                                <div class="row">
+                                                    <div class="col-md-6 mb-3">
+                                                        <label for="email" class="form-label">Email</label>
+                                                        <input type="email" class="form-control" id="email" name="email" 
+                                                               value="{{ user_profile.email }}" readonly>
+                                                        <div class="form-text">
+                                                            <i class="bi bi-info-circle me-1"></i>
+                                                            El email no se puede modificar
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6 mb-3">
+                                                        <label for="phone" class="form-label">Teléfono</label>
+                                                        <input type="tel" class="form-control" id="phone" name="phone" 
+                                                               value="{{ user_profile.telefono|default:'' }}" 
+                                                               placeholder="300 123 4567">
+                                                    </div>
+                                                </div>
+                                            </div>
 
-                                    <div class="row">
-                                        <div class="col-md-8 mb-3">
-                                            <label for="address" class="form-label">Dirección</label>
-                                            <input type="text" class="form-control" id="address" name="address" 
-                                                   value="{{ user_profile.address|default:'' }}" placeholder="Calle 123 # 45-67">
-                                        </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label for="city" class="form-label">Ciudad</label>
-                                            <input type="text" class="form-control" id="city" name="city" 
-                                                   value="{{ user_profile.city|default:'' }}" placeholder="Bogotá">
-                                        </div>
-                                    </div>
+                                            <div class="mb-4">
+                                                <h6 class="text-muted mb-3">
+                                                    <i class="bi bi-geo-alt me-2"></i>
+                                                    Dirección de Envío
+                                                </h6>
+                                                <div class="row">
+                                                    <div class="col-md-8 mb-3">
+                                                        <label for="address" class="form-label">Dirección Completa</label>
+                                                        <input type="text" class="form-control" id="address" name="address" 
+                                                               value="{{ user_profile.address|default:'' }}" 
+                                                               placeholder="Calle 123 # 45-67, Apto 101">
+                                                    </div>
+                                                    <div class="col-md-4 mb-3">
+                                                        <label for="city" class="form-label">Ciudad</label>
+                                                        <input type="text" class="form-control" id="city" name="city" 
+                                                               value="{{ user_profile.city|default:'' }}" 
+                                                               placeholder="Bogotá">
+                                                    </div>
+                                                </div>
+                                            </div>
 
-                                    <div class="alert alert-info">
-                                        <i class="bi bi-shield-check me-2"></i>
-                                        <strong>Verificación requerida:</strong> Los cambios en información sensible requieren 
-                                        verificación por email para mayor seguridad.
-                                    </div>
+                                            <div class="alert alert-info">
+                                                <i class="bi bi-shield-check me-2"></i>
+                                                <strong>Seguridad:</strong> Los cambios en tu perfil son verificados para proteger tu cuenta.
+                                            </div>
 
-                                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                                        <button type="button" class="btn btn-outline-secondary" onclick="resetProfileForm()">
-                                            <i class="bi bi-arrow-clockwise me-1"></i>
-                                            Restaurar
-                                        </button>
-                                        <button type="submit" class="btn btn-primary-custom btn-custom">
-                                            <i class="bi bi-check-lg me-1"></i>
-                                            Guardar Cambios
-                                        </button>
+                                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                                <button type="button" class="btn btn-outline-secondary" onclick="resetProfileForm()">
+                                                    <i class="bi bi-arrow-clockwise me-1"></i>
+                                                    Restaurar
+                                                </button>
+                                                <button type="submit" class="btn btn-primary-custom btn-custom">
+                                                    <i class="bi bi-check-lg me-1"></i>
+                                                    Guardar Cambios
+                                                </button>
+                                            </div>
+                                        </form>
                                     </div>
-                                </form>
+                                </div>
                             </div>
                         </div>
                     </div>
