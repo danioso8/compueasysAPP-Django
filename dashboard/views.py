@@ -296,7 +296,7 @@ def dashboard_home(request):
     
     # Obtener todas las visitas filtradas (sin paginación, usar scroll)
     # Incluir producto para mostrar el nombre cuando visit_type='product_detail'
-    visitas_recientes = visitas_qs.select_related('user').order_by('-timestamp')[:500]  # Limitar a 500 para rendimiento
+    visitas_recientes = visitas_qs.select_related('user').order_by('-timestamp')[:1000]  # Mostrar hasta 1000 visitas con scroll
     
     # Agregar información del producto a cada visita
     for visita in visitas_recientes:
@@ -2717,7 +2717,7 @@ def visitas_live_data(request):
     visitas_filter = request.GET.get('visitas_filter', 'all')
     visitas_user_filter = request.GET.get('visitas_user', 'all')
     visitas_type_filter = request.GET.get('visitas_type', 'all')
-    limit = int(request.GET.get('limit', 20))
+    limit = int(request.GET.get('limit', 1000))  # Cambiado de 20 a 1000 para mostrar todas las visitas
     
     # Calcular rangos de tiempo
     now = timezone.now()
