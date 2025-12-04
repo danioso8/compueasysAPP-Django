@@ -388,6 +388,7 @@ body {
         flex-direction: column;
     }
     
+    /* Sidebar oculto por defecto en móvil */
     .sidebar {
         position: fixed !important;
         top: 0 !important;
@@ -395,63 +396,119 @@ body {
         width: 280px !important;
         height: 100vh !important;
         z-index: 1045 !important;
-        transition: left 0.3s ease !important;
-        box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        box-shadow: none;
         transform: translateX(0) !important;
-        opacity: 1 !important;
-        visibility: visible !important;
         display: flex !important;
+        background: #ffffff !important;
+        overflow-y: auto;
+    }
+    
+    /* Sidebar abierto con gradiente */
+    .sidebar.mobile-open {
+        left: 0 !important;
+        box-shadow: 5px 0 30px rgba(0,0,0,0.4) !important;
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
     }
     
-    .sidebar.mobile-open {
-        left: 0 !important;
-        box-shadow: 5px 0 30px rgba(0,0,0,0.3) !important;
+    /* Estilos de header del sidebar cuando está abierto */
+    .sidebar.mobile-open .sidebar-brand {
+        background: rgba(255, 255, 255, 0.1) !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important;
     }
     
-    /* Cambiar colores del texto en móvil para que sea visible sobre el gradiente */
-    .sidebar.mobile-open .nav-link {
-        color: rgba(255, 255, 255, 0.9) !important;
+    .sidebar.mobile-open .brand-name {
+        color: white !important;
+        font-weight: 700 !important;
     }
     
-    .sidebar.mobile-open .nav-link:hover {
-        background: rgba(255, 255, 255, 0.2) !important;
+    .sidebar.mobile-open .brand-tagline {
+        color: rgba(255, 255, 255, 0.8) !important;
+    }
+    
+    .sidebar.mobile-open .logo-icon i,
+    .sidebar.mobile-open .sidebar-logo-icon {
         color: white !important;
     }
     
-    .sidebar.mobile-open .nav-link.active {
-        background: rgba(255, 255, 255, 0.25) !important;
+    /* Títulos de sección */
+    .sidebar.mobile-open .nav-section-title {
+        color: rgba(255, 255, 255, 0.7) !important;
+        font-size: 11px !important;
+        font-weight: 600 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+    }
+    
+    .sidebar.mobile-open .nav-section-title i {
+        color: rgba(255, 255, 255, 0.7) !important;
+    }
+    
+    /* Links de navegación */
+    .sidebar.mobile-open .nav-menu-link,
+    .sidebar.mobile-open .nav-link {
+        color: rgba(255, 255, 255, 0.95) !important;
+        background: transparent !important;
+        border-left: 3px solid transparent !important;
+    }
+    
+    .sidebar.mobile-open .nav-menu-link:hover,
+    .sidebar.mobile-open .nav-link:hover {
+        background: rgba(255, 255, 255, 0.15) !important;
         color: white !important;
         border-left-color: white !important;
     }
     
+    .sidebar.mobile-open .nav-menu-link.active,
+    .sidebar.mobile-open .nav-link.active {
+        background: rgba(255, 255, 255, 0.25) !important;
+        color: white !important;
+        border-left: 3px solid white !important;
+        font-weight: 600 !important;
+    }
+    
+    /* Iconos */
+    .sidebar.mobile-open .nav-menu-icon,
     .sidebar.mobile-open .nav-icon {
-        color: rgba(255, 255, 255, 0.9) !important;
-    }
-    
-    .sidebar.mobile-open .nav-link.active .nav-icon {
         color: white !important;
     }
     
-    .sidebar.mobile-open .sidebar-brand .brand-name,
-    .sidebar.mobile-open .sidebar-brand .brand-tagline,
-    .sidebar.mobile-open .nav-section-title,
-    .sidebar.mobile-open .nav-menu-text {
+    /* Texto del menú */
+    .sidebar.mobile-open .nav-menu-text,
+    .sidebar.mobile-open .sidebar-text {
+        color: white !important;
+        display: inline-block !important;
+    }
+    
+    /* Badges */
+    .sidebar.mobile-open .nav-menu-badge {
+        background: rgba(255, 255, 255, 0.25) !important;
         color: white !important;
     }
     
-    .sidebar .sidebar-text {
-        display: block !important;
+    /* User info si existe */
+    .sidebar.mobile-open .sidebar-user,
+    .sidebar.mobile-open .user-info {
+        border-top: 1px solid rgba(255, 255, 255, 0.2) !important;
+        background: rgba(255, 255, 255, 0.1) !important;
     }
     
+    .sidebar.mobile-open .user-info .user-name,
+    .sidebar.mobile-open .user-info .user-role {
+        color: white !important;
+    }
+    
+    /* Botón de collapse (ocultar en móvil) */
+    .sidebar .sidebar-collapse-btn,
     .sidebar-toggle {
-        display: none;
+        display: none !important;
     }
     
+    /* Main content ajustado */
     .main-content {
-        margin-left: 0;
-        padding: 80px 15px 15px 15px;
-        width: 100%;
+        margin-left: 0 !important;
+        padding: 80px 15px 15px 15px !important;
+        width: 100% !important;
     }
 }
 
