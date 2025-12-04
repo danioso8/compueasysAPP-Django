@@ -1357,16 +1357,36 @@ document.addEventListener('DOMContentLoaded', function() {
     // Abrir menú móvil
     mobileMenuBtn.addEventListener('click', function(e) {
       e.preventDefault();
-      console.log('📱 Abriendo menú móvil');
+      e.stopPropagation();
+      console.log('📱 Click en botón móvil detectado!');
+      console.log('📱 Elemento clickeado:', e.target);
+      console.log('📱 Abriendo menú móvil...');
+      
+      // Forzar las clases con !important via inline styles
       sidebar.classList.add('mobile-open');
+      sidebar.style.left = '0';
+      sidebar.style.display = 'flex';
+      sidebar.style.visibility = 'visible';
+      
       mobileOverlay.classList.add('active');
+      mobileOverlay.style.display = 'block';
+      mobileOverlay.style.opacity = '1';
+      mobileOverlay.style.visibility = 'visible';
+      
       document.body.style.overflow = 'hidden'; // Prevenir scroll
+      
+      console.log('✅ Menú abierto. Clases:', {
+        sidebar: sidebar.className,
+        overlay: mobileOverlay.className,
+        sidebarLeft: sidebar.style.left
+      });
     });
     
     // Cerrar menú móvil
     function closeMobileMenu() {
       console.log('📱 Cerrando menú móvil');
       sidebar.classList.remove('mobile-open');
+      sidebar.style.left = '';
       mobileOverlay.classList.remove('active');
       document.body.style.overflow = ''; // Restaurar scroll
     }

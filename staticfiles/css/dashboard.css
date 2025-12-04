@@ -389,18 +389,55 @@ body {
     }
     
     .sidebar {
-        position: fixed;
-        top: 0;
-        left: -280px;
-        width: 280px;
-        height: 100vh;
-        z-index: 1045;
-        transition: left 0.3s ease;
+        position: fixed !important;
+        top: 0 !important;
+        left: -280px !important;
+        width: 280px !important;
+        height: 100vh !important;
+        z-index: 1045 !important;
+        transition: left 0.3s ease !important;
         box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        transform: translateX(0) !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        display: flex !important;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
     }
     
     .sidebar.mobile-open {
-        left: 0;
+        left: 0 !important;
+        box-shadow: 5px 0 30px rgba(0,0,0,0.3) !important;
+    }
+    
+    /* Cambiar colores del texto en mÃ³vil para que sea visible sobre el gradiente */
+    .sidebar.mobile-open .nav-link {
+        color: rgba(255, 255, 255, 0.9) !important;
+    }
+    
+    .sidebar.mobile-open .nav-link:hover {
+        background: rgba(255, 255, 255, 0.2) !important;
+        color: white !important;
+    }
+    
+    .sidebar.mobile-open .nav-link.active {
+        background: rgba(255, 255, 255, 0.25) !important;
+        color: white !important;
+        border-left-color: white !important;
+    }
+    
+    .sidebar.mobile-open .nav-icon {
+        color: rgba(255, 255, 255, 0.9) !important;
+    }
+    
+    .sidebar.mobile-open .nav-link.active .nav-icon {
+        color: white !important;
+    }
+    
+    .sidebar.mobile-open .sidebar-brand .brand-name,
+    .sidebar.mobile-open .sidebar-brand .brand-tagline,
+    .sidebar.mobile-open .nav-section-title,
+    .sidebar.mobile-open .nav-menu-text {
+        color: white !important;
     }
     
     .sidebar .sidebar-text {
@@ -513,21 +550,26 @@ body {
 }
 
 .mobile-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0,0,0,0.5);
-    z-index: 1040;
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.3s ease;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background: rgba(0, 0, 0, 0.6) !important;
+    backdrop-filter: blur(2px);
+    z-index: 1040 !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    transition: all 0.3s ease !important;
+    pointer-events: none;
 }
 
 .mobile-overlay.active {
-    opacity: 1;
-    visibility: visible;
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
 }
 
 /* Mejoras para tablets */
@@ -1828,7 +1870,7 @@ th {
     border: 1px solid rgba(156, 163, 175, 0.3);
 }
 
-/* Navegación Corporativa Moderna */
+/* Navegaciï¿½n Corporativa Moderna */
 .sidebar-navigation {
     flex: 1;
     overflow-y: auto;
@@ -1853,7 +1895,7 @@ th {
     background: rgba(255, 255, 255, 0.3);
 }
 
-/* Secciones de Navegación */
+/* Secciones de Navegaciï¿½n */
 .nav-section {
     margin-bottom: 24px;
 }
@@ -2136,7 +2178,7 @@ th {
     width: calc(100% - 70px);
 }
 
-/* Responsive para Móvil */
+/* Responsive para Mï¿½vil */
 @media (max-width: 768px) {
     .modern-sidebar {
         transform: translateX(-100%);
