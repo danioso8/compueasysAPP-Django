@@ -1362,23 +1362,21 @@ document.addEventListener('DOMContentLoaded', function() {
       console.log('📱 Elemento clickeado:', e.target);
       console.log('📱 Abriendo menú móvil...');
       
-      // Forzar las clases con !important via inline styles
+      // Agregar clase mobile-open al sidebar
       sidebar.classList.add('mobile-open');
-      sidebar.style.left = '0';
-      sidebar.style.display = 'flex';
-      sidebar.style.visibility = 'visible';
       
+      // Mostrar overlay
       mobileOverlay.classList.add('active');
-      mobileOverlay.style.display = 'block';
-      mobileOverlay.style.opacity = '1';
-      mobileOverlay.style.visibility = 'visible';
       
-      document.body.style.overflow = 'hidden'; // Prevenir scroll
+      // Prevenir scroll del body
+      document.body.style.overflow = 'hidden';
       
       console.log('✅ Menú abierto. Clases:', {
         sidebar: sidebar.className,
         overlay: mobileOverlay.className,
-        sidebarLeft: sidebar.style.left
+        sidebarComputedStyle: window.getComputedStyle(sidebar).left,
+        overlayZIndex: window.getComputedStyle(mobileOverlay).zIndex,
+        sidebarZIndex: window.getComputedStyle(sidebar).zIndex
       });
     });
     
@@ -1386,9 +1384,9 @@ document.addEventListener('DOMContentLoaded', function() {
     function closeMobileMenu() {
       console.log('📱 Cerrando menú móvil');
       sidebar.classList.remove('mobile-open');
-      sidebar.style.left = '';
       mobileOverlay.classList.remove('active');
       document.body.style.overflow = ''; // Restaurar scroll
+      console.log('✅ Menú cerrado');
     }
     
     mobileOverlay.addEventListener('click', closeMobileMenu);
