@@ -388,7 +388,7 @@ body {
         flex-direction: column;
     }
     
-    /* Sidebar oculto por defecto en móvil */
+    /* Sidebar oculto por defecto en móvil - mantiene todos los estilos originales */
     .sidebar {
         position: fixed !important;
         top: 0 !important;
@@ -396,106 +396,24 @@ body {
         width: 280px !important;
         height: 100vh !important;
         z-index: 1045 !important;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
         box-shadow: none;
-        transform: translateX(0) !important;
         display: flex !important;
-        background: #ffffff !important;
         overflow-y: auto;
+        /* Mantiene el background original del desktop */
     }
     
-    /* Sidebar abierto con gradiente */
+    /* Sidebar abierto - solo cambia posición y sombra */
     .sidebar.mobile-open {
         left: 0 !important;
-        box-shadow: 5px 0 30px rgba(0,0,0,0.4) !important;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        box-shadow: 5px 0 30px rgba(0,0,0,0.3) !important;
     }
     
-    /* Estilos de header del sidebar cuando está abierto */
-    .sidebar.mobile-open .sidebar-brand {
-        background: rgba(255, 255, 255, 0.1) !important;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important;
-    }
-    
-    .sidebar.mobile-open .brand-name {
-        color: white !important;
-        font-weight: 700 !important;
-    }
-    
-    .sidebar.mobile-open .brand-tagline {
-        color: rgba(255, 255, 255, 0.8) !important;
-    }
-    
-    .sidebar.mobile-open .logo-icon i,
-    .sidebar.mobile-open .sidebar-logo-icon {
-        color: white !important;
-    }
-    
-    /* Títulos de sección */
-    .sidebar.mobile-open .nav-section-title {
-        color: rgba(255, 255, 255, 0.7) !important;
-        font-size: 11px !important;
-        font-weight: 600 !important;
-        text-transform: uppercase !important;
-        letter-spacing: 0.5px !important;
-    }
-    
-    .sidebar.mobile-open .nav-section-title i {
-        color: rgba(255, 255, 255, 0.7) !important;
-    }
-    
-    /* Links de navegación */
-    .sidebar.mobile-open .nav-menu-link,
-    .sidebar.mobile-open .nav-link {
-        color: rgba(255, 255, 255, 0.95) !important;
-        background: transparent !important;
-        border-left: 3px solid transparent !important;
-    }
-    
-    .sidebar.mobile-open .nav-menu-link:hover,
-    .sidebar.mobile-open .nav-link:hover {
-        background: rgba(255, 255, 255, 0.15) !important;
-        color: white !important;
-        border-left-color: white !important;
-    }
-    
-    .sidebar.mobile-open .nav-menu-link.active,
-    .sidebar.mobile-open .nav-link.active {
-        background: rgba(255, 255, 255, 0.25) !important;
-        color: white !important;
-        border-left: 3px solid white !important;
-        font-weight: 600 !important;
-    }
-    
-    /* Iconos */
-    .sidebar.mobile-open .nav-menu-icon,
-    .sidebar.mobile-open .nav-icon {
-        color: white !important;
-    }
-    
-    /* Texto del menú */
-    .sidebar.mobile-open .nav-menu-text,
-    .sidebar.mobile-open .sidebar-text {
-        color: white !important;
+    /* Asegurar que el texto siempre sea visible */
+    .sidebar .sidebar-text,
+    .sidebar .nav-menu-text {
         display: inline-block !important;
-    }
-    
-    /* Badges */
-    .sidebar.mobile-open .nav-menu-badge {
-        background: rgba(255, 255, 255, 0.25) !important;
-        color: white !important;
-    }
-    
-    /* User info si existe */
-    .sidebar.mobile-open .sidebar-user,
-    .sidebar.mobile-open .user-info {
-        border-top: 1px solid rgba(255, 255, 255, 0.2) !important;
-        background: rgba(255, 255, 255, 0.1) !important;
-    }
-    
-    .sidebar.mobile-open .user-info .user-name,
-    .sidebar.mobile-open .user-info .user-role {
-        color: white !important;
+        opacity: 1 !important;
     }
     
     /* Botón de collapse (ocultar en móvil) */
