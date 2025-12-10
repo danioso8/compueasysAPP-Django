@@ -261,13 +261,13 @@ def login_user(request):
                         'success': True,
                         'message': 'Login exitoso',
                         'user': {
-                            'name': simple_user.name,
-                            'email': simple_user.email,
-                            'telefono': simple_user.telefono,
-                            'direccion': simple_user.direccion,
-                            'ciudad': simple_user.ciudad,
-                            'departamento': simple_user.departamento,
-                            'codigo_postal': simple_user.codigo_postal
+                            'name': simple_user.name or '',
+                            'email': simple_user.email or '',
+                            'telefono': simple_user.telefono or '',
+                            'direccion': simple_user.address or '',
+                            'ciudad': simple_user.city or '',
+                            'departamento': simple_user.departamento or '',
+                            'codigo_postal': simple_user.codigo_postal or ''
                         }
                     })
                 

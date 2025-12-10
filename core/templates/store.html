@@ -19,6 +19,29 @@
     <!-- Meta tags para SEO -->
     <meta name="description" content="Tienda online CompuEasys - Encuentra los mejores productos tecnológicos al mejor precio">
     <meta name="keywords" content="tecnología, computadoras, accesorios, CompuEasys">
+    
+    <style>
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        #refresh-cart-btn {
+            border-radius: 0.375rem;
+            padding: 0.375rem 0.75rem;
+            transition: all 0.2s ease;
+        }
+        
+        #refresh-cart-btn:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 2px 8px rgba(13, 110, 253, 0.25);
+        }
+        
+        #refresh-cart-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+    </style>
 </head>
 
 <body>
@@ -43,9 +66,14 @@
                 Mi Carrito
                 <span id="cart-count-sidebar" class="cart-count-badge">{{ cart_count }}</span>
             </h3>
-            <button class="cart-close-btn" onclick="toggleCartSidebar()">
-                <i class="bi bi-x-lg"></i>
-            </button>
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <button class="btn btn-sm btn-outline-primary" onclick="refreshCartSidebar()" id="refresh-cart-btn" title="Actualizar carrito">
+                    <i class="bi bi-arrow-clockwise"></i>
+                </button>
+                <button class="cart-close-btn" onclick="toggleCartSidebar()">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
         </div>
         
         <div class="cart-sidebar-content">
@@ -53,7 +81,7 @@
                 <!-- Items del carrito con productos reales -->
                 <div id="cart-items-container" class="cart-items-list">
                     {% for item in cart_items %}
-                    <div class="cart-item-card">
+                    <div class="cart-item-card" data-product-id="{{ item.product.id }}">
                         <div class="cart-item-image">
                             {% if item.variant and item.variant.imagen %}
                                 <img src="{{ item.variant.imagen.url }}" alt="{{ item.product.name }}">
@@ -66,7 +94,14 @@
                             {% endif %}
                         </div>
                         <div class="cart-item-details">
-                            <h4 class="cart-item-name">{{ item.product.name|truncatechars:35 }}</h4>
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h4 class="cart-item-name mb-0">{{ item.product.name|truncatechars:35 }}</h4>
+                                <button class="btn btn-sm btn-danger btn-remove-item" 
+                                        onclick="removeFromCartSidebar({{ item.product.id }})" 
+                                        title="Eliminar">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
                             {% if item.variant %}
                             <p class="cart-item-variant">
                                 <i class="bi bi-palette me-1"></i>{{ item.variant.color }}
@@ -667,6 +702,108 @@
             }
         }
     });
+
+    // ===== ACTUALIZAR CARRITO MANUALMENTE =====
+    async function refreshCartSidebar() {
+        const refreshBtn = document.getElementById('refresh-cart-btn');
+        
+        if (refreshBtn) {
+            // Animación de rotación
+            refreshBtn.disabled = true;
+            refreshBtn.querySelector('i').style.animation = 'spin 0.5s linear';
+        }
+        
+        try {
+            console.log('🔄 Actualizando carrito manualmente...');
+            
+            if (window.StoreManagers && window.StoreManagers.Cart) {
+                await window.StoreManagers.Cart.loadCartPreview();
+                await window.StoreManagers.Cart.updateCartCount();
+                
+                console.log('✅ Carrito actualizado exitosamente');
+                
+                // Mostrar feedback visual
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Carrito actualizado',
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 1500
+                    });
+                }
+            }
+        } catch (error) {
+            console.error('❌ Error al actualizar carrito:', error);
+        } finally {
+            if (refreshBtn) {
+                refreshBtn.disabled = false;
+                refreshBtn.querySelector('i').style.animation = '';
+            }
+        }
+    }
+
+    // ===== ELIMINAR PRODUCTO DEL CARRITO FLOTANTE =====
+    async function removeFromCartSidebar(productId) {
+        if (!confirm('¿Eliminar este producto del carrito?')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/remove_from_cart/${productId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            });
+
+            if (response.ok) {
+                console.log('✅ Producto eliminado del carrito');
+                
+                // Recargar el carrito flotante
+                if (window.StoreManagers && window.StoreManagers.Cart) {
+                    await window.StoreManagers.Cart.loadCartPreview();
+                    await window.StoreManagers.Cart.updateCartCount();
+                }
+                
+                // Mostrar notificación
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Producto eliminado',
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 2000
+                    });
+                }
+            } else {
+                throw new Error('Error al eliminar');
+            }
+        } catch (error) {
+            console.error('Error eliminando producto:', error);
+            alert('Error al eliminar el producto. Intenta nuevamente.');
+        }
+    }
+
+    // Función auxiliar para obtener CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
     </script>
 
     <!-- WebSocket para registrar visitas en tiempo real -->
