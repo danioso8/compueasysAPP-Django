@@ -306,36 +306,9 @@ body {
   line-height: 1.2;
 }
 
-/* Mobile Menu Toggle */
+/* Mobile Menu Toggle - Nuevo */
 .mobile-menu-toggle {
   display: none;
-  flex-direction: column;
-  gap: 4px;
-  background: none;
-  border: none;
-  padding: var(--space-sm);
-  cursor: pointer;
-  z-index: 1001;
-}
-
-.mobile-menu-toggle span {
-  width: 24px;
-  height: 3px;
-  background: var(--gray-600);
-  border-radius: 2px;
-  transition: var(--transition-fast);
-}
-
-.mobile-menu-toggle.active span:nth-child(1) {
-  transform: rotate(45deg) translateY(7px);
-}
-
-.mobile-menu-toggle.active span:nth-child(2) {
-  opacity: 0;
-}
-
-.mobile-menu-toggle.active span:nth-child(3) {
-  transform: rotate(-45deg) translateY(-7px);
 }
 
 /* Secondary Navbar */
@@ -355,34 +328,7 @@ body {
   padding: 0 var(--space-lg);
 }
 
-/* Mobile menu styles */
-@media (max-width: 768px) {
-  .secondary-navbar {
-    position: fixed;
-    top: 0;
-    left: -100%;
-    width: 280px;
-    height: 100vh;
-    z-index: 1000;
-    box-shadow: var(--shadow-xl);
-    overflow-y: auto;
-    padding-top: 60px;
-  }
-  
-  .secondary-navbar.active {
-    left: 0;
-  }
-  
-  .nav-links {
-    flex-direction: column;
-    padding: var(--space-lg);
-  }
-  
-  .nav-links a {
-    padding: var(--space-md);
-    border-bottom: 1px solid var(--gray-100);
-  }
-}
+
 
 .nav-links a {
   display: flex;
@@ -1173,9 +1119,118 @@ body {
     width: 100%;
   }
   
-  .nav-links {
-    display: none;
+  /* ==== MENÚ MÓVIL HAMBURGUESA - NUEVO ==== */
+  .mobile-menu-toggle {
+    display: flex !important;
+    flex-direction: column;
+    gap: 5px;
+    background: none;
+    border: none;
+    padding: 8px;
+    cursor: pointer;
+    z-index: 1100;
+    position: relative;
   }
+  
+  .mobile-menu-toggle span {
+    display: block;
+    width: 25px;
+    height: 3px;
+    background: #333;
+    border-radius: 3px;
+    transition: all 0.3s ease;
+  }
+  
+  .mobile-menu-toggle.active span:nth-child(1) {
+    transform: rotate(45deg) translate(6px, 6px);
+  }
+  
+  .mobile-menu-toggle.active span:nth-child(2) {
+    opacity: 0;
+  }
+  
+  .mobile-menu-toggle.active span:nth-child(3) {
+    transform: rotate(-45deg) translate(7px, -7px);
+  }
+  
+  /* Secondary navbar como menú lateral móvil */
+  .secondary-navbar {
+    position: fixed;
+    top: 0;
+    right: -100%;
+    width: 280px;
+    height: 100vh;
+    background: white;
+    z-index: 1050;
+    box-shadow: -4px 0 15px rgba(0, 0, 0, 0.2);
+    transition: right 0.3s ease-in-out;
+    overflow-y: auto;
+    padding-top: 20px;
+  }
+  
+  .secondary-navbar.active {
+    right: 0;
+  }
+  
+  .nav-links {
+    display: flex !important;
+    flex-direction: column;
+    padding: 20px;
+    gap: 0;
+  }
+  
+  .nav-links li {
+    list-style: none;
+  }
+  
+  .nav-links a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 15px 20px;
+    color: #333;
+    text-decoration: none;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+  }
+  
+  .nav-links a:hover,
+  .nav-links a.active {
+    background: #f8f9fa;
+    color: var(--primary-color);
+    padding-left: 25px;
+  }
+  
+  .nav-links a i {
+    font-size: 1.2rem;
+    width: 24px;
+  }
+  
+  /* Overlay para cerrar menú */
+  .mobile-menu-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1040;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  
+  .mobile-menu-overlay.active {
+    display: block;
+    opacity: 1;
+  }
+  
+  body.menu-open {
+    overflow: hidden;
+  }
+  /* ==== FIN MENÚ MÓVIL ==== */
   
   .products-toolbar {
     flex-direction: column;
@@ -1877,6 +1932,23 @@ html {
 
 .action-btn.cart-btn.bounce {
     animation: cart-bounce 0.6s ease-in-out;
+}
+
+/* Animación pulse para badge */
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+    100% { transform: scale(1); }
+}
+
+.pulse-animation {
+    animation: pulse 0.5s ease-in-out;
+}
+
+/* Asegurar visibilidad del badge flotante */
+#cart-badge-float {
+    pointer-events: none;
+    animation: pulse 0.5s ease-in-out;
 }
 
 /* ========================================

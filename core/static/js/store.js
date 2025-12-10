@@ -870,42 +870,86 @@
     },
 
     async loadCartPreview() {
-      const cartPreviewBody = document.getElementById('cart-preview-body');
-      if (!cartPreviewBody) return;
-
+      console.log('🔄 Actualizando preview del carrito flotante...');
+      
       try {
-        // Simular carga del carrito (en producción sería un endpoint AJAX)
-        const cart = JSON.parse(sessionStorage.getItem('cart') || '{}');
-        const cartCount = Object.keys(cart).length;
-        
-        if (cartCount === 0) {
-          cartPreviewBody.innerHTML = `
-            <div class="cart-preview-empty">
-              <i class="bi bi-cart-x"></i>
-              <p class="mb-0">Tu carrito está vacío</p>
-            </div>
-          `;
+        // Obtener el HTML actualizado del carrito desde el servidor
+        const response = await fetch('/cart-preview/', {
+          method: 'GET',
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          console.log('📦 Datos recibidos del servidor:', data);
+          
+          // Actualizar el contenedor de items del carrito
+          const cartItemsContainer = document.getElementById('cart-items-container');
+          const cartSidebarContent = document.querySelector('.cart-sidebar-content');
+          
+          console.log('🔍 cart_count:', data.cart_count);
+          console.log('🔍 cartItemsContainer existe:', !!cartItemsContainer);
+          console.log('🔍 cartSidebarContent existe:', !!cartSidebarContent);
+          
+          if (data.cart_count > 0) {
+            if (cartItemsContainer) {
+              // Actualizar con los items reales del carrito
+              cartItemsContainer.innerHTML = data.cart_items_html;
+              console.log('✅ Carrito flotante actualizado con', data.cart_count, 'items');
+              
+              // Asegurar que el contenedor padre esté visible
+              if (cartSidebarContent) {
+                // Remover mensaje de vacío si existe
+                const emptyState = cartSidebarContent.querySelector('.cart-empty-state');
+                if (emptyState) {
+                  emptyState.remove();
+                }
+              }
+              
+              // Mostrar el footer con totales
+              const cartSidebarFooter = document.querySelector('.cart-sidebar-footer');
+              if (cartSidebarFooter) {
+                cartSidebarFooter.classList.remove('d-none');
+                
+                // Actualizar el total
+                const cartTotalAmount = document.getElementById('cart-total-amount');
+                if (cartTotalAmount && data.cart_total) {
+                  cartTotalAmount.textContent = data.cart_total;
+                  console.log('✅ Total actualizado:', data.cart_total);
+                }
+              }
+            } else {
+              console.error('❌ No se encontró cart-items-container');
+            }
+          } else {
+            console.log('ℹ️ Carrito vacío, mostrando mensaje');
+            if (cartSidebarContent) {
+              // Mostrar mensaje de carrito vacío
+              cartSidebarContent.innerHTML = `
+                <div class="cart-empty-state">
+                  <i class="bi bi-cart-x"></i>
+                  <h4>Tu carrito está vacío</h4>
+                  <p>Agrega productos para empezar a comprar</p>
+                  <a href="/store" class="btn-continue-shopping">
+                    <i class="bi bi-shop me-2"></i>Ir a la tienda
+                  </a>
+                </div>
+              `;
+              
+              // Ocultar footer
+              const cartSidebarFooter = document.querySelector('.cart-sidebar-footer');
+              if (cartSidebarFooter) {
+                cartSidebarFooter.classList.add('d-none');
+              }
+            }
+          }
         } else {
-          // Mostrar items del carrito (simplificado para demo)
-          cartPreviewBody.innerHTML = `
-            <div class="cart-preview-items">
-              <div class="preview-item">
-                <i class="bi bi-bag-check text-success"></i>
-                <div>
-                  <small class="text-muted">${cartCount} producto${cartCount !== 1 ? 's' : ''} agregado${cartCount !== 1 ? 's' : ''}</small>
-                </div>
-              </div>
-              <div class="preview-item">
-                <i class="bi bi-clock text-warning"></i>
-                <div>
-                  <small class="text-muted">Haz clic para ver detalles</small>
-                </div>
-              </div>
-            </div>
-          `;
+          console.warn('⚠️ No se pudo cargar el preview del carrito. Status:', response.status);
         }
       } catch (error) {
-        console.error('Error loading cart preview:', error);
+        console.error('❌ Error loading cart preview:', error);
       }
     },
 
@@ -948,6 +992,7 @@
           // Actualizar todos los contadores inmediatamente
           if (data.cart_count !== undefined) {
             const count = data.cart_count;
+            console.log('🔢 Actualizando contadores con:', count);
             
             // Badge del navbar
             const navCartCount = document.querySelector('.action-btn.cart-btn .cart-count');
@@ -957,12 +1002,16 @@
               console.log('✅ Nav cart count actualizado:', count);
             }
             
-            // Badge del cart flotante
+            // Badge del cart flotante (PRINCIPAL - arriba derecha)
             const cartFloatBadge = document.getElementById('cart-badge-float');
             if (cartFloatBadge) {
               cartFloatBadge.textContent = count;
               cartFloatBadge.style.display = count > 0 ? 'block' : 'none';
+              // Forzar re-render
+              cartFloatBadge.classList.add('pulse-animation');
               console.log('✅ Float cart badge actualizado:', count);
+            } else {
+              console.warn('⚠️ cart-badge-float NO encontrado en DOM');
             }
             
             // Badge del sidebar
@@ -1503,6 +1552,63 @@
   `;
   document.head.appendChild(style);
 
+  // ============================================
+  // MOBILE MENU MANAGER - NUEVO Y LIMPIO
+  // ============================================
+  const MobileMenuManager = {
+    init() {
+      const toggle = document.getElementById('mobile-menu-toggle');
+      const navbar = document.querySelector('.secondary-navbar');
+      const overlay = document.getElementById('mobile-menu-overlay');
+      
+      if (!toggle || !navbar) {
+        console.warn('⚠️ Mobile menu elements not found');
+        return;
+      }
+
+      // Función para cerrar menú
+      const closeMenu = () => {
+        toggle.classList.remove('active');
+        navbar.classList.remove('active');
+        if (overlay) overlay.classList.remove('active');
+        document.body.classList.remove('menu-open');
+      };
+
+      // Función para abrir menú
+      const openMenu = () => {
+        toggle.classList.add('active');
+        navbar.classList.add('active');
+        if (overlay) overlay.classList.add('active');
+        document.body.classList.add('menu-open');
+      };
+
+      // Toggle al hacer click en hamburguesa
+      toggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = navbar.classList.contains('active');
+        if (isOpen) {
+          closeMenu();
+        } else {
+          openMenu();
+        }
+        console.log('🍔 Menu toggled:', !isOpen ? 'OPEN' : 'CLOSED');
+      });
+
+      // Cerrar al hacer click en overlay
+      if (overlay) {
+        overlay.addEventListener('click', closeMenu);
+      }
+
+      // Cerrar al hacer click en un link del menú
+      const links = navbar.querySelectorAll('.nav-links a');
+      links.forEach(link => {
+        link.addEventListener('click', closeMenu);
+      });
+
+      console.log('✅ Mobile Menu initialized');
+    }
+  };
+
   // Inicialización cuando el DOM está listo
   document.addEventListener('DOMContentLoaded', () => {
     console.group('🏪 Store Manager Initialization');
@@ -1515,6 +1621,7 @@
     CartManager.init();
     LazyLoadManager.init();
     GestureManager.init();
+    MobileMenuManager.init();
 
     console.log('✅ Store experience initialized successfully');
     console.groupEnd();
@@ -1527,7 +1634,8 @@
     Sidebar: SidebarManager,
     Cart: CartManager,
     LazyLoad: LazyLoadManager,
-    Gesture: GestureManager
+    Gesture: GestureManager,
+    MobileMenu: MobileMenuManager
   };
 
 })();

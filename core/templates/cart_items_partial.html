@@ -1,0 +1,36 @@
+{% load humanize %}
+{% for item in cart_items %}
+<div class="cart-item-card">
+    <div class="cart-item-image">
+        {% if item.variant and item.variant.imagen %}
+            <img src="{{ item.variant.imagen.url }}" alt="{{ item.product.name }}">
+        {% elif item.product.imagen %}
+            <img src="{{ item.product.imagen.url }}" alt="{{ item.product.name }}">
+        {% else %}
+            <div class="cart-item-no-image">
+                <i class="bi bi-image"></i>
+            </div>
+        {% endif %}
+    </div>
+    <div class="cart-item-details">
+        <h4 class="cart-item-name">{{ item.product.name|truncatechars:35 }}</h4>
+        {% if item.variant %}
+        <p class="cart-item-variant">
+            <i class="bi bi-palette me-1"></i>{{ item.variant.color }}
+        </p>
+        {% endif %}
+        <div class="cart-item-quantity">
+            <span class="quantity-label">Cantidad:</span>
+            <span class="quantity-value">{{ item.quantity }}</span>
+        </div>
+        <div class="cart-item-price">
+            <span class="price-label">Precio:</span>
+            <span class="price-value">${{ item.price|floatformat:0|intcomma }}</span>
+        </div>
+        <div class="cart-item-subtotal">
+            <span class="subtotal-label">Subtotal:</span>
+            <span class="subtotal-value">${{ item.subtotal|floatformat:0|intcomma }} COP</span>
+        </div>
+    </div>
+</div>
+{% endfor %}

@@ -30,11 +30,9 @@
     <!-- Floating Cart Button - Modern (arriba a la derecha) -->
     <button class="cart-float-modern cart-float-top" title="Ver carrito" onclick="toggleCartSidebar()" style="position: fixed !important; right: 30px !important; top: 20px !important; z-index: 9998 !important; width: 65px !important; height: 65px !important; display: flex !important; align-items: center !important; justify-content: center !important; border-radius: 50% !important; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; color: white !important; font-size: 30px !important; border: none !important; cursor: pointer !important; box-shadow: 0 8px 32px rgba(0,0,0,0.16) !important; transition: all 0.3s ease !important;">
         <i class="bi bi-cart-plus-fill"></i>
-        {% if cart_count > 0 %}
-        <span id="cart-badge-float" class="badge rounded-pill bg-danger pulse-animation" style="position: absolute !important; top: -5px !important; right: -5px !important; z-index: 9999 !important; font-size: 13px !important; font-weight: 700 !important; padding: 5px 8px !important; min-width: 24px !important;">
-            {{ cart_count }}
+        <span id="cart-badge-float" class="badge rounded-pill bg-danger pulse-animation" style="position: absolute !important; top: -5px !important; right: -5px !important; z-index: 9999 !important; font-size: 13px !important; font-weight: 700 !important; padding: 5px 8px !important; min-width: 24px !important; display: {% if cart_count > 0 %}block{% else %}none{% endif %} !important;">
+            {{ cart_count|default:0 }}
         </span>
-        {% endif %}
     </button>
     
     <!-- Cart Sidebar Modern -->
@@ -218,6 +216,9 @@
             </div>
         </nav>
     </header>
+
+    <!-- Mobile Menu Overlay -->
+    <div class="mobile-menu-overlay" id="mobile-menu-overlay"></div>
 
     <!-- Main Content -->
     <main class="store-main">
@@ -644,10 +645,15 @@
                 overlay.classList.remove('active');
                 document.body.style.overflow = '';
             } else {
-                // Abrir
+                // Abrir y recargar contenido del carrito
                 sidebar.classList.add('active');
                 overlay.classList.add('active');
                 document.body.style.overflow = 'hidden';
+                
+                // Recargar productos del carrito cuando se abre
+                if (window.StoreManagers && window.StoreManagers.Cart) {
+                    window.StoreManagers.Cart.loadCartPreview();
+                }
             }
         }
     }

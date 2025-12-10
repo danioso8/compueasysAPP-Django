@@ -7,7 +7,7 @@ from core.views import (
     mis_pedidos, remove_from_cart, store, auctions, services, contactUs, 
     aboutUs, cart, register_user, login, product_detail, checkout, 
     update_cart, logout_view, search_suggestions, 
-    filter_products_ajax, get_categories_ajax, cart_count_api, register_stock_notification,
+    filter_products_ajax, get_categories_ajax, cart_count_api, cart_preview, register_stock_notification,
     create_wompi_transaction, wompi_webhook, wompi_test, wompi_widget_test, validate_discount_code,
     send_verification_email, verify_code, resend_verification_code,
     order_details, cancel_order, start_conversation, get_conversations,
@@ -48,6 +48,7 @@ urlpatterns = [
     path('api/categories/', get_categories_ajax, name='get_categories_ajax'),
     path('api/validate-discount-code/', validate_discount_code, name='validate_discount_code'),
     path('api/cart-count/', cart_count_api, name='cart_count_api'),
+    path('cart-preview/', cart_preview, name='cart_preview'),
     path('api/stock-notification/', register_stock_notification, name='register_stock_notification'),
     
     # Endpoints de Wompi para pagos

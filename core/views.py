@@ -216,8 +216,13 @@ def wompi_widget_test(request):
 
 def login_user(request):
     if request.method == 'POST':
-        username = request.POST['username']        
-        password = request.POST['password']
+        # Soportar tanto 'username' como 'email'
+        username = request.POST.get('username') or request.POST.get('email')
+        password = request.POST.get('password')
+        
+        # Verificar si es un login desde checkout (AJAX)
+        is_checkout_login = request.POST.get('checkout_login') == 'true'
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
         
         # Primero verificar si es un superusuario
         superuser_qs = register_superuser.objects.filter(username=username)
@@ -226,8 +231,16 @@ def login_user(request):
             if superuser.password == password:
                 request.session['superuser_id'] = superuser.id
                 request.session['superuser_username'] = superuser.username
+                
+                if is_ajax and is_checkout_login:
+                    return JsonResponse({
+                        'success': False,
+                        'message': 'Los superusuarios deben usar el login del dashboard'
+                    })
                 return redirect('/dashboard/dashboard_home')  
             else:
+                if is_ajax and is_checkout_login:
+                    return JsonResponse({'success': False, 'message': 'Contraseña incorrecta'})
                 return render(request, 'login_user.html', {'error_message': 'Contraseña incorrecta'})
         
         # Si no es superusuario, verificar si es usuario simple (usando email)
@@ -241,11 +254,32 @@ def login_user(request):
                 request.session['user_id'] = simple_user.id  # Alias para compatibilidad
                 request.session['simple_user_email'] = simple_user.email
                 request.session['simple_user_name'] = simple_user.name
+                
+                # Si es login desde checkout, retornar JSON
+                if is_ajax and is_checkout_login:
+                    return JsonResponse({
+                        'success': True,
+                        'message': 'Login exitoso',
+                        'user': {
+                            'name': simple_user.name,
+                            'email': simple_user.email,
+                            'telefono': simple_user.telefono,
+                            'direccion': simple_user.direccion,
+                            'ciudad': simple_user.ciudad,
+                            'departamento': simple_user.departamento,
+                            'codigo_postal': simple_user.codigo_postal
+                        }
+                    })
+                
                 return redirect('/mis-pedidos/')
             else:
+                if is_ajax and is_checkout_login:
+                    return JsonResponse({'success': False, 'message': 'Contraseña incorrecta'})
                 return render(request, 'login_user.html', {'error_message': 'Contraseña incorrecta'})
         
         # Si no se encontró el usuario en ninguna tabla
+        if is_ajax and is_checkout_login:
+            return JsonResponse({'success': False, 'message': 'Usuario no encontrado'})
         return render(request, 'login_user.html', {'error_message': 'Usuario no encontrado'})
         
     return render(request, 'login_user.html')
@@ -2273,6 +2307,88 @@ def cart_count_api(request):
             'success': False,
             'count': 0
         })
+
+def cart_preview(request):
+    """
+    Endpoint AJAX para obtener el preview del carrito con HTML de los items
+    """
+    try:
+        from django.template.loader import render_to_string
+        
+        cart = request.session.get('cart', {})
+        cart_items = []
+        cart_total = 0
+        cart_count = 0
+        
+        print(f"🛒 Cart session data: {cart}")  # Debug
+        
+        for product_id, item_data in cart.items():
+            try:
+                product = ProductStore.objects.get(id=product_id)
+                
+                if isinstance(item_data, dict):
+                    quantity = item_data.get('quantity', 1)
+                    variant_id = item_data.get('variant_id')
+                    
+                    variant = None
+                    if variant_id:
+                        try:
+                            variant = ProductVariant.objects.get(id=variant_id)
+                        except ProductVariant.DoesNotExist:
+                            pass
+                    
+                    price = variant.price if variant else product.price
+                else:
+                    quantity = item_data
+                    variant = None
+                    price = product.price
+                
+                subtotal = price * quantity
+                cart_total += subtotal
+                cart_count += quantity  # Sumar la cantidad de cada producto
+                
+                cart_items.append({
+                    'product': product,
+                    'variant': variant,
+                    'quantity': quantity,
+                    'price': price,
+                    'subtotal': subtotal
+                })
+                
+                print(f"✅ Producto agregado: {product.name}, cantidad: {quantity}")  # Debug
+            except ProductStore.DoesNotExist:
+                print(f"⚠️ Producto {product_id} no encontrado")  # Debug
+                continue
+        
+        print(f"📊 Total items: {len(cart_items)}, Total count: {cart_count}, Total: {cart_total}")  # Debug
+        
+        # Renderizar el HTML de los items
+        cart_items_html = render_to_string('cart_items_partial.html', {
+            'cart_items': cart_items
+        })
+        
+        print(f"📤 Enviando respuesta: count={cart_count}, total={cart_total}, HTML length={len(cart_items_html)}")  # Debug
+        
+        return JsonResponse({
+            'success': True,
+            'cart_count': cart_count,
+            'cart_total': f'${cart_total:,.0f} COP',
+            'cart_items_html': cart_items_html,
+            'debug': {
+                'items_in_cart': len(cart_items),
+                'total_quantity': cart_count
+            }
+        })
+        
+    except Exception as e:
+        print(f"Error in cart_preview: {e}")
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({
+            'success': False,
+            'cart_count': 0,
+            'error': str(e)
+        }, status=500)
 
 def register_stock_notification(request):
     """

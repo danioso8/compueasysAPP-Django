@@ -192,6 +192,18 @@
 
                                 {% else %}
                                     <!-- Usuario NO Logueado: Mostrar Formulario Completo -->
+                                    
+                                    <!-- Banner para usuarios registrados -->
+                                    <div class="alert alert-info d-flex align-items-center justify-content-between">
+                                        <div>
+                                            <i class="bi bi-info-circle me-2"></i>
+                                            <strong>¿Ya tienes cuenta?</strong> Inicia sesión para autocompletar tus datos
+                                        </div>
+                                        <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#loginModal">
+                                            <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
+                                        </button>
+                                    </div>
+                                    
                                     <!-- Email -->
                                     <div class="form-floating mb-3">
                                         <input type="email" class="form-control" id="email" name="email" 
@@ -323,7 +335,7 @@
                                     </div>
                                     
                                     <!-- Opción 2: Tarjeta + Domicilio -->
-                                    <div class="option-card" hidden>
+                                    <div class="option-card" >
                                         <input type="radio" id="tarjeta_domicilio" name="pago_entrega" 
                                                value="tarjeta_domicilio" class="option-radio">
                                         <label for="tarjeta_domicilio" class="option-label">
@@ -334,11 +346,10 @@
                                                 <div class="option-details">
                                                     <h5>Tarjeta + Domicilio</h5>
                                                     <p class="mb-1">Pago seguro con tarjeta + Entrega a domicilio</p>
-                                                    <div class="alert alert-warning py-1 px-2 mb-1 mt-2" style="font-size: 0.85rem;">
-                                                        <i class="bi bi-exclamation-triangle-fill"></i>
-                                                        <strong>Incluye recargo del 12%</strong> por comisión de Wompi
+                                                    <div id="tarjeta_domicilio_price">
+                                                        <small class="text-muted">Envío: <span class="shipping-cost">$15.000</span></small>
+                                                        <br><small class="text-success">Envío gratis en compras >$100k</small>
                                                     </div>
-                                                    <small class="text-muted">Envío gratis en compras >$100k</small>
                                                 </div>
                                                 
                                             </div>
@@ -365,7 +376,7 @@
                                     </div>
                                     
                                     <!-- Opción 4: Recoger en Tienda + Tarjeta -->
-                                    <div class="option-card" hidden >
+                                    <div class="option-card"  >
                                         <input type="radio" id="recoger_tarjeta" name="pago_entrega" 
                                                value="recoger_tarjeta" class="option-radio">
                                         <label for="recoger_tarjeta" class="option-label">
@@ -376,11 +387,7 @@
                                                 <div class="option-details">
                                                     <h5>Recoger + Tarjeta</h5>
                                                     <p class="mb-1">Pago seguro con tarjeta + Retira en tienda</p>
-                                                    <div class="alert alert-warning py-1 px-2 mb-1 mt-2" style="font-size: 0.85rem;">
-                                                        <i class="bi bi-exclamation-triangle-fill"></i>
-                                                        <strong>Incluye recargo del 12%</strong> por comisión de Wompi
-                                                    </div>
-                                                   
+                                                                                                      
                                                 </div>
                                                 
                                             </div>
@@ -581,13 +588,7 @@
                                             0
                                         </span>
                                     </div>
-                                    <div class="total-row d-none" id="wompi_fee_row">
-                                        <span>
-                                            <i class="bi bi-credit-card text-warning"></i>
-                                            Comisión Wompi (12%)
-                                        </span>
-                                        <span class="text-warning" id="wompi_fee_amount">+$0</span>
-                                    </div>
+
                                     <hr>
                                     <div class="total-row total-final">
                                         <span><strong>Total a Pagar</strong></span>
@@ -637,6 +638,48 @@
             </form>
         </div>
     </main>
+
+    <!-- Modal de Login -->
+    <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="loginModalLabel">
+                        <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="checkoutLoginForm">
+                        <div class="mb-3">
+                            <label for="loginEmail" class="form-label">
+                                <i class="bi bi-envelope"></i> Correo Electrónico
+                            </label>
+                            <input type="email" class="form-control" id="loginEmail" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="loginPassword" class="form-label">
+                                <i class="bi bi-lock"></i> Contraseña
+                            </label>
+                            <input type="password" class="form-control" id="loginPassword" required>
+                        </div>
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i>
+                            <small>Al iniciar sesión, tus datos se autocompletarán en el formulario de compra.</small>
+                        </div>
+                        <div id="loginError" class="alert alert-danger d-none"></div>
+                        <div id="loginSuccess" class="alert alert-success d-none"></div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="loginSubmitBtn">
+                        <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Scripts -->
     <!-- Wompi JS - DEBE cargar ANTES que nuestro script -->
@@ -737,6 +780,79 @@
         document.addEventListener('DOMContentLoaded', initializeDepartments);
     </script>
     
+    <!-- LOGIN EN CHECKOUT - Sin redirección -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginBtn = document.getElementById('loginSubmitBtn');
+            const loginForm = document.getElementById('checkoutLoginForm');
+            const loginEmail = document.getElementById('loginEmail');
+            const loginPassword = document.getElementById('loginPassword');
+            const loginError = document.getElementById('loginError');
+            const loginSuccess = document.getElementById('loginSuccess');
+            
+            if (loginBtn) {
+                loginBtn.addEventListener('click', async function() {
+                    loginError.classList.add('d-none');
+                    loginSuccess.classList.add('d-none');
+                    
+                    const email = loginEmail.value.trim();
+                    const password = loginPassword.value.trim();
+                    
+                    if (!email || !password) {
+                        loginError.textContent = 'Por favor completa todos los campos';
+                        loginError.classList.remove('d-none');
+                        return;
+                    }
+                    
+                    // Deshabilitar botón
+                    loginBtn.disabled = true;
+                    loginBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Iniciando...';
+                    
+                    try {
+                        const response = await fetch('{% url "login_user" %}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'X-CSRFToken': '{{ csrf_token }}'
+                            },
+                            body: `email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}&checkout_login=true`
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (data.success) {
+                            loginSuccess.textContent = '¡Login exitoso! Recargando datos...';
+                            loginSuccess.classList.remove('d-none');
+                            
+                            // Esperar 1 segundo y recargar la página para que Django renderice con los datos del usuario
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 1000);
+                        } else {
+                            loginError.textContent = data.message || 'Credenciales incorrectas';
+                            loginError.classList.remove('d-none');
+                            loginBtn.disabled = false;
+                            loginBtn.innerHTML = '<i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión';
+                        }
+                    } catch (error) {
+                        console.error('Error en login:', error);
+                        loginError.textContent = 'Error al iniciar sesión. Intenta nuevamente.';
+                        loginError.classList.remove('d-none');
+                        loginBtn.disabled = false;
+                        loginBtn.innerHTML = '<i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión';
+                    }
+                });
+                
+                // Enter key en el formulario
+                loginForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    loginBtn.click();
+                });
+            }
+        });
+    </script>
+    
     <!-- AUTOCOMPLETAR DATOS DE USUARIO -->
     <script>
         // Datos del usuario para autocompletar
@@ -817,7 +933,7 @@
         // Esperar a que Wompi esté disponible antes de cargar nuestro script
         function loadCheckoutScript() {
             const script = document.createElement('script');
-            script.src = "{% static 'js/checkout-wompi.js' %}?v=2.1";
+            script.src = "{% static 'js/checkout-wompi.js' %}?v=4.0";
             script.onload = () => {
                 console.log('✅ Script de checkout cargado exitosamente');
             };
