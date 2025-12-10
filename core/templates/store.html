@@ -27,19 +27,27 @@
         }
         
         #refresh-cart-btn {
-            border-radius: 0.375rem;
-            padding: 0.375rem 0.75rem;
-            transition: all 0.2s ease;
+            transition: all 0.3s ease !important;
+            cursor: pointer !important;
         }
         
         #refresh-cart-btn:hover:not(:disabled) {
-            transform: scale(1.05);
-            box-shadow: 0 2px 8px rgba(13, 110, 253, 0.25);
+            transform: translateY(-2px) scale(1.05) !important;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.5) !important;
+            filter: brightness(1.1) !important;
+        }
+        
+        #refresh-cart-btn:active:not(:disabled) {
+            transform: translateY(0) scale(0.98) !important;
         }
         
         #refresh-cart-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
+            opacity: 0.7 !important;
+            cursor: not-allowed !important;
+        }
+        
+        #refresh-cart-btn.spinning i {
+            animation: spin 0.6s linear infinite !important;
         }
     </style>
 </head>
@@ -66,9 +74,10 @@
                 Mi Carrito
                 <span id="cart-count-sidebar" class="cart-count-badge">{{ cart_count }}</span>
             </h3>
-            <div style="display: flex; gap: 0.5rem; align-items: center;">
-                <button class="btn btn-sm btn-outline-primary" onclick="refreshCartSidebar()" id="refresh-cart-btn" title="Actualizar carrito">
-                    <i class="bi bi-arrow-clockwise"></i>
+            <div style="display: flex; gap: 0.75rem; align-items: center;">
+                <button class="btn btn-primary" onclick="refreshCartSidebar()" id="refresh-cart-btn" title="Actualizar carrito" style="padding: 0.5rem 1rem; font-size: 1rem; display: flex; align-items: center; gap: 0.5rem; border-radius: 0.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);">
+                    <i class="bi bi-arrow-clockwise" style="font-size: 1.1rem;"></i>
+                    <span style="font-weight: 600;">Actualizar</span>
                 </button>
                 <button class="cart-close-btn" onclick="toggleCartSidebar()">
                     <i class="bi bi-x-lg"></i>
@@ -705,44 +714,93 @@
 
     // ===== ACTUALIZAR CARRITO MANUALMENTE =====
     async function refreshCartSidebar() {
+        console.log('🔄 [RefreshCart] Botón clickeado');
         const refreshBtn = document.getElementById('refresh-cart-btn');
         
-        if (refreshBtn) {
-            // Animación de rotación
-            refreshBtn.disabled = true;
-            refreshBtn.querySelector('i').style.animation = 'spin 0.5s linear';
+        if (!refreshBtn) {
+            console.error('❌ Botón de actualizar no encontrado');
+            return;
         }
         
         try {
-            console.log('🔄 Actualizando carrito manualmente...');
+            // Deshabilitar y animar
+            refreshBtn.disabled = true;
+            refreshBtn.classList.add('spinning');
+            console.log('🔄 [RefreshCart] Iniciando actualización...');
             
+            // Método 1: Usar StoreManagers si existe
             if (window.StoreManagers && window.StoreManagers.Cart) {
+                console.log('📦 [RefreshCart] Usando StoreManagers.Cart');
                 await window.StoreManagers.Cart.loadCartPreview();
                 await window.StoreManagers.Cart.updateCartCount();
+            } else {
+                // Método 2: Fetch directo
+                console.log('📦 [RefreshCart] Usando fetch directo');
+                const response = await fetch('/cart-preview/', {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Cache-Control': 'no-cache'
+                    }
+                });
                 
-                console.log('✅ Carrito actualizado exitosamente');
+                const data = await response.json();
+                console.log('📦 [RefreshCart] Datos recibidos:', data);
                 
-                // Mostrar feedback visual
-                if (typeof Swal !== 'undefined') {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Carrito actualizado',
-                        toast: true,
-                        position: 'top-end',
-                        showConfirmButton: false,
-                        timer: 1500
-                    });
+                if (data.success && data.cart_items_html) {
+                    const container = document.getElementById('cart-items-container');
+                    if (container) {
+                        container.innerHTML = data.cart_items_html;
+                        console.log('✅ [RefreshCart] HTML actualizado');
+                    }
+                    
+                    // Actualizar contador
+                    const badge = document.getElementById('cart-count-sidebar');
+                    if (badge) {
+                        badge.textContent = data.cart_count;
+                    }
                 }
             }
+            
+            console.log('✅ [RefreshCart] Carrito actualizado exitosamente');
+            
+            // Mostrar feedback visual
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Carrito actualizado!',
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 1500,
+                    timerProgressBar: true
+                });
+            }
         } catch (error) {
-            console.error('❌ Error al actualizar carrito:', error);
+            console.error('❌ [RefreshCart] Error:', error);
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error al actualizar',
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 2000
+                });
+            }
         } finally {
             if (refreshBtn) {
-                refreshBtn.disabled = false;
-                refreshBtn.querySelector('i').style.animation = '';
+                setTimeout(() => {
+                    refreshBtn.disabled = false;
+                    refreshBtn.classList.remove('spinning');
+                    console.log('🔄 [RefreshCart] Botón restaurado');
+                }, 500);
             }
         }
     }
+    
+    // Hacer la función global
+    window.refreshCartSidebar = refreshCartSidebar;
 
     // ===== ELIMINAR PRODUCTO DEL CARRITO FLOTANTE =====
     async function removeFromCartSidebar(productId) {
