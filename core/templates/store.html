@@ -804,9 +804,7 @@
 
     // ===== ELIMINAR PRODUCTO DEL CARRITO FLOTANTE =====
     async function removeFromCartSidebar(productId) {
-        if (!confirm('¿Eliminar este producto del carrito?')) {
-            return;
-        }
+        console.log('🗑️ [RemoveFromCart] Eliminando producto:', productId);
 
         try {
             const response = await fetch(`/remove_from_cart/${productId}/`, {
@@ -819,24 +817,36 @@
             });
 
             if (response.ok) {
-                console.log('✅ Producto eliminado del carrito');
+                console.log('✅ [RemoveFromCart] Producto eliminado');
                 
-                // Recargar el carrito flotante
+                // Recargar el carrito flotante - Método dual
                 if (window.StoreManagers && window.StoreManagers.Cart) {
                     await window.StoreManagers.Cart.loadCartPreview();
                     await window.StoreManagers.Cart.updateCartCount();
-                }
-                
-                // Mostrar notificación
-                if (typeof Swal !== 'undefined') {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Producto eliminado',
-                        toast: true,
-                        position: 'top-end',
-                        showConfirmButton: false,
-                        timer: 2000
+                } else {
+                    // Método alternativo: fetch directo
+                    const cartResponse = await fetch('/cart-preview/', {
+                        method: 'GET',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Cache-Control': 'no-cache'
+                        }
                     });
+                    
+                    const cartData = await cartResponse.json();
+                    if (cartData.success && cartData.cart_items_html) {
+                        const container = document.getElementById('cart-items-container');
+                        if (container) {
+                            container.innerHTML = cartData.cart_items_html;
+                        }
+                        
+                        // Actualizar badges
+                        const badge = document.getElementById('cart-count-sidebar');
+                        if (badge) badge.textContent = cartData.cart_count;
+                        
+                        const badges = document.querySelectorAll('.cart-count');
+                        badges.forEach(b => b.textContent = cartData.cart_count);
+                    }
                 }
             } else {
                 throw new Error('Error al eliminar');
