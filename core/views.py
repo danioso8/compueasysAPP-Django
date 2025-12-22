@@ -2362,18 +2362,20 @@ def cart_preview(request):
         
         print(f"📊 Total items: {len(cart_items)}, Total count: {cart_count}, Total: {cart_total}")  # Debug
         
-        # Renderizar el HTML de los items
-        cart_items_html = render_to_string('cart_items_partial.html', {
-            'cart_items': cart_items
+        # Renderizar el HTML completo del contenido del sidebar (incluyendo if/else de vacío)
+        cart_content_html = render_to_string('cart_sidebar_content.html', {
+            'cart_items': cart_items,
+            'cart_count': cart_count,
+            'cart_total': cart_total
         })
         
-        print(f"📤 Enviando respuesta: count={cart_count}, total={cart_total}, HTML length={len(cart_items_html)}")  # Debug
+        print(f"📤 Enviando respuesta: count={cart_count}, total={cart_total}, HTML length={len(cart_content_html)}")  # Debug
         
         return JsonResponse({
             'success': True,
             'cart_count': cart_count,
             'cart_total': f'${cart_total:,.0f} COP',
-            'cart_items_html': cart_items_html,
+            'cart_content_html': cart_content_html,
             'debug': {
                 'items_in_cart': len(cart_items),
                 'total_quantity': cart_count

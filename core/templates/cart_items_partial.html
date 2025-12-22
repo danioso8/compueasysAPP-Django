@@ -1,6 +1,6 @@
 {% load humanize %}
 {% for item in cart_items %}
-<div class="cart-item-card">
+<div class="cart-item-card" data-product-id="{{ item.product.id }}">
     <div class="cart-item-image">
         {% if item.variant and item.variant.imagen %}
             <img src="{{ item.variant.imagen.url }}" alt="{{ item.product.name }}">
@@ -13,7 +13,14 @@
         {% endif %}
     </div>
     <div class="cart-item-details">
-        <h4 class="cart-item-name">{{ item.product.name|truncatechars:35 }}</h4>
+        <div class="d-flex justify-content-between align-items-start mb-2">
+            <h4 class="cart-item-name mb-0">{{ item.product.name|truncatechars:35 }}</h4>
+            <button class="btn btn-sm btn-danger btn-remove-item" 
+                    onclick="removeFromCartSidebar({{ item.product.id }})" 
+                    title="Eliminar">
+                <i class="bi bi-trash"></i>
+            </button>
+        </div>
         {% if item.variant %}
         <p class="cart-item-variant">
             <i class="bi bi-palette me-1"></i>{{ item.variant.color }}

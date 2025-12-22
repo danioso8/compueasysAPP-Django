@@ -870,63 +870,84 @@
     },
 
     async loadCartPreview() {
-      console.log('🔄 Actualizando preview del carrito flotante...');
+      console.log('🔄 [CartPreview] Iniciando actualización...');
       
       try {
         // Obtener el HTML actualizado del carrito desde el servidor
         const response = await fetch('/cart-preview/', {
           method: 'GET',
           headers: {
-            'X-Requested-With': 'XMLHttpRequest'
+            'X-Requested-With': 'XMLHttpRequest',
+            'Cache-Control': 'no-cache'
           }
         });
 
         if (response.ok) {
           const data = await response.json();
-          console.log('📦 Datos recibidos del servidor:', data);
+          console.log('📦 [CartPreview] Datos recibidos:', {
+            success: data.success,
+            cart_count: data.cart_count,
+            has_html: !!data.cart_items_html,
+            html_length: data.cart_items_html?.length
+          });
           
-          // Actualizar el contenedor de items del carrito
+          if (!data.success) {
+            console.error('❌ [CartPreview] Servidor retornó error:', data.error);
+            return;
+          }
+          
+          // Buscar elementos del DOM
           const cartItemsContainer = document.getElementById('cart-items-container');
           const cartSidebarContent = document.querySelector('.cart-sidebar-content');
+          const cartSidebarFooter = document.querySelector('.cart-sidebar-footer');
           
-          console.log('🔍 cart_count:', data.cart_count);
-          console.log('🔍 cartItemsContainer existe:', !!cartItemsContainer);
-          console.log('🔍 cartSidebarContent existe:', !!cartSidebarContent);
+          console.log('🔍 [CartPreview] Elementos DOM:', {
+            cartItemsContainer: !!cartItemsContainer,
+            cartSidebarContent: !!cartSidebarContent,
+            cartSidebarFooter: !!cartSidebarFooter
+          });
           
-          if (data.cart_count > 0) {
+          if (data.cart_count > 0 && data.cart_items_html) {
+            // HAY PRODUCTOS EN EL CARRITO
+            console.log('✅ [CartPreview] Actualizando con', data.cart_count, 'productos');
+            
             if (cartItemsContainer) {
-              // Actualizar con los items reales del carrito
+              // Actualizar HTML de los items
               cartItemsContainer.innerHTML = data.cart_items_html;
-              console.log('✅ Carrito flotante actualizado con', data.cart_count, 'items');
+              console.log('✅ [CartPreview] HTML insertado en cart-items-container');
               
-              // Asegurar que el contenedor padre esté visible
+              // Asegurar que el contenedor esté visible
               if (cartSidebarContent) {
+                cartSidebarContent.style.display = 'block';
+                
                 // Remover mensaje de vacío si existe
                 const emptyState = cartSidebarContent.querySelector('.cart-empty-state');
                 if (emptyState) {
+                  console.log('🗑️ [CartPreview] Removiendo mensaje de carrito vacío');
                   emptyState.remove();
                 }
               }
               
-              // Mostrar el footer con totales
-              const cartSidebarFooter = document.querySelector('.cart-sidebar-footer');
+              // Mostrar footer con totales
               if (cartSidebarFooter) {
                 cartSidebarFooter.classList.remove('d-none');
+                cartSidebarFooter.style.display = 'block';
                 
-                // Actualizar el total
+                // Actualizar total
                 const cartTotalAmount = document.getElementById('cart-total-amount');
                 if (cartTotalAmount && data.cart_total) {
                   cartTotalAmount.textContent = data.cart_total;
-                  console.log('✅ Total actualizado:', data.cart_total);
+                  console.log('✅ [CartPreview] Total actualizado:', data.cart_total);
                 }
               }
             } else {
-              console.error('❌ No se encontró cart-items-container');
+              console.error('❌ [CartPreview] No se encontró #cart-items-container');
             }
           } else {
-            console.log('ℹ️ Carrito vacío, mostrando mensaje');
+            // CARRITO VACÍO
+            console.log('ℹ️ [CartPreview] Carrito vacío, mostrando mensaje');
+            
             if (cartSidebarContent) {
-              // Mostrar mensaje de carrito vacío
               cartSidebarContent.innerHTML = `
                 <div class="cart-empty-state">
                   <i class="bi bi-cart-x"></i>
@@ -937,19 +958,21 @@
                   </a>
                 </div>
               `;
-              
-              // Ocultar footer
-              const cartSidebarFooter = document.querySelector('.cart-sidebar-footer');
-              if (cartSidebarFooter) {
-                cartSidebarFooter.classList.add('d-none');
-              }
+            }
+            
+            // Ocultar footer
+            if (cartSidebarFooter) {
+              cartSidebarFooter.classList.add('d-none');
+              cartSidebarFooter.style.display = 'none';
             }
           }
+          
+          console.log('✅ [CartPreview] Actualización completada');
         } else {
-          console.warn('⚠️ No se pudo cargar el preview del carrito. Status:', response.status);
+          console.error('❌ [CartPreview] Error HTTP:', response.status, response.statusText);
         }
       } catch (error) {
-        console.error('❌ Error loading cart preview:', error);
+        console.error('❌ [CartPreview] Error en fetch:', error);
       }
     },
 
@@ -1042,8 +1065,9 @@
             }, 600);
           }
           
-          // Actualizar preview del carrito
-          this.loadCartPreview();
+          // Actualizar preview del carrito INMEDIATAMENTE
+          console.log('🔄 Llamando a loadCartPreview después de agregar producto...');
+          await this.loadCartPreview();
           
           // Restaurar botón después de 2 segundos
           setTimeout(() => {

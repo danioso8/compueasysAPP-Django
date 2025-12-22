@@ -1665,6 +1665,7 @@ body {
   border-bottom: 1px solid var(--gray-100);
   padding: var(--spacing-lg);
   transition: var(--transition-fast);
+  position: relative;
 }
 
 .cart-item-card:last-child {
@@ -1673,6 +1674,20 @@ body {
 
 .cart-item-card:hover {
   background: var(--gray-50);
+}
+
+/* Botón de eliminar en cart item */
+.btn-remove-item {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  line-height: 1;
+  border-radius: 0.25rem;
+  transition: all 0.2s ease;
+}
+
+.btn-remove-item:hover {
+  transform: scale(1.1);
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
 }
 
 .cart-item-header {

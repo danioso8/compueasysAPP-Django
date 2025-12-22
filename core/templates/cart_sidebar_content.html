@@ -1,0 +1,76 @@
+{% load humanize %}
+<div class="cart-sidebar-content">
+    {% if cart_count > 0 %}
+        <!-- Items del carrito con productos reales -->
+        <div id="cart-items-container" class="cart-items-list">
+        {% for item in cart_items %}
+        <div class="cart-item-card" data-product-id="{{ item.product.id }}">
+            <div class="cart-item-image">
+                {% if item.variant and item.variant.imagen %}
+                    <img src="{{ item.variant.imagen.url }}" alt="{{ item.product.name }}">
+                {% elif item.product.imagen %}
+                    <img src="{{ item.product.imagen.url }}" alt="{{ item.product.name }}">
+                {% else %}
+                    <div class="cart-item-no-image">
+                        <i class="bi bi-image"></i>
+                    </div>
+                {% endif %}
+            </div>
+            <div class="cart-item-details">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h4 class="cart-item-name mb-0">{{ item.product.name|truncatechars:35 }}</h4>
+                    <button class="btn btn-sm btn-danger btn-remove-item" 
+                            onclick="removeFromCartSidebar({{ item.product.id }})" 
+                            title="Eliminar">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+                {% if item.variant %}
+                <p class="cart-item-variant">
+                    <i class="bi bi-palette me-1"></i>{{ item.variant.color }}
+                </p>
+                {% endif %}
+                <div class="cart-item-quantity">
+                    <span class="quantity-label">Cantidad:</span>
+                    <span class="quantity-value">{{ item.quantity }}</span>
+                </div>
+                <div class="cart-item-price">
+                    <span class="price-label">Precio:</span>
+                    <span class="price-value">${{ item.price|floatformat:0|intcomma }}</span>
+                </div>
+                <div class="cart-item-subtotal">
+                    <span class="subtotal-label">Subtotal:</span>
+                    <span class="subtotal-value">${{ item.subtotal|floatformat:0|intcomma }} COP</span>
+                </div>
+            </div>
+        </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="cart-empty-state">
+            <i class="bi bi-cart-x"></i>
+            <h4>Tu carrito está vacío</h4>
+            <p>Agrega productos para empezar a comprar</p>
+            <a href="/store" class="btn-continue-shopping">
+                <i class="bi bi-shop me-2"></i>Ir a la tienda
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+{% if cart_count > 0 %}
+<div class="cart-sidebar-footer">
+    <div class="cart-total-section">
+        <span class="cart-total-label">Total:</span>
+        <span id="cart-total-amount" class="cart-total-amount">${{ cart_total|floatformat:0|intcomma }} COP</span>
+    </div>
+    <div class="cart-actions">
+        <a href="/cart" class="btn-view-cart">
+            <i class="bi bi-eye me-2"></i>Ver carrito completo
+        </a>
+        <a href="/checkout" class="btn-checkout-now">
+            <i class="bi bi-lightning-charge-fill me-2"></i>Finalizar compra
+        </a>
+    </div>
+</div>
+{% endif %}

@@ -27,8 +27,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'cloudinary_storage',  # Descomentado - listo para usar
-    'cloudinary',          # Descomentado - listo para usar
     'core',
     'contable.apps.ContableConfig',
     'django_bootstrap5',    
