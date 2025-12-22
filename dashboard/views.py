@@ -1068,7 +1068,7 @@ def dashboard_home(request):
 
 @superuser_required
 def eliminar_producto(request, product_id):
-    # Aceptar solo POST y devolver JSON (no redirect) para uso por AJAX
+    """Elimina un producto y todas sus imágenes asociadas (galería y variantes)"""
     if request.method != 'POST':
         return JsonResponse({'success': False, 'error': 'Método no permitido.'}, status=405)
 
@@ -1078,48 +1078,48 @@ def eliminar_producto(request, product_id):
     if not (is_super_session or is_django_staff):
         return JsonResponse({'success': False, 'error': 'Permiso denegado.'}, status=403)
 
-    # Usar el modelo correcto (ProductStore) — antes estaba Product (no importado)
-    product = get_object_or_404(ProductStore, id=product_id)
     try:
-        # eliminar imagen principal si existe
-        try:
-            if getattr(product, 'imagen', None):
+        product = get_object_or_404(ProductStore, id=product_id)
+        
+        # Eliminar imagen principal si existe
+        if product.imagen:
+            try:
                 product.imagen.delete(save=False)
-        except Exception:
-            pass
+            except Exception as e:
+                print(f"Error eliminando imagen principal: {e}")
 
-        # eliminar imágenes de galería asociadas (soporta varios nombres de campo)
-        try:
-            if hasattr(product, 'galeria'):
-                for g in product.galeria.all():
-                    try:
-                        if getattr(g, 'imagen', None):
-                            g.imagen.delete(save=False)
-                        elif getattr(g, 'image', None):
-                            g.image.delete(save=False)
-                        elif getattr(g, 'galeria', None):
-                            g.galeria.delete(save=False)
-                    except Exception:
-                        pass
-        except Exception:
-            pass
+        # Eliminar imágenes de galería asociadas
+        for g in product.galeria.all():
+            try:
+                if g.galeria:  # El campo se llama 'galeria' en el modelo Galeria
+                    g.galeria.delete(save=False)
+            except Exception as e:
+                print(f"Error eliminando imagen de galería: {e}")
 
-        # eliminar imágenes de variantes si existen
-        try:
-            if hasattr(product, 'variants'):
-                for v in product.variants.all():
-                    try:
-                        if getattr(v, 'imagen', None):
-                            v.imagen.delete(save=False)
-                    except Exception:
-                        pass
-        except Exception:
-            pass
+        # Eliminar imágenes de variantes si existen
+        for v in product.variants.all():
+            try:
+                if v.imagen:
+                    v.imagen.delete(save=False)
+            except Exception as e:
+                print(f"Error eliminando imagen de variante: {e}")
 
+        # Finalmente eliminar el producto (esto eliminará las relaciones en cascada)
         product.delete()
-        return JsonResponse({'success': True})
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Producto "{product.name}" eliminado exitosamente'
+        })
+        
     except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+        print(f"Error en eliminar_producto: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({
+            'success': False, 
+            'error': f'Error al eliminar el producto: {str(e)}'
+        }, status=500)
 # ...existing code...
 
 @superuser_required
