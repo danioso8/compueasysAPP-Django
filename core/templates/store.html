@@ -85,10 +85,12 @@
             </div>
         </div>
         
-        <div class="cart-sidebar-content">
-            {% if cart_count > 0 %}
-                <!-- Items del carrito con productos reales -->
-                <div id="cart-items-container" class="cart-items-list">
+        <!-- Wrapper para actualización dinámica completa -->
+        <div id="cart-sidebar-dynamic-content">
+            <div class="cart-sidebar-content">
+                {% if cart_count > 0 %}
+                    <!-- Items del carrito con productos reales -->
+                    <div id="cart-items-container" class="cart-items-list">
                     {% for item in cart_items %}
                     <div class="cart-item-card" data-product-id="{{ item.product.id }}">
                         <div class="cart-item-image">
@@ -140,26 +142,27 @@
                     <a href="/store" class="btn-continue-shopping">
                         <i class="bi bi-shop me-2"></i>Ir a la tienda
                     </a>
+                    </div>
+                {% endif %}
+            </div>
+            
+            {% if cart_count > 0 %}
+            <div class="cart-sidebar-footer">
+                <div class="cart-total-section">
+                    <span class="cart-total-label">Total:</span>
+                    <span id="cart-total-amount" class="cart-total-amount">${{ cart_total|floatformat:0|intcomma }} COP</span>
                 </div>
+                <div class="cart-actions">
+                    <a href="/cart" class="btn-view-cart">
+                        <i class="bi bi-eye me-2"></i>Ver carrito completo
+                    </a>
+                    <a href="/checkout" class="btn-checkout-now">
+                        <i class="bi bi-lightning-charge-fill me-2"></i>Finalizar compra
+                    </a>
+                </div>
+            </div>
             {% endif %}
         </div>
-        
-        {% if cart_count > 0 %}
-        <div class="cart-sidebar-footer">
-            <div class="cart-total-section">
-                <span class="cart-total-label">Total:</span>
-                <span id="cart-total-amount" class="cart-total-amount">${{ cart_total|floatformat:0|intcomma }} COP</span>
-            </div>
-            <div class="cart-actions">
-                <a href="/cart" class="btn-view-cart">
-                    <i class="bi bi-eye me-2"></i>Ver carrito completo
-                </a>
-                <a href="/checkout" class="btn-checkout-now">
-                    <i class="bi bi-lightning-charge-fill me-2"></i>Finalizar compra
-                </a>
-            </div>
-        </div>
-        {% endif %}
     </div>
     
     <!-- Overlay para cerrar el sidebar -->
@@ -728,38 +731,62 @@
             refreshBtn.classList.add('spinning');
             console.log('🔄 [RefreshCart] Iniciando actualización...');
             
-            // Método 1: Usar StoreManagers si existe
-            if (window.StoreManagers && window.StoreManagers.Cart) {
-                console.log('📦 [RefreshCart] Usando StoreManagers.Cart');
-                await window.StoreManagers.Cart.loadCartPreview();
-                await window.StoreManagers.Cart.updateCartCount();
-            } else {
-                // Método 2: Fetch directo
-                console.log('📦 [RefreshCart] Usando fetch directo');
-                const response = await fetch('/cart-preview/', {
-                    method: 'GET',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Cache-Control': 'no-cache'
+            // SIEMPRE usar fetch directo para asegurar datos actualizados
+            console.log('📦 [RefreshCart] Usando fetch directo');
+            const response = await fetch('/cart-preview/', {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Cache-Control': 'no-cache',
+                    'Pragma': 'no-cache'
+                },
+                cache: 'no-store'
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const data = await response.json();
+            console.log('📦 [RefreshCart] Respuesta completa:', data);
+            console.log('📦 [RefreshCart] Items en carrito:', data.debug?.items_in_cart || 'N/A');
+            console.log('📦 [RefreshCart] Total cantidad:', data.debug?.total_quantity || 'N/A');
+            console.log('📦 [RefreshCart] HTML length:', data.cart_items_html?.length || 0);
+            
+            if (data.success) {
+                // Actualizar TODO el contenido dinámico del sidebar (content + footer)
+                const dynamicContent = document.getElementById('cart-sidebar-dynamic-content');
+                if (dynamicContent) {
+                    console.log('📦 [RefreshCart] Dynamic content encontrado, actualizando...');
+                    console.log('📦 [RefreshCart] HTML antes:', dynamicContent.innerHTML.length);
+                    dynamicContent.innerHTML = data.cart_content_html;
+                    console.log('📦 [RefreshCart] HTML después:', dynamicContent.innerHTML.length);
+                    console.log('✅ [RefreshCart] Dynamic content actualizado completamente (items + footer)');
+                } else {
+                    console.error('❌ [RefreshCart] Dynamic content NO encontrado');
+                }
+                
+                // Actualizar todos los badges
+                const badges = [
+                    document.getElementById('cart-count-sidebar'),
+                    ...document.querySelectorAll('.cart-count')
+                ];
+                
+                badges.forEach((badge, index) => {
+                    if (badge) {
+                        badge.textContent = data.cart_count;
+                        console.log(`✅ [RefreshCart] Badge ${index} actualizado a ${data.cart_count}`);
                     }
                 });
                 
-                const data = await response.json();
-                console.log('📦 [RefreshCart] Datos recibidos:', data);
-                
-                if (data.success && data.cart_items_html) {
-                    const container = document.getElementById('cart-items-container');
-                    if (container) {
-                        container.innerHTML = data.cart_items_html;
-                        console.log('✅ [RefreshCart] HTML actualizado');
-                    }
-                    
-                    // Actualizar contador
-                    const badge = document.getElementById('cart-count-sidebar');
-                    if (badge) {
-                        badge.textContent = data.cart_count;
-                    }
+                // Actualizar total en el footer si existe
+                const totalAmount = document.getElementById('cart-total-amount');
+                if (totalAmount) {
+                    totalAmount.textContent = data.cart_total;
+                    console.log(`✅ [RefreshCart] Total actualizado a ${data.cart_total}`);
                 }
+            } else {
+                console.error('❌ [RefreshCart] Respuesta sin success=true');
             }
             
             console.log('✅ [RefreshCart] Carrito actualizado exitosamente');
@@ -819,34 +846,40 @@
             if (response.ok) {
                 console.log('✅ [RemoveFromCart] Producto eliminado');
                 
-                // Recargar el carrito flotante - Método dual
-                if (window.StoreManagers && window.StoreManagers.Cart) {
-                    await window.StoreManagers.Cart.loadCartPreview();
-                    await window.StoreManagers.Cart.updateCartCount();
-                } else {
-                    // Método alternativo: fetch directo
-                    const cartResponse = await fetch('/cart-preview/', {
-                        method: 'GET',
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest',
-                            'Cache-Control': 'no-cache'
-                        }
-                    });
-                    
-                    const cartData = await cartResponse.json();
-                    if (cartData.success && cartData.cart_items_html) {
-                        const container = document.getElementById('cart-items-container');
-                        if (container) {
-                            container.innerHTML = cartData.cart_items_html;
-                        }
-                        
-                        // Actualizar badges
-                        const badge = document.getElementById('cart-count-sidebar');
-                        if (badge) badge.textContent = cartData.cart_count;
-                        
-                        const badges = document.querySelectorAll('.cart-count');
-                        badges.forEach(b => b.textContent = cartData.cart_count);
+                // Recargar el carrito usando fetch directo (igual que refreshCartSidebar)
+                const cartResponse = await fetch('/cart-preview/', {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Cache-Control': 'no-cache',
+                        'Pragma': 'no-cache'
+                    },
+                    cache: 'no-store'
+                });
+                
+                const cartData = await cartResponse.json();
+                console.log('📦 [RemoveFromCart] Datos actualizados:', cartData);
+                
+                if (cartData.success) {
+                    // Actualizar TODO el contenido dinámico del sidebar
+                    const dynamicContent = document.getElementById('cart-sidebar-dynamic-content');
+                    if (dynamicContent) {
+                        dynamicContent.innerHTML = cartData.cart_content_html;
+                        console.log('✅ [RemoveFromCart] Dynamic content actualizado (items + footer)');
                     }
+                    
+                    // Actualizar badges
+                    const badge = document.getElementById('cart-count-sidebar');
+                    if (badge) badge.textContent = cartData.cart_count;
+                    
+                    const badges = document.querySelectorAll('.cart-count');
+                    badges.forEach(b => b.textContent = cartData.cart_count);
+                    
+                    // Actualizar total
+                    const totalAmount = document.getElementById('cart-total-amount');
+                    if (totalAmount) totalAmount.textContent = cartData.cart_total;
+                    
+                    console.log('✅ [RemoveFromCart] Todo actualizado correctamente');
                 }
             } else {
                 throw new Error('Error al eliminar');
@@ -875,27 +908,41 @@
     </script>
 
     <!-- WebSocket para registrar visitas en tiempo real -->
+    <!-- NOTA: WebSocket deshabilitado temporalmente para evitar errores en consola -->
+    <!-- Para habilitar: descomentar el bloque y asegurarse de que Redis/Channel Layers esté configurado -->
+    <!--
     <script>
     (function() {
         // Detectar si es local o producción
         var ws_scheme = window.location.protocol === "https:" ? "wss" : "ws";
         var ws_path = ws_scheme + '://' + window.location.host + '/ws/store/';
-        var storeSocket = new WebSocket(ws_path);
+        
+        try {
+            var storeSocket = new WebSocket(ws_path);
 
-        storeSocket.onopen = function(e) {
-            console.log('[WebSocket] Conectado para visitas en tienda');
-        };
-        storeSocket.onmessage = function(e) {
-            var data = JSON.parse(e.data);
-            if (data.message === 'visit_registered') {
-                console.log('[WebSocket] Visita registrada:', data.timestamp);
-            }
-        };
-        storeSocket.onclose = function(e) {
-            console.log('[WebSocket] Desconectado');
-        };
+            storeSocket.onopen = function(e) {
+                console.log('[WebSocket] Conectado para visitas en tienda');
+            };
+            storeSocket.onmessage = function(e) {
+                var data = JSON.parse(e.data);
+                if (data.message === 'visit_registered') {
+                    console.log('[WebSocket] Visita registrada:', data.timestamp);
+                }
+            };
+            storeSocket.onerror = function(e) {
+                console.warn('[WebSocket] Error de conexión (normal en desarrollo sin Redis)');
+            };
+            storeSocket.onclose = function(e) {
+                console.log('[WebSocket] Desconectado');
+            };
+        } catch (error) {
+            console.warn('[WebSocket] No disponible:', error.message);
+        }
     })();
+    </script>
+    -->
     
+    <script>
     // ===== COMPARTIR CATEGORÍA =====
     function shareCategoryLink(categoryName, buttonElement) {
         // Obtener el ID de categoría desde el elemento padre
