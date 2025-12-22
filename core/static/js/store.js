@@ -446,14 +446,16 @@
       }
 
       // Actualizar grid - aplicar clase a todos los products-grid dentro del container
-      const productsGrids = document.querySelectorAll('.products-grid');
+      const productsGrids = document.querySelectorAll('.products-grid, .products-list');
       console.log('🔲 Found', productsGrids.length, 'product grids to update');
       
       if (productsGrids.length > 0) {
+        const oldClass = view === 'list' ? 'products-grid' : 'products-list';
         const newClass = view === 'list' ? 'products-list' : 'products-grid';
         productsGrids.forEach((grid, index) => {
-          grid.className = newClass;
-          console.log(`  Grid ${index + 1}: Changed to ${newClass}`);
+          grid.classList.remove(oldClass);
+          grid.classList.add(newClass);
+          console.log(`  Grid ${index + 1}: Changed from ${oldClass} to ${newClass}`);
         });
         console.log('✅ All grids updated successfully');
       } else {
@@ -1633,6 +1635,39 @@
     }
   };
 
+  // ========================================
+  // IMAGE HOVER MANAGER - Cambio de imágenes en hover
+  // ========================================
+  const ImageHoverManager = {
+    init() {
+      console.log('🖼️ Initializing Image Hover Manager...');
+      
+      const productCards = document.querySelectorAll('.product-card');
+      
+      productCards.forEach(card => {
+        const imageContainer = card.querySelector('.card-image-container');
+        const primaryImage = card.querySelector('.card-image.primary-image');
+        
+        if (!imageContainer || !primaryImage) return;
+        
+        const productId = card.getAttribute('data-product-id');
+        
+        // Efecto de hover mejorado
+        card.addEventListener('mouseenter', () => {
+          primaryImage.style.transform = 'scale(1.15) rotate(2deg)';
+          primaryImage.style.filter = 'brightness(1.05)';
+        });
+        
+        card.addEventListener('mouseleave', () => {
+          primaryImage.style.transform = 'scale(1) rotate(0deg)';
+          primaryImage.style.filter = 'brightness(0.98)';
+        });
+      });
+      
+      console.log(`✅ Image hover effects applied to ${productCards.length} products`);
+    }
+  };
+
   // Inicialización cuando el DOM está listo
   document.addEventListener('DOMContentLoaded', () => {
     console.group('🏪 Store Manager Initialization');
@@ -1646,6 +1681,7 @@
     LazyLoadManager.init();
     GestureManager.init();
     MobileMenuManager.init();
+    ImageHoverManager.init();
 
     console.log('✅ Store experience initialized successfully');
     console.groupEnd();
@@ -1659,7 +1695,8 @@
     Cart: CartManager,
     LazyLoad: LazyLoadManager,
     Gesture: GestureManager,
-    MobileMenu: MobileMenuManager
+    MobileMenu: MobileMenuManager,
+    ImageHover: ImageHoverManager
   };
 
 })();

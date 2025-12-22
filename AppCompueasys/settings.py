@@ -169,48 +169,31 @@ if os.getenv('DJANGO_DEVELOPMENT') == 'True':
 else:
     BASE_URL = os.getenv('BASE_URL', 'https://compueasys.onrender.com')
 
-# ====== Cloudinary Configuration ======
-# Configuración de Cloudinary para almacenamiento de imágenes
-USE_CLOUDINARY = os.getenv('USE_CLOUDINARY', 'True') == 'True'
+# ====== MEDIA FILES CONFIGURATION ======
+# Configuración para archivos media (imágenes, videos, etc.)
 
-if USE_CLOUDINARY:
-    # Importar cloudinary
-    import cloudinary
-    import cloudinary.uploader
-    import cloudinary.api
-    
-    # Configuración Cloudinary
-    cloudinary.config(
-        cloud_name=os.getenv('CLOUDINARY_CLOUD_NAME'),
-        api_key=os.getenv('CLOUDINARY_API_KEY'),
-        api_secret=os.getenv('CLOUDINARY_API_SECRET'),
-        secure=True
-    )
-    
-    # Storage backends para archivos media
-    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-    
-    # URLs para archivos media
-    MEDIA_URL = '/media/'
-    # Definir MEDIA_ROOT para compatibilidad (aunque no se use con Cloudinary)
-    MEDIA_ROOT = os.path.join(BASE_DIR, 'media_files')
-else:
-    # Configuración para disco persistente de Render (alternativa)
-    if os.getenv('DJANGO_DEVELOPMENT') == 'True':
-        # Desarrollo local
-        MEDIA_URL = '/media_files/'
-        MEDIA_ROOT = os.path.join(BASE_DIR, 'media_files')
+# Configuración para disco persistente de Render
+if os.getenv('DJANGO_DEVELOPMENT') == 'True':
+    # Desarrollo local
+    # Si estamos usando la DB de producción, usar URLs de producción para imágenes
+    if USE_PRODUCTION_DB:
+        MEDIA_URL = 'https://compueasys.onrender.com/media/'
+        MEDIA_ROOT = os.path.join(BASE_DIR, 'media_files')  # Local (por si subes algo)
+        print("🌐 DESARROLLO: Usando imágenes de PRODUCCIÓN desde Render")
     else:
-        # Producción con disco persistente de Render
         MEDIA_URL = '/media/'
-        MEDIA_ROOT = os.getenv('MEDIA_ROOT', '/opt/render/project/media')
-        
-        # Crear directorio si no existe
-        if not os.path.exists(MEDIA_ROOT):
-            try:
-                os.makedirs(MEDIA_ROOT, exist_ok=True)
-            except Exception as e:
-                print(f"Warning: No se pudo crear MEDIA_ROOT: {e}")
+        MEDIA_ROOT = os.path.join(BASE_DIR, 'media_files')
+else:
+    # Producción con disco persistente de Render
+    MEDIA_URL = '/media/'
+    MEDIA_ROOT = os.getenv('MEDIA_ROOT', '/opt/render/project/media')
+    
+    # Crear directorio si no existe
+    if not os.path.exists(MEDIA_ROOT):
+        try:
+            os.makedirs(MEDIA_ROOT, exist_ok=True)
+        except Exception as e:
+            print(f"Warning: No se pudo crear MEDIA_ROOT: {e}")
 
 # ===== WOMPI CONFIGURATION =====
 # Configuración completa de Wompi Colombia

@@ -6,11 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% if current_category %}{{ current_category.nombre }} - {% endif %}Tienda CompuEasys</title>
     
-    <!-- CSS Moderno -->
+    <!-- CSS Ultra Moderno -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="{% static 'css/store.css' %}?v=1.3">
+    <link rel="stylesheet" href="{% static 'css/store.css' %}?v=7.8">
     <link rel="stylesheet" href="{% static 'css/detail_modern.css' %}?v=1.3">
     
     <!-- Preload crítico -->
@@ -267,123 +267,35 @@
     <!-- Mobile Menu Overlay -->
     <div class="mobile-menu-overlay" id="mobile-menu-overlay"></div>
 
+    <!-- Categories Bar - Horizontal -->
+    <div class="categories-bar">
+        <div class="container-fluid">
+            <div class="categories-scroll">
+                <a href="{% url 'store' %}" class="category-chip {% if not request.GET.category %}active{% endif %}">
+                    <i class="bi bi-grid"></i>
+                    <span>Todos</span>
+                    <span class="chip-count">{{ products.count }}</span>
+                </a>
+                {% for category in categories %}
+                <a href="?category={{ category.id }}" class="category-chip {% if request.GET.category == category.id|stringformat:'s' %}active{% endif %}">
+                    <i class="bi bi-tag"></i>
+                    <span>{{ category.nombre }}</span>
+                    <span class="chip-count">{{ category.productstore_set.count }}</span>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
     <!-- Main Content -->
     <main class="store-main">
         <div class="container-fluid">
-            <div class="store-layout">
-                
-                <!-- Sidebar Filters -->
-                <aside class="filters-sidebar" id="filters-sidebar">
-                    <div class="sidebar-header">
-                        <h3><i class="bi bi-funnel"></i> Categorias</h3>
-                        <button class="sidebar-close" id="sidebar-close">
-                            <i class="bi bi-x"></i>
-                        </button>
-                    </div>
-                    
-                    <div class="sidebar-content">
-                        <!-- Categorías -->
-                        <div class="filter-section">
-                            <h4 class="filter-title">
-                                <i class="bi bi-collection"></i> 
-                                Categorías
-                            </h4>
-                            <div class="filter-options">
-                                <label class="filter-option">
-                                    <input type="radio" name="category" value="" 
-                                           {% if not request.GET.category %}checked{% endif %}>
-                                    <span class="filter-label">
-                                           <i class="bi bi-grid"></i>
-                                            Todos los productos
-                                           <span class="count">{{ products.count }}</span>
-                                    </span>
-                                </label>
-                                {% for category in categories %}
-                                <label class="filter-option">
-                                  
-                                    <input type="radio" name="category" value="{{ category.id }}"
-                                           {% if request.GET.category == category.id|stringformat:'s' %}checked{% endif %}>
-                                           <span class="filter-label">
-                                               <i class="bi bi-tag"></i>
-                                               {{ category.nombre }}
-                                              <span class="count">{{ category.productstore_set.count }}</span>
-                                           </span>
-                                </label>
-                                {% endfor %}
-                               
-                            </div>
-                        </div>
-                        
-                        <!-- Precio Range -->
-                        <div class="filter-section">
-                            <h4 class="filter-title">
-                                <i class="bi bi-currency-dollar"></i>
-                                Rango de Precio
-                            </h4>
-                            <div class="price-range">
-                                <div class="price-inputs">
-                                    <input type="number" id="price-min" placeholder="Min" class="price-input">
-                                    <span class="price-separator">-</span>
-                                    <input type="number" id="price-max" placeholder="Max" class="price-input">
-                                </div>
-                                <div class="price-slider">
-                                    <input type="range" id="price-range" min="0" max="5000000" step="50000">
-                                </div>
-                                <div class="price-labels">
-                                    <span>$0</span>
-                                    <span>$5,000,000+</span>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Stock -->
-                        <div class="filter-section">
-                            <h4 class="filter-title">
-                                <i class="bi bi-box"></i>
-                                Disponibilidad
-                            </h4>
-                            <div class="filter-options">
-                                <label class="filter-option">
-                                    <input type="checkbox" name="in_stock" value="true" checked>
-                                    <span class="filter-label">
-                                        <i class="bi bi-check-circle text-success"></i>
-                                        Disponible
-                                    </span>
-                                </label>
-                                <label class="filter-option">
-                                    <input type="checkbox" name="out_of_stock" value="true" checked>
-                                    <span class="filter-label">
-                                        <i class="bi bi-x-circle text-warning"></i>
-                                        Agotado
-                                    </span>
-                                </label>
-                            </div>
-                        </div>
-                        
-                        <!-- Actions -->
-                        <div class="filter-actions">
-                            <button class="btn-apply-filters" id="apply-filters">
-                                <i class="bi bi-check2"></i>
-                                Aplicar Filtros
-                            </button>
-                            <button class="btn-clear-filters" id="clear-filters">
-                                <i class="bi bi-arrow-clockwise"></i>
-                                Limpiar Todo
-                            </button>
-                        </div>
-                    </div>
-                </aside>
-
+            <div class="store-layout-full">
                 <!-- Products Area -->
-                <section class="products-area">
+                <section class="products-area-full">
                     <!-- Toolbar -->
                     <div class="products-toolbar">
                         <div class="toolbar-left">
-                            <button class="filters-toggle" id="filters-toggle">
-                                <i class="bi bi-funnel"></i>
-                                <span>Categorias</span>
-                            </button>
-                            
                             <div class="results-info">
                                 {% if query %}
                                 <span class="search-query">
@@ -451,8 +363,9 @@
                                         <img 
                                             src="{{ product.imagen.url }}" 
                                             alt="{{ product.name }}"
-                                            class="card-image"
+                                            class="card-image primary-image"
                                             loading="lazy"
+                                            data-product-id="{{ product.id }}"
                                         >
                                         {% else %}
                                         <div class="card-image-placeholder">
@@ -462,11 +375,18 @@
                                         {% endif %}
                                     </a>
                                     
+                                    <!-- Discount Badge (Simulado - puedes agregar campo de descuento al modelo) -->
+                                    {% if product.stock > 0 %}
+                                    <div class="discount-badge">
+                                        <i class="bi bi-percent"></i> OFERTA
+                                    </div>
+                                    {% endif %}
+                                    
                                     <!-- Stock Badge -->
                                     {% if product.stock > 0 %}
                                     <div class="stock-badge in-stock bg-primary text-white">
                                         <i class="bi bi-check-circle"></i>
-                                       Disponible ({{ product.stock }})
+                                       Disponible
                                     </div>
                                     {% else %}
                                     <div class="stock-badge out-of-stock">
@@ -474,10 +394,23 @@
                                         Agotado
                                     </div>
                                     {% endif %}
+                                    
+                                    <!-- Free Shipping Badge (Simulado - puedes agregar lógica según precio) -->
+                                    {% if product.price >= 100000 and product.stock > 0 %}
+                                    <div class="free-shipping-badge">
+                                        <i class="bi bi-truck"></i>
+                                        Envío Gratis
+                                    </div>
+                                    {% endif %}
                                 </div>
                                 
                                 <div class="card-content">
                                     <div class="card-header">
+                                        <!-- Provider Badge -->
+                                        {% if product.proveedor %}
+                                        
+                                        {% endif %}
+                                        
                                         <h3 class="card-title">
                                             <a href="{% url 'product_detail' product.id %}">
                                                 {{ product.name }}
@@ -494,8 +427,12 @@
                                     
                                     <div class="card-footer">
                                         <div class="price-section">
+                                            <!-- Precio original tachado (simulado - puedes agregar campo al modelo) -->
+                                            <!-- <span class="price-original">$XXX</span> -->
                                             <span class="price-current">${{ product.price|intcomma }}</span>
                                             <span class="price-currency">COP</span>
+                                            <!-- Badge de ahorro (simulado) -->
+                                            <!-- <span class="price-savings">Ahorras $XXX</span> -->
                                         </div>
                                         
                                         <div class="card-actions-footer">

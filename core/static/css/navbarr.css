@@ -322,20 +322,20 @@
 
 /* === Overlay oscuro (Mobile) === */
 .nav-overlay {
-  display: none;
+  display: none !important; /* Sin overlay oscuro */
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: var(--overlay-bg);
+  background: transparent;
   z-index: 9999;
-  backdrop-filter: blur(3px);
+  backdrop-filter: none;
   animation: fadeIn 0.3s ease-out;
 }
 
 .nav-overlay.active {
-  display: block;
+  display: none !important; /* Sin overlay */
 }
 
 /* ========================================
@@ -359,8 +359,8 @@
     display: none;
     position: fixed;
     top: 0;
-    right: 0;
-    width: min(320px, 85vw);
+    left: 0;
+    width: 100vw;
     height: 100vh;
     background: var(--mobile-menu-bg);
     flex-direction: column;
@@ -370,7 +370,7 @@
     backdrop-filter: blur(10px);
     overflow-y: auto;
     z-index: 10000;
-    animation: slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: slideInLeft 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
   
   .nav-list.open {
@@ -487,6 +487,17 @@
 /* ========================================
    ANIMACIONES
    ======================================== */
+
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
 
 @keyframes slideInRight {
   from {
