@@ -175,25 +175,31 @@ else:
 # Configuración para disco persistente de Render
 if os.getenv('DJANGO_DEVELOPMENT') == 'True':
     # Desarrollo local
-    # Si estamos usando la DB de producción, usar URLs de producción para imágenes
     if USE_PRODUCTION_DB:
+        # Cargar imágenes desde el servidor de producción (Render)
+        # Esto crea URLs absolutas: https://compueasys.onrender.com/media/...
         MEDIA_URL = 'https://compueasys.onrender.com/media/'
-        MEDIA_ROOT = os.path.join(BASE_DIR, 'media_files')  # Local (por si subes algo)
-        print("🌐 DESARROLLO: Usando imágenes de PRODUCCIÓN desde Render")
+        MEDIA_ROOT = os.path.join(BASE_DIR, 'media_files')  # Local (para uploads en dev)
+        print("🌐 DESARROLLO: Cargando imágenes desde Render (producción)")
+        print(f"📸 MEDIA_URL: {MEDIA_URL}")
     else:
+        # Desarrollo puro con DB local
         MEDIA_URL = '/media/'
         MEDIA_ROOT = os.path.join(BASE_DIR, 'media_files')
+        print("🔧 DESARROLLO: Usando imágenes locales")
 else:
-    # Producción con disco persistente de Render
+    # Producción en Render con disco persistente
     MEDIA_URL = '/media/'
     MEDIA_ROOT = os.getenv('MEDIA_ROOT', '/opt/render/project/media')
+    print(f"🚀 PRODUCCIÓN: MEDIA_ROOT = {MEDIA_ROOT}")
     
     # Crear directorio si no existe
     if not os.path.exists(MEDIA_ROOT):
         try:
             os.makedirs(MEDIA_ROOT, exist_ok=True)
+            print(f"✅ Directorio MEDIA_ROOT creado: {MEDIA_ROOT}")
         except Exception as e:
-            print(f"Warning: No se pudo crear MEDIA_ROOT: {e}")
+            print(f"❌ Warning: No se pudo crear MEDIA_ROOT: {e}")
 
 # ===== WOMPI CONFIGURATION =====
 # Configuración completa de Wompi Colombia
