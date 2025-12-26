@@ -1036,7 +1036,7 @@ body {
   filter: brightness(1.05);
 }
 
-/* Efecto de segunda imagen en hover (se implementará con JS) */
+/* Efecto de segunda imagen en hover */
 .card-image.primary-image {
   opacity: 1;
   transition: opacity 0.4s ease;
@@ -1048,14 +1048,22 @@ body {
   left: 0;
   opacity: 0;
   transition: opacity 0.4s ease;
+  pointer-events: none;
 }
 
-.product-card:hover .card-image.primary-image {
+/* Solo ocultar imagen primaria si hay imagen secundaria */
+.product-card.has-secondary-image:hover .card-image.primary-image {
   opacity: 0;
 }
 
-.product-card:hover .card-image.secondary-image {
+.product-card.has-secondary-image:hover .card-image.secondary-image {
   opacity: 1;
+  pointer-events: auto;
+}
+
+/* Si no hay segunda imagen, solo aplicar zoom */
+.product-card:not(.has-secondary-image):hover .card-image {
+  transform: scale(1.1) rotate(1deg);
 }
 
 .card-image-placeholder {

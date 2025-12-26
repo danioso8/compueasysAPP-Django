@@ -356,14 +356,16 @@
                             
                             <div class="products-grid" id="products-grid-{{ forloop.counter }}">
                             {% for product in category_products %}
-                            <article class="product-card" data-product-id="{{ product.id }}">
+                            <article class="product-card" 
+                                     data-product-id="{{ product.id }}"
+                                     data-gallery-images='[{% if product.imagen and product.imagen.name %}"{{ product.imagen.url }}"{% endif %}{% for img in product.galeria.all %}{% if img.galeria and img.galeria.name %}, "{{ img.galeria.url }}"{% endif %}{% endfor %}]'>
                                 <div class="card-image-container">
                                     <a href="{% url 'product_detail' product.id %}" class="card-image-link">
                                         {% if product.imagen and product.imagen.name %}
                                         <img 
                                             src="{{ product.imagen.url }}" 
                                             alt="{{ product.name }}"
-                                            class="card-image primary-image"
+                                            class="card-image"
                                             loading="lazy"
                                             data-product-id="{{ product.id }}"
                                         >
