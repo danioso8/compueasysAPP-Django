@@ -446,14 +446,16 @@
       }
 
       // Actualizar grid - aplicar clase a todos los products-grid dentro del container
-      const productsGrids = document.querySelectorAll('.products-grid');
+      const productsGrids = document.querySelectorAll('.products-grid, .products-list');
       console.log('🔲 Found', productsGrids.length, 'product grids to update');
       
       if (productsGrids.length > 0) {
+        const oldClass = view === 'list' ? 'products-grid' : 'products-list';
         const newClass = view === 'list' ? 'products-list' : 'products-grid';
         productsGrids.forEach((grid, index) => {
-          grid.className = newClass;
-          console.log(`  Grid ${index + 1}: Changed to ${newClass}`);
+          grid.classList.remove(oldClass);
+          grid.classList.add(newClass);
+          console.log(`  Grid ${index + 1}: Changed from ${oldClass} to ${newClass}`);
         });
         console.log('✅ All grids updated successfully');
       } else {
@@ -870,42 +872,109 @@
     },
 
     async loadCartPreview() {
-      const cartPreviewBody = document.getElementById('cart-preview-body');
-      if (!cartPreviewBody) return;
-
+      console.log('🔄 [CartPreview] Iniciando actualización...');
+      
       try {
-        // Simular carga del carrito (en producción sería un endpoint AJAX)
-        const cart = JSON.parse(sessionStorage.getItem('cart') || '{}');
-        const cartCount = Object.keys(cart).length;
-        
-        if (cartCount === 0) {
-          cartPreviewBody.innerHTML = `
-            <div class="cart-preview-empty">
-              <i class="bi bi-cart-x"></i>
-              <p class="mb-0">Tu carrito está vacío</p>
-            </div>
-          `;
+        // Obtener el HTML actualizado del carrito desde el servidor
+        const response = await fetch('/cart-preview/', {
+          method: 'GET',
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Cache-Control': 'no-cache'
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          console.log('📦 [CartPreview] Datos recibidos:', {
+            success: data.success,
+            cart_count: data.cart_count,
+            has_html: !!data.cart_items_html,
+            html_length: data.cart_items_html?.length
+          });
+          
+          if (!data.success) {
+            console.error('❌ [CartPreview] Servidor retornó error:', data.error);
+            return;
+          }
+          
+          // Buscar elementos del DOM
+          const cartItemsContainer = document.getElementById('cart-items-container');
+          const cartSidebarContent = document.querySelector('.cart-sidebar-content');
+          const cartSidebarFooter = document.querySelector('.cart-sidebar-footer');
+          
+          console.log('🔍 [CartPreview] Elementos DOM:', {
+            cartItemsContainer: !!cartItemsContainer,
+            cartSidebarContent: !!cartSidebarContent,
+            cartSidebarFooter: !!cartSidebarFooter
+          });
+          
+          if (data.cart_count > 0 && data.cart_items_html) {
+            // HAY PRODUCTOS EN EL CARRITO
+            console.log('✅ [CartPreview] Actualizando con', data.cart_count, 'productos');
+            
+            if (cartItemsContainer) {
+              // Actualizar HTML de los items
+              cartItemsContainer.innerHTML = data.cart_items_html;
+              console.log('✅ [CartPreview] HTML insertado en cart-items-container');
+              
+              // Asegurar que el contenedor esté visible
+              if (cartSidebarContent) {
+                cartSidebarContent.style.display = 'block';
+                
+                // Remover mensaje de vacío si existe
+                const emptyState = cartSidebarContent.querySelector('.cart-empty-state');
+                if (emptyState) {
+                  console.log('🗑️ [CartPreview] Removiendo mensaje de carrito vacío');
+                  emptyState.remove();
+                }
+              }
+              
+              // Mostrar footer con totales
+              if (cartSidebarFooter) {
+                cartSidebarFooter.classList.remove('d-none');
+                cartSidebarFooter.style.display = 'block';
+                
+                // Actualizar total
+                const cartTotalAmount = document.getElementById('cart-total-amount');
+                if (cartTotalAmount && data.cart_total) {
+                  cartTotalAmount.textContent = data.cart_total;
+                  console.log('✅ [CartPreview] Total actualizado:', data.cart_total);
+                }
+              }
+            } else {
+              console.error('❌ [CartPreview] No se encontró #cart-items-container');
+            }
+          } else {
+            // CARRITO VACÍO
+            console.log('ℹ️ [CartPreview] Carrito vacío, mostrando mensaje');
+            
+            if (cartSidebarContent) {
+              cartSidebarContent.innerHTML = `
+                <div class="cart-empty-state">
+                  <i class="bi bi-cart-x"></i>
+                  <h4>Tu carrito está vacío</h4>
+                  <p>Agrega productos para empezar a comprar</p>
+                  <a href="/store" class="btn-continue-shopping">
+                    <i class="bi bi-shop me-2"></i>Ir a la tienda
+                  </a>
+                </div>
+              `;
+            }
+            
+            // Ocultar footer
+            if (cartSidebarFooter) {
+              cartSidebarFooter.classList.add('d-none');
+              cartSidebarFooter.style.display = 'none';
+            }
+          }
+          
+          console.log('✅ [CartPreview] Actualización completada');
         } else {
-          // Mostrar items del carrito (simplificado para demo)
-          cartPreviewBody.innerHTML = `
-            <div class="cart-preview-items">
-              <div class="preview-item">
-                <i class="bi bi-bag-check text-success"></i>
-                <div>
-                  <small class="text-muted">${cartCount} producto${cartCount !== 1 ? 's' : ''} agregado${cartCount !== 1 ? 's' : ''}</small>
-                </div>
-              </div>
-              <div class="preview-item">
-                <i class="bi bi-clock text-warning"></i>
-                <div>
-                  <small class="text-muted">Haz clic para ver detalles</small>
-                </div>
-              </div>
-            </div>
-          `;
+          console.error('❌ [CartPreview] Error HTTP:', response.status, response.statusText);
         }
       } catch (error) {
-        console.error('Error loading cart preview:', error);
+        console.error('❌ [CartPreview] Error en fetch:', error);
       }
     },
 
@@ -948,6 +1017,7 @@
           // Actualizar todos los contadores inmediatamente
           if (data.cart_count !== undefined) {
             const count = data.cart_count;
+            console.log('🔢 Actualizando contadores con:', count);
             
             // Badge del navbar
             const navCartCount = document.querySelector('.action-btn.cart-btn .cart-count');
@@ -957,12 +1027,16 @@
               console.log('✅ Nav cart count actualizado:', count);
             }
             
-            // Badge del cart flotante
+            // Badge del cart flotante (PRINCIPAL - arriba derecha)
             const cartFloatBadge = document.getElementById('cart-badge-float');
             if (cartFloatBadge) {
               cartFloatBadge.textContent = count;
               cartFloatBadge.style.display = count > 0 ? 'block' : 'none';
+              // Forzar re-render
+              cartFloatBadge.classList.add('pulse-animation');
               console.log('✅ Float cart badge actualizado:', count);
+            } else {
+              console.warn('⚠️ cart-badge-float NO encontrado en DOM');
             }
             
             // Badge del sidebar
@@ -993,8 +1067,9 @@
             }, 600);
           }
           
-          // Actualizar preview del carrito
-          this.loadCartPreview();
+          // Actualizar preview del carrito INMEDIATAMENTE
+          console.log('🔄 Llamando a loadCartPreview después de agregar producto...');
+          await this.loadCartPreview();
           
           // Restaurar botón después de 2 segundos
           setTimeout(() => {
@@ -1503,6 +1578,96 @@
   `;
   document.head.appendChild(style);
 
+  // ============================================
+  // MOBILE MENU MANAGER - NUEVO Y LIMPIO
+  // ============================================
+  const MobileMenuManager = {
+    init() {
+      const toggle = document.getElementById('mobile-menu-toggle');
+      const navbar = document.querySelector('.secondary-navbar');
+      const overlay = document.getElementById('mobile-menu-overlay');
+      
+      if (!toggle || !navbar) {
+        console.warn('⚠️ Mobile menu elements not found');
+        return;
+      }
+
+      // Función para cerrar menú
+      const closeMenu = () => {
+        toggle.classList.remove('active');
+        navbar.classList.remove('active');
+        if (overlay) overlay.classList.remove('active');
+        document.body.classList.remove('menu-open');
+      };
+
+      // Función para abrir menú
+      const openMenu = () => {
+        toggle.classList.add('active');
+        navbar.classList.add('active');
+        if (overlay) overlay.classList.add('active');
+        document.body.classList.add('menu-open');
+      };
+
+      // Toggle al hacer click en hamburguesa
+      toggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = navbar.classList.contains('active');
+        if (isOpen) {
+          closeMenu();
+        } else {
+          openMenu();
+        }
+        console.log('🍔 Menu toggled:', !isOpen ? 'OPEN' : 'CLOSED');
+      });
+
+      // Cerrar al hacer click en overlay
+      if (overlay) {
+        overlay.addEventListener('click', closeMenu);
+      }
+
+      // Cerrar al hacer click en un link del menú
+      const links = navbar.querySelectorAll('.nav-links a');
+      links.forEach(link => {
+        link.addEventListener('click', closeMenu);
+      });
+
+      console.log('✅ Mobile Menu initialized');
+    }
+  };
+
+  // ========================================
+  // IMAGE HOVER MANAGER - Cambio de imágenes en hover
+  // ========================================
+  const ImageHoverManager = {
+    init() {
+      console.log('🖼️ Initializing Image Hover Manager...');
+      
+      const productCards = document.querySelectorAll('.product-card');
+      
+      productCards.forEach(card => {
+        const imageContainer = card.querySelector('.card-image-container');
+        const primaryImage = card.querySelector('.card-image.primary-image');
+        
+        if (!imageContainer || !primaryImage) return;
+        
+        const productId = card.getAttribute('data-product-id');
+        
+        // Efecto de hover mejorado
+        card.addEventListener('mouseenter', () => {
+          primaryImage.style.transform = 'scale(1.15) rotate(2deg)';
+          primaryImage.style.filter = 'brightness(1.05)';
+        });
+        
+        card.addEventListener('mouseleave', () => {
+          primaryImage.style.transform = 'scale(1) rotate(0deg)';
+          primaryImage.style.filter = 'brightness(0.98)';
+        });
+      });
+      
+      console.log(`✅ Image hover effects applied to ${productCards.length} products`);
+    }
+  };
+
   // Inicialización cuando el DOM está listo
   document.addEventListener('DOMContentLoaded', () => {
     console.group('🏪 Store Manager Initialization');
@@ -1515,6 +1680,8 @@
     CartManager.init();
     LazyLoadManager.init();
     GestureManager.init();
+    MobileMenuManager.init();
+    ImageHoverManager.init();
 
     console.log('✅ Store experience initialized successfully');
     console.groupEnd();
@@ -1527,7 +1694,9 @@
     Sidebar: SidebarManager,
     Cart: CartManager,
     LazyLoad: LazyLoadManager,
-    Gesture: GestureManager
+    Gesture: GestureManager,
+    MobileMenu: MobileMenuManager,
+    ImageHover: ImageHoverManager
   };
 
 })();

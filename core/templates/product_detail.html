@@ -6,9 +6,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, maximum-scale=3.0">
     <title>{{ product.name }} - CompuEasys</title>
-    <link rel="stylesheet" href="{% static 'css/main.css' %}?v=1.1">
-    <link rel="stylesheet" href="{% static 'css/detail.css' %}?v=1.1">
-    <link rel="stylesheet" href="{% static 'css/detail_modern.css' %}?v=1.2">
+    <link rel="stylesheet" href="{% static 'css/main.css' %}?v=1.2">
+    <link rel="stylesheet" href="{% static 'css/detail.css' %}?v=1.2">
+    <link rel="stylesheet" href="{% static 'css/detail_modern.css' %}?v=1.3">
+    <link rel="stylesheet" href="{% static 'css/store.css' %}?v=2.0">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -45,15 +46,101 @@
         }
         
         .modern-breadcrumb {
-            background: white;
-            padding: 15px 0;
-            box-shadow: var(--shadow-sm);
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            padding: 18px 0;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
             margin-bottom: 30px;
+            border-bottom: 2px solid #e8ecf0;
+        }
+        
+        .breadcrumb {
+            margin: 0;
+            padding: 0;
+            background: transparent;
+        }
+        
+        .breadcrumb-item {
+            font-size: 0.95rem;
+            font-weight: 500;
         }
         
         .breadcrumb-item + .breadcrumb-item::before {
             content: "→";
             color: #667eea;
+            font-weight: bold;
+            margin: 0 12px;
+        }
+        
+        .breadcrumb-link-modern {
+            display: inline-flex;
+            align-items: center;
+            padding: 8px 16px;
+            background: white;
+            color: #667eea;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15);
+            border: 2px solid transparent;
+        }
+        
+        .breadcrumb-link-modern:hover {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+            border-color: #667eea;
+        }
+        
+        .breadcrumb-link-modern i {
+            font-size: 1rem;
+            transition: transform 0.3s ease;
+        }
+        
+        .breadcrumb-link-modern:hover i {
+            transform: scale(1.2);
+        }
+        
+        .breadcrumb-category {
+            background: rgba(102, 126, 234, 0.1);
+            color: #5145cd;
+        }
+        
+        .breadcrumb-category:hover {
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+            color: white;
+        }
+        
+        .breadcrumb-item.active {
+            display: inline-flex;
+            align-items: center;
+            color: #475569;
+            font-weight: 600;
+            padding: 8px 16px;
+            background: #f1f5f9;
+            border-radius: 25px;
+        }
+        
+        .breadcrumb-item.active i {
+            color: #667eea;
+        }
+        
+        @media (max-width: 768px) {
+            .breadcrumb-link-modern,
+            .breadcrumb-item.active {
+                padding: 6px 12px;
+                font-size: 0.85rem;
+            }
+            
+            .breadcrumb-link-modern i,
+            .breadcrumb-item.active i {
+                font-size: 0.9rem;
+            }
+            
+            .breadcrumb-item + .breadcrumb-item::before {
+                margin: 0 8px;
+            }
         }
         
         .product-detail-container {
@@ -204,11 +291,24 @@
     <nav class="modern-breadcrumb" aria-label="breadcrumb">
         <div class="container">
             <ol class="breadcrumb mb-0">
-                <li class="breadcrumb-item"><a href="/store"><i class="bi bi-house-door me-1"></i>Inicio</a></li>
+                <li class="breadcrumb-item">
+                    <a href="/store" class="breadcrumb-link-modern">
+                        <i class="bi bi-house-door-fill me-2"></i>
+                        <span>Inicio</span>
+                    </a>
+                </li>
                 {% if product.category %}
-                <li class="breadcrumb-item"><a href="/?category={{ product.category.id }}">{{ product.category.nombre }}</a></li>
+                <li class="breadcrumb-item">
+                    <a href="/store?category={{ product.category.id }}" class="breadcrumb-link-modern breadcrumb-category">
+                        <i class="bi bi-tag-fill me-2"></i>
+                        <span>{{ product.category.nombre }}</span>
+                    </a>
+                </li>
                 {% endif %}
-                <li class="breadcrumb-item active" aria-current="page">{{ product.name }}</li>
+                <li class="breadcrumb-item active" aria-current="page">
+                    <i class="bi bi-box-seam me-2"></i>
+                    <span>{{ product.name|truncatechars:50 }}</span>
+                </li>
             </ol>
         </div>
     </nav>
@@ -396,6 +496,29 @@
                                         </span>
                                     {% endif %}
                                 </div>
+                            </div>
+                            
+                            <!-- Botón Comprar por WhatsApp -->
+                            <div class="whatsapp-buy-section" style="margin: 1.5rem 0; width: 100%; display: flex; flex-direction: column; align-items: center;">
+                                <a href="#" 
+                                   id="whatsapp-buy-btn" 
+                                   class="btn-whatsapp-buy pulse"
+                                   style="display: flex !important; align-items: center !important; justify-content: center !important; gap: 0.75rem !important; padding: 18px 32px !important; background: #25D366 !important; color: white !important; border: none !important; border-radius: 50px !important; font-weight: 800 !important; font-size: 1.05rem !important; cursor: pointer !important; text-transform: none !important; letter-spacing: 0.3px !important; box-shadow: 0 6px 20px rgba(37, 211, 102, 0.4), 0 2px 8px rgba(0, 0, 0, 0.15) !important; position: relative !important; overflow: hidden !important; text-decoration: none !important; width: 95% !important; margin: 0 auto !important; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important; transition: all 0.3s ease !important;"
+                                   data-product-name="{{ product.name }}"
+                                   data-product-price="{{ product.price }}"
+                                   data-product-id="{{ product.id }}"
+                                   data-product-category="{{ product.category.nombre|default:'Sin categoría' }}"
+                                   data-product-stock="{{ product.stock }}"
+                                   target="_blank"
+                                   onmouseover="this.style.transform='translateY(-3px) scale(1.02)'; this.style.boxShadow='0 10px 30px rgba(37, 211, 102, 0.5), 0 4px 12px rgba(0, 0, 0, 0.2)'; this.style.background='#20BA5A';"
+                                   onmouseout="this.style.transform='translateY(0) scale(1)'; this.style.boxShadow='0 6px 20px rgba(37, 211, 102, 0.4), 0 2px 8px rgba(0, 0, 0, 0.15)'; this.style.background='#25D366';">
+                                    <i class="fab fa-whatsapp" style="font-size: 1.5rem !important;"></i>
+                                    <span style="font-weight: 600 !important;">Comprar por WhatsApp</span>
+                                </a>
+                                <p style="text-align: center; margin-top: 0.75rem; font-size: 0.85rem; color: #64748b;">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    Respuesta rápida en minutos
+                                </p>
                             </div>
                             
                             <!-- Formulario de Compra Moderno -->
@@ -1712,6 +1835,71 @@ if (buyNowBtn) {
             buyNowBtn.disabled = false;
             alert('Error al procesar la compra. Por favor intenta nuevamente.');
         }
+    });
+}
+
+// ===== BOTÓN COMPRAR POR WHATSAPP =====
+const whatsappBuyBtn = document.getElementById('whatsapp-buy-btn');
+if (whatsappBuyBtn) {
+    whatsappBuyBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        // Obtener datos del producto
+        const productName = this.dataset.productName;
+        const productPrice = this.dataset.productPrice;
+        const productId = this.dataset.productId;
+        const productCategory = this.dataset.productCategory;
+        const productStock = this.dataset.productStock;
+        
+        // Obtener cantidad seleccionada
+        const quantityInput = document.querySelector('.qty-input');
+        const quantity = quantityInput ? quantityInput.value : 1;
+        
+        // Obtener variante seleccionada (si existe)
+        let variantInfo = '';
+        const selectedVariant = document.querySelector('.variant-card-modern.active');
+        if (selectedVariant) {
+            const variantColor = selectedVariant.dataset.color;
+            const variantPrice = selectedVariant.dataset.price;
+            variantInfo = `\n🎨 *Variante:* ${variantColor}\n💰 *Precio variante:* $${parseInt(variantPrice).toLocaleString('es-CO')} COP`;
+        }
+        
+        // Formatear precio
+        const formattedPrice = parseInt(productPrice).toLocaleString('es-CO');
+        const totalPrice = parseInt(productPrice) * parseInt(quantity);
+        const formattedTotal = totalPrice.toLocaleString('es-CO');
+        
+        // Crear mensaje de WhatsApp
+        const message = `¡Hola! 👋 Estoy interesado en comprar:\n\n` +
+                       `📦 *Producto:* ${productName}\n` +
+                       `🏷️ *Categoría:* ${productCategory}\n` +
+                       `💵 *Precio unitario:* $${formattedPrice} COP${variantInfo}\n` +
+                       `🔢 *Cantidad:* ${quantity}\n` +
+                       `💰 *Total:* $${formattedTotal} COP\n` +
+                       `📋 *ID Producto:* ${productId}\n\n` +
+                       `¿Está disponible? Me gustaría conocer los métodos de pago y envío disponibles. ¡Gracias! 😊`;
+        
+        // Número de WhatsApp (reemplaza con tu número)
+        const phoneNumber = '573182865445'; // Formato: código país + número (sin +, sin espacios)
+        
+        // Crear URL de WhatsApp
+        const whatsappURL = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+        
+        // Abrir WhatsApp
+        window.open(whatsappURL, '_blank');
+        
+        // Mostrar notificación de éxito
+        showQuickNotification('✅ Redirigiendo a WhatsApp...');
+        
+        // Animación visual del botón
+        this.classList.remove('pulse');
+        this.style.transform = 'scale(0.95)';
+        setTimeout(() => {
+            this.style.transform = 'scale(1)';
+            setTimeout(() => {
+                this.classList.add('pulse');
+            }, 300);
+        }, 150);
     });
 }
     </script>

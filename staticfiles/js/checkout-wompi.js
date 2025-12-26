@@ -1,12 +1,13 @@
 /**
  * CompuEasys Checkout - Versión Nueva y Limpia
- * Versión: 4.0 - Tres opciones de pago/entrega
- * - Contra Entrega: Domicilio + Efectivo (envío según monto)
+ * Versión: 4.0 - SIN COMISIÓN WOMPI
+ * - Contra Entrega: Domicilio + Efectivo (envío $15k, gratis > $100k)
+ * - Tarjeta + Domicilio: Domicilio + Tarjeta (envío $15k, gratis > $100k)
  * - Recoger Efectivo: Tienda + Efectivo (sin envío)
- * - Recoger Tarjeta: Tienda + Wompi (sin envío)
+ * - Recoger Tarjeta: Tienda + Tarjeta (sin envío)
  */
 
-console.log('🚀 CHECKOUT v4.0 - Cargando...');
+console.log('🚀 CHECKOUT v4.0 - SIN COMISIÓN WOMPI - Cargando...');
 
 (function() {
     "use strict";
@@ -21,7 +22,7 @@ console.log('🚀 CHECKOUT v4.0 - Cargando...');
         subtotal: 0,
         shipping: 0,
         discount: 0,
-        wompiFee: 0, // Comisión del 12% de Wompi para pagos con tarjeta
+
         total: 0,
         processing: false
     };
@@ -108,9 +109,10 @@ console.log('🚀 CHECKOUT v4.0 - Cargando...');
         
         switch (option) {
             case 'contra_entrega':
+            case 'tarjeta_domicilio':
                 // Envío a domicilio - gratis si > 100k
                 const shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
-                console.log(`📦 Contra entrega - Envío: ${shipping}`);
+                console.log(`📦 ${option} - Envío: ${shipping}`);
                 return shipping;
                 
             case 'recoger_efectivo':
@@ -151,31 +153,17 @@ console.log('🚀 CHECKOUT v4.0 - Cargando...');
         // Calcular envío según opción seleccionada
         checkoutState.shipping = calculateShipping(checkoutState.selectedOption, checkoutState.subtotal);
         
-        // Calcular comisión de Wompi (12%) solo para pagos con tarjeta
-        const requiresWompiFee = checkoutState.selectedOption === 'tarjeta_domicilio' || 
-                                  checkoutState.selectedOption === 'recoger_tarjeta';
-        
-        if (requiresWompiFee) {
-            // Calcular 12% sobre el subtotal después del descuento
-            const baseForFee = checkoutState.subtotal - checkoutState.discount;
-            checkoutState.wompiFee = Math.round(baseForFee * 0.12);
-        } else {
-            checkoutState.wompiFee = 0;
-        }
-        
-        // Calcular total
-        checkoutState.total = checkoutState.subtotal - checkoutState.discount + checkoutState.shipping + checkoutState.wompiFee;
+        // Calcular total (SIN comisión Wompi - eliminada completamente)
+        checkoutState.total = checkoutState.subtotal - checkoutState.discount + checkoutState.shipping;
         
         console.log(`🧾 Cálculo final:`);
         console.log(`   Subtotal: ${checkoutState.subtotal}`);
         console.log(`   Descuento: ${checkoutState.discount}`);
         console.log(`   Envío: ${checkoutState.shipping}`);
-        console.log(`   Comisión Wompi (12%): ${checkoutState.wompiFee}`);
         console.log(`   TOTAL: ${checkoutState.total}`);
         
         // Actualizar DOM
         updateShippingDisplay();
-        updateWompiFeeDisplay();
         updateTotalDisplay();
         updateOptionPrices();
         
@@ -195,19 +183,7 @@ console.log('🚀 CHECKOUT v4.0 - Cargando...');
         }
     }
     
-    function updateWompiFeeDisplay() {
-        const wompiFeeRow = document.getElementById('wompi_fee_row');
-        const wompiFeeAmount = document.getElementById('wompi_fee_amount');
-        
-        if (wompiFeeRow && wompiFeeAmount) {
-            if (checkoutState.wompiFee > 0) {
-                wompiFeeRow.classList.remove('d-none');
-                wompiFeeAmount.textContent = `+${formatCurrency(checkoutState.wompiFee)}`;
-            } else {
-                wompiFeeRow.classList.add('d-none');
-            }
-        }
-    }
+
     
     function updateTotalDisplay() {
         const totalElement = document.getElementById('total_final');
