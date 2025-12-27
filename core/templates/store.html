@@ -267,24 +267,40 @@
     <!-- Mobile Menu Overlay -->
     <div class="mobile-menu-overlay" id="mobile-menu-overlay"></div>
 
-    <!-- Categories Bar - Horizontal -->
-    <div class="categories-bar">
-        <div class="container-fluid">
-            <div class="categories-scroll">
-                <a href="{% url 'store' %}" class="category-chip {% if not request.GET.category %}active{% endif %}">
-                    <i class="bi bi-grid"></i>
-                    <span>Todos</span>
-                    <span class="chip-count">{{ products.count }}</span>
-                </a>
-                {% for category in categories %}
-                <a href="?category={{ category.id }}" class="category-chip {% if request.GET.category == category.id|stringformat:'s' %}active{% endif %}">
-                    <i class="bi bi-tag"></i>
-                    <span>{{ category.nombre }}</span>
-                    <span class="chip-count">{{ category.productstore_set.count }}</span>
-                </a>
-                {% endfor %}
+    <!-- Categories Bar - Horizontal Desktop + Hamburguesa Mobile -->
+    <div class="categories-section">
+        <!-- Botón Hamburguesa de Categorías (Solo Mobile) -->
+        <button class="categories-toggle-btn" id="categories-toggle" aria-label="Abrir categorías">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="3" y1="12" x2="21" y2="12"/>
+                <line x1="3" y1="6" x2="21" y2="6"/>
+                <line x1="3" y1="18" x2="21" y2="18"/>
+            </svg>
+            <span>Categorías</span>
+        </button>
+        
+        <!-- Categorías Desktop -->
+        <div class="categories-bar" id="categories-bar">
+            <div class="container-fluid">
+                <div class="categories-scroll">
+                    <a href="{% url 'store' %}" class="category-chip {% if not request.GET.category %}active{% endif %}">
+                        <i class="bi bi-grid"></i>
+                        <span>Todos</span>
+                        <span class="chip-count">{{ products.count }}</span>
+                    </a>
+                    {% for category in categories %}
+                    <a href="?category={{ category.id }}" class="category-chip {% if request.GET.category == category.id|stringformat:'s' %}active{% endif %}">
+                        <i class="bi bi-tag"></i>
+                        <span>{{ category.nombre }}</span>
+                        <span class="chip-count">{{ category.productstore_set.count }}</span>
+                    </a>
+                    {% endfor %}
+                </div>
             </div>
         </div>
+        
+        <!-- Overlay para cerrar categorías en mobile -->
+        <div class="categories-overlay" id="categories-overlay"></div>
     </div>
 
     <!-- Main Content -->

@@ -207,8 +207,18 @@ body {
 }
 
 /* ========================================
-   CATEGORIES BAR - HORIZONTAL
+   CATEGORIES BAR - HORIZONTAL + HAMBURGUESA MOBILE
 ======================================== */
+
+/* Botón hamburguesa de categorías (solo mobile) */
+.categories-toggle-btn {
+  display: none;
+}
+
+.categories-overlay {
+  display: none;
+}
+
 .categories-bar {
   background: white;
   border-bottom: none;
@@ -929,13 +939,21 @@ body {
 
 @media (max-width: 576px) {
   .products-grid {
-    grid-template-columns: 1fr;
-    gap: 1rem;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+    max-width: 95%;
+    margin: 1rem auto;
   }
   
   .product-card {
-    max-width: 500px;
-    margin: 0 auto;
+    max-width: 100%;
+    margin: 0;
+  }
+  
+  /* Ocultar badges de oferta y envío gratis en móvil */
+  .discount-badge,
+  .free-shipping-badge {
+    display: none !important;
   }
   
   /* Botones full-width en móvil */
@@ -1758,6 +1776,124 @@ body {
   
   .search-form {
     width: 100%;
+  }
+  
+  /* ===== CATEGORÍAS HAMBURGUESA MOBILE ===== */
+  .categories-section {
+    position: relative;
+  }
+  
+  /* Botón toggle de categorías */
+  .categories-toggle-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 1rem 1.25rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+  }
+  
+  .categories-toggle-btn:active {
+    transform: scale(0.98);
+  }
+  
+  .categories-toggle-btn svg {
+    transition: transform 0.3s ease;
+  }
+  
+  .categories-toggle-btn.active svg {
+    transform: rotate(90deg);
+  }
+  
+  /* Barra de categorías como menú lateral */
+  .categories-bar {
+    position: fixed;
+    top: 0;
+    left: -100%;
+    width: 85%;
+    max-width: 320px;
+    height: 100vh;
+    background: white;
+    z-index: 9999;
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.2);
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 0;
+    overflow-y: auto;
+  }
+  
+  .categories-bar.active {
+    left: 0;
+  }
+  
+  .categories-scroll {
+    flex-direction: column;
+    gap: 0;
+    padding: 1rem 0;
+    overflow-x: visible;
+  }
+  
+  .category-chip {
+    width: 100%;
+    padding: 1rem 1.5rem;
+    border-radius: 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    justify-content: space-between;
+    font-size: 14px;
+    transition: all 0.2s ease;
+  }
+  
+  .category-chip:hover {
+    background: rgba(102, 126, 234, 0.08);
+    transform: translateX(5px);
+  }
+  
+  .category-chip.active {
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    transform: translateX(0);
+    border-left: 4px solid rgba(255, 255, 255, 0.5);
+  }
+  
+  .category-chip i {
+    font-size: 1.1rem;
+  }
+  
+  .chip-count {
+    background: rgba(102, 126, 234, 0.15);
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  
+  .category-chip.active .chip-count {
+    background: rgba(255, 255, 255, 0.3);
+  }
+  
+  /* Overlay oscuro */
+  .categories-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 9998;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+  
+  .categories-overlay.active {
+    opacity: 1;
+    pointer-events: all;
   }
   
   /* ==== MENÚ MÓVIL HAMBURGUESA - NUEVO ==== */

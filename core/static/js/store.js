@@ -1705,10 +1705,81 @@
     GestureManager.init();
     MobileMenuManager.init();
     ImageHoverManager.init();
+    CategoriesMenuManager.init();
 
     console.log('✅ Store experience initialized successfully');
     console.groupEnd();
   });
+
+  // ========================================
+  // CATEGORIES MENU MANAGER (Hamburguesa Mobile)
+  // ========================================
+  const CategoriesMenuManager = {
+    toggleBtn: null,
+    categoriesBar: null,
+    overlay: null,
+    isOpen: false,
+
+    init() {
+      this.toggleBtn = document.getElementById('categories-toggle');
+      this.categoriesBar = document.getElementById('categories-bar');
+      this.overlay = document.getElementById('categories-overlay');
+
+      if (this.toggleBtn && this.categoriesBar && this.overlay) {
+        this.bindEvents();
+        console.log('✅ Categories Menu Manager initialized');
+      }
+    },
+
+    bindEvents() {
+      // Toggle button click
+      this.toggleBtn.addEventListener('click', () => this.toggle());
+      
+      // Overlay click
+      this.overlay.addEventListener('click', () => this.close());
+      
+      // ESC key
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && this.isOpen) {
+          this.close();
+        }
+      });
+      
+      // Close on category click (mobile)
+      if (window.innerWidth <= 768) {
+        const categoryLinks = this.categoriesBar.querySelectorAll('.category-chip');
+        categoryLinks.forEach(link => {
+          link.addEventListener('click', () => {
+            setTimeout(() => this.close(), 300);
+          });
+        });
+      }
+    },
+
+    toggle() {
+      if (this.isOpen) {
+        this.close();
+      } else {
+        this.open();
+      }
+    },
+
+    open() {
+      this.categoriesBar.classList.add('active');
+      this.overlay.classList.add('active');
+      this.toggleBtn.classList.add('active');
+      this.isOpen = true;
+      document.body.style.overflow = 'hidden';
+    },
+
+    close() {
+      this.categoriesBar.classList.remove('active');
+      this.overlay.classList.remove('active');
+      this.toggleBtn.classList.remove('active');
+      this.isOpen = false;
+      document.body.style.overflow = '';
+    }
+  };
 
   // Exponer managers globalmente para debugging
   window.StoreManagers = {
@@ -1719,7 +1790,8 @@
     LazyLoad: LazyLoadManager,
     Gesture: GestureManager,
     MobileMenu: MobileMenuManager,
-    ImageHover: ImageHoverManager
+    ImageHover: ImageHoverManager,
+    CategoriesMenu: CategoriesMenuManager
   };
 
 })();
