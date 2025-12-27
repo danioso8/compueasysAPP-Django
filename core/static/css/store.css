@@ -2131,6 +2131,15 @@ body {
     font-size: 0.75rem;
   }
   
+  /* Ocultar badge "Disponible" en móvil, mostrar solo "Agotado" */
+  .stock-badge.in-stock {
+    display: none !important;
+  }
+  
+  .stock-badge.out-of-stock {
+    display: flex !important;
+  }
+  
   /* Search and filters mobile optimization */
   .search-bar,
   .search-input,
@@ -2249,6 +2258,15 @@ body {
   
   .stock-badge i {
     font-size: 0.7rem;
+  }
+  
+  /* Ocultar badge "Disponible" en móvil, mostrar solo "Agotado" */
+  .stock-badge.in-stock {
+    display: none !important;
+  }
+  
+  .stock-badge.out-of-stock {
+    display: flex !important;
   }
   
   /* Button sizing for small screens */
