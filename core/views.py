@@ -2327,7 +2327,7 @@ def cart_preview(request):
         
         for product_id, item_data in cart.items():
             try:
-                product = ProductStore.objects.get(id=product_id)
+                product = Product.objects.get(id=product_id)
                 
                 if isinstance(item_data, dict):
                     quantity = item_data.get('quantity', 1)
@@ -2359,7 +2359,7 @@ def cart_preview(request):
                 })
                 
                 print(f"✅ Producto agregado: {product.name}, cantidad: {quantity}")  # Debug
-            except ProductStore.DoesNotExist:
+            except Product.DoesNotExist:
                 print(f"⚠️ Producto {product_id} no encontrado")  # Debug
                 continue
         

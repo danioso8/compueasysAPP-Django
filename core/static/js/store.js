@@ -1082,6 +1082,12 @@
           console.log('🔄 Llamando a loadCartPreview después de agregar producto...');
           await this.loadCartPreview();
           
+          // Mostrar mini cart mobile si está disponible
+          if (typeof window.showMiniCart === 'function') {
+            console.log('📱 Mostrando mini cart mobile...');
+            window.showMiniCart();
+          }
+          
           // Restaurar botón después de 2 segundos
           setTimeout(() => {
             submitBtn.innerHTML = originalContent;

@@ -16,6 +16,16 @@
       <span class="brand-text">CompuEasys</span>
     </a>
 
+    <!-- Botón Carrito - Visible solo en móvil, fijo arriba derecha -->
+    <button class="cart-icon-nav" onclick="toggleCartSidebar()" title="Ver carrito" style="display: none;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+        <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+        <line x1="3" y1="6" x2="21" y2="6"/>
+        <path d="M16 10a4 4 0 01-8 0"/>
+      </svg>
+      <span class="cart-count" id="cart-count-navbar" style="display: {% if cart_count > 0 %}flex{% else %}none{% endif %};">{{ cart_count|default:0 }}</span>
+    </button>
+
     <!-- Desktop Menu -->
     <div class="desktop-menu">
       <a href="{% url 'home' %}" class="menu-link">
@@ -54,15 +64,6 @@
         <span>Contáctanos</span>
       </a>
     </div>
-    
-    <!-- Carrito -->
-    <a href="{% url 'cart' %}" class="cart-icon-nav" aria-label="Ver carrito">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-        <path d="M9 2L7 6H3C2.4 6 2 6.4 2 7v13c0 .6.4 1 1 1h18c.6 0 1-.4 1-1V7c0-.6-.4-1-1-1h-4l-2-4H9z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        <circle cx="12" cy="13" r="3" stroke="currentColor" stroke-width="2"/>
-      </svg>
-      <span class="cart-count-badge" id="cart-count" data-count="0">0</span>
-    </a>
   </div>
 
   <!-- Mobile Menu Full Width - Sin hamburguesa -->
