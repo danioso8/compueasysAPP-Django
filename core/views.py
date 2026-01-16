@@ -237,7 +237,10 @@ def login_user(request):
                         'success': False,
                         'message': 'Los superusuarios deben usar el login del dashboard'
                     })
-                return redirect('/dashboard/dashboard_home')  
+                
+                # Obtener el parámetro 'next' para redirigir correctamente
+                next_url = request.GET.get('next', '/dashboard/dashboard_home/')
+                return redirect(next_url)
             else:
                 if is_ajax and is_checkout_login:
                     return JsonResponse({'success': False, 'message': 'Contraseña incorrecta'})
@@ -2371,11 +2374,24 @@ def cart_preview(request):
         
         print(f"📤 Enviando respuesta: count={cart_count}, total={cart_total}, HTML length={len(cart_content_html)}")  # Debug
         
+        # Preparar items para JSON (mini cart mobile)
+        cart_items_json = []
+        for item in cart_items:
+            cart_items_json.append({
+                'id': item['product'].id,
+                'name': item['product'].name,
+                'quantity': item['quantity'],
+                'price': f'${item["price"]:,.0f}',
+                'subtotal': f'${item["subtotal"]:,.0f}',
+                'image': item['variant'].imagen.url if item['variant'] and item['variant'].imagen else (item['product'].imagen.url if item['product'].imagen else None)
+            })
+        
         return JsonResponse({
             'success': True,
             'cart_count': cart_count,
             'cart_total': f'${cart_total:,.0f} COP',
             'cart_content_html': cart_content_html,
+            'cart_items': cart_items_json,  # Para mini cart mobile
             'debug': {
                 'items_in_cart': len(cart_items),
                 'total_quantity': cart_count

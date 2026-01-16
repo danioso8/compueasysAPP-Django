@@ -790,13 +790,16 @@
     init() {
       console.log('🛒 Initializing CartManager...');
       
-      document.addEventListener('click', (e) => {
-        if (e.target.closest('.add-to-cart-form')) {
+      // Manejar submit de formularios de agregar al carrito
+      document.addEventListener('submit', (e) => {
+        if (e.target.classList.contains('add-to-cart-form')) {
           e.preventDefault();
-          this.handleAddToCart(e.target.closest('.add-to-cart-form'));
+          this.handleAddToCart(e.target);
         }
-        
-        // Manejar botón de notificación de stock
+      });
+      
+      // Manejar clics en botones de notificación de stock
+      document.addEventListener('click', (e) => {
         if (e.target.closest('.btn-notify-stock')) {
           e.preventDefault();
           const button = e.target.closest('.btn-notify-stock');
@@ -980,9 +983,17 @@
 
     async handleAddToCart(form) {
       const productId = form.dataset.product;
-      const submitBtn = form.querySelector('.btn-add-cart');
+      const submitBtn = form.querySelector('button[type="submit"]');
       
-      if (!productId || !submitBtn) return;
+      if (!productId) {
+        console.error('❌ No product ID found');
+        return;
+      }
+      
+      if (!submitBtn) {
+        console.error('❌ No submit button found');
+        return;
+      }
 
       console.log('🛒 Adding to cart:', productId);
 

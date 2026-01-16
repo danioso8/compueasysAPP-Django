@@ -1646,22 +1646,45 @@
       
       productCards.forEach(card => {
         const imageContainer = card.querySelector('.card-image-container');
-        const primaryImage = card.querySelector('.card-image.primary-image');
+        const primaryImage = card.querySelector('.card-image');
         
         if (!imageContainer || !primaryImage) return;
         
-        const productId = card.getAttribute('data-product-id');
+        // Obtener las imágenes de la galería desde data attributes
+        const galleryImages = card.getAttribute('data-gallery-images');
         
-        // Efecto de hover mejorado
-        card.addEventListener('mouseenter', () => {
-          primaryImage.style.transform = 'scale(1.15) rotate(2deg)';
-          primaryImage.style.filter = 'brightness(1.05)';
-        });
-        
-        card.addEventListener('mouseleave', () => {
-          primaryImage.style.transform = 'scale(1) rotate(0deg)';
-          primaryImage.style.filter = 'brightness(0.98)';
-        });
+        if (galleryImages) {
+          try {
+            const images = JSON.parse(galleryImages);
+            
+            // Si hay al menos 2 imágenes, crear efecto de cambio
+            if (images && images.length >= 2) {
+              console.log('📸 Producto con', images.length, 'imágenes - agregando efecto hover');
+              
+              // Marcar que tiene imagen secundaria
+              card.classList.add('has-secondary-image');
+              
+              // Agregar clase primary-image a la imagen existente
+              primaryImage.classList.add('primary-image');
+              
+              // Crear imagen secundaria
+              const secondaryImage = document.createElement('img');
+              secondaryImage.src = images[1]; // Segunda imagen de la galería
+              secondaryImage.alt = primaryImage.alt;
+              secondaryImage.className = 'card-image secondary-image';
+              secondaryImage.loading = 'lazy';
+              
+              // Insertar después de la imagen primaria
+              primaryImage.parentNode.insertBefore(secondaryImage, primaryImage.nextSibling);
+              
+              console.log('✅ Imagen secundaria agregada:', images[1]);
+            } else {
+              console.log('ℹ️ Producto con solo 1 imagen - usando efecto zoom simple');
+            }
+          } catch (e) {
+            console.error('❌ Error parsing gallery images:', e);
+          }
+        }
       });
       
       console.log(`✅ Image hover effects applied to ${productCards.length} products`);

@@ -63,6 +63,29 @@
             box-shadow: 0 30px 80px rgba(0,0,0,0.15);
         }
         
+        /* Estilo para el card clickeable de ubicación */
+        a.text-decoration-none .contact-card {
+            transition: all 0.3s ease;
+        }
+        
+        a.text-decoration-none:hover .contact-card {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 30px 80px rgba(79, 172, 254, 0.3);
+        }
+        
+        a.text-decoration-none:hover .contact-card * {
+            color: white !important;
+        }
+        
+        a.text-decoration-none:hover .contact-icon {
+            background: white;
+        }
+        
+        a.text-decoration-none:hover .contact-icon i {
+            color: #4facfe !important;
+        }
+        
         .contact-icon {
             width: 80px;
             height: 80px;
@@ -278,20 +301,20 @@
                 </div>
                 
                 <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="300">
-                    <div class="contact-card text-center">
-                        <div class="contact-icon icon-location">
-                            <i class="bi bi-geo-alt-fill"></i>
+                    <a href="https://www.google.com/maps/search/?api=1&query=Calle+47A+%23+100+-+34,+Medellin,+Colombia" 
+                       target="_blank" 
+                       class="text-decoration-none"
+                       style="cursor: pointer;">
+                        <div class="contact-card text-center">
+                            <div class="contact-icon icon-location">
+                                <i class="bi bi-geo-alt-fill"></i>
+                            </div>
+                            <h5 class="fw-bold">Ubicación</h5>
+                            <p class="text-muted mb-3">Visítanos</p>
+                            <p class="text-muted mb-3">Calle 47A # 100 - 34</p>
+                            <span class="fw-semibold">Medellin, Colombia</span>
                         </div>
-                        <h5 class="fw-bold">Ubicación</h5>
-                        <p class="text-muted mb-3">Visítanos</p>
-                        <p class="text-muted mb-3">Calle 47A # 100 - 34</p>
-                        <span class="fw-semibold d-block mb-3">Medellin, Colombia</span>
-                        <a href="https://www.google.com/maps/search/?api=1&query=Calle+47A+%23+100+-+34,+Medellin,+Colombia" 
-                           target="_blank" 
-                           class="btn btn-outline-primary btn-sm">
-                            <i class="bi bi-map me-2"></i>Ver en Google Maps
-                        </a>
-                    </div>
+                    </a>
                 </div>
                 
                 <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="400">
