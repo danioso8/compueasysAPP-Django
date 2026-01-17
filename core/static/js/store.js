@@ -1248,6 +1248,14 @@
       const userEmail = window.userData && window.userData.email;
       const userName = window.userData && window.userData.name || userEmail;
       
+      // Debug logs
+      console.group('🔔 Creating Notification Modal');
+      console.log('window.userData:', window.userData);
+      console.log('isAuthenticated:', isAuthenticated);
+      console.log('userEmail:', userEmail);
+      console.log('userName:', userName);
+      console.groupEnd();
+      
       modal.innerHTML = `
         <div class="modal-dialog modal-lg">
           <div class="modal-content">

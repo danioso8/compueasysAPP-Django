@@ -603,8 +603,11 @@
             name: {% if user and user.name %}'{{ user.name|escapejs }}'{% else %}{% if user and user.username %}'{{ user.username|escapejs }}'{% else %}null{% endif %}{% endif %}
         };
         console.log('🔐 User Data:', window.userData); // Debug
+        console.log('🔐 isAuthenticated:', window.userData.isAuthenticated);
+        console.log('🔐 email:', window.userData.email);
+        console.log('🔐 name:', window.userData.name);
     </script>
-    <script src="{% static 'js/store.js' %}?v=1.4"></script>
+    <script src="{% static 'js/store.js' %}?v=1.5"></script>
 
     <!-- Cart Sidebar Scripts -->
     <script>
