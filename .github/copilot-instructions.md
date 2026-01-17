@@ -392,4 +392,109 @@ try {
 
 ---
 
+## 🚀 Deployment a Contabo
+
+### Información del Servidor
+- **IP**: 84.247.129.180
+- **Usuario**: root
+- **Password**: Miesposa0526
+- **Ruta del proyecto**: /var/www/CompuEasysApp
+- **Servicio**: compueasys (systemd)
+
+### Proceso de Deployment Manual
+
+**IMPORTANTE**: El servidor NO tiene repositorio git configurado. Los archivos fueron subidos manualmente.
+
+#### Subir cambios a Contabo (Desde PowerShell en Windows):
+
+```powershell
+# 1. Subir archivo específico
+pscp -batch -pw Miesposa0526 "ruta\local\archivo" root@84.247.129.180:/var/www/CompuEasysApp/ruta/destino/
+
+# Ejemplos:
+# Subir template HTML
+pscp -batch -pw Miesposa0526 "D:\ESCRITORIO\CompuEasysApp\core\templates\store.html" root@84.247.129.180:/var/www/CompuEasysApp/core/templates/
+
+# Subir JavaScript
+pscp -batch -pw Miesposa0526 "D:\ESCRITORIO\CompuEasysApp\core\static\js\store.js" root@84.247.129.180:/var/www/CompuEasysApp/core/static/js/
+
+# Subir archivo Python (views, models, etc)
+pscp -batch -pw Miesposa0526 "D:\ESCRITORIO\CompuEasysApp\core\views.py" root@84.247.129.180:/var/www/CompuEasysApp/core/
+
+# 2. Reiniciar servicio después de cambios
+plink -batch -pw Miesposa0526 root@84.247.129.180 "systemctl restart compueasys"
+
+# 3. Verificar estado del servicio
+plink -batch -pw Miesposa0526 root@84.247.129.180 "systemctl status compueasys --no-pager -l | head -15"
+
+# 4. Ver logs en caso de error
+plink -batch -pw Miesposa0526 root@84.247.129.180 "journalctl -u compueasys -n 50 --no-pager"
+```
+
+#### Workflow Completo de Deployment:
+
+1. **Hacer cambios localmente** y probarlos
+2. **Subir a GitHub** (para respaldo):
+   ```bash
+   git add .
+   git commit -m "Descripción del cambio"
+   git push origin main
+   ```
+3. **Subir archivos modificados a Contabo** usando `pscp`
+4. **Reiniciar servicio** en Contabo
+5. **Verificar** que el sitio funcione correctamente
+
+#### Archivos Comunes a Actualizar:
+
+```powershell
+# Templates (HTML)
+pscp -batch -pw Miesposa0526 "D:\ESCRITORIO\CompuEasysApp\core\templates\*.html" root@84.247.129.180:/var/www/CompuEasysApp/core/templates/
+
+# Static Files (CSS/JS)
+pscp -batch -pw Miesposa0526 "D:\ESCRITORIO\CompuEasysApp\core\static\js\*.js" root@84.247.129.180:/var/www/CompuEasysApp/core/static/js/
+pscp -batch -pw Miesposa0526 "D:\ESCRITORIO\CompuEasysApp\core\static\css\*.css" root@84.247.129.180:/var/www/CompuEasysApp/core/static/css/
+
+# Python Files
+pscp -batch -pw Miesposa0526 "D:\ESCRITORIO\CompuEasysApp\core\views.py" root@84.247.129.180:/var/www/CompuEasysApp/core/
+pscp -batch -pw Miesposa0526 "D:\ESCRITORIO\CompuEasysApp\core\models.py" root@84.247.129.180:/var/www/CompuEasysApp/core/
+```
+
+#### Comandos SSH Útiles:
+
+```powershell
+# Conectar por SSH
+plink -batch -pw Miesposa0526 root@84.247.129.180
+
+# Ejecutar comando remoto
+plink -batch -pw Miesposa0526 root@84.247.129.180 "comando"
+
+# Ver archivos en servidor
+plink -batch -pw Miesposa0526 root@84.247.129.180 "ls -la /var/www/CompuEasysApp/core/templates/"
+
+# Ver logs del servicio
+plink -batch -pw Miesposa0526 root@84.247.129.180 "journalctl -u compueasys -f"
+```
+
+#### Troubleshooting:
+
+```powershell
+# Si el servicio no inicia
+plink -batch -pw Miesposa0526 root@84.247.129.180 "systemctl status compueasys -l"
+
+# Ver últimos 100 logs
+plink -batch -pw Miesposa0526 root@84.247.129.180 "journalctl -u compueasys -n 100 --no-pager"
+
+# Reiniciar Nginx (si hay problemas de proxy)
+plink -batch -pw Miesposa0526 root@84.247.129.180 "systemctl restart nginx"
+
+# Verificar permisos de archivos
+plink -batch -pw Miesposa0526 root@84.247.129.180 "chown -R root:www-data /var/www/CompuEasysApp"
+```
+
+### Auto-Deployment (Opcional)
+
+Para configurar auto-deployment con GitHub Webhooks, ver [AUTO_DEPLOYMENT_SETUP.md](AUTO_DEPLOYMENT_SETUP.md)
+
+---
+
 **Nota**: Estos patrones han sido desarrollados y validados durante el desarrollo del proyecto CompuEasys. Seguir estas convenciones garantiza consistencia con el código existente y facilita el mantenimiento del proyecto.
