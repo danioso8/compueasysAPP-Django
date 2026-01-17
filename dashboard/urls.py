@@ -30,6 +30,8 @@ from .views import (
     visitas_live_data,
     productos_mas_visitados,
     ventas_por_periodo,
+    notification_mark_sent,
+    notification_details,
 )
 from django.urls import path
 from django.contrib import admin
@@ -138,6 +140,10 @@ urlpatterns = [
     path('projects/create/', views.project_create, name='project_create'),
     path('projects/<int:project_id>/edit/', views.project_edit, name='project_edit'),
     path('projects/<int:project_id>/delete/', views.project_delete, name='project_delete'),
+
+    # URLs para gestión de notificaciones de stock
+    path('notification/<int:notification_id>/mark_sent/', notification_mark_sent, name='notification_mark_sent'),
+    path('notification/<int:notification_id>/details/', notification_details, name='notification_details'),
 
 ]
 

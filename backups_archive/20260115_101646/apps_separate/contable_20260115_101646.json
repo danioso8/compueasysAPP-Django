@@ -1,0 +1,519 @@
+[
+{
+  "model": "contable.contableuser",
+  "pk": "b0da4b85-8b24-44c8-9596-c6f016ff739b",
+  "fields": {
+    "password": "pbkdf2_sha256$600000$A0nIHvU6cn8pbOkxoTwKvJ$rxHtIdckreDHzomgn6AWIhg9GNs+d+lHyDAyj9fW+oM=",
+    "email": "compueasys@hotmail.com",
+    "first_name": "Daniel Andres",
+    "last_name": "Osorio Velasquez",
+    "phone": "3007915262",
+    "is_active": true,
+    "is_staff": false,
+    "is_superuser": false,
+    "email_verified": true,
+    "email_token": "",
+    "date_joined": "2025-11-18T15:12:04.832Z",
+    "last_login": "2025-11-18T15:13:07.005Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "contable.contableuser",
+  "pk": "d33c8259-cc08-49c1-9796-09a499a788ff",
+  "fields": {
+    "password": "pbkdf2_sha256$600000$IxrvGtkpPwNe5JDILy4RaG$E/p+2huWe2FUqTUzO70mpyyv1q+49Z8ZYbe+AyyNtw0=",
+    "email": "danioso8@hotmail.com",
+    "first_name": "Daniel Andres",
+    "last_name": "Osorio Velasquez",
+    "phone": "3007915262",
+    "is_active": true,
+    "is_staff": true,
+    "is_superuser": true,
+    "email_verified": true,
+    "email_token": "",
+    "date_joined": "2025-11-15T20:44:18.591Z",
+    "last_login": "2025-11-27T21:02:08.798Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "contable.plan",
+  "pk": 1,
+  "fields": {
+    "name": "free",
+    "display_name": "Plan Gratuito",
+    "price": "0.00",
+    "max_users": 1,
+    "max_companies": 1,
+    "max_invoices_month": 50,
+    "features": {
+      "modules": [
+        "invoicing",
+        "customers",
+        "reports_basic"
+      ],
+      "support": "email",
+      "features": [
+        "Facturación básica",
+        "Gestión de clientes",
+        "Reportes básicos",
+        "1 GB de almacenamiento"
+      ],
+      "storage_gb": 1
+    },
+    "is_active": true,
+    "created_at": "2025-11-15T20:41:15.558Z"
+  }
+},
+{
+  "model": "contable.plan",
+  "pk": 2,
+  "fields": {
+    "name": "pro",
+    "display_name": "Plan Profesional",
+    "price": "99900.00",
+    "max_users": 5,
+    "max_companies": 3,
+    "max_invoices_month": 500,
+    "features": {
+      "modules": [
+        "invoicing",
+        "customers",
+        "suppliers",
+        "products",
+        "inventory",
+        "purchases",
+        "accounting",
+        "reports_advanced",
+        "payroll",
+        "fixed_assets"
+      ],
+      "support": "priority",
+      "features": [
+        "Todos los módulos incluidos",
+        "Reportes avanzados",
+        "Inventario con FIFO/LIFO",
+        "Nómina completa",
+        "Activos fijos",
+        "10 GB de almacenamiento",
+        "Soporte prioritario"
+      ],
+      "storage_gb": 10
+    },
+    "is_active": true,
+    "created_at": "2025-11-15T20:41:16.148Z"
+  }
+},
+{
+  "model": "contable.plan",
+  "pk": 3,
+  "fields": {
+    "name": "enterprise",
+    "display_name": "Plan Empresarial",
+    "price": "299900.00",
+    "max_users": -1,
+    "max_companies": -1,
+    "max_invoices_month": -1,
+    "features": {
+      "modules": "all",
+      "support": "24/7",
+      "features": [
+        "Todo ilimitado",
+        "Multi-empresa sin límites",
+        "Usuarios ilimitados",
+        "Facturación electrónica",
+        "API personalizada",
+        "Integraciones avanzadas",
+        "100 GB de almacenamiento",
+        "Soporte 24/7",
+        "Consultor asignado",
+        "Capacitación incluida"
+      ],
+      "storage_gb": 100
+    },
+    "is_active": true,
+    "created_at": "2025-11-15T20:41:16.724Z"
+  }
+},
+{
+  "model": "contable.company",
+  "pk": "ebc4de17-14ad-49f2-8a2b-285defb28e85",
+  "fields": {
+    "name": "CompuEasys",
+    "legal_name": "Compueasys",
+    "tax_id": "danioso8",
+    "email": "danioso8@hotmail.com",
+    "phone": "",
+    "address": "",
+    "city": "",
+    "country": "Colombia",
+    "logo": "",
+    "fiscal_year_start": "2025-11-15",
+    "currency": "COP",
+    "tax_regime": "Común",
+    "plan": 3,
+    "is_active": true,
+    "created_at": "2025-11-15T20:44:18.970Z",
+    "updated_at": "2025-11-15T20:44:18.970Z"
+  }
+},
+{
+  "model": "contable.company",
+  "pk": "983cb51e-f5bd-4ab4-8822-ad9f3bb4fe95",
+  "fields": {
+    "name": "CompuEasys",
+    "legal_name": "Compueasys",
+    "tax_id": "71360801",
+    "email": "compueasys@hotmail.com",
+    "phone": "",
+    "address": "",
+    "city": "",
+    "country": "Colombia",
+    "logo": "",
+    "fiscal_year_start": "2025-11-18",
+    "currency": "COP",
+    "tax_regime": "Común",
+    "plan": 1,
+    "is_active": true,
+    "created_at": "2025-11-18T15:12:04.846Z",
+    "updated_at": "2025-11-18T15:12:04.846Z"
+  }
+},
+{
+  "model": "contable.userprofile",
+  "pk": 1,
+  "fields": {
+    "user": "d33c8259-cc08-49c1-9796-09a499a788ff",
+    "role": "superuser",
+    "avatar": "",
+    "reset_token": "",
+    "reset_token_expires": null,
+    "language": "es",
+    "timezone": "America/Bogota",
+    "theme": "light",
+    "created_at": "2025-11-15T20:44:18.802Z",
+    "updated_at": "2025-11-15T22:40:21.117Z"
+  }
+},
+{
+  "model": "contable.userprofile",
+  "pk": 2,
+  "fields": {
+    "user": "b0da4b85-8b24-44c8-9596-c6f016ff739b",
+    "role": "admin",
+    "avatar": "",
+    "reset_token": "",
+    "reset_token_expires": null,
+    "language": "es",
+    "timezone": "America/Bogota",
+    "theme": "light",
+    "created_at": "2025-11-18T15:12:04.843Z",
+    "updated_at": "2025-11-18T15:12:04.843Z"
+  }
+},
+{
+  "model": "contable.companymembership",
+  "pk": 1,
+  "fields": {
+    "user_profile": 1,
+    "company": "ebc4de17-14ad-49f2-8a2b-285defb28e85",
+    "role_in_company": "admin",
+    "permissions": {
+      "can_edit": true,
+      "can_create": true,
+      "can_delete": true,
+      "all_modules": true,
+      "can_approve": true
+    },
+    "is_default": true,
+    "joined_at": "2025-11-15T20:44:19.124Z"
+  }
+},
+{
+  "model": "contable.companymembership",
+  "pk": 2,
+  "fields": {
+    "user_profile": 2,
+    "company": "983cb51e-f5bd-4ab4-8822-ad9f3bb4fe95",
+    "role_in_company": "admin",
+    "permissions": {
+      "can_edit": true,
+      "can_create": true,
+      "can_delete": true,
+      "all_modules": true,
+      "can_approve": true
+    },
+    "is_default": true,
+    "joined_at": "2025-11-18T15:12:04.895Z"
+  }
+},
+{
+  "model": "contable.auditlog",
+  "pk": 19,
+  "fields": {
+    "user": "d33c8259-cc08-49c1-9796-09a499a788ff",
+    "company": "ebc4de17-14ad-49f2-8a2b-285defb28e85",
+    "action": "login",
+    "module": "auth",
+    "description": "Inicio de sesión exitoso",
+    "ip_address": "181.58.39.186",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+    "timestamp": "2025-11-27T21:02:08.805Z"
+  }
+},
+{
+  "model": "contable.auditlog",
+  "pk": 18,
+  "fields": {
+    "user": "d33c8259-cc08-49c1-9796-09a499a788ff",
+    "company": "ebc4de17-14ad-49f2-8a2b-285defb28e85",
+    "action": "logout",
+    "module": "auth",
+    "description": "Cierre de sesión",
+    "ip_address": "127.0.0.1",
+    "user_agent": "",
+    "timestamp": "2025-11-24T15:49:04.647Z"
+  }
+},
+{
+  "model": "contable.auditlog",
+  "pk": 17,
+  "fields": {
+    "user": "d33c8259-cc08-49c1-9796-09a499a788ff",
+    "company": "ebc4de17-14ad-49f2-8a2b-285defb28e85",
+    "action": "login",
+    "module": "auth",
+    "description": "Inicio de sesión exitoso",
+    "ip_address": "127.0.0.1",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+    "timestamp": "2025-11-24T15:43:56.644Z"
+  }
+},
+{
+  "model": "contable.auditlog",
+  "pk": 16,
+  "fields": {
+    "user": "d33c8259-cc08-49c1-9796-09a499a788ff",
+    "company": "ebc4de17-14ad-49f2-8a2b-285defb28e85",
+    "action": "login",
+    "module": "auth",
+    "description": "Inicio de sesión exitoso",
+    "ip_address": "181.58.39.102",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+    "timestamp": "2025-11-22T16:53:02.272Z"
+  }
+},
+{
+  "model": "contable.auditlog",
+  "pk": 15,
+  "fields": {
+    "user": "d33c8259-cc08-49c1-9796-09a499a788ff",
+    "company": "ebc4de17-14ad-49f2-8a2b-285defb28e85",
+    "action": "logout",
+    "module": "auth",
+    "description": "Cierre de sesión",
+    "ip_address": "181.132.224.39",
+    "user_agent": "",
+    "timestamp": "2025-11-20T03:21:31.940Z"
+  }
+},
+{
+  "model": "contable.auditlog",
+  "pk": 14,
+  "fields": {
+    "user": "d33c8259-cc08-49c1-9796-09a499a788ff",
+    "company": "ebc4de17-14ad-49f2-8a2b-285defb28e85",
+    "action": "login",
+    "module": "auth",
+    "description": "Inicio de sesión exitoso",
+    "ip_address": "181.132.224.39",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+    "timestamp": "2025-11-20T03:20:35.462Z"
+  }
+},
+{
+  "model": "contable.auditlog",
+  "pk": 13,
+  "fields": {
+    "user": "d33c8259-cc08-49c1-9796-09a499a788ff",
+    "company": "ebc4de17-14ad-49f2-8a2b-285defb28e85",
+    "action": "login",
+    "module": "auth",
+    "description": "Inicio de sesión exitoso",
+    "ip_address": "179.14.168.249",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+    "timestamp": "2025-11-19T21:08:35.041Z"
+  }
+},
+{
+  "model": "contable.auditlog",
+  "pk": 12,
+  "fields": {
+    "user": "d33c8259-cc08-49c1-9796-09a499a788ff",
+    "company": "ebc4de17-14ad-49f2-8a2b-285defb28e85",
+    "action": "logout",
+    "module": "auth",
+    "description": "Cierre de sesión",
+    "ip_address": "181.132.224.39",
+    "user_agent": "",
+    "timestamp": "2025-11-19T01:08:26.887Z"
+  }
+},
+{
+  "model": "contable.auditlog",
+  "pk": 11,
+  "fields": {
+    "user": "d33c8259-cc08-49c1-9796-09a499a788ff",
+    "company": "ebc4de17-14ad-49f2-8a2b-285defb28e85",
+    "action": "login",
+    "module": "auth",
+    "description": "Inicio de sesión exitoso",
+    "ip_address": "181.132.224.39",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+    "timestamp": "2025-11-19T01:07:27.176Z"
+  }
+},
+{
+  "model": "contable.auditlog",
+  "pk": 10,
+  "fields": {
+    "user": "d33c8259-cc08-49c1-9796-09a499a788ff",
+    "company": "ebc4de17-14ad-49f2-8a2b-285defb28e85",
+    "action": "login",
+    "module": "auth",
+    "description": "Inicio de sesión exitoso",
+    "ip_address": "181.58.39.72",
+    "user_agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Mobile Safari/537.36",
+    "timestamp": "2025-11-18T15:14:03.822Z"
+  }
+},
+{
+  "model": "contable.auditlog",
+  "pk": 9,
+  "fields": {
+    "user": "b0da4b85-8b24-44c8-9596-c6f016ff739b",
+    "company": "983cb51e-f5bd-4ab4-8822-ad9f3bb4fe95",
+    "action": "login",
+    "module": "auth",
+    "description": "Inicio de sesión exitoso",
+    "ip_address": "181.58.39.72",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+    "timestamp": "2025-11-18T15:13:07.016Z"
+  }
+},
+{
+  "model": "contable.auditlog",
+  "pk": 8,
+  "fields": {
+    "user": "b0da4b85-8b24-44c8-9596-c6f016ff739b",
+    "company": "983cb51e-f5bd-4ab4-8822-ad9f3bb4fe95",
+    "action": "create",
+    "module": "auth",
+    "description": "Nuevo registro: Daniel Andres Osorio Velasquez - CompuEasys",
+    "ip_address": "181.58.39.72",
+    "user_agent": "",
+    "timestamp": "2025-11-18T15:12:05.699Z"
+  }
+},
+{
+  "model": "contable.auditlog",
+  "pk": 7,
+  "fields": {
+    "user": "d33c8259-cc08-49c1-9796-09a499a788ff",
+    "company": "ebc4de17-14ad-49f2-8a2b-285defb28e85",
+    "action": "logout",
+    "module": "auth",
+    "description": "Cierre de sesión",
+    "ip_address": "181.58.39.72",
+    "user_agent": "",
+    "timestamp": "2025-11-18T15:11:13.454Z"
+  }
+},
+{
+  "model": "contable.auditlog",
+  "pk": 6,
+  "fields": {
+    "user": "d33c8259-cc08-49c1-9796-09a499a788ff",
+    "company": "ebc4de17-14ad-49f2-8a2b-285defb28e85",
+    "action": "login",
+    "module": "auth",
+    "description": "Inicio de sesión exitoso",
+    "ip_address": "181.58.39.72",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+    "timestamp": "2025-11-18T15:10:59.830Z"
+  }
+},
+{
+  "model": "contable.auditlog",
+  "pk": 5,
+  "fields": {
+    "user": "d33c8259-cc08-49c1-9796-09a499a788ff",
+    "company": "ebc4de17-14ad-49f2-8a2b-285defb28e85",
+    "action": "login",
+    "module": "auth",
+    "description": "Inicio de sesión exitoso",
+    "ip_address": "127.0.0.1",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+    "timestamp": "2025-11-15T21:11:47.801Z"
+  }
+},
+{
+  "model": "contable.auditlog",
+  "pk": 4,
+  "fields": {
+    "user": "d33c8259-cc08-49c1-9796-09a499a788ff",
+    "company": "ebc4de17-14ad-49f2-8a2b-285defb28e85",
+    "action": "login",
+    "module": "auth",
+    "description": "Inicio de sesión exitoso",
+    "ip_address": "127.0.0.1",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+    "timestamp": "2025-11-15T21:08:48.193Z"
+  }
+},
+{
+  "model": "contable.auditlog",
+  "pk": 3,
+  "fields": {
+    "user": "d33c8259-cc08-49c1-9796-09a499a788ff",
+    "company": "ebc4de17-14ad-49f2-8a2b-285defb28e85",
+    "action": "logout",
+    "module": "auth",
+    "description": "Cierre de sesión",
+    "ip_address": "127.0.0.1",
+    "user_agent": "",
+    "timestamp": "2025-11-15T20:46:26.940Z"
+  }
+},
+{
+  "model": "contable.auditlog",
+  "pk": 2,
+  "fields": {
+    "user": "d33c8259-cc08-49c1-9796-09a499a788ff",
+    "company": "ebc4de17-14ad-49f2-8a2b-285defb28e85",
+    "action": "login",
+    "module": "auth",
+    "description": "Inicio de sesión exitoso",
+    "ip_address": "127.0.0.1",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+    "timestamp": "2025-11-15T20:44:50.574Z"
+  }
+},
+{
+  "model": "contable.auditlog",
+  "pk": 1,
+  "fields": {
+    "user": "d33c8259-cc08-49c1-9796-09a499a788ff",
+    "company": "ebc4de17-14ad-49f2-8a2b-285defb28e85",
+    "action": "create",
+    "module": "auth",
+    "description": "Nuevo registro: Daniel Andres Osorio Velasquez - CompuEasys",
+    "ip_address": "127.0.0.1",
+    "user_agent": "",
+    "timestamp": "2025-11-15T20:44:21.682Z"
+  }
+}
+]

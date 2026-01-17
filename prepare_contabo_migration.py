@@ -1,0 +1,614 @@
+"""
+Script para preparar migración a Contabo PostgreSQL
+Genera scripts SQL y comandos necesarios para la migración
+"""
+import os
+import json
+from datetime import datetime
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent
+
+def create_contabo_migration_guide():
+    """Crear guía de migración a Contabo"""
+    
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    guide_file = os.path.join(BASE_DIR, f'CONTABO_MIGRATION_GUIDE_{timestamp}.md')
+    
+    content = f"""# Guía de Migración CompuEasys a Contabo
+
+**Fecha de generación:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+
+## 📋 Pre-requisitos
+
+### En Contabo:
+1. ✅ Servidor VPS/Cloud configurado
+2. ✅ PostgreSQL instalado y configurado
+3. ✅ Base de datos creada
+4. ✅ Usuario de base de datos con permisos completos
+5. ✅ Firewall configurado (puerto 5432 para PostgreSQL)
+6. ✅ Nginx/Apache configurado para servir archivos estáticos
+
+### Localmente:
+1. ✅ Backups completados (carpeta `backups/`)
+2. ✅ Imágenes descargadas (carpeta `media_backup/`)
+3. ✅ PostgreSQL client tools instalados (opcional)
+
+---
+
+## 🗄️ Paso 1: Configurar Base de Datos en Contabo
+
+### 1.1 Conectarse al servidor Contabo
+
+```bash
+ssh root@tu-servidor-contabo.com
+```
+
+### 1.2 Crear base de datos y usuario
+
+```sql
+-- Conectar a PostgreSQL
+sudo -u postgres psql
+
+-- Crear base de datos
+CREATE DATABASE compueasys_db;
+
+-- Crear usuario
+CREATE USER compueasys_user WITH PASSWORD 'tu_password_seguro';
+
+-- Otorgar permisos
+GRANT ALL PRIVILEGES ON DATABASE compueasys_db TO compueasys_user;
+
+-- Configurar permisos del esquema
+\\c compueasys_db
+GRANT ALL ON SCHEMA public TO compueasys_user;
+
+-- Salir
+\\q
+```
+
+### 1.3 Configurar acceso remoto (si es necesario)
+
+Editar `/etc/postgresql/[version]/main/postgresql.conf`:
+```
+listen_addresses = '*'
+```
+
+Editar `/etc/postgresql/[version]/main/pg_hba.conf`:
+```
+host    compueasys_db    compueasys_user    0.0.0.0/0    md5
+```
+
+Reiniciar PostgreSQL:
+```bash
+sudo systemctl restart postgresql
+```
+
+---
+
+## 📤 Paso 2: Restaurar Base de Datos
+
+### Opción A: Usando Django (Recomendado)
+
+```bash
+# 1. Copiar backup JSON al servidor Contabo
+scp backups/compueasys_backup_*.json root@tu-servidor:/root/
+
+# 2. En el servidor, instalar dependencias
+cd /path/to/compueasys
+pip install -r requirements.txt
+
+# 3. Configurar variables de entorno
+nano .env
+# Agregar:
+# DB_NAME=compueasys_db
+# DB_USERNAME=compueasys_user
+# DB_PASSWORD=tu_password_seguro
+# DB_HOST=localhost
+# DB_PORT=5432
+# DJANGO_DEVELOPMENT=False
+
+# 4. Aplicar migraciones
+python manage.py migrate
+
+# 5. Restaurar datos
+python manage.py loaddata /root/compueasys_backup_*.json
+```
+
+### Opción B: Usando pg_restore (si tienes dump SQL)
+
+```bash
+# Si tienes archivo .sql
+psql -h localhost -U compueasys_user -d compueasys_db -f backup.sql
+
+# Si tienes archivo .dump
+pg_restore -h localhost -U compueasys_user -d compueasys_db backup.dump
+```
+
+---
+
+## 📁 Paso 3: Migrar Imágenes
+
+### 3.1 Copiar imágenes al servidor
+
+```bash
+# Desde tu máquina local, copiar media_backup al servidor
+scp -r media_backup/ root@tu-servidor:/var/www/compueasys/media/
+
+# O usar rsync (más eficiente)
+rsync -avz --progress media_backup/ root@tu-servidor:/var/www/compueasys/media/
+```
+
+### 3.2 Configurar permisos
+
+```bash
+# En el servidor Contabo
+sudo chown -R www-data:www-data /var/www/compueasys/media/
+sudo chmod -R 755 /var/www/compueasys/media/
+```
+
+---
+
+## ⚙️ Paso 4: Configurar Django en Contabo
+
+### 4.1 Actualizar settings.py
+
+```python
+# En producción (Contabo), asegurar:
+DEBUG = False
+ALLOWED_HOSTS = ['tu-dominio.com', 'tu-ip-contabo']
+
+# Base de datos
+DATABASES = {{
+    'default': {{
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv('DB_NAME'),
+        'USER': os.getenv('DB_USERNAME'),
+        'PASSWORD': os.getenv('DB_PASSWORD'),
+        'HOST': os.getenv('DB_HOST', 'localhost'),
+        'PORT': os.getenv('DB_PORT', '5432'),
+    }}
+}}
+
+# Archivos estáticos
+STATIC_ROOT = '/var/www/compueasys/staticfiles/'
+MEDIA_ROOT = '/var/www/compueasys/media/'
+MEDIA_URL = '/media/'
+```
+
+### 4.2 Recolectar archivos estáticos
+
+```bash
+python manage.py collectstatic --noinput
+```
+
+---
+
+## 🌐 Paso 5: Configurar Servidor Web (Nginx)
+
+### 5.1 Configuración Nginx
+
+Crear `/etc/nginx/sites-available/compueasys`:
+
+```nginx
+server {{
+    listen 80;
+    server_name tu-dominio.com www.tu-dominio.com;
+
+    # Archivos estáticos
+    location /static/ {{
+        alias /var/www/compueasys/staticfiles/;
+        expires 30d;
+    }}
+
+    # Archivos media
+    location /media/ {{
+        alias /var/www/compueasys/media/;
+        expires 30d;
+    }}
+
+    # Django app (Gunicorn)
+    location / {{
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }}
+}}
+```
+
+### 5.2 Activar sitio
+
+```bash
+sudo ln -s /etc/nginx/sites-available/compueasys /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl restart nginx
+```
+
+---
+
+## 🚀 Paso 6: Configurar Gunicorn
+
+### 6.1 Instalar Gunicorn
+
+```bash
+pip install gunicorn
+```
+
+### 6.2 Crear servicio systemd
+
+Crear `/etc/systemd/system/compueasys.service`:
+
+```ini
+[Unit]
+Description=CompuEasys Django Application
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/compueasys
+Environment="PATH=/var/www/compueasys/venv/bin"
+ExecStart=/var/www/compueasys/venv/bin/gunicorn \\
+    --workers 3 \\
+    --bind 127.0.0.1:8000 \\
+    AppCompueasys.wsgi:application
+
+[Install]
+WantedBy=multi-user.target
+```
+
+### 6.3 Iniciar servicio
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl start compueasys
+sudo systemctl enable compueasys
+sudo systemctl status compueasys
+```
+
+---
+
+## 🔒 Paso 7: Configurar SSL (Certbot)
+
+```bash
+# Instalar Certbot
+sudo apt install certbot python3-certbot-nginx
+
+# Obtener certificado
+sudo certbot --nginx -d tu-dominio.com -d www.tu-dominio.com
+
+# Auto-renovación (ya configurado)
+sudo certbot renew --dry-run
+```
+
+---
+
+## ✅ Paso 8: Verificación Post-Migración
+
+### 8.1 Verificar base de datos
+
+```bash
+python manage.py shell
+>>> from core.models import ProductStore
+>>> ProductStore.objects.count()  # Debe mostrar 71
+>>> from core.models import StoreVisit
+>>> StoreVisit.objects.count()  # Debe mostrar ~4,698
+```
+
+### 8.2 Verificar imágenes
+
+```bash
+# Contar archivos de imagen
+find /var/www/compueasys/media/images -type f | wc -l  # ~71 productos
+find /var/www/compueasys/media/galeria -type f | wc -l  # ~258 galerías
+find /var/www/compueasys/media/variant_images -type f | wc -l  # ~25 variantes
+```
+
+### 8.3 Probar sitio web
+
+1. Abrir navegador: `https://tu-dominio.com`
+2. Verificar que las imágenes cargan correctamente
+3. Probar funcionalidades principales:
+   - Ver productos
+   - Agregar al carrito
+   - Checkout
+   - Dashboard admin
+
+---
+
+## 🔄 Paso 9: Configurar Backups Automáticos en Contabo
+
+### 9.1 Script de backup automático
+
+Crear `/root/scripts/backup_compueasys.sh`:
+
+```bash
+#!/bin/bash
+
+BACKUP_DIR="/root/backups/compueasys"
+TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+
+# Crear directorio
+mkdir -p $BACKUP_DIR
+
+# Backup base de datos
+pg_dump -U compueasys_user compueasys_db > $BACKUP_DIR/db_$TIMESTAMP.sql
+
+# Backup media files (opcional - puede ser grande)
+# tar -czf $BACKUP_DIR/media_$TIMESTAMP.tar.gz /var/www/compueasys/media/
+
+# Mantener solo últimos 7 días
+find $BACKUP_DIR -name "db_*.sql" -mtime +7 -delete
+
+echo "Backup completado: $TIMESTAMP"
+```
+
+### 9.2 Configurar cron
+
+```bash
+# Editar crontab
+crontab -e
+
+# Agregar backup diario a las 2 AM
+0 2 * * * /root/scripts/backup_compueasys.sh >> /var/log/backup_compueasys.log 2>&1
+```
+
+---
+
+## 📊 Checklist de Migración
+
+- [ ] Base de datos PostgreSQL creada en Contabo
+- [ ] Usuario y permisos configurados
+- [ ] Backup restaurado (8,801 registros)
+- [ ] Imágenes copiadas al servidor (354 archivos)
+- [ ] Variables de entorno configuradas
+- [ ] Migraciones aplicadas
+- [ ] Archivos estáticos recolectados
+- [ ] Nginx configurado y funcionando
+- [ ] Gunicorn configurado como servicio
+- [ ] SSL/HTTPS configurado
+- [ ] Sitio web funcionando correctamente
+- [ ] Backups automáticos configurados
+- [ ] DNS apuntando al nuevo servidor
+
+---
+
+## 🆘 Troubleshooting
+
+### Error: "FATAL: password authentication failed"
+```bash
+# Verificar pg_hba.conf
+sudo nano /etc/postgresql/[version]/main/pg_hba.conf
+# Asegurar línea: host all all 0.0.0.0/0 md5
+sudo systemctl restart postgresql
+```
+
+### Error: "Permission denied" en media files
+```bash
+sudo chown -R www-data:www-data /var/www/compueasys/media/
+sudo chmod -R 755 /var/www/compueasys/media/
+```
+
+### Error: "502 Bad Gateway" en Nginx
+```bash
+# Verificar que Gunicorn está corriendo
+sudo systemctl status compueasys
+# Ver logs
+sudo journalctl -u compueasys -f
+```
+
+---
+
+## 📞 Información de Contacto
+
+**Proyecto:** CompuEasys  
+**Fecha de migración:** {datetime.now().strftime('%Y-%m-%d')}  
+**Generado por:** Sistema de migración automática
+
+---
+
+**Nota:** Esta guía fue generada automáticamente. Ajusta los valores según tu configuración específica de Contabo.
+"""
+    
+    with open(guide_file, 'w', encoding='utf-8') as f:
+        f.write(content)
+    
+    return guide_file
+
+def create_env_template_contabo():
+    """Crear template de .env para Contabo"""
+    
+    env_file = os.path.join(BASE_DIR, 'env_contabo_template.txt')
+    
+    content = """# Configuración de Variables de Entorno para Contabo
+# Copia este archivo como .env en tu servidor Contabo
+
+# Django
+SECRET_KEY=genera-una-clave-secreta-nueva-aqui-usar-python-secrets
+DEBUG=False
+DJANGO_DEVELOPMENT=False
+
+# Allowed Hosts
+ALLOWED_HOSTS=tu-dominio.com,www.tu-dominio.com,tu-ip-contabo
+
+# Base de Datos PostgreSQL
+DB_NAME=compueasys_db
+DB_USERNAME=compueasys_user
+DB_PASSWORD=tu_password_seguro_aqui
+DB_HOST=localhost
+DB_PORT=5432
+
+# Email Configuration
+EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USE_TLS=True
+EMAIL_HOST_USER=tu-email@gmail.com
+EMAIL_HOST_PASSWORD=tu-app-password-gmail
+
+# WhatsApp (opcional)
+WHATSAPP_API_KEY=tu-api-key
+WHATSAPP_PHONE_ID=tu-phone-id
+
+# Wompi (opcional)
+WOMPI_PUBLIC_KEY=tu-public-key-produccion
+WOMPI_PRIVATE_KEY=tu-private-key-produccion
+WOMPI_EVENT_SECRET=tu-event-secret
+
+# Seguridad
+SECURE_SSL_REDIRECT=True
+SESSION_COOKIE_SECURE=True
+CSRF_COOKIE_SECURE=True
+SECURE_BROWSER_XSS_FILTER=True
+X_FRAME_OPTIONS=DENY
+
+# Para generar SECRET_KEY, usa en Python:
+# python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
+"""
+    
+    with open(env_file, 'w', encoding='utf-8') as f:
+        f.write(content)
+    
+    return env_file
+
+def create_deployment_script():
+    """Crear script de deployment para Contabo"""
+    
+    script_file = os.path.join(BASE_DIR, 'deploy_to_contabo.sh')
+    
+    content = """#!/bin/bash
+# Script de deployment para Contabo
+# Ejecutar en el servidor Contabo
+
+set -e  # Salir si hay errores
+
+echo "=================================="
+echo "DEPLOYMENT COMPUEASYS - CONTABO"
+echo "=================================="
+echo ""
+
+# Variables
+APP_DIR="/var/www/compueasys"
+VENV_DIR="$APP_DIR/venv"
+BACKUP_DIR="/root/backups/pre-deployment"
+
+# Colores
+GREEN='\\033[0;32m'
+RED='\\033[0;31m'
+NC='\\033[0m' # No Color
+
+echo "1. Creando backup pre-deployment..."
+mkdir -p $BACKUP_DIR
+TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+pg_dump -U compueasys_user compueasys_db > $BACKUP_DIR/pre_deploy_$TIMESTAMP.sql
+echo -e "${GREEN}✅ Backup creado${NC}"
+echo ""
+
+echo "2. Activando entorno virtual..."
+source $VENV_DIR/bin/activate
+echo -e "${GREEN}✅ Entorno activado${NC}"
+echo ""
+
+echo "3. Instalando dependencias..."
+pip install -r $APP_DIR/requirements.txt --quiet
+echo -e "${GREEN}✅ Dependencias instaladas${NC}"
+echo ""
+
+echo "4. Aplicando migraciones..."
+cd $APP_DIR
+python manage.py migrate --noinput
+echo -e "${GREEN}✅ Migraciones aplicadas${NC}"
+echo ""
+
+echo "5. Recolectando archivos estáticos..."
+python manage.py collectstatic --noinput
+echo -e "${GREEN}✅ Archivos estáticos recolectados${NC}"
+echo ""
+
+echo "6. Reiniciando servicios..."
+sudo systemctl restart compueasys
+sudo systemctl restart nginx
+echo -e "${GREEN}✅ Servicios reiniciados${NC}"
+echo ""
+
+echo "7. Verificando estado..."
+sleep 2
+if systemctl is-active --quiet compueasys; then
+    echo -e "${GREEN}✅ CompuEasys está corriendo${NC}"
+else
+    echo -e "${RED}❌ Error: CompuEasys no está corriendo${NC}"
+    sudo journalctl -u compueasys -n 50
+    exit 1
+fi
+
+if systemctl is-active --quiet nginx; then
+    echo -e "${GREEN}✅ Nginx está corriendo${NC}"
+else
+    echo -e "${RED}❌ Error: Nginx no está corriendo${NC}"
+    exit 1
+fi
+
+echo ""
+echo "=================================="
+echo -e "${GREEN}✅ DEPLOYMENT COMPLETADO${NC}"
+echo "=================================="
+echo ""
+echo "Verifica el sitio: https://tu-dominio.com"
+"""
+    
+    with open(script_file, 'w', encoding='utf-8', newline='\n') as f:
+        f.write(content)
+    
+    # Hacer ejecutable
+    os.chmod(script_file, 0o755)
+    
+    return script_file
+
+def main():
+    print()
+    print("=" * 80)
+    print("🚀 PREPARACIÓN DE MIGRACIÓN A CONTABO")
+    print("=" * 80)
+    print()
+    
+    print("📝 Generando archivos de migración...")
+    print()
+    
+    # Crear guía de migración
+    guide_file = create_contabo_migration_guide()
+    print(f"✅ Guía de migración: {os.path.basename(guide_file)}")
+    
+    # Crear template de .env
+    env_file = create_env_template_contabo()
+    print(f"✅ Template .env: {os.path.basename(env_file)}")
+    
+    # Crear script de deployment
+    deploy_script = create_deployment_script()
+    print(f"✅ Script de deployment: {os.path.basename(deploy_script)}")
+    
+    print()
+    print("=" * 80)
+    print("✅ ARCHIVOS DE MIGRACIÓN GENERADOS")
+    print("=" * 80)
+    print()
+    print("📁 Archivos creados:")
+    print(f"   1. {os.path.basename(guide_file)}")
+    print(f"   2. {os.path.basename(env_file)}")
+    print(f"   3. {os.path.basename(deploy_script)}")
+    print()
+    print("📖 Siguiente paso:")
+    print(f"   Abre y lee: {os.path.basename(guide_file)}")
+    print()
+    print("=" * 80)
+
+if __name__ == "__main__":
+    try:
+        main()
+    except Exception as e:
+        print(f"\n❌ Error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+    
+    input("\nPresiona Enter para salir...")

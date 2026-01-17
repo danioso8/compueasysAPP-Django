@@ -1,0 +1,72 @@
+[
+{
+  "model": "dashboard.wompiconfig",
+  "pk": 1,
+  "fields": {
+    "nombre": "Configuración Wompi",
+    "public_key": "pub_prod_DMT4tAPNSvnvuHiVmwjIoyVwaam8N3k7",
+    "private_key": "prv_prod_1X63CjcbCvba86WpWJOuXiqJnKvtMgeT",
+    "integrity_secret": "prod_integrity_YW2t43XJOhLUAOONX5u6U8AO5sEosmTT",
+    "environment": "production",
+    "base_url": "https://production.wompi.co/v1",
+    "is_active": true,
+    "created_at": "2025-11-24T19:24:33.017Z",
+    "updated_at": "2025-11-28T21:34:43.873Z"
+  }
+},
+{
+  "model": "dashboard.storeconfig",
+  "pk": 1,
+  "fields": {
+    "nombre_tienda": "CompuEasys",
+    "slogan": "None",
+    "email_tienda": "compueasys@gmail.com",
+    "telefono_tienda": "+573007915262",
+    "direccion_tienda": "Calle 47A · 100-34",
+    "ciudad_tienda": "MEDELLIN",
+    "pais_tienda": "Colombia",
+    "facebook": null,
+    "instagram": null,
+    "twitter": null,
+    "whatsapp": "+57 3007915262",
+    "horario_semana": "8:00 AM - 6:00 PM",
+    "horario_sabado": "9:00 AM - 2:00 PM",
+    "horario_domingo": "Cerrado",
+    "logo": "",
+    "created_at": "2025-11-29T14:26:28.771Z",
+    "updated_at": "2025-11-29T14:31:51.537Z"
+  }
+},
+{
+  "model": "dashboard.register_superuser",
+  "pk": 2,
+  "fields": {
+    "username": "DARWINALRUVE02",
+    "email": "darwinjosealtuve@gmail.com",
+    "password": "02011988",
+    "phone": "3154364011",
+    "address": "",
+    "is_superuser": false,
+    "is_staff": true,
+    "is_active": true,
+    "created_at": "2025-10-18T17:31:35.865Z",
+    "updated_at": "2025-11-21T13:33:33.490Z"
+  }
+},
+{
+  "model": "dashboard.register_superuser",
+  "pk": 1,
+  "fields": {
+    "username": "danioso8",
+    "email": "danioso8@hotmail.com",
+    "password": "Miesposa1",
+    "phone": "3007915262",
+    "address": "",
+    "is_superuser": true,
+    "is_staff": false,
+    "is_active": true,
+    "created_at": "2025-10-12T00:21:54.874Z",
+    "updated_at": "2025-11-21T13:33:46.925Z"
+  }
+}
+]

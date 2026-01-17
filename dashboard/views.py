@@ -32,7 +32,7 @@ def wompi_config_view(request):
 
     return render(request, 'dashboard/wompi_config.html', {'config': config})
 from django.contrib.auth.decorators import login_required, permission_required
-from core.models import ProductStore, Pedido, SimpleUser, Category, Type, proveedor, Galeria, ProductVariant, PedidoDetalle, BonoDescuento, Conversation, ConversationMessage
+from core.models import ProductStore, Pedido, SimpleUser, Category, Type, proveedor, Galeria, ProductVariant, PedidoDetalle, BonoDescuento, Conversation, ConversationMessage, StockNotification
 from django.contrib.auth.models import User
 from dashboard.models import register_superuser
 from django.db.models.signals import post_delete
@@ -41,6 +41,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from django.db.models import Sum, Count, Q, F
 from datetime import datetime, timedelta
+from django.utils import timezone
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from functools import wraps
 from django.shortcuts import redirect, render, get_object_or_404
@@ -1011,6 +1012,61 @@ def dashboard_home(request):
             'today_messages': today_messages,
             'active_conversations': active_conversations,
         }
+    
+    # Vista de Notificaciones de Stock
+    stock_notifications = []
+    stock_notifications_count = 0
+    stock_notifications_stats = {}
+    
+    if view_param == 'notificaciones_stock':
+        # Obtener notificaciones con paginación
+        stock_notifications_queryset = StockNotification.objects.select_related(
+            'product', 'user'
+        ).order_by('-created_at')
+        
+        # Filtros
+        status_filter = request.GET.get('status_filter', '')
+        notification_type_filter = request.GET.get('type_filter', '')
+        
+        if status_filter:
+            stock_notifications_queryset = stock_notifications_queryset.filter(status=status_filter)
+        
+        if notification_type_filter:
+            stock_notifications_queryset = stock_notifications_queryset.filter(notification_type=notification_type_filter)
+        
+        # Paginación
+        stock_notifications_paginator = Paginator(stock_notifications_queryset, 20)
+        stock_notifications_page_number = request.GET.get('page', 1)
+        
+        try:
+            stock_notifications_page = stock_notifications_paginator.page(stock_notifications_page_number)
+        except PageNotAnInteger:
+            stock_notifications_page = stock_notifications_paginator.page(1)
+        except EmptyPage:
+            stock_notifications_page = stock_notifications_paginator.page(stock_notifications_paginator.num_pages)
+        
+        stock_notifications = stock_notifications_page.object_list
+        
+        # Estadísticas
+        total_notifications = StockNotification.objects.count()
+        pending_notifications = StockNotification.objects.filter(status='pending').count()
+        sent_notifications = StockNotification.objects.filter(status='sent').count()
+        
+        # Notificaciones de hoy
+        today = datetime.now().date()
+        today_notifications = StockNotification.objects.filter(
+            created_at__date=today
+        ).count()
+        
+        stock_notifications_stats = {
+            'total': total_notifications,
+            'pending': pending_notifications,
+            'sent': sent_notifications,
+            'today': today_notifications,
+        }
+    else:
+        # Contar notificaciones pendientes para el badge en sidebar
+        stock_notifications_count = StockNotification.objects.filter(status='pending').count()
 
 # ...existing code...
     return render(request, 'dashboard/dashboard_home.html', {
@@ -1061,6 +1117,10 @@ def dashboard_home(request):
         'config': config,
         'whatsapp_config': whatsapp_config,
         'store_config': store_config,
+        'stock_notifications': stock_notifications,
+        'stock_notifications_page': stock_notifications_page if view_param == 'notificaciones_stock' else None,
+        'stock_notifications_count': stock_notifications_count,
+        'stock_notifications_stats': stock_notifications_stats,
 
     })
 # ...existing code...
@@ -2970,3 +3030,62 @@ def ventas_por_periodo(request):
         },
         'timestamp': now.strftime('%Y-%m-%d %H:%M:%S')
     })
+
+
+# ========================================
+# VISTAS PARA NOTIFICACIONES DE STOCK
+# ========================================
+
+@superuser_required
+@csrf_exempt
+def notification_mark_sent(request, notification_id):
+    """Marca una notificación como enviada"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
+    
+    try:
+        notification = get_object_or_404(StockNotification, id=notification_id)
+        notification.status = 'sent'
+        notification.sent_at = timezone.now()
+        notification.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Notificación marcada como enviada'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+
+@superuser_required
+def notification_details(request, notification_id):
+    """Obtiene los detalles de una notificación"""
+    try:
+        notification = get_object_or_404(StockNotification, id=notification_id)
+        
+        return JsonResponse({
+            'success': True,
+            'notification': {
+                'id': notification.id,
+                'email': notification.email,
+                'product_name': notification.product.name,
+                'product_price': str(notification.product.price),
+                'notification_type': notification.notification_type,
+                'notification_type_display': notification.get_notification_type_display(),
+                'status': notification.status,
+                'status_display': notification.get_status_display(),
+                'created_at': notification.created_at.strftime('%d/%m/%Y %H:%M'),
+                'sent_at': notification.sent_at.strftime('%d/%m/%Y %H:%M') if notification.sent_at else None,
+                'target_price': str(notification.target_price) if notification.target_price else None,
+                'notify_price_drop': notification.notify_price_drop,
+                'notify_low_stock': notification.notify_low_stock,
+            }
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)

@@ -1,0 +1,33 @@
+================================================================================
+REPORTE DE DESCARGA DE IMÁGENES - COMPUEASYS
+================================================================================
+
+Fecha: 2026-01-15 10:41:13
+Origen: https://compueasys.onrender.com/media/
+
+RESUMEN DE DESCARGA:
+--------------------------------------------------------------------------------
+Productos descargados: 33
+Productos fallidos: 38
+Galerías descargadas: 175
+Galerías fallidas: 78
+Variantes descargadas: 8
+Variantes fallidas: 17
+
+Total exitoso: 216
+Total fallido: 133
+
+UBICACIONES DE DESCARGA:
+--------------------------------------------------------------------------------
+products: D:\ESCRITORIO\CompueasysApp\media_files\images (38 archivos)
+gallery: D:\ESCRITORIO\CompueasysApp\media_files\galeria (175 archivos)
+variants: D:\ESCRITORIO\CompueasysApp\media_files\variant_images (8 archivos)
+upload: D:\ESCRITORIO\CompueasysApp\media_files\upload (2 archivos)
+
+Total de archivos descargados: 223
+Tamaño total: 138.55 MB
+
+================================================================================
+SIGUIENTE PASO: Subir a Contabo
+Comando: upload_to_contabo.bat
+================================================================================

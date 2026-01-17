@@ -15,10 +15,20 @@ load_dotenv(os.path.join(BASE_DIR, '.env'))
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-5ykh0i3xxbu298h!xo-bh#k+97m!f=qb_7rt3x@zhhji$-pfb%')
 DEBUG = True
 
-ALLOWED_HOSTS = ['.onrender.com', 'localhost', '127.0.0.1']
+# ALLOWED_HOSTS configuration
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '.onrender.com,localhost,127.0.0.1').split(',')
 render_external_host = os.getenv('RENDER_EXTERNAL_HOSTNAME')
-if render_external_host:
+if render_external_host and render_external_host not in ALLOWED_HOSTS:
     ALLOWED_HOSTS.append(render_external_host)
+
+# CSRF Trusted Origins for production
+CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS', 'http://localhost:8000').split(',')
+
+# Security settings for HTTPS (when SSL is configured)
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SECURE_SSL_REDIRECT = False  # Nginx handles redirection
+SESSION_COOKIE_SECURE = False  # Set to True when SSL is active
+CSRF_COOKIE_SECURE = False  # Set to True when SSL is active
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -163,24 +173,23 @@ CONTACT_EMAIL = os.getenv('CONTACT_EMAIL', EMAIL_HOST_USER)
 EMAIL_TIMEOUT = 30  # Timeout en segundos
 
 # Base URL para enlaces en emails
-# En producción usa la URL de Render, en desarrollo usa localhost
+# En producción usa la URL del dominio, en desarrollo usa localhost
 if os.getenv('DJANGO_DEVELOPMENT') == 'True':
     BASE_URL = 'http://127.0.0.1:8000'
 else:
-    BASE_URL = os.getenv('BASE_URL', 'https://compueasys.onrender.com')
+    BASE_URL = os.getenv('BASE_URL', 'http://compueasys.com')
 
 # ====== MEDIA FILES CONFIGURATION ======
 # Configuración para archivos media (imágenes, videos, etc.)
 
-# Configuración para disco persistente de Render
+# Configuración para archivos media locales
 if os.getenv('DJANGO_DEVELOPMENT') == 'True':
     # Desarrollo local
     if USE_PRODUCTION_DB:
-        # Cargar imágenes desde el servidor de producción (Render)
-        # Esto crea URLs absolutas: https://compueasys.onrender.com/media/...
-        MEDIA_URL = 'https://compueasys.onrender.com/media/'
-        MEDIA_ROOT = os.path.join(BASE_DIR, 'media_files')  # Local (para uploads en dev)
-        print("🌐 DESARROLLO: Cargando imágenes desde Render (producción)")
+        # Cargar imágenes locales (ya migradas de Render)
+        MEDIA_URL = '/media/'
+        MEDIA_ROOT = os.path.join(BASE_DIR, 'media_files')
+        print("🌐 DESARROLLO: Usando imágenes locales (migradas de Render)")
         print(f"📸 MEDIA_URL: {MEDIA_URL}")
     else:
         # Desarrollo puro con DB local
@@ -188,9 +197,9 @@ if os.getenv('DJANGO_DEVELOPMENT') == 'True':
         MEDIA_ROOT = os.path.join(BASE_DIR, 'media_files')
         print("🔧 DESARROLLO: Usando imágenes locales")
 else:
-    # Producción en Render con disco persistente
+    # Producción en Contabo con archivos locales
     MEDIA_URL = '/media/'
-    MEDIA_ROOT = os.getenv('MEDIA_ROOT', '/opt/render/project/media')
+    MEDIA_ROOT = os.getenv('MEDIA_ROOT', '/var/www/CompuEasysApp/media_files')
     print(f"🚀 PRODUCCIÓN: MEDIA_ROOT = {MEDIA_ROOT}")
     
     # Crear directorio si no existe

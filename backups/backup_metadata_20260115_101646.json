@@ -1,0 +1,83 @@
+{
+  "backup_date": "2026-01-15T10:18:05.049726",
+  "timestamp": "20260115_101646",
+  "database": {
+    "name": "compueasys",
+    "host": "dpg-d3jf1ut6ubrc73cpji70-a.oregon-postgres.render.com",
+    "engine": "django.db.backends.postgresql"
+  },
+  "statistics": {
+    "admin": {
+      "logentry": 0
+    },
+    "auth": {
+      "permission": 232,
+      "group": 0,
+      "user": 7
+    },
+    "contenttypes": {
+      "contenttype": 58
+    },
+    "sessions": {
+      "session": 3155
+    },
+    "core": {
+      "tenant": 0,
+      "storevisit": 4698,
+      "category": 15,
+      "type": 2,
+      "proveedor": 10,
+      "productstore": 71,
+      "productvariant": 25,
+      "galeria": 258,
+      "simpleuser": 5,
+      "pedido": 90,
+      "pedidodetalle": 110,
+      "bonodescuento": 0,
+      "verificationtoken": 0,
+      "conversation": 7,
+      "conversationmessage": 14,
+      "stocknotification": 4,
+      "notificationlog": 5,
+      "project": 0,
+      "whatsappconfig": 1
+    },
+    "contable": {
+      "contableuser": 2,
+      "plan": 3,
+      "company": 2,
+      "userprofile": 2,
+      "companymembership": 2,
+      "auditlog": 19,
+      "accountingperiod": 0,
+      "chartofaccounts": 0,
+      "journalentry": 0,
+      "journalentryline": 0,
+      "customer": 0,
+      "supplier": 0,
+      "product": 0,
+      "inventorymovement": 0,
+      "invoice": 0,
+      "invoiceline": 0,
+      "payment": 0,
+      "purchaseorder": 0,
+      "purchaseorderline": 0,
+      "employee": 0,
+      "payroll": 0,
+      "payrollline": 0,
+      "fixedasset": 0,
+      "depreciation": 0,
+      "taxrate": 0,
+      "bankaccount": 0,
+      "categoriacontable": 0,
+      "productcontsble": 0
+    },
+    "dashboard": {
+      "storeinfo": 0,
+      "wompiconfig": 1,
+      "storeconfig": 1,
+      "register_superuser": 2
+    }
+  },
+  "files": []
+}
