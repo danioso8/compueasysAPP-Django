@@ -801,9 +801,11 @@
       // Manejar clics en botones de notificación de stock
       document.addEventListener('click', (e) => {
         if (e.target.closest('.btn-notify-stock')) {
+          console.log('🔔 Click detectado en botón de notificación');
           e.preventDefault();
           const button = e.target.closest('.btn-notify-stock');
           const productId = button.dataset.productId || button.dataset.product;
+          console.log('📦 Product ID:', productId);
           this.handleStockNotification(productId);
         }
       });
@@ -1205,18 +1207,34 @@
 
       console.log('🔔 Handling stock notification for product:', productId);
 
-      // Crear y mostrar modal de notificación
-      const modal = this.createNotificationModal(productId);
-      document.body.appendChild(modal);
+      // Verificar que Bootstrap esté disponible
+      if (typeof bootstrap === 'undefined') {
+        console.error('❌ Bootstrap no está cargado');
+        Utils.showToast('Error: Bootstrap no está disponible', 'error');
+        return;
+      }
 
-      // Mostrar modal
-      const bsModal = new bootstrap.Modal(modal);
-      bsModal.show();
+      try {
+        // Crear y mostrar modal de notificación
+        const modal = this.createNotificationModal(productId);
+        document.body.appendChild(modal);
 
-      // Limpiar modal cuando se cierre
-      modal.addEventListener('hidden.bs.modal', () => {
-        document.body.removeChild(modal);
-      });
+        console.log('✅ Modal creado y agregado al DOM');
+
+        // Mostrar modal
+        const bsModal = new bootstrap.Modal(modal);
+        bsModal.show();
+
+        console.log('✅ Modal mostrado');
+
+        // Limpiar modal cuando se cierre
+        modal.addEventListener('hidden.bs.modal', () => {
+          document.body.removeChild(modal);
+        });
+      } catch (error) {
+        console.error('❌ Error al crear/mostrar modal:', error);
+        Utils.showToast('Error al abrir el modal de notificación', 'error');
+      }
     },
 
     // Crear modal para registrar notificación
