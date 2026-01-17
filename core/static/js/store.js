@@ -1242,6 +1242,12 @@
       const modal = document.createElement('div');
       modal.className = 'modal fade';
       modal.id = 'stockNotificationModal';
+      
+      // Verificar si el usuario está autenticado
+      const isAuthenticated = window.userData && window.userData.isAuthenticated;
+      const userEmail = window.userData && window.userData.email;
+      const userName = window.userData && window.userData.name || userEmail;
+      
       modal.innerHTML = `
         <div class="modal-dialog modal-lg">
           <div class="modal-content">
@@ -1254,10 +1260,13 @@
             <div class="modal-body">
               <div class="alert alert-info">
                 <i class="bi bi-info-circle"></i>
-                Te enviaremos un email cuando este producto esté disponible nuevamente.
+                ${isAuthenticated 
+                  ? `Hola <strong>${userName}</strong>, te enviaremos un email a <strong>${userEmail}</strong> cuando este producto esté disponible.`
+                  : 'Te enviaremos un email cuando este producto esté disponible nuevamente.'}
               </div>
               
               <form id="notificationForm">
+                ${!isAuthenticated ? `
                 <div class="mb-3">
                   <label for="email" class="form-label">
                     <i class="bi bi-envelope"></i> Email de notificación
@@ -1268,6 +1277,9 @@
                     Recibirás notificaciones en este email
                   </div>
                 </div>
+                ` : `
+                <input type="hidden" id="email" value="${userEmail}">
+                `}
                 
                 <div class="notification-options">
                   <h6><i class="bi bi-gear"></i> Opciones adicionales</h6>
@@ -1346,7 +1358,8 @@
 
     // Enviar registro de notificación
     async submitNotification(modal, productId) {
-      const email = modal.querySelector('#email').value.trim();
+      const emailInput = modal.querySelector('#email');
+      const email = emailInput ? emailInput.value.trim() : '';
       const notifyPriceDrop = modal.querySelector('#notifyPriceDrop').checked;
       const targetPrice = modal.querySelector('#targetPrice').value;
       const notifyLowStock = modal.querySelector('#notifyLowStock').checked;
