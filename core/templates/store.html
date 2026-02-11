@@ -36,6 +36,51 @@
             -webkit-box-orient: vertical;
             overflow: hidden;
         }
+        
+        /* Móvil: Imágenes ocupan ~95% de la pantalla */
+        @media (max-width: 768px) {
+            /* Eliminar padding lateral del contenedor principal */
+            .flex-1.min-w-0 {
+                padding-left: 0 !important;
+                padding-right: 0 !important;
+            }
+            
+            /* Reducir padding del contenedor de productos */
+            #products-container {
+                padding-left: 0.25rem !important;
+                padding-right: 0.25rem !important;
+            }
+            
+            /* Gap casi cero y columnas aprovechando todo el ancho */
+            #products-container .grid.grid-cols-2 {
+                gap: 0.05rem !important;
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            }
+            
+            /* Los productos ocupan todo el ancho disponible */
+            #products-container .grid.grid-cols-2 > article {
+                width: 100% !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            
+            /* Imagen ocupa todo el espacio disponible, sin padding */
+            #products-container .grid.grid-cols-2 .aspect-square {
+                padding: 0 !important;
+            }
+            
+            #products-container .grid.grid-cols-2 .aspect-square img {
+                padding: 0 !important;
+                width: 100% !important;
+                height: 100% !important;
+                object-fit: contain !important;
+            }
+            
+            /* Reducir padding del contenido del card */
+            #products-container .grid.grid-cols-2 > article > div:last-child {
+                padding: 0.5rem !important;
+            }
+        }
     </style>
     
     <!-- Preload crítico -->
@@ -83,8 +128,8 @@
          <i class="fab fa-whatsapp"></i>
     </a>
     
-    <!-- Floating Cart Button - Modern (arriba a la derecha) -->
-    <button class="cart-float-modern cart-float-top" title="Ver carrito" onclick="toggleCartSidebar()" style="position: fixed !important; right: 30px !important; top: 20px !important; z-index: 9998 !important; width: 65px !important; height: 65px !important; display: flex !important; align-items: center !important; justify-content: center !important; border-radius: 50% !important; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; color: white !important; font-size: 30px !important; border: none !important; cursor: pointer !important; box-shadow: 0 8px 32px rgba(0,0,0,0.16) !important; transition: all 0.3s ease !important;">
+    <!-- Floating Cart Button - Modern (derecha arriba con icono más grande) -->
+    <button class="cart-float-modern cart-float-top" title="Ver carrito" onclick="toggleCartSidebar()" style="position: fixed !important; right: 20px !important; top: 20px !important; z-index: 9998 !important; width: 65px !important; height: 65px !important; display: flex !important; align-items: center !important; justify-content: center !important; border-radius: 50% !important; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; color: white !important; font-size: 32px !important; border: none !important; cursor: pointer !important; box-shadow: 0 8px 32px rgba(0,0,0,0.16) !important; transition: all 0.3s ease !important;">
         <i class="bi bi-cart-plus-fill"></i>
         <span id="cart-badge-float" class="badge rounded-pill bg-danger pulse-animation" style="position: absolute !important; top: -5px !important; right: -5px !important; z-index: 9999 !important; font-size: 13px !important; font-weight: 700 !important; padding: 5px 8px !important; min-width: 24px !important; display: {% if cart_count > 0 %}block{% else %}none{% endif %} !important;">
             {{ cart_count|default:0 }}
@@ -141,100 +186,84 @@
     <!-- Cart Sidebar Modern -->
     <div id="cart-sidebar-modern" class="cart-sidebar-modern">
         <div class="cart-sidebar-header">
-            <h3>
-                <i class="bi bi-cart3 me-2"></i>
-                Mi Carrito
-                <span id="cart-count-sidebar" class="cart-count-badge">{{ cart_count }}</span>
-            </h3>
-            <div style="display: flex; gap: 0.75rem; align-items: center;">
-                <button class="btn btn-primary" onclick="refreshCartSidebar()" id="refresh-cart-btn" title="Actualizar carrito" style="padding: 0.5rem 1rem; font-size: 1rem; display: flex; align-items: center; gap: 0.5rem; border-radius: 0.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);">
-                    <i class="bi bi-arrow-clockwise" style="font-size: 1.1rem;"></i>
-                    <span style="font-weight: 600;">Actualizar</span>
-                </button>
-                <button class="cart-close-btn" onclick="toggleCartSidebar()">
-                    <i class="bi bi-x-lg"></i>
-                </button>
-            </div>
+            <h3><i class="bi bi-cart3 me-2"></i>Mi Carrito</h3>
+            <button class="btn-close-cart" onclick="toggleCartSidebar()" aria-label="Cerrar carrito">
+                <i class="bi bi-x-lg"></i>
+            </button>
         </div>
-        
-        <!-- Wrapper para actualización dinámica completa -->
-        <div id="cart-sidebar-dynamic-content">
-            <div class="cart-sidebar-content">
-                {% if cart_count > 0 %}
-                    <!-- Items del carrito con productos reales -->
-                    <div id="cart-items-container" class="cart-items-list">
-                    {% for item in cart_items %}
-                    <div class="cart-item-card" data-product-id="{{ item.product.id }}">
-                        <div class="cart-item-image">
-                            {% if item.variant and item.variant.imagen %}
-                                <img src="{{ item.variant.imagen.url }}" alt="{{ item.product.name }}">
-                            {% elif item.product.imagen %}
-                                <img src="{{ item.product.imagen.url }}" alt="{{ item.product.name }}">
-                            {% else %}
-                                <div class="cart-item-no-image">
-                                    <i class="bi bi-image"></i>
-                                </div>
-                            {% endif %}
+
+        <div class="cart-sidebar-body" id="cart-sidebar-dynamic-content">
+            {% if cart_items %}
+            <div class="cart-items-list">
+                {% for item in cart_items %}
+                <div class="cart-item">
+                    <div class="cart-item-image">
+                        {% if item.product.imagen and item.product.imagen.name %}
+                        <img src="{{ item.product.imagen.url }}" alt="{{ item.product.name }}">
+                        {% else %}
+                        <div class="cart-item-placeholder">
+                            <i class="bi bi-image"></i>
                         </div>
-                        <div class="cart-item-details">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <h4 class="cart-item-name mb-0">{{ item.product.name|truncatechars:35 }}</h4>
-                                <button class="btn btn-sm btn-danger btn-remove-item" 
-                                        onclick="removeFromCartSidebar({{ item.product.id }})" 
-                                        title="Eliminar">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </div>
-                            {% if item.variant %}
-                            <p class="cart-item-variant">
-                                <i class="bi bi-palette me-1"></i>{{ item.variant.color }}
-                            </p>
-                            {% endif %}
-                            <div class="cart-item-quantity">
-                                <span class="quantity-label">Cantidad:</span>
-                                <span class="quantity-value">{{ item.quantity }}</span>
-                            </div>
-                            <div class="cart-item-price">
-                                <span class="price-label">Precio:</span>
-                                <span class="price-value">${{ item.price|floatformat:0|intcomma }}</span>
-                            </div>
-                            <div class="cart-item-subtotal">
-                                <span class="subtotal-label">Subtotal:</span>
-                                <span class="subtotal-value">${{ item.subtotal|floatformat:0|intcomma }} COP</span>
-                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="cart-item-details">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h4 class="cart-item-name mb-0">{{ item.product.name|truncatechars:35 }}</h4>
+                            <button class="btn btn-sm btn-danger btn-remove-item" 
+                                    onclick="removeFromCartSidebar({{ item.product.id }})" 
+                                    title="Eliminar">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                        {% if item.variant %}
+                        <p class="cart-item-variant">
+                            <i class="bi bi-palette me-1"></i>{{ item.variant.color }}
+                        </p>
+                        {% endif %}
+                        <div class="cart-item-quantity">
+                            <span class="quantity-label">Cantidad:</span>
+                            <span class="quantity-value">{{ item.quantity }}</span>
+                        </div>
+                        <div class="cart-item-price">
+                            <span class="price-label">Precio:</span>
+                            <span class="price-value">${{ item.price|floatformat:0|intcomma }}</span>
+                        </div>
+                        <div class="cart-item-subtotal">
+                            <span class="subtotal-label">Subtotal:</span>
+                            <span class="subtotal-value">${{ item.subtotal|floatformat:0|intcomma }} COP</span>
                         </div>
                     </div>
-                    {% endfor %}
                 </div>
-            {% else %}
-                <div class="cart-empty-state">
-                    <i class="bi bi-cart-x"></i>
-                    <h4>Tu carrito está vacío</h4>
-                    <p>Agrega productos para empezar a comprar</p>
-                    <a href="/store" class="btn-continue-shopping">
-                        <i class="bi bi-shop me-2"></i>Ir a la tienda
-                    </a>
-                    </div>
-                {% endif %}
+                {% endfor %}
             </div>
-            
-            {% if cart_count > 0 %}
-            <div class="cart-sidebar-footer">
-                <div class="cart-total-section">
-                    <span class="cart-total-label">Total:</span>
-                    <span id="cart-total-amount" class="cart-total-amount">${{ cart_total|floatformat:0|intcomma }} COP</span>
-                </div>
-                <div class="cart-actions">
-                    <a href="/cart" class="btn-view-cart">
-                        <i class="bi bi-eye me-2"></i>Ver carrito completo
-                    </a>
-                    <a href="/checkout" class="btn-checkout-now">
-                        <i class="bi bi-lightning-charge-fill me-2"></i>Finalizar compra
-                    </a>
-                </div>
+            {% else %}
+            <div class="cart-empty-state">
+                <i class="bi bi-cart-x"></i>
+                <h4>Tu carrito está vacío</h4>
+                <p>Agrega productos para empezar a comprar</p>
+                <a href="/store" class="btn-continue-shopping">
+                    <i class="bi bi-shop me-2"></i>Ir a la tienda
+                </a>
             </div>
             {% endif %}
         </div>
+
+        {% if cart_count > 0 %}
+        <div class="cart-sidebar-footer">
+            <div class="cart-total-section">
+                <span class="cart-total-label">Total:</span>
+                <span id="cart-total-amount" class="cart-total-amount">${{ cart_total|floatformat:0|intcomma }} COP</span>
+            </div>
+            <div class="cart-actions">
+                <a href="/cart" class="btn-view-cart">
+                    <i class="bi bi-eye me-2"></i>Ver carrito completo
+                </a>
+                <a href="/checkout" class="btn-checkout-now">
+                    <i class="bi bi-lightning-charge-fill me-2"></i>Finalizar compra
+                </a>
+            </div>
+        </div>
+        {% endif %}
     </div>
     
     <!-- Overlay para cerrar el sidebar -->
@@ -461,7 +490,7 @@
                 </div>
                     
                     <!-- Products Grid -->
-                    <div id="products-container">
+                    <div id="products-container" class="px-1 md:px-0">
                         {% if products %}
                         <!-- Productos agrupados por categoría -->
                         {% for category_name, category_products in products_by_category.items %}
@@ -476,7 +505,7 @@
                                 </h2>
                             </div>
                             
-                            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6" id="products-grid-{{ forloop.counter }}">
+                            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1 md:gap-6" id="products-grid-{{ forloop.counter }}">
                             {% for product in category_products %}
                             <!-- Product Card Moderno con Tailwind -->
                             <article class="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col" 
@@ -1280,5 +1309,404 @@
     `;
     document.head.appendChild(style);
     </script>
+    
+    <!-- Footer Moderno -->
+    <footer class="footer-modern">
+        <div class="container">
+            <div class="row g-4">
+                <!-- Sobre Nosotros -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="footer-section">
+                        <h3 class="footer-title">
+                            <i class="bi bi-shop me-2"></i>CompuEasys
+                        </h3>
+                        <p class="footer-description">
+                            Tu tienda de confianza en tecnología y electrónica. Ofrecemos productos de alta calidad con el mejor servicio al cliente en Colombia.
+                        </p>
+                        <div class="footer-social">
+                            <a href="https://www.facebook.com/compueasys" target="_blank" class="social-link" title="Facebook">
+                                <i class="bi bi-facebook"></i>
+                            </a>
+                            <a href="https://www.instagram.com/compueasys" target="_blank" class="social-link" title="Instagram">
+                                <i class="bi bi-instagram"></i>
+                            </a>
+                            <a href="https://twitter.com/compueasys" target="_blank" class="social-link" title="Twitter">
+                                <i class="bi bi-twitter"></i>
+                            </a>
+                            <a href="https://wa.me/573007915262" target="_blank" class="social-link" title="WhatsApp">
+                                <i class="bi bi-whatsapp"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Contacto -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="footer-section">
+                        <h3 class="footer-title">
+                            <i class="bi bi-telephone-fill me-2"></i>Contacto
+                        </h3>
+                        <ul class="footer-contact-list">
+                            <li class="contact-item">
+                                <i class="bi bi-phone-vibrate-fill"></i>
+                                <div class="contact-info">
+                                    <span class="contact-label">Celular / WhatsApp</span>
+                                    <a href="tel:+573001234567" class="contact-value">+57 300 791 5262</a>
+                                </div>
+                            </li>
+                            <li class="contact-item">
+                                <i class="bi bi-envelope-fill"></i>
+                                <div class="contact-info">
+                                    <span class="contact-label">Email</span>
+                                    <a href="mailto:compueasys@gmail.com" class="contact-value">compueasys@gmail.com</a>
+                                </div>
+                            </li>
+                            <li class="contact-item">
+                                <i class="bi bi-geo-alt-fill"></i>
+                                <div class="contact-info">
+                                    <span class="contact-label">Dirección</span>
+                                    <span class="contact-value">Calle 47A #100-34, Medellin, Colombia</span>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- Horarios y Mapa -->
+                <div class="col-lg-4 col-md-12">
+                    <div class="footer-section">
+                        <h3 class="footer-title">
+                            <i class="bi bi-clock-fill me-2"></i>Horarios de Atención
+                        </h3>
+                        <div class="footer-schedule">
+                            <div class="schedule-item">
+                                <i class="bi bi-calendar-check"></i>
+                                <div class="schedule-info">
+                                    <span class="schedule-days">Lunes - Sábado</span>
+                                    <span class="schedule-hours">9:30 AM - 7:30 PM</span>
+                                </div>
+                            </div>
+                            <div class="schedule-item closed">
+                                <i class="bi bi-calendar-x"></i>
+                                <div class="schedule-info">
+                                    <span class="schedule-days">Domingos</span>
+                                    <span class="schedule-hours">Cerrado</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Ubicación Google Maps -->
+                        <a href="https://maps.google.com/?q=Calle+47A+100-34+Medellin+Colombia" 
+                           target="_blank" 
+                           class="btn-location">
+                            <i class="bi bi-pin-map-fill me-2"></i>Ver en Google Maps
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Footer Bottom -->
+            <div class="footer-bottom">
+                <div class="row align-items-center">
+                    <div class="col-md-6 text-center text-md-start">
+                        <p class="copyright">
+                            &copy; 2026 <strong>CompuEasys</strong>. Todos los derechos reservados.
+                        </p>
+                    </div>
+                    <div class="col-md-6 text-center text-md-end">
+                        <div class="footer-links">
+                            <a href="{% url 'politicas_compras' %}" class="footer-link">Políticas de Compra</a>
+                            <span class="separator">•</span>
+                            <a href="#" class="footer-link">Términos y Condiciones</a>
+                            <span class="separator">•</span>
+                            <a href="#" class="footer-link">Privacidad</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <style>
+    /* Footer Moderno Styles */
+    .footer-modern {
+        background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+        color: #e2e8f0;
+        padding: 60px 0 0;
+        margin-top: 80px;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .footer-modern::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 50%, #667eea 100%);
+        background-size: 200% 100%;
+        animation: gradientShift 3s ease infinite;
+    }
+    
+    @keyframes gradientShift {
+        0%, 100% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+    }
+    
+    .footer-section {
+        margin-bottom: 30px;
+    }
+    
+    .footer-title {
+        color: #ffffff;
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+    }
+    
+    .footer-title i {
+        color: #667eea;
+        font-size: 1.5rem;
+    }
+    
+    .footer-description {
+        color: #cbd5e1;
+        line-height: 1.8;
+        margin-bottom: 1.5rem;
+        font-size: 0.95rem;
+    }
+    
+    .footer-social {
+        display: flex;
+        gap: 12px;
+        margin-top: 20px;
+    }
+    
+    .social-link {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        background: rgba(102, 126, 234, 0.1);
+        border: 2px solid rgba(102, 126, 234, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #667eea;
+        font-size: 1.2rem;
+        transition: all 0.3s ease;
+        text-decoration: none;
+    }
+    
+    .social-link:hover {
+        background: #667eea;
+        color: white;
+        transform: translateY(-3px) scale(1.1);
+        box-shadow: 0 8px 16px rgba(102, 126, 234, 0.4);
+    }
+    
+    .footer-contact-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .contact-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 15px;
+        padding: 15px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .contact-item:last-child {
+        border-bottom: none;
+    }
+    
+    .contact-item i {
+        color: #667eea;
+        font-size: 1.3rem;
+        margin-top: 3px;
+        flex-shrink: 0;
+    }
+    
+    .contact-info {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+    
+    .contact-label {
+        font-size: 0.85rem;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: 600;
+    }
+    
+    .contact-value {
+        color: #e2e8f0;
+        font-size: 1rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+    
+    .contact-value:hover {
+        color: #667eea;
+    }
+    
+    .footer-schedule {
+        margin-bottom: 20px;
+    }
+    
+    .schedule-item {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 15px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        margin-bottom: 12px;
+        border-left: 4px solid #667eea;
+        transition: all 0.3s ease;
+    }
+    
+    .schedule-item:hover {
+        background: rgba(255, 255, 255, 0.08);
+        transform: translateX(5px);
+    }
+    
+    .schedule-item.closed {
+        border-left-color: #ef4444;
+        opacity: 0.7;
+    }
+    
+    .schedule-item i {
+        font-size: 1.5rem;
+        color: #667eea;
+    }
+    
+    .schedule-item.closed i {
+        color: #ef4444;
+    }
+    
+    .schedule-info {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+    }
+    
+    .schedule-days {
+        font-weight: 600;
+        color: #ffffff;
+        font-size: 0.95rem;
+    }
+    
+    .schedule-hours {
+        color: #94a3b8;
+        font-size: 0.9rem;
+    }
+    
+    .btn-location {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 12px 24px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 25px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        width: 100%;
+        margin-top: 10px;
+    }
+    
+    .btn-location:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+        color: white;
+    }
+    
+    .footer-bottom {
+        margin-top: 50px;
+        padding: 25px 0;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(0, 0, 0, 0.2);
+    }
+    
+    .copyright {
+        margin: 0;
+        color: #cbd5e1;
+        font-size: 0.9rem;
+    }
+    
+    .copyright strong {
+        color: #667eea;
+        font-weight: 700;
+    }
+    
+    .footer-links {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    
+    @media (max-width: 767px) {
+        .footer-links {
+            margin-top: 15px;
+        }
+    }
+    
+    .footer-link {
+        color: #cbd5e1;
+        text-decoration: none;
+        font-size: 0.9rem;
+        transition: color 0.3s ease;
+    }
+    
+    .footer-link:hover {
+        color: #667eea;
+    }
+    
+    .separator {
+        color: #64748b;
+    }
+    
+    @media (max-width: 991px) {
+        .footer-modern {
+            padding: 40px 0 0;
+            margin-top: 60px;
+        }
+        
+        .footer-section {
+            margin-bottom: 35px;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .footer-title {
+            font-size: 1.1rem;
+        }
+        
+        .footer-social {
+            justify-content: center;
+        }
+        
+        .social-link {
+            width: 40px;
+            height: 40px;
+            font-size: 1.1rem;
+        }
+    }
+    </style>
 </body>
 </html>

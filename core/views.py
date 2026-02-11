@@ -329,8 +329,8 @@ def store(request):
     sort_by = request.GET.get('sort', 'name')
     page = request.GET.get('page', 1)
 
-    # Base queryset
-    products = Product.objects.all().select_related('category')
+    # Base queryset: prefetch galeria to evitar N+1 y acelerar /store
+    products = Product.objects.all().select_related('category').prefetch_related('galeria')
     categories = Category.objects.all().order_by('nombre')
     
     # Aplicar filtros

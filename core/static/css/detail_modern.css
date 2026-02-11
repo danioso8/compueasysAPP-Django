@@ -1692,4 +1692,26 @@
         padding: 8px;
         object-fit: contain;
     }
+    
+    /* Imágenes de producto al 95% en móvil */
+    .image-slider-modern {
+        width: 95%;
+        margin: 0 auto;
+    }
+    
+    .gallery-thumbnails {
+        width: 95%;
+        margin: 15px auto 0;
+        grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+        gap: 8px;
+    }
+    
+    .main-image-container {
+        padding: 15px;
+    }
+    
+    /* Ocultar botones de navegación en móvil (se usa swipe) */
+    .slider-arrow-modern {
+        display: none !important;
+    }
 }

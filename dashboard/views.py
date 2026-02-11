@@ -162,6 +162,52 @@ def dashboard_home(request):
             
             store_config.save()
             messages.success(request, 'Información de la tienda actualizada correctamente.')
+    
+    # Vista de Mi Perfil - Edición de perfil del usuario actual
+    if view_param == 'mi_perfil':
+        if request.method == 'POST':
+            username = request.POST.get('username', '')
+            email = request.POST.get('email', '')
+            current_password = request.POST.get('current_password', '')
+            new_password = request.POST.get('new_password', '')
+            confirm_password = request.POST.get('confirm_password', '')
+            
+            try:
+                # Actualizar información básica
+                if username:
+                    current_user.username = username
+                    request.session['superuser_username'] = username
+                
+                if email:
+                    current_user.email = email
+                    request.session['superuser_email'] = email
+                
+                # Cambiar contraseña si se proporcionó
+                if current_password and new_password:
+                    # Verificar contraseña actual
+                    if current_user.check_password(current_password):
+                        # Validar que las nuevas contraseñas coincidan
+                        if new_password == confirm_password:
+                            if len(new_password) >= 8:
+                                current_user.set_password(new_password)
+                                messages.success(request, 'Contraseña actualizada correctamente.')
+                            else:
+                                messages.error(request, 'La nueva contraseña debe tener al menos 8 caracteres.')
+                                return redirect(f"{reverse('dashboard_home')}?view=mi_perfil")
+                        else:
+                            messages.error(request, 'Las nuevas contraseñas no coinciden.')
+                            return redirect(f"{reverse('dashboard_home')}?view=mi_perfil")
+                    else:
+                        messages.error(request, 'La contraseña actual es incorrecta.')
+                        return redirect(f"{reverse('dashboard_home')}?view=mi_perfil")
+                
+                current_user.save()
+                messages.success(request, 'Perfil actualizado correctamente.')
+                return redirect(f"{reverse('dashboard_home')}?view=mi_perfil")
+            
+            except Exception as e:
+                messages.error(request, f'Error al actualizar el perfil: {str(e)}')
+                return redirect(f"{reverse('dashboard_home')}?view=mi_perfil")
 
     # Obtener filtros para productos
     categoria_filter = request.GET.get('categoria_filter', '')
@@ -196,6 +242,15 @@ def dashboard_home(request):
 
     # Para compatibilidad con el código existente
     productos = productos_page.object_list
+
+    # Estadísticas de inventario (sobre todos los productos, no solo la página actual)
+    from django.db.models import Sum
+    inventario_stats = productos_queryset.aggregate(
+        total_valor=Sum('price'),
+        total_stock=Sum('stock')
+    )
+    total_valor_inventario = inventario_stats['total_valor'] or 0
+    total_stock_inventario = inventario_stats['total_stock'] or 0
 
     categorias = Category.objects.all()
     tipos = Type.objects.all()
@@ -673,8 +728,20 @@ def dashboard_home(request):
                             imagen=img_v
                         )
 
-            # redirigir a la lista o a la edición del producto actualizado
-            return redirect(crear_producto_url)
+            # Redirigir manteniendo los filtros de búsqueda
+            categoria_filter = request.POST.get('categoria_filter', '')
+            search_query = request.POST.get('search_query', '')
+            page = request.POST.get('page', '1')
+            
+            redirect_url = f"{reverse('dashboard_home')}?view=productos"
+            if categoria_filter:
+                redirect_url += f'&categoria_filter={categoria_filter}'
+            if search_query:
+                redirect_url += f'&search={search_query}'
+            if page:
+                redirect_url += f'&page={page}'
+            
+            return redirect(redirect_url)
 
         else:
             # crear nuevo producto
@@ -729,8 +796,20 @@ def dashboard_home(request):
                         imagen=img_v
                     )
 
-            # tras crear, redirigir a la lista sin abrir el form crear
-            return redirect(f"{reverse('dashboard_home')}?view=productos")
+            # Redirigir manteniendo los filtros de búsqueda tras crear
+            categoria_filter = request.POST.get('categoria_filter', '')
+            search_query = request.POST.get('search_query', '')
+            page = request.POST.get('page', '1')
+            
+            redirect_url = f"{reverse('dashboard_home')}?view=productos"
+            if categoria_filter:
+                redirect_url += f'&categoria_filter={categoria_filter}'
+            if search_query:
+                redirect_url += f'&search={search_query}'
+            if page:
+                redirect_url += f'&page={page}'
+            
+            return redirect(redirect_url)
 
     # MANEJO DE BONOS DE DESCUENTO
     if request.method == 'POST' and view_param == 'bonos':
@@ -1072,6 +1151,8 @@ def dashboard_home(request):
     return render(request, 'dashboard/dashboard_home.html', {
         'productos': productos,
         'productos_page': productos_page,
+        'total_valor_inventario': total_valor_inventario,
+        'total_stock_inventario': total_stock_inventario,
         'categorias': categorias,
         'tipos': tipos,
         'proveedores': proveedores,
@@ -1113,6 +1194,9 @@ def dashboard_home(request):
         'current_user': current_user,
         'is_superuser': is_superuser,
         'is_staff': is_staff,
+        'superuser_username': current_user.username if current_user else '',
+        'superuser_email': current_user.email if current_user else '',
+        'pedidos_totales': Pedidos.count() if hasattr(Pedidos, 'count') else len(Pedidos),
         'selected_category': selected_category,
         'config': config,
         'whatsapp_config': whatsapp_config,

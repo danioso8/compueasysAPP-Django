@@ -1,0 +1,34 @@
+[Unit]
+Description=CompuEasys Gunicorn daemon
+After=network.target
+
+[Service]
+User=root
+Group=www-data
+WorkingDirectory=/var/www/CompuEasysApp
+Environment="PATH=/var/www/CompuEasysApp/venv/bin"
+
+# Configuración de Gunicorn optimizada
+ExecStart=/var/www/CompuEasysApp/venv/bin/gunicorn \
+    --workers 2 \
+    --worker-class sync \
+    --max-requests 1000 \
+    --max-requests-jitter 50 \
+    --timeout 60 \
+    --bind unix:/var/www/CompuEasysApp/gunicorn.sock \
+    AppCompueasys.wsgi:application
+
+# Auto-restart en caso de falla
+Restart=always
+RestartSec=10s
+
+# Límites de recursos
+MemoryLimit=500M
+MemoryMax=600M
+
+# Logging mejorado
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

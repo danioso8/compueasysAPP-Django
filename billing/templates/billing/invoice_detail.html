@@ -1,0 +1,267 @@
+{% load static %}
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Factura {{ invoice.invoice_number }} - CompuEasys</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body class="bg-light">
+    <div class="container-fluid py-4">
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h2 class="mb-1">Factura {{ invoice.invoice_number }}</h2>
+                                <p class="text-muted mb-0">{{ invoice.issue_date|date:"d/m/Y" }}</p>
+                            </div>
+                            <div>
+                                <a href="{% url 'billing:invoice_list' %}" class="btn btn-outline-secondary">
+                                    <i class="fas fa -left me-2"></i>Volver
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-user me-2"></i>Cliente</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Nombre:</strong> {{ invoice.customer_name }}</p>
+                                <p><strong>NIT/CC:</strong> {{ invoice.customer_nit|default:"-" }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Email:</strong> {{ invoice.customer_email|default:"-" }}</p>
+                                <p><strong>Teléfono:</strong> {{ invoice.customer_phone|default:"-" }}</p>
+                            </div>
+                            {% if invoice.customer_address %}
+                            <div class="col-12">
+                                <p><strong>Dirección:</strong> {{ invoice.customer_address }}</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-warning">
+                        <h5 class="mb-0"><i class="fas fa-shopping-cart me-2"></i>Productos</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Código</th>
+                                        <th>Descripción</th>
+                                        <th class="text-center">Cant.</th>
+                                        <th class="text-end">Precio</th>
+                                        <th class="text-end">Subtotal</th>
+                                        <th class="text-center">IVA</th>
+                                        <th class="text-end">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in items %}
+                                    <tr>
+                                        <td>{{ item.product_code }}</td>
+                                        <td>{{ item.description }}</td>
+                                        <td class="text-center">{{ item.quantity }}</td>
+                                        <td class="text-end">${{ item.unit_price|floatformat:0|intcomma }}</td>
+                                        <td class="text-end">${{ item.subtotal|floatformat:0|intcomma }}</td>
+                                        <td class="text-center">{{ item.tax_percentage }}%</td>
+                                        <td class="text-end"><strong>${{ item.line_total|floatformat:0|intcomma }}</strong></td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                                <tfoot class="table-light">
+                                    <tr>
+                                        <td colspan="6" class="text-end"><strong>Subtotal:</strong></td>
+                                        <td class="text-end">${{ invoice.subtotal|floatformat:0|intcomma }}</td>
+                                    </tr>
+                                    {% if invoice.total_discount > 0 %}
+                                    <tr>
+                                        <td colspan="6" class="text-end"><strong>Descuentos:</strong></td>
+                                        <td class="text-end">-${{ invoice.total_discount|floatformat:0|intcomma }}</td>
+                                    </tr>
+                                    {% endif %}
+                                    <tr>
+                                        <td colspan="6" class="text-end"><strong>IVA:</strong></td>
+                                        <td class="text-end">${{ invoice.total_tax|floatformat:0|intcomma }}</td>
+                                    </tr>
+                                    <tr class="table-primary">
+                                        <td colspan="6" class="text-end"><strong>TOTAL:</strong></td>
+                                        <td class="text-end"><strong>${{ invoice.total|floatformat:0|intcomma }}</strong></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-success text-white">
+                        <h6 class="mb-0">Estado</h6>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Estado de Pago:</strong></p>
+                        <p>
+                            {% if invoice.payment_status == 'paid' %}
+                            <span class="badge bg-success">Pagada</span>
+                            {% elif invoice.payment_status == 'partial' %}
+                            <span class="badge bg-warning">Parcial</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Pendiente</span>
+                            {% endif %}
+                        </p>
+                        
+                        {% if invoice.is_electronic %}
+                        <hr>
+                        <p><strong>Estado DIAN:</strong></p>
+                        <p>
+                            {% if invoice.dian_status == 'approved' %}
+                            <span class="badge bg-success"><i class="fas fa-check"></i> Aprobada</span>
+                            {% elif invoice.dian_status == 'processing' %}
+                            <span class="badge bg-info"><i class="fas fa-spinner fa-spin"></i> Procesando</span>
+                            {% elif invoice.dian_status == 'pending' %}
+                            <span class="badge bg-warning"><i class="fas fa-clock"></i> Pendiente</span>
+                            {% elif invoice.dian_status == 'error' or invoice.dian_status == 'rejected' %}
+                            <span class="badge bg-danger"><i class="fas fa-times"></i> Error</span>
+                            {% else %}
+                            <span class="badge bg-secondary">N/A</span>
+                            {% endif %}
+                        </p>
+                        
+                        {% if invoice.cufe %}
+                        <p><strong>CUFE:</strong><br><small class="text-monospace">{{ invoice.cufe|truncatechars:40 }}</small></p>
+                        {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+                
+                {% if invoice.is_electronic %}
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-info text-white">
+                        <h6 class="mb-0">Facturación Electrónica</h6>
+                    </div>
+                    <div class="card-body">
+                        {% if invoice.dian_status == 'pending' %}
+                        <button class="btn btn-success w-100 mb-2" onclick="sendToDian()">
+                            <i class="fas fa-paper-plane me-2"></i>Enviar a DIAN
+                        </button>
+                        {% endif %}
+                        
+                        {% if invoice.matias_track_id and invoice.dian_status in 'processing,error' %}
+                        <button class="btn btn-info w-100 mb-2" onclick="checkStatus()">
+                            <i class="fas fa-sync me-2"></i>Consultar Estado
+                        </button>
+                        {% endif %}
+                        
+                        {% if invoice.pdf_url %}
+                        <a href="{{ invoice.pdf_url }}" target="_blank" class="btn btn-danger w-100 mb-2">
+                            <i class="fas fa-file-pdf me-2"></i>Descargar PDF
+                        </a>
+                        {% endif %}
+                        
+                        {% if invoice.xml_url %}
+                        <a href="{{ invoice.xml_url }}" target="_blank" class="btn btn-outline-primary w-100">
+                            <i class="fas fa-file-code me-2"></i>Descargar XML
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        async function sendToDian() {
+            const result = await Swal.fire({
+                title: '¿Enviar a DIAN?',
+                text: 'Se enviará la factura para validación DIAN',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, enviar',
+                cancelButtonText: 'Cancelar'
+            });
+
+            if (result.isConfirmed) {
+                Swal.showLoading();
+                try {
+                    const response = await fetch('send-matias/', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': getCookie('csrftoken')
+                        }
+                    });
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        await Swal.fire('¡Enviado!', data.message, 'success');
+                        location.reload();
+                    } else {
+                        Swal.fire('Error', data.message, 'error');
+                    }
+                } catch (error) {
+                    Swal.fire('Error', 'Error al enviar: ' + error.message, 'error');
+                }
+            }
+        }
+
+        async function checkStatus() {
+            Swal.showLoading();
+            try {
+                const response = await fetch('check-status/', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    await Swal.fire('Estado Actualizado', data.message, 'success');
+                    location.reload();
+                } else {
+                    Swal.fire('Error', data.message, 'error');
+                }
+            } catch (error) {
+                Swal.fire('Error', 'Error al consultar: ' + error.message, 'error');
+            }
+        }
+    </script>
+</body>
+</html>

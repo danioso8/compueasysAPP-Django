@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'core',
     'contable.apps.ContableConfig',
+    'billing.apps.BillingConfig',
     'django_bootstrap5',    
     'django.contrib.humanize',
     'dashboard',
@@ -65,6 +66,7 @@ TEMPLATES = [
         'DIRS': [
             os.path.join(BASE_DIR, 'core', 'templates'),
             os.path.join(BASE_DIR, 'dashboard', 'templates'),
+            os.path.join(BASE_DIR, 'billing', 'templates'),
         ],
         'APP_DIRS': True,
         'OPTIONS': {

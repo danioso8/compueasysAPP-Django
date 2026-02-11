@@ -1,0 +1,440 @@
+{% load static %}
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nueva Factura - CompuEasys</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <style>
+        .product-search-results {
+            position: absolute;
+            z-index: 1000;
+            width: 100%;
+            max-height: 300px;
+            overflow-y: auto;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 0.25rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .product-search-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .product-search-item:hover {
+            background: #f8f9fa;
+        }
+        
+        .product-search-item:last-child {
+            border-bottom: none;
+        }
+        
+        .item-row {
+            background: #f8f9fa;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            padding: 1rem;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="container-fluid py-4">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h2 class="mb-1">
+                                    <i class="fas fa-plus-circle text-primary me-2"></i>
+                                    Nueva Factura
+                                </h2>
+                                <p class="text-muted mb-0">Crear factura normal o electrónica (DIAN)</p>
+                            </div>
+                            <div>
+                                <a href="{% url 'billing:invoice_list' %}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-arrow-left me-2"></i>Volver
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <form method="POST" id="invoiceForm">
+            {% csrf_token %}
+            
+            <div class="row">
+                <!-- Datos del Cliente -->
+                <div class="col-lg-6">
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0"><i class="fas fa-user me-2"></i>Datos del Cliente</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <label class="form-label">Nombre / Razón Social *</label>
+                                    <input type="text" name="customer_name" class="form-control" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">NIT / CC</label>
+                                    <input type="text" name="customer_nit" class="form-control">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Teléfono</label>
+                                    <input type="text" name="customer_phone" class="form-control">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label">Email</label>
+                                    <input type="email" name="customer_email" class="form-control">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label">Dirección</label>
+                                    <textarea name="customer_address" class="form-control" rows="2"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Configuración de Factura -->
+                <div class="col-lg-6">
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0"><i class="fas fa-cog me-2"></i>Configuración</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="is_electronic" name="is_electronic">
+                                        <label class="form-check-label" for="is_electronic">
+                                            <strong>Factura Electrónica (DIAN - Matias API)</strong>
+                                            <br>
+                                            <small class="text-muted">Se enviará a validación DIAN</small>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Forma de Pago</label>
+                                    <select name="payment_form" class="form-select">
+                                        <option value="1" selected>Contado</option>
+                                        <option value="2">Crédito</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Medio de Pago</label>
+                                    <select name="payment_method" class="form-select">
+                                        <option value="10" selected>Efectivo</option>
+                                        <option value="31">Transferencia</option>
+                                        <option value="48">Tarjeta de Crédito</option>
+                                        <option value="49">Tarjeta de Débito</option>
+                                    </select>
+                                </div>
+                                {% if config %}
+                                <div class="col-12">
+                                    <div class="alert alert-info mb-0">
+                                        <small>
+                                            <strong>Prefijo:</strong> {{ config.prefix|default:"FV" }}<br>
+                                            <strong>Estado Matias:</strong> 
+                                            {% if config.is_active %}
+                                                <span class="badge bg-success">Activa</span>
+                                            {% else %}
+                                                <span class="badge bg-warning">Inactiva</span>
+                                            {% endif %}
+                                        </small>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Productos -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-header bg-warning">
+                            <h5 class="mb-0"><i class="fas fa-shopping-cart me-2"></i>Productos / Servicios</h5>
+                        </div>
+                        <div class="card-body">
+                            <!-- Búsqueda de Productos -->
+                            <div class="mb-4 position-relative">
+                                <label class="form-label">Buscar Producto de la Tienda</label>
+                                <input type="text" id="productSearch" class="form-control" placeholder="Escribe el nombre del producto...">
+                                <div id="productSearchResults" class="product-search-results" style="display: none;"></div>
+                            </div>
+
+                            <!-- Items de Factura -->
+                            <div id="invoiceItems"></div>
+
+                            <!-- Botón Agregar Item Manual -->
+                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="addManualItem()">
+                                <i class="fas fa-plus me-2"></i>Agregar Ítem Manual
+                            </button>
+
+                            <!-- Totales -->
+                            <div class="mt-4 p-3 bg-light rounded">
+                                <div class="row">
+                                    <div class="col-md-6 offset-md-6">
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <strong>Subtotal:</strong>
+                                            <span id="displaySubtotal">$0</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <strong>Descuentos:</strong>
+                                            <span id="displayDiscount">$0</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <strong>IVA (19%):</strong>
+                                            <span id="displayTax">$0</span>
+                                        </div>
+                                        <hr>
+                                        <div class="d-flex justify-content-between">
+                                            <h4 class="mb-0">TOTAL:</h4>
+                                            <h4 class="mb-0 text-primary" id="displayTotal">$0</h4>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botones de Acción -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <a href="{% url 'billing:invoice_list' %}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-times me-2"></i>Cancelar
+                                </a>
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-save me-2"></i>Guardar Factura
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input hidden para items JSON -->
+            <input type="hidden" name="items" id="itemsJson">
+        </form>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        let items = [];
+        let itemCounter = 0;
+
+        // Búsqueda de productos
+        const productSearch = document.getElementById('productSearch');
+        const searchResults = document.getElementById('productSearchResults');
+        let searchTimeout;
+
+        productSearch.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            const query = this.value;
+
+            if (query.length < 2) {
+                searchResults.style.display = 'none';
+                return;
+            }
+
+            searchTimeout = setTimeout(async () => {
+                try {
+                    const response = await fetch(`/billing/products/search/?q=${encodeURIComponent(query)}`);
+                    const data = await response.json();
+
+                    if (data.products && data.products.length > 0) {
+                        searchResults.innerHTML = data.products.map(product => `
+                            <div class="product-search-item" onclick='addProductItem(${JSON.stringify(product)})'>
+                                <div class="d-flex align-items-center">
+                                    ${product.image_url ? `<img src="${product.image_url}" style="width: 40px; height: 40px; object-fit: cover; margin-right: 10px;">` : ''}
+                                    <div class="flex-grow-1">
+                                        <strong>${product.name}</strong>
+                                        <br>
+                                        <small>Stock: ${product.stock} | Precio: $${product.price.toLocaleString()}</small>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('');
+                        searchResults.style.display = 'block';
+                    } else {
+                        searchResults.innerHTML = '<div class="p-3 text-muted">No se encontraron productos</div>';
+                        searchResults.style.display = 'block';
+                    }
+                } catch (error) {
+                    console.error('Error buscando productos:', error);
+                }
+            }, 300);
+        });
+
+        // Cerrar resultados al hacer click fuera
+        document.addEventListener('click', function(e) {
+            if (!productSearch.contains(e.target) && !searchResults.contains(e.target)) {
+                searchResults.style.display = 'none';
+            }
+        });
+
+        function addProductItem(product) {
+            itemCounter++;
+            const item = {
+                id: itemCounter,
+                product_id: product.id,
+                code: product.code,
+                description: product.name,
+                quantity: 1,
+                unit_price: product.price,
+                discount_percentage: 0,
+                tax_percentage: 19
+            };
+
+            items.push(item);
+            renderItems();
+            calculateTotals();
+
+            productSearch.value = '';
+            searchResults.style.display = 'none';
+        }
+
+        function addManualItem() {
+            itemCounter++;
+            const item = {
+                id: itemCounter,
+                product_id: null,
+                code: '',
+                description: '',
+                quantity: 1,
+                unit_price: 0,
+                discount_percentage: 0,
+                tax_percentage: 19
+            };
+
+            items.push(item);
+            renderItems();
+        }
+
+        function removeItem(id) {
+            items = items.filter(item => item.id !== id);
+            renderItems();
+            calculateTotals();
+        }
+
+        function updateItem(id, field, value) {
+            const item = items.find(i => i.id === id);
+            if (item) {
+                item[field] = field === 'description' || field === 'code' ? value : parseFloat(value) || 0;
+                calculateTotals();
+            }
+        }
+
+        function renderItems() {
+            const container = document.getElementById('invoiceItems');
+            container.innerHTML = items.map(item => `
+                <div class="item-row">
+                    <div class="row g-2 align-items-center">
+                        <div class="col-md-3">
+                            <label class="form-label small">Código</label>
+                            <input type="text" class="form-control form-control-sm" value="${item.code}" 
+                                   onchange="updateItem(${item.id}, 'code', this.value)">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small">Descripción</label>
+                            <input type="text" class="form-control form-control-sm" value="${item.description}" 
+                                   onchange="updateItem(${item.id}, 'description', this.value)" required>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small">Cantidad</label>
+                            <input type="number" class="form-control form-control-sm" value="${item.quantity}" min="1" 
+                                   onchange="updateItem(${item.id}, 'quantity', this.value)">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small">Precio Unit.</label>
+                            <input type="number" class="form-control form-control-sm" value="${item.unit_price}" min="0" 
+                                   onchange="updateItem(${item.id}, 'unit_price', this.value)">
+                        </div>
+                        <div class="col-md-1">
+                            <label class="form-label small">IVA %</label>
+                            <input type="number" class="form-control form-control-sm" value="${item.tax_percentage}" min="0" max="100" 
+                                   onchange="updateItem(${item.id}, 'tax_percentage', this.value)">
+                        </div>
+                        <div class="col-md-1 text-end">
+                            <label class="form-label small d-block">&nbsp;</label>
+                            <button type="button" class="btn btn-danger btn-sm" onclick="removeItem(${item.id})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function calculateTotals() {
+            let subtotal = 0;
+            let totalDiscount = 0;
+            let totalTax = 0;
+
+            items.forEach(item => {
+                const itemSubtotal = item.quantity * item.unit_price;
+                const itemDiscount = itemSubtotal * (item.discount_percentage / 100);
+                const baseAfterDiscount = itemSubtotal - itemDiscount;
+                const itemTax = baseAfterDiscount * (item.tax_percentage / 100);
+
+                subtotal += itemSubtotal;
+                totalDiscount += itemDiscount;
+                totalTax += itemTax;
+            });
+
+            const total = subtotal - totalDiscount + totalTax;
+
+            document.getElementById('displaySubtotal').textContent = '$' + subtotal.toLocaleString('es-CO', {maximumFractionDigits: 0});
+            document.getElementById('displayDiscount').textContent = '$' + totalDiscount.toLocaleString('es-CO', {maximumFractionDigits: 0});
+            document.getElementById('displayTax').textContent = '$' + totalTax.toLocaleString('es-CO', {maximumFractionDigits: 0});
+            document.getElementById('displayTotal').textContent = '$' + total.toLocaleString('es-CO', {maximumFractionDigits: 0});
+        }
+
+        // Submit del formulario
+        document.getElementById('invoiceForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            if (items.length === 0) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Sin productos',
+                    text: 'Debes agregar al menos un producto a la factura'
+                });
+                return;
+            }
+
+            // Convertir items a JSON
+            document.getElementById('itemsJson').value = JSON.stringify(items);
+
+            // Enviar formulario
+            this.submit();
+        });
+    </script>
+</body>
+</html>

@@ -441,8 +441,18 @@ plink -batch -pw Miesposa0526 root@84.247.129.180 "journalctl -u compueasys -n 5
    git push origin main
    ```
 3. **Subir archivos modificados a Contabo** usando `pscp`
-4. **Reiniciar servicio** en Contabo
-5. **Verificar** que el sitio funcione correctamente
+4. **⚠️ IMPORTANTE - Archivos Estáticos**: Si modificaste CSS/JS/imágenes, también cópialos a staticfiles:
+   ```powershell
+   # Ejemplo para CSS de dashboard
+   pscp -batch -pw Miesposa0526 "D:\ESCRITORIO\CompueasysApp\dashboard\static\css\archivo.css" root@84.247.129.180:/var/www/CompuEasysApp/staticfiles/css/
+   
+   # Ejemplo para JS de core
+   pscp -batch -pw Miesposa0526 "D:\ESCRITORIO\CompueasysApp\core\static\js\archivo.js" root@84.247.129.180:/var/www/CompuEasysApp/staticfiles/js/
+   ```
+5. **Reiniciar servicio** en Contabo
+6. **Verificar** que el sitio funcione correctamente
+
+**🔴 NOTA CRÍTICA**: Django en producción sirve archivos estáticos desde `/var/www/CompuEasysApp/staticfiles/`, NO desde `app/static/`. Por eso debemos copiar manualmente o ejecutar collectstatic.
 
 #### Archivos Comunes a Actualizar:
 
@@ -489,6 +499,13 @@ plink -batch -pw Miesposa0526 root@84.247.129.180 "systemctl restart nginx"
 
 # Verificar permisos de archivos
 plink -batch -pw Miesposa0526 root@84.247.129.180 "chown -R root:www-data /var/www/CompuEasysApp"
+
+# 🔴 ARCHIVOS ESTÁTICOS NO SE REFLEJAN - Ejecutar collectstatic
+plink -batch -pw Miesposa0526 root@84.247.129.180 "/var/www/CompuEasysApp/venv/bin/python /var/www/CompuEasysApp/manage.py collectstatic --noinput"
+
+# O copiar manualmente a staticfiles
+pscp -batch -pw Miesposa0526 "ruta\local\archivo.css" root@84.247.129.180:/var/www/CompuEasysApp/staticfiles/css/
+pscp -batch -pw Miesposa0526 "ruta\local\archivo.js" root@84.247.129.180:/var/www/CompuEasysApp/staticfiles/js/
 ```
 
 ### Auto-Deployment (Opcional)

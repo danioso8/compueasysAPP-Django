@@ -29,6 +29,7 @@ urlpatterns = [
     path('', include('core.urls')),  # Included the core app's URL configurations
     path('contable/', include('contable.urls')),  # Included the contable app's URL configurations
     path('dashboard/', include('dashboard.urls')),
+    path('billing/', include('billing.urls', namespace='billing')),  # Módulo de facturación
 ]
 
 # Servir archivos media en desarrollo y producción

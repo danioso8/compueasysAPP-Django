@@ -1,5 +1,6 @@
 <!-- filepath: d:\ESCRITORIO\CompueasysApp\dashboard\templates\dashboard\dashboard_home.html -->
 {% load static %}
+{% load humanize %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -13,31 +14,123 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     
-    <!-- Estilos Base del Dashboard -->
-    <link rel="stylesheet" href="{% static 'css/main.css' %}" />
-    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}" />
-    <link rel="stylesheet" href="{% static 'css/dashboard-light-theme.css' %}" />
+    <!-- PLUG Tailwind Pro Dashboard CSS -->
+    <link rel="stylesheet" href="{% static 'css/dashboard-tailwind-pro.css' %}" />
     
-    <!-- Módulos CSS Especializados -->
-    <link rel="stylesheet" href="{% static 'css/dashboard-realtime.css' %}" />
-    <link rel="stylesheet" href="{% static 'css/dashboard-messages.css' %}" />
-    <link rel="stylesheet" href="{% static 'css/dashboard-pedidos.css' %}" />
+    <!-- Dashboard Moderno V2 CSS -->
+    <link rel="stylesheet" href="{% static 'css/dashboard-modern-v2.css' %}" />
+    
+    <!-- Dashboard Animations & Advanced Effects -->
+    <link rel="stylesheet" href="{% static 'css/dashboard-animations.css' %}" />
+    
+    <!-- Google Fonts - Inter for Pro Look -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+        
+        /* Estilos para placeholder en filtros */
+        #search::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        #search:focus {
+            background: rgba(255, 255, 255, 0.3) !important;
+            color: white !important;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
+        }
+        
+        #categoria_filter:focus {
+            background: rgba(255, 255, 255, 0.3) !important;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
+        }
+    </style>
 
 </head>
 <body>
-    <!-- Barra superior para móviles -->
-    <div class="mobile-header d-md-none">
-        <button class="mobile-menu-btn" id="mobileMenuBtn">
-            <i class="fas fa-bars"></i>
-        </button>
-        <div class="mobile-logo">
-            <i class="fas fa-desktop"></i>
-            <span>CompuEasys</span>
+    <!-- Header Superior Moderno con Usuario -->
+    <nav class="top-navbar">
+        <div class="container-fluid">
+            <div class="d-flex justify-content-between align-items-center w-100">
+                <!-- Logo y botón menú móvil -->
+                <div class="d-flex align-items-center gap-3">
+                    <button class="mobile-menu-btn d-md-none" id="mobileMenuBtn">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="top-navbar-brand d-none d-md-flex align-items-center gap-2">
+                        <i class="fas fa-desktop text-primary"></i>
+                        <span class="fw-bold">CompuEasys</span>
+                    </div>
+                </div>
+
+                <!-- Menú de Usuario -->
+                <div class="dropdown">
+                    <button class="btn btn-link text-decoration-none p-0 user-menu-btn" type="button" id="userMenuDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="user-avatar-small">
+                                <i class="fas fa-user-circle"></i>
+                            </div>
+                            <div class="d-none d-sm-block text-start">
+                                <div class="user-name">{{ request.session.superuser_username }}</div>
+                                <div class="user-role">{% if is_superuser %}Superusuario{% else %}STAFF{% endif %}</div>
+                            </div>
+                            <i class="fas fa-chevron-down ms-2"></i>
+                        </div>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-lg" aria-labelledby="userMenuDropdown">
+                        <!-- Perfil -->
+                        <li>
+                            <div class="dropdown-header d-flex align-items-center gap-2 pb-2 border-bottom">
+                                <div class="user-avatar-dropdown">
+                                    <i class="fas fa-user-circle"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-bold">{{ request.session.superuser_username }}</div>
+                                    <small class="text-muted">{{ request.session.superuser_email }}</small>
+                                </div>
+                            </div>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        
+                        <!-- Opciones de usuario -->
+                        <li>
+                            <a class="dropdown-item" href="?view=mi_perfil">
+                                <i class="fas fa-user-edit me-2 text-primary"></i>
+                                Mi Perfil
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="?view=usuarios">
+                                <i class="fas fa-users-cog me-2 text-info"></i>
+                                Gestionar Usuarios
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="?view=datos_tienda">
+                                <i class="fas fa-store-alt me-2 text-success"></i>
+                                Configuración Tienda
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        
+                        <!-- Cerrar sesión -->
+                        <li>
+                            <a class="dropdown-item text-danger" href="{% url 'logout_view' %}">
+                                <i class="fas fa-sign-out-alt me-2"></i>
+                                Cerrar Sesión
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
         </div>
-        <div class="mobile-user">
-            <i class="fas fa-user-circle"></i>
-        </div>
-    </div>
+    </nav>
     
     <!-- Overlay para cerrar menú en móvil -->
     <div class="mobile-overlay" id="mobileOverlay"></div>
@@ -143,6 +236,45 @@
                                 <span class="nav-menu-text">Promociones</span>
                             </a>
                         </li>
+                    </ul>
+                </div>
+
+                <!-- GRUPO: FACTURACIÓN -->
+                <div class="nav-section">
+                    <div class="nav-section-title">
+                        <i class="fas fa-file-invoice-dollar"></i>
+                        <span class="sidebar-text">Facturación</span>
+                    </div>
+                    <ul class="nav-menu">
+                        <li class="nav-menu-item">
+                            <a href="{% url 'billing:invoice_list' %}" class="nav-menu-link">
+                                <span class="nav-menu-icon">
+                                    <i class="fas fa-file-invoice"></i>
+                                </span>
+                                <span class="nav-menu-text">Factura Normal</span>
+                            </a>
+                        </li>
+                        <li class="nav-menu-item">
+                            <a href="{% url 'billing:invoice_list' %}?filter=electronic" class="nav-menu-link">
+                                <span class="nav-menu-icon">
+                                    <i class="fas fa-file-contract"></i>
+                                </span>
+                                <span class="nav-menu-text">Factura Electrónica</span>
+                                <span class="nav-menu-badge success">
+                                    <i class="fas fa-check-circle"></i> DIAN
+                                </span>
+                            </a>
+                        </li>
+                        {% if is_superuser %}
+                        <li class="nav-menu-item">
+                            <a href="{% url 'billing:matias_config' %}" class="nav-menu-link">
+                                <span class="nav-menu-icon">
+                                    <i class="fas fa-cogs"></i>
+                                </span>
+                                <span class="nav-menu-text">Configuración DIAN</span>
+                            </a>
+                        </li>
+                        {% endif %}
                     </ul>
                 </div>
 
@@ -285,51 +417,10 @@
                         <i class="fas fa-bell"></i>
                     </a>
                 </div>
-                 <!-- Perfil de Usuario Corporativo -->
-            <div class="sidebar-user-profile">
-                <div class="user-profile-card">
-                    <div class="user-avatar-wrapper">
-                        <div class="user-avatar-img">
-                            <i class="fas fa-user-circle"></i>
-                        </div>
-                        <div class="user-status-indicator"></div>
-                    </div>
-                    <div class="user-profile-info">
-                        <h6 class="user-profile-name">{{ current_user.username|default:"Administrador" }}</h6>
-                        <div class="user-profile-role">
-                            {% if is_superuser %}
-                                <span class="role-badge superuser">
-                                    <i class="fas fa-crown"></i> Super Admin
-                                </span>
-                            {% elif is_staff %}
-                                <span class="role-badge staff">
-                                    <i class="fas fa-user-tie"></i> Staff
-                                </span>
-                            {% else %}
-                                <span class="role-badge user">
-                                    <i class="fas fa-user"></i> Usuario
-                                </span>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-                <!-- Logout Button Corporativo -->
-                <form method="post" action="{% url 'logout_view' %}" class="logout-form">
-                    {% csrf_token %}
-                    <button type="submit" class="logout-btn-modern">
-                        <span class="logout-icon">
-                            <i class="fas fa-sign-out-alt"></i>
-                        </span>
-                          
-                        <span class="logout-text">Cerrar Sesión</span>
-                    </button>
-                </form>
 
                 <!-- Version Info -->
                 <div class="sidebar-version">
-                    <small>v2.0.0 Pro</small>
+                    <small>CompuEasys v2.0 Pro</small>
                 </div>
             </div>
         </aside>
@@ -354,8 +445,8 @@
                                 <i class="fas fa-dollar-sign"></i>
                             </div>
                             <div class="stat-content">
-                                <div class="stat-value">
-                                    ${{ total_ventas_general|floatformat:0 }}
+                                <div class="stat-value" style="font-family: 'Courier New', monospace;">
+                                    ${{ total_ventas_general|floatformat:0|intcomma }}
                                 </div>
                                 <div class="stat-label">Ventas Totales</div>
                                 <div class="stat-trend">
@@ -374,7 +465,7 @@
                             </div>
                             <div class="stat-content">
                                 <div class="stat-value">
-                                    {{ estadisticas_ventas.productos_vendidos }}
+                                    {{ estadisticas_ventas.productos_vendidos|intcomma }}
                                 </div>
                                 <div class="stat-label">Productos Vendidos</div>
                                 <div class="stat-trend">
@@ -392,8 +483,8 @@
                                 <i class="fas fa-receipt"></i>
                             </div>
                             <div class="stat-content">
-                                <div class="stat-value">
-                                    ${{ estadisticas_ventas.promedio_por_pedido|floatformat:0 }}
+                                <div class="stat-value" style="font-family: 'Courier New', monospace;">
+                                    ${{ estadisticas_ventas.promedio_por_pedido|floatformat:0|intcomma }}
                                 </div>
                                 <div class="stat-label">Promedio por Pedido</div>
                                 <div class="stat-trend">
@@ -412,7 +503,7 @@
                             </div>
                             <div class="stat-content">
                                 <div class="stat-value">
-                                    {{ estadisticas_ventas.pedidos_totales }}
+                                    {{ estadisticas_ventas.pedidos_totales|intcomma }}
                                 </div>
                                 <div class="stat-label">Total Pedidos</div>
                                 <div class="stat-trend">
@@ -424,49 +515,84 @@
                     </div>
                 </div>
 
-                <!-- Actividad en Tiempo Real -->
-                <div class="alert alert-info mb-4">
-                    <h5 class="mb-3">
-                        <i class="fas fa-calendar-day me-2"></i>Actividad de Hoy
-                        <span class="badge bg-success ms-2">
-                            <i class="fas fa-sync-alt fa-spin"></i> Tiempo Real
-                        </span>
-                    </h5>
-                    <div class="row">
-                        <div class="col-md-3">
-                            <div class="stat-card">
-                                <h3 class="text-primary">
-                                    <i class="fas fa-shopping-cart me-2"></i>
-                                    <span data-stat="pedidos-hoy">{{ estadisticas_diarias.pedidos_hoy }}</span>
-                                </h3>
-                                <p class="mb-0 text-muted">Pedidos de Hoy</p>
+                <!-- Actividad en Tiempo Real Modernizada CON MÁS COLORES -->
+                <div class="card border-0 shadow-lg mb-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%); overflow: hidden; border-radius: 16px;">
+                    <div class="card-body p-4 text-white position-relative">
+                        <!-- Patrón de fondo animado -->
+                        <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.15; background: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,.15) 10px, rgba(255,255,255,.15) 20px); animation: slide 20s linear infinite;"></div>
+                        
+                        <div class="position-relative">
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <div>
+                                    <h4 class="mb-1 fw-bold" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.2);">
+                                        <i class="fas fa-calendar-day me-2"></i>Actividad de Hoy
+                                    </h4>
+                                    <small class="opacity-90">Actualizado en tiempo real</small>
+                                </div>
+                                <div class="pulse-badge">
+                                    <span class="badge" style="background: rgba(255,255,255,0.35); backdrop-filter: blur(10px); font-size: 0.9rem; padding: 0.6rem 1.2rem; border-radius: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                                        <i class="fas fa-sync-alt fa-spin me-2"></i>En Vivo
+                                    </span>
+                                </div>
                             </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="stat-card">
-                                <h3 class="text-success">
-                                    <i class="fas fa-dollar-sign me-2"></i>
-                                    <span data-stat="ventas-hoy">${{ estadisticas_diarias.ventas_hoy|default:"0"|floatformat:0 }}</span>
-                                </h3>
-                                <p class="mb-0 text-muted">Ventas de Hoy</p>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="stat-card">
-                                <h3 class="text-info">
-                                    <i class="fas fa-box-open me-2"></i>
-                                    <span data-stat="productos-vendidos-hoy">{{ estadisticas_diarias.productos_vendidos_hoy }}</span>
-                                </h3>
-                                <p class="mb-0 text-muted">Productos Vendidos Hoy</p>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="stat-card">
-                                <h3 class="text-warning">
-                                    <i class="fas fa-users me-2"></i>
-                                    <span data-stat="total-usuarios">{{ usuarios|length }}</span>
-                                </h3>
-                                <p class="mb-0 text-muted">Total Usuarios</p>
+                            
+                            <div class="row g-3">
+                                <div class="col-md-3 col-6">
+                                    <div class="p-3 rounded" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.25) 0%, rgba(37, 99, 235, 0.25) 100%); backdrop-filter: blur(15px); border: 2px solid rgba(255, 255, 255, 0.3); transition: all 0.3s ease; cursor: pointer; box-shadow: 0 8px 20px rgba(0,0,0,0.15);" onmouseover="this.style.transform='translateY(-8px) scale(1.02)'; this.style.boxShadow='0 12px 30px rgba(59, 130, 246, 0.4)'; this.style.background='linear-gradient(135deg, rgba(59, 130, 246, 0.35) 0%, rgba(37, 99, 235, 0.35) 100%)'" onmouseout="this.style.transform='translateY(0) scale(1)'; this.style.boxShadow='0 8px 20px rgba(0,0,0,0.15)'; this.style.background='linear-gradient(135deg, rgba(59, 130, 246, 0.25) 0%, rgba(37, 99, 235, 0.25) 100%)'">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <div class="stat-icon-mini" style="width: 50px; height: 50px; background: linear-gradient(135deg, #3b82f6, #2563eb); border-radius: 14px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);">
+                                                <i class="fas fa-shopping-cart" style="font-size: 1.4rem; color: white;"></i>
+                                            </div>
+                                            <div class="trend-arrow">
+                                                <i class="fas fa-arrow-up" style="color: #86efac; font-size: 1.2rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));"></i>
+                                            </div>
+                                        </div>
+                                        <h3 class="mb-1 fw-bold" data-stat="pedidos-hoy" style="font-size: 2.2rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.2);">{{ estadisticas_diarias.pedidos_hoy }}</h3>
+                                        <small class="opacity-90" style="font-weight: 500;">Pedidos de Hoy</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 col-6">
+                                    <div class="p-3 rounded" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.25) 0%, rgba(5, 150, 105, 0.25) 100%); backdrop-filter: blur(15px); border: 2px solid rgba(255, 255, 255, 0.3); transition: all 0.3s ease; cursor: pointer; box-shadow: 0 8px 20px rgba(0,0,0,0.15);" onmouseover="this.style.transform='translateY(-8px) scale(1.02)'; this.style.boxShadow='0 12px 30px rgba(16, 185, 129, 0.4)'; this.style.background='linear-gradient(135deg, rgba(16, 185, 129, 0.35) 0%, rgba(5, 150, 105, 0.35) 100%)'" onmouseout="this.style.transform='translateY(0) scale(1)'; this.style.boxShadow='0 8px 20px rgba(0,0,0,0.15)'; this.style.background='linear-gradient(135deg, rgba(16, 185, 129, 0.25) 0%, rgba(5, 150, 105, 0.25) 100%)'">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <div class="stat-icon-mini" style="width: 50px; height: 50px; background: linear-gradient(135deg, #10b981, #059669); border-radius: 14px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);">
+                                                <i class="fas fa-dollar-sign" style="font-size: 1.4rem; color: white;"></i>
+                                            </div>
+                                            <div class="trend-arrow">
+                                                <i class="fas fa-chart-line" style="color: #a7f3d0; font-size: 1.2rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));"></i>
+                                            </div>
+                                        </div>
+                                        <h3 class="mb-1 fw-bold" data-stat="ventas-hoy" style="font-size: 1.6rem; font-family: 'Courier New', monospace; text-shadow: 2px 2px 4px rgba(0,0,0,0.2);">${{ estadisticas_diarias.ventas_hoy|default:"0"|floatformat:0|intcomma }}</h3>
+                                        <small class="opacity-90" style="font-weight: 500;">Ventas de Hoy</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 col-6">
+                                    <div class="p-3 rounded" style="background: linear-gradient(135deg, rgba(251, 146, 60, 0.25) 0%, rgba(249, 115, 22, 0.25) 100%); backdrop-filter: blur(15px); border: 2px solid rgba(255, 255, 255, 0.3); transition: all 0.3s ease; cursor: pointer; box-shadow: 0 8px 20px rgba(0,0,0,0.15);" onmouseover="this.style.transform='translateY(-8px) scale(1.02)'; this.style.boxShadow='0 12px 30px rgba(251, 146, 60, 0.4)'; this.style.background='linear-gradient(135deg, rgba(251, 146, 60, 0.35) 0%, rgba(249, 115, 22, 0.35) 100%)'" onmouseout="this.style.transform='translateY(0) scale(1)'; this.style.boxShadow='0 8px 20px rgba(0,0,0,0.15)'; this.style.background='linear-gradient(135deg, rgba(251, 146, 60, 0.25) 0%, rgba(249, 115, 22, 0.25) 100%)'">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <div class="stat-icon-mini" style="width: 50px; height: 50px; background: linear-gradient(135deg, #fb923c, #f97316); border-radius: 14px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(251, 146, 60, 0.4);">
+                                                <i class="fas fa-box-open" style="font-size: 1.4rem; color: white;"></i>
+                                            </div>
+                                            <div class="trend-arrow">
+                                                <i class="fas fa-fire" style="color: #fde68a; font-size: 1.2rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));"></i>
+                                            </div>
+                                        </div>
+                                        <h3 class="mb-1 fw-bold" data-stat="productos-vendidos-hoy" style="font-size: 2.2rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.2);">{{ estadisticas_diarias.productos_vendidos_hoy }}</h3>
+                                        <small class="opacity-90" style="font-weight: 500;">Productos Vendidos</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 col-6">
+                                    <div class="p-3 rounded" style="background: linear-gradient(135deg, rgba(236, 72, 153, 0.25) 0%, rgba(219, 39, 119, 0.25) 100%); backdrop-filter: blur(15px); border: 2px solid rgba(255, 255, 255, 0.3); transition: all 0.3s ease; cursor: pointer; box-shadow: 0 8px 20px rgba(0,0,0,0.15);" onmouseover="this.style.transform='translateY(-8px) scale(1.02)'; this.style.boxShadow='0 12px 30px rgba(236, 72, 153, 0.4)'; this.style.background='linear-gradient(135deg, rgba(236, 72, 153, 0.35) 0%, rgba(219, 39, 119, 0.35) 100%)'" onmouseout="this.style.transform='translateY(0) scale(1)'; this.style.boxShadow='0 8px 20px rgba(0,0,0,0.15)'; this.style.background='linear-gradient(135deg, rgba(236, 72, 153, 0.25) 0%, rgba(219, 39, 119, 0.25) 100%)'">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <div class="stat-icon-mini" style="width: 50px; height: 50px; background: linear-gradient(135deg, #ec4899, #db2777); border-radius: 14px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(236, 72, 153, 0.4);">
+                                                <i class="fas fa-users" style="font-size: 1.4rem; color: white;"></i>
+                                            </div>
+                                            <div class="trend-arrow">
+                                                <i class="fas fa-user-plus" style="color: #fde047; font-size: 1.2rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));"></i>
+                                            </div>
+                                        </div>
+                                        <h3 class="mb-1 fw-bold" data-stat="total-usuarios" style="font-size: 2.2rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.2);">{{ usuarios|length }}</h3>
+                                        <small class="opacity-90" style="font-weight: 500;">Total Usuarios</small>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -522,7 +648,7 @@
                                                 <span class="fw-bold">{{ forloop.counter }}. {{ categoria.nombre }}</span>
                                                 <small class="text-muted d-block">{{ categoria.cantidad_productos }} productos</small>
                                             </div>
-                                            <span class="badge bg-success">${{ categoria.total_ingresos|floatformat:0 }}</span>
+                                            <span class="badge bg-success" style="font-family: 'Courier New', monospace; font-size: 0.95rem;">${{ categoria.total_ingresos|floatformat:0|intcomma }}</span>
                                         </div>
                                         <div class="progress" style="height: 8px;">
                                             {% widthratio categoria.total_ingresos ventas_por_categoria.0.total_ingresos 100 as percentage %}
@@ -581,8 +707,8 @@
                                             </div>
                                         </td>
                                         <td class="text-end">
-                                            <span class="badge bg-success-subtle text-success px-3 py-2">
-                                                ${{ categoria.total_ingresos|floatformat:0 }}
+                                            <span class="badge bg-success bg-opacity-10 text-success px-3 py-2" style="font-family: 'Courier New', monospace; font-weight: 600;">
+                                                ${{ categoria.total_ingresos|floatformat:0|intcomma }}
                                             </span>
                                         </td>
                                         <td class="text-center">
@@ -1169,7 +1295,127 @@
 
 
 
-            {% if request.GET.view == "usuarios" %}
+            {% if request.GET.view == "mi_perfil" %}
+                <div class="mi-perfil-dashboard">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2><i class="fas fa-user-circle me-2"></i>Mi Perfil</h2>
+                    </div>
+
+                    <div class="row">
+                        <!-- Tarjeta de información del perfil -->
+                        <div class="col-md-4 mb-4">
+                            <div class="card shadow-sm">
+                                <div class="card-body text-center">
+                                    <div class="mb-3">
+                                        <i class="fas fa-user-circle fa-5x text-primary"></i>
+                                    </div>
+                                    <h4 class="mb-1">{{ superuser_username }}</h4>
+                                    <p class="text-muted mb-2">{{ superuser_email }}</p>
+                                    {% if is_superuser %}
+                                        <span class="badge bg-danger">
+                                            <i class="fas fa-crown me-1"></i>Superusuario
+                                        </span>
+                                    {% elif is_staff %}
+                                        <span class="badge bg-warning">
+                                            <i class="fas fa-user-shield me-1"></i>STAFF
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Formulario de edición de perfil -->
+                        <div class="col-md-8 mb-4">
+                            <div class="card shadow-sm">
+                                <div class="card-header bg-gradient" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                                    <h5 class="mb-0"><i class="fas fa-edit me-2"></i>Editar Perfil</h5>
+                                </div>
+                                <div class="card-body">
+                                    <form method="POST" action="?view=mi_perfil">
+                                        {% csrf_token %}
+                                        
+                                        <div class="mb-3">
+                                            <label for="username" class="form-label">Nombre de Usuario</label>
+                                            <input type="text" class="form-control" id="username" name="username" 
+                                                   value="{{ superuser_username }}" required>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="email" class="form-label">Correo Electrónico</label>
+                                            <input type="email" class="form-control" id="email" name="email" 
+                                                   value="{{ superuser_email }}" required>
+                                        </div>
+
+                                        <hr class="my-4">
+                                        
+                                        <h6 class="mb-3">Cambiar Contraseña (Opcional)</h6>
+                                        
+                                        <div class="mb-3">
+                                            <label for="current_password" class="form-label">Contraseña Actual</label>
+                                            <input type="password" class="form-control" id="current_password" name="current_password" 
+                                                   placeholder="Dejar en blanco si no desea cambiarla">
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="new_password" class="form-label">Nueva Contraseña</label>
+                                            <input type="password" class="form-control" id="new_password" name="new_password" 
+                                                   placeholder="Mínimo 8 caracteres">
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="confirm_password" class="form-label">Confirmar Nueva Contraseña</label>
+                                            <input type="password" class="form-control" id="confirm_password" name="confirm_password" 
+                                                   placeholder="Repetir nueva contraseña">
+                                        </div>
+
+                                        <div class="d-grid gap-2">
+                                            <button type="submit" class="btn btn-primary">
+                                                <i class="fas fa-save me-2"></i>Guardar Cambios
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Estadísticas rápidas -->
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-gradient" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                            <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Resumen de Actividad</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row text-center">
+                                <div class="col-md-3">
+                                    <div class="border rounded p-3">
+                                        <h3 class="text-primary">{{ productos|length }}</h3>
+                                        <p class="text-muted mb-0">Productos</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="border rounded p-3">
+                                        <h3 class="text-success">{{ pedidos_totales|default:0 }}</h3>
+                                        <p class="text-muted mb-0">Pedidos Totales</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="border rounded p-3">
+                                        <h3 class="text-info">{{ usuarios|length }}</h3>
+                                        <p class="text-muted mb-0">Usuarios</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="border rounded p-3">
+                                        <h3 class="text-warning">{{ categorias|length }}</h3>
+                                        <p class="text-muted mb-0">Categorías</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            {% elif request.GET.view == "usuarios" %}
                 <div class="usuarios-dashboard">
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <h2><i class="fas fa-users me-2"></i>Gestión de Usuarios</h2>
@@ -1729,80 +1975,151 @@
                 </script>
 
             {% elif request.GET.view == "productos" %}
-                <div class="productos-dashboard">
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h2><i class="fas fa-boxes me-2"></i>Gestión de Productos</h2>
-                        <a href="?view=productos&crear=1" class="btn btn-primary">
-                            <i class="fas fa-plus me-2"></i>Crear Producto
-                        </a>
-                    </div>
-
-                    <!-- Filtros responsive -->
-                    <div class="card mb-4 shadow-sm border-0">
-                        <div class="card-header bg-gradient d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
-                            <h5 class="mb-0 text-white"><i class="fas fa-filter me-2"></i>Filtros de Búsqueda</h5>
-                            <button class="btn btn-sm btn-light d-md-none" type="button" 
-                                    data-bs-toggle="collapse" data-bs-target="#filtrosCollapse" 
-                                    aria-expanded="true" aria-controls="filtrosCollapse">
-                                <i class="fas fa-chevron-down"></i>
-                            </button>
-                        </div>
-                        <div class="card-body bg-light">
-                            <div class="collapse show" id="filtrosCollapse">
-                                <form method="GET" class="row g-3">
-                                    <input type="hidden" name="view" value="productos">
-                                    
-                                    <div class="col-12 col-md-5">
-                                        <label for="categoria_filter" class="form-label">Categoría</label>
-                                        <select name="categoria_filter" id="categoria_filter" class="form-select">
-                                            <option value="">Todas las categorías</option>
-                                            {% for categoria in categorias %}
-                                                <option value="{{ categoria.id }}" {% if categoria_filter == categoria.id|stringformat:"s" %}selected{% endif %}>
-                                                    {{ categoria.nombre }}
-                                                </option>
-                                            {% endfor %}
-                                        </select>
+                <div class="productos-dashboard animate-in">
+                    <!-- Header con estadísticas rápidas -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <h2 class="mb-1"><i class="fas fa-boxes me-2 text-primary"></i>Gestión de Inventario</h2>
+                                    <p class="text-muted mb-0">Administra tu inventario completo por categorías</p>
+                                </div>
+                                <a href="?view=productos&crear=1" class="btn btn-primary btn-lg shadow-sm">
+                                    <i class="fas fa-plus me-2"></i>Crear Producto
+                                </a>
+                            </div>
+                            
+                            <!-- Mini estadísticas del inventario -->
+                            <div class="row g-3">
+                                <div class="col-md-3 col-sm-6">
+                                    <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                                        <div class="card-body text-white">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <p class="mb-1 opacity-75 small">Total Productos</p>
+                                                    <h3 class="mb-0 fw-bold">{{ productos_page.paginator.count }}</h3>
+                                                </div>
+                                                <div class="opacity-50">
+                                                    <i class="fas fa-box fa-2x"></i>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
-                                    
-                                    <div class="col-12 col-md-5">
-                                        <label for="search" class="form-label">Buscar</label>
-                                        <input type="text" name="search" id="search" class="form-control" 
-                                               value="{{ search_query }}" placeholder="Nombre o descripción" style="font-size: 16px;">
+                                </div>
+                                <div class="col-md-3 col-sm-6">
+                                    <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                                        <div class="card-body text-white">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <p class="mb-1 opacity-75 small">Categorías</p>
+                                                    <h3 class="mb-0 fw-bold">{{ categorias|length }}</h3>
+                                                </div>
+                                                <div class="opacity-50">
+                                                    <i class="fas fa-folder fa-2x"></i>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
-                                    
-                                    <div class="col-12 col-md-2 d-flex align-items-end gap-2">
-                                        <button type="submit" class="btn btn-primary flex-grow-1">
-                                            <i class="fas fa-search"></i><span class="d-none d-sm-inline ms-2">Buscar</span>
-                                        </button>
-                                        <a href="?view=productos" class="btn btn-outline-secondary flex-grow-1">
-                                            <i class="fas fa-times"></i><span class="d-none d-sm-inline ms-2">Limpiar</span>
-                                        </a>
+                                </div>
+                                <div class="col-md-3 col-sm-6">
+                                    <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                                        <div class="card-body text-white">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <p class="mb-1 opacity-75 small">💰 Valor Total</p>
+                                                    <h3 class="mb-0 fw-bold" style="font-family: 'Courier New', monospace;">${{ total_valor_inventario|floatformat:0|intcomma }}</h3>
+                                                </div>
+                                                <div class="opacity-50">
+                                                    <i class="fas fa-dollar-sign fa-2x"></i>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
-                                </form>
+                                </div>
+                                <div class="col-md-3 col-sm-6">
+                                    <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                                        <div class="card-body text-white">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <p class="mb-1 opacity-75 small">📦 Stock Total</p>
+                                                    <h3 class="mb-0 fw-bold" style="font-family: 'Courier New', monospace;">{{ total_stock_inventario|intcomma }}</h3>
+                                                </div>
+                                                <div class="opacity-50">
+                                                    <i class="fas fa-warehouse fa-2x"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Información de resultados -->
-                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-3 gap-2">
+                    <!-- Filtros Simplificados -->
+                    <div class="card border-0 shadow-sm mb-3">
+                        <div class="card-body p-3">
+                            <form method="GET" class="row g-3 align-items-end">
+                                <input type="hidden" name="view" value="productos">
+                                
+                                <div class="col-md-4">
+                                    <label for="categoria_filter" class="form-label fw-semibold mb-1">
+                                        <i class="fas fa-folder me-1 text-primary"></i> Categoría
+                                    </label>
+                                    <select name="categoria_filter" id="categoria_filter" class="form-select">
+                                        <option value="">Todas las categorías</option>
+                                        {% for categoria in categorias %}
+                                            <option value="{{ categoria.id }}" {% if categoria_filter == categoria.id|stringformat:"s" %}selected{% endif %}>
+                                                {{ categoria.nombre }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                
+                                <div class="col-md-5">
+                                    <label for="search" class="form-label fw-semibold mb-1">
+                                        <i class="fas fa-search me-1 text-primary"></i> Buscar producto
+                                    </label>
+                                    <input type="text" name="search" id="search" class="form-control" 
+                                           value="{{ search_query }}" placeholder="Nombre o descripción...">
+                                </div>
+                                
+                                <div class="col-md-3">
+                                    <div class="d-flex gap-2">
+                                        <button type="submit" class="btn btn-primary flex-fill">
+                                            <i class="fas fa-search"></i>
+                                        </button>
+                                        <a href="?view=productos" class="btn btn-outline-secondary">
+                                            <i class="fas fa-redo"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Información de resultados modernos -->
+                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3">
                         <div class="results-info">
-                            <span class="badge bg-info">
-                                Total: {{ productos_page.paginator.count }} producto(s)
+                            <span class="badge bg-primary badge-modern me-2">
+                                <i class="fas fa-box me-1"></i> Total: {{ productos_page.paginator.count }}
                             </span>
                             {% if categoria_filter %}
-                                <span class="badge bg-success ms-2">
-                                    Filtrado por categoría
+                                <span class="badge bg-success badge-modern me-2">
+                                    <i class="fas fa-filter me-1"></i> Filtrado por categoría
                                 </span>
                             {% endif %}
                             {% if search_query %}
-                                <span class="badge bg-warning ms-2">
-                                    Búsqueda: "{{ search_query }}"
+                                <span class="badge bg-warning badge-modern text-dark me-2">
+                                    <i class="fas fa-search me-1"></i> "{{ search_query }}"
                                 </span>
                             {% endif %}
                         </div>
                         
                         <div class="pagination-info">
-                            <small class="text-muted">Página {{ productos_page.number }} de {{ productos_page.paginator.num_pages }}</small>
+                            <small class="text-muted">
+                                <i class="fas fa-file-alt me-1"></i>
+                                Página {{ productos_page.number }} de {{ productos_page.paginator.num_pages }}
+                            </small>
                         </div>
                     </div>
 
@@ -1824,7 +2141,7 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {% for producto in productos %}
+                                        {% for producto in productos_page %}
                                         <tr data-producto-id="{{ producto.id }}">
                                             <td class="text-center">
                                                 {% if producto.imagen %}
@@ -1861,10 +2178,14 @@
                                                 {% endif %}
                                             </td>
                                             <td class="align-middle">
-                                                <span class="text-muted">${{ producto.price_buy|floatformat:0 }}</span>
+                                                <span class="text-muted fw-semibold" style="font-family: 'Courier New', monospace; font-size: 0.95rem;">
+                                                    ${{ producto.price_buy|floatformat:0|intcomma }}
+                                                </span>
                                             </td>
                                             <td class="align-middle">
-                                                <strong class="text-success">${{ producto.price|floatformat:0 }}</strong>
+                                                <strong class="text-success fw-bold" style="font-family: 'Courier New', monospace; font-size: 1.05rem;">
+                                                    ${{ producto.price|floatformat:0|intcomma }}
+                                                </strong>
                                             </td>
                                             <td class="align-middle">
                                                 {% if producto.proveedor %}
@@ -1917,7 +2238,7 @@
 
                     <!-- Vista Móvil - Tarjetas de productos -->
                     <div class="d-lg-none">
-                        {% for producto in productos %}
+                        {% for producto in productos_page %}
                         <div class="card producto-card-mobile mb-3" data-producto-id="{{ producto.id }}">
                             <div class="card-body">
                                 <!-- Header con imagen y nombre -->
@@ -1962,14 +2283,14 @@
                                 <div class="row g-2 mt-3">
                                     <div class="col-6">
                                         <div class="p-2 bg-light rounded">
-                                            <small class="text-muted d-block">Precio Compra</small>
-                                            <strong>${{ producto.price_buy|floatformat:0 }}</strong>
+                                            <small class="text-muted d-block">💵 Compra</small>
+                                            <strong style="font-family: 'Courier New', monospace;">${{ producto.price_buy|floatformat:0|intcomma }}</strong>
                                         </div>
                                     </div>
                                     <div class="col-6">
                                         <div class="p-2 bg-success bg-opacity-10 rounded">
-                                            <small class="text-muted d-block">Precio Venta</small>
-                                            <strong class="text-success">${{ producto.price|floatformat:0 }}</strong>
+                                            <small class="text-muted d-block">💰 Venta</small>
+                                            <strong class="text-success" style="font-family: 'Courier New', monospace; font-size: 1.1rem;">${{ producto.price|floatformat:0|intcomma }}</strong>
                                         </div>
                                     </div>
                                     {% if producto.proveedor %}
@@ -2110,59 +2431,68 @@
                
             <!-- ...existing code... -->
             {% if show_create_product_form or show_edit_product_form %}
-               <h2 id="form-title">{% if producto_to_edit %}Editar Producto{% else %}Crear Producto{% endif %}</h2>
-               <form id="form-crear-producto" method="post" enctype="multipart/form-data" class="form-crear-producto" action="{% url 'dashboard_home' %}?view=productos{% if producto_to_edit %}&editar={{ producto_to_edit.id }}{% else %}&crear=1{% endif %}" data-create-action="{% url 'dashboard_home' %}?view=productos&crear=1">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                    <h3 class="mb-0" id="form-title">
+                        <i class="fas {% if producto_to_edit %}fa-edit{% else %}fa-plus{% endif %} me-2"></i>
+                        {% if producto_to_edit %}Editar Producto{% else %}Crear Producto{% endif %}
+                    </h3>
+                </div>
+                <div class="card-body p-4">
+               <form id="form-crear-producto" method="post" enctype="multipart/form-data" class="form-crear-producto" action="?view=productos{% if producto_to_edit %}&editar={{ producto_to_edit.id }}{% else %}&crear=1{% endif %}{% if categoria_filter %}&categoria_filter={{ categoria_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}{% if request.GET.page %}&page={{ request.GET.page }}{% endif %}" data-create-action="?view=productos&crear=1">
                {% csrf_token %}
               <input type="hidden" name="product_id" id="producto_id" value="{% if producto_to_edit %}{{ producto_to_edit.id }}{% endif %}" />
+              <input type="hidden" name="categoria_filter" value="{{ categoria_filter }}" />
+              <input type="hidden" name="search_query" value="{{ search_query }}" />
+              <input type="hidden" name="page" value="{{ request.GET.page }}" />
 
-             <label>Nombre:</label>
-             <input type="text" name="name" id="producto_name" value="{% if producto_to_edit %}{{ producto_to_edit.name }}{% endif %}" required />
+             <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold"><i class="fas fa-tag me-1 text-primary"></i>Nombre del Producto *</label>
+                    <input type="text" name="name" id="producto_name" value="{% if producto_to_edit %}{{ producto_to_edit.name }}{% endif %}" class="form-control" required />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold"><i class="fas fa-folder me-1 text-primary"></i>Categoría *</label>
+                    <select name="categoria" id="producto_categoria" class="form-select" required>
+                        <option value="">Seleccione una categoría</option>
+                        {% for categoria in categorias %}
+                            <option value="{{ categoria.id }}" {% if producto_to_edit and producto_to_edit.category.id == categoria.id %}selected{% endif %}>{{ categoria.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+             </div>
 
-             <label>Descripción:</label>
-            <textarea name="description" id="producto_description">{% if producto_to_edit %}{{ producto_to_edit.description }}{% endif %}</textarea>
+             <div class="mt-3">
+                <label class="form-label fw-semibold"><i class="fas fa-align-left me-1 text-primary"></i>Descripción</label>
+                <textarea name="description" id="producto_description" class="form-control" rows="3">{% if producto_to_edit %}{{ producto_to_edit.description }}{% endif %}</textarea>
+             </div>
  
              <div class="row g-3 mt-2">
-              <div class="col-12 col-md-6">
-                <label>Precio de compra:</label>
-                <input type="number" name="price_buy" id="producto_price_buy" step="0.01" value="{% if producto_to_edit %}{{ producto_to_edit.price_buy }}{% endif %}" class="form-control" required />
+              <div class="col-md-4">
+                <label class="form-label fw-semibold"><i class="fas fa-shopping-cart me-1 text-success"></i>Precio de Compra *</label>
+                <input type="number" name="price_buy" id="producto_price_buy" step="0.01" value="{% if producto_to_edit %}{{ producto_to_edit.price_buy }}{% endif %}" class="form-control" placeholder="$0.00" required />
              </div>
-            <div class="col-12 col-md-6">
-                <label>Precio de venta:</label>
-                <input type="number" name="price" id="producto_price" step="0.01" value="{% if producto_to_edit %}{{ producto_to_edit.price }}{% endif %}" class="form-control" required />
+            <div class="col-md-4">
+                <label class="form-label fw-semibold"><i class="fas fa-dollar-sign me-1 text-success"></i>Precio de Venta *</label>
+                <input type="number" name="price" id="producto_price" step="0.01" value="{% if producto_to_edit %}{{ producto_to_edit.price }}{% endif %}" class="form-control" placeholder="$0.00" required />
             </div>
-            <div class="col-12 col-md-4">
-                <label>Stock:</label>
-                <input type="number" name="stock" id="producto_stock" value="{% if producto_to_edit %}{{ producto_to_edit.stock }}{% endif %}" class="form-control" required />
+            <div class="col-md-4">
+                <label class="form-label fw-semibold"><i class="fas fa-box me-1 text-primary"></i>Stock *</label>
+                <input type="number" name="stock" id="producto_stock" value="{% if producto_to_edit %}{{ producto_to_edit.stock }}{% endif %}" class="form-control" placeholder="0" required />
             </div>
-            <div class="col-12 col-md-4">
-                <label>Descuento:</label>
-                <input type="number" name="descuento" id="producto_descuento" step="0.01" value="{% if producto_to_edit %}{{ producto_to_edit.descuento|default:0 }}{% endif %}" class="form-control" />
             </div>
-            <div class="col-12 col-md-4">
-                <label>IVA:</label>
-                <input type="number" name="iva" id="producto_iva" step="0.01" value="{% if producto_to_edit %}{{ producto_to_edit.iva|default:0 }}{% endif %}" class="form-control" />
+            
+            <div class="row g-3 mt-2">
+            <div class="col-md-4">
+                <label class="form-label fw-semibold"><i class="fas fa-percent me-1 text-warning"></i>Descuento %</label>
+                <input type="number" name="descuento" id="producto_descuento" step="0.01" value="{% if producto_to_edit %}{{ producto_to_edit.descuento|default:0 }}{% endif %}" class="form-control" placeholder="0" />
             </div>
-        </div>        <div class="row g-3 mt-2">
-            <div class="col-12 col-md-4">
-                <label>Proveedor:</label>
-                <select name="proveedor" id="producto_proveedor" class="form-select">
-                    <option value="">Seleccione un proveedor</option>
-                    {% for prov in proveedores %}
-                        <option value="{{ prov.id }}" {% if producto_to_edit and producto_to_edit.proveedor.id == prov.id %}selected{% endif %}>{{ prov.nombre }}</option>
-                    {% endfor %}
-                </select>
+            <div class="col-md-4">
+                <label class="form-label fw-semibold"><i class="fas fa-receipt me-1 text-info"></i>IVA %</label>
+                <input type="number" name="iva" id="producto_iva" step="0.01" value="{% if producto_to_edit %}{{ producto_to_edit.iva|default:0 }}{% endif %}" class="form-control" placeholder="0" />
             </div>
-            <div class="col-12 col-md-4">
-                <label>Categorías:</label>
-                <select name="categoria" id="producto_categoria" class="form-select">
-                    <option value="">Seleccione una categoría</option>
-                    {% for categoria in categorias %}
-                        <option value="{{ categoria.id }}" {% if producto_to_edit and producto_to_edit.category.id == categoria.id %}selected{% endif %}>{{ categoria.nombre }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="col-12 col-md-4">
-                <label>Tipo de producto:</label>
+            <div class="col-md-4">
+                <label class="form-label fw-semibold"><i class="fas fa-layer-group me-1 text-secondary"></i>Tipo de Producto</label>
                 <select name="type" id="producto_type" class="form-select">
                     <option value="">Seleccione un tipo</option>
                     {% for tipo in tipos %}
@@ -2171,22 +2501,37 @@
                 </select>
             </div>
         </div>
-
-        <label>Imagen principal:</label>
-        <input type="file" name="images" id="producto_images" />
-        <div id="preview-main" style="margin-top:8px;">
-            {% if producto_to_edit and producto_to_edit.imagen %}
-                <div class="position-relative d-inline-block">
-                    <img src="{{ producto_to_edit.imagen.url }}" alt="{{ producto_to_edit.name }}" style="max-width:150px; border-radius:6px; border:2px solid #ddd;" />
-                    <small class="d-block text-muted mt-1">Imagen actual (selecciona un archivo para reemplazar)</small>
-                </div>
-            {% endif %}
-            <img id="preview-main-img" src="" alt="Nueva imagen" style="max-width:150px; display:none; margin-top:8px; border-radius:6px;" />
+        
+        <div class="row g-3 mt-2">
+            <div class="col-md-6">
+                <label class="form-label fw-semibold"><i class="fas fa-truck me-1 text-info"></i>Proveedor</label>
+                <select name="proveedor" id="producto_proveedor" class="form-select">
+                    <option value="">Seleccione un proveedor</option>
+                    {% for prov in proveedores %}
+                        <option value="{{ prov.id }}" {% if producto_to_edit and producto_to_edit.proveedor.id == prov.id %}selected{% endif %}>{{ prov.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
         </div>
 
-        <label>Galería:</label>
-        <small class="text-muted d-block mb-2">{% if producto_to_edit %}Añade más imágenes o elimina las existentes{% else %}Selecciona múltiples imágenes{% endif %}</small>
-<input type="file" name="galeria" id="producto_galeria" multiple accept="image/*" />
+        <div class="mt-4">
+            <label class="form-label fw-semibold"><i class="fas fa-image me-1 text-primary"></i>Imagen Principal</label>
+            <input type="file" name="images" id="producto_images" class="form-control" accept="image/*" />
+            <div id="preview-main" class="mt-2">
+                {% if producto_to_edit and producto_to_edit.imagen %}
+                    <div class="position-relative d-inline-block">
+                        <img src="{{ producto_to_edit.imagen.url }}" alt="{{ producto_to_edit.name }}" class="img-thumbnail" style="max-width:200px;" />
+                        <span class="badge bg-success position-absolute top-0 end-0 m-1"><i class="fas fa-check"></i> Actual</span>
+                    </div>
+                {% endif %}
+                <img id="preview-main-img" src="" alt="Nueva imagen" class="img-thumbnail" style="max-width:200px; display:none; margin-top:8px;" />
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <label class="form-label fw-semibold"><i class="fas fa-images me-1 text-primary"></i>Galería de Imágenes</label>
+            <small class="text-muted d-block mb-2">{% if producto_to_edit %}Añade más imágenes o elimina las existentes{% else %}Selecciona múltiples imágenes{% endif %}</small>
+            <input type="file" name="galeria" id="producto_galeria" multiple accept="image/*" class="form-control" />
 <div id="preview-gallery" style="margin-top:12px; display:flex; gap:12px; flex-wrap:wrap;">
   {# imágenes existentes (solo si existe producto_to_edit) #}
   {% if producto_to_edit %}
@@ -2314,7 +2659,7 @@
           <button type="submit" id="form-submit-btn" class="btn btn-success"><i class="fas fa-save me-1"></i>{% if producto_to_edit %}Actualizar{% else %}Guardar{% endif %}</button>
           <button type="button" id="form-clear-btn" class="btn btn-outline-secondary"><i class="fas fa-plus me-1"></i>Nuevo Producto</button>
           {% if producto_to_edit %}
-            <a href="?view=productos" class="btn btn-outline-danger"><i class="fas fa-times me-1"></i>Cancelar</a>
+            <a href="{% url 'dashboard_home' %}?view=productos" class="btn btn-outline-danger"><i class="fas fa-times me-1"></i>Cancelar</a>
           {% endif %}
         </div>
     </form>
@@ -2835,18 +3180,13 @@
                         </div>
                     </div>
 
-                    <!-- Filtros Avanzados responsive -->
+                    <!-- Filtros Avanzados - Siempre visibles -->
                     <div class="card modern-card shadow-sm mb-4">
-                        <div class="card-header bg-white d-flex justify-content-between align-items-center d-lg-none">
-                            <h6 class="mb-0"><i class="fas fa-filter me-2"></i>Filtros</h6>
-                            <button class="btn btn-sm btn-outline-secondary" type="button" 
-                                    data-bs-toggle="collapse" data-bs-target="#inventoryFiltersCollapse" 
-                                    aria-expanded="true" aria-controls="inventoryFiltersCollapse">
-                                <i class="fas fa-chevron-down"></i>
-                            </button>
+                        <div class="card-header bg-white">
+                            <h6 class="mb-0 fw-bold"><i class="fas fa-filter me-2"></i>Filtros de Inventario</h6>
                         </div>
                         <div class="card-body">
-                            <div class="collapse show" id="inventoryFiltersCollapse">
+                            <div>
                                 <form id="inventario-filter-form" method="get" action="" class="row g-3 align-items-end">
                                     <input type="hidden" name="view" value="inventario">
                                     
@@ -2908,8 +3248,8 @@
                                     <i class="fas fa-dollar-sign"></i>
                                 </div>
                                 <div class="stat-content">
-                                    <div class="stat-value">
-                                        ${{ resumen_inventario.valor_invertido|floatformat:0 }}
+                                    <div class="stat-value" style="font-family: 'Courier New', monospace;">
+                                        ${{ resumen_inventario.valor_invertido|floatformat:0|intcomma }}
                                     </div>
                                     <div class="stat-label">Capital Invertido</div>
                                     <div class="stat-trend">
@@ -2926,8 +3266,8 @@
                                     <i class="fas fa-chart-line"></i>
                                 </div>
                                 <div class="stat-content">
-                                    <div class="stat-value">
-                                        ${{ resumen_inventario.valor_productos|floatformat:0 }}
+                                    <div class="stat-value" style="font-family: 'Courier New', monospace;">
+                                        ${{ resumen_inventario.valor_productos|floatformat:0|intcomma }}
                                     </div>
                                     <div class="stat-label">Valor Venta</div>
                                     <div class="stat-trend d-none d-lg-block">
@@ -2944,8 +3284,8 @@
                                     <i class="fas fa-percentage"></i>
                                 </div>
                                 <div class="stat-content">
-                                    <div class="stat-value">
-                                        ${{ resumen_inventario.margen_ganancia|floatformat:0 }}
+                                    <div class="stat-value" style="font-family: 'Courier New', monospace;">
+                                        ${{ resumen_inventario.margen_ganancia|floatformat:0|intcomma }}
                                     </div>
                                     <div class="stat-label">Margen Ganancia</div>
                                     <div class="stat-trend d-none d-lg-block">
@@ -3026,70 +3366,75 @@
                     <!-- Tabla Detallada por Categoría -->
                     {% if inventario_by_category %}
                         {% for cat in inventario_by_category %}
-                        <div class="card modern-card shadow-sm mb-3">
-                            <div class="card-header bg-gradient" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                                <div class="d-flex justify-content-between align-items-center text-white">
+                        <div class="card modern-card shadow-sm mb-3" style="border: 1px solid #e0e0e0; border-radius: 12px; overflow: hidden;">
+                            <div class="card-header" style="background: linear-gradient(to right, #f8f9fa, #ffffff); border-bottom: 3px solid #667eea;">
+                                <div class="d-flex justify-content-between align-items-center">
                                     <div>
-                                        <h5 class="mb-1">
-                                            <i class="fas fa-folder me-2"></i>
+                                        <h5 class="mb-1 fw-bold" style="color: #2c3e50;">
+                                            <i class="fas fa-folder me-2" style="color: #667eea;"></i>
                                             {{ cat.category_name }}
                                         </h5>
-                                        <small class="opacity-75">{{ cat.items|length }} productos en esta categoría</small>
+                                        <small class="text-muted">{{ cat.items|length }} productos en esta categoría</small>
                                     </div>
                                     <div class="text-end">
                                         <div class="mb-1">
-                                            <i class="fas fa-boxes me-1"></i>
-                                            Stock: <strong>{{ cat.cantidad_stock }}</strong> unidades
+                                            <i class="fas fa-boxes me-1" style="color: #667eea;"></i>
+                                            <span style="color: #495057;">Stock:</span> <strong style="color: #2c3e50;">{{ cat.cantidad_stock }}</strong> <span style="color: #6c757d;">unidades</span>
                                         </div>
                                         <div class="mb-1">
-                                            <i class="fas fa-dollar-sign me-1"></i>
-                                            Inversión: <strong>${{ cat.valor_invertido|floatformat:0 }}</strong>
+                                            <i class="fas fa-dollar-sign me-1" style="color: #28a745;"></i>
+                                            <span style="color: #495057;">Inversión:</span> <strong style="font-family: 'Courier New', monospace; color: #2c3e50;">${{ cat.valor_invertido|floatformat:0|intcomma }}</strong>
                                         </div>
                                         <div>
-                                            <i class="fas fa-chart-line me-1"></i>
-                                            Valor Venta: <strong>${{ cat.valor_productos|floatformat:0 }}</strong>
+                                            <i class="fas fa-chart-line me-1" style="color: #17a2b8;"></i>
+                                            <span style="color: #495057;">Valor Venta:</span> <strong style="font-family: 'Courier New', monospace; color: #2c3e50;">${{ cat.valor_productos|floatformat:0|intcomma }}</strong>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                             <div class="card-body p-0">
                                 <div class="table-responsive">
-                                    <table class="table table-hover mb-0">
-                                        <thead class="table-light">
+                                    <table class="table table-hover mb-0" style="border-collapse: separate; border-spacing: 0;">
+                                        <thead style="background: linear-gradient(to right, #f8f9fa, #e9ecef); border-bottom: 2px solid #dee2e6;">
                                             <tr>
-                                                <th style="width: 40%">
-                                                    <i class="fas fa-box me-1"></i>Producto
+                                                <th style="width: 40%; padding: 16px; color: #2c3e50; font-weight: 600; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                                                    <i class="fas fa-box me-2" style="color: #667eea;"></i>Producto
                                                 </th>
-                                                <th class="text-center" style="width: 10%">
-                                                    <i class="fas fa-layer-group me-1"></i>Stock
+                                                <th class="text-center" style="width: 10%; padding: 16px; color: #2c3e50; font-weight: 600; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                                                    <i class="fas fa-layer-group me-2" style="color: #667eea;"></i>Stock
                                                 </th>
-                                                <th class="text-end" style="width: 12.5%">
-                                                    <i class="fas fa-shopping-cart me-1"></i>P. Compra
+                                                <th class="text-end" style="width: 12.5%; padding: 16px; color: #2c3e50; font-weight: 600; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                                                    <i class="fas fa-shopping-cart me-2" style="color: #667eea;"></i>P. Compra
                                                 </th>
-                                                <th class="text-end" style="width: 12.5%">
-                                                    <i class="fas fa-tag me-1"></i>P. Venta
+                                                <th class="text-end" style="width: 12.5%; padding: 16px; color: #2c3e50; font-weight: 600; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                                                    <i class="fas fa-tag me-2" style="color: #667eea;"></i>P. Venta
                                                 </th>
-                                                <th class="text-end" style="width: 12.5%">
-                                                    <i class="fas fa-wallet me-1"></i>Inv. Total
+                                                <th class="text-end" style="width: 12.5%; padding: 16px; color: #2c3e50; font-weight: 600; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                                                    <i class="fas fa-wallet me-2" style="color: #667eea;"></i>Inv. Total
                                                 </th>
-                                                <th class="text-end" style="width: 12.5%">
-                                                    <i class="fas fa-money-bill-wave me-1"></i>Valor Total
+                                                <th class="text-end" style="width: 12.5%; padding: 16px; color: #2c3e50; font-weight: 600; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                                                    <i class="fas fa-money-bill-wave me-2" style="color: #667eea;"></i>Valor Total
                                                 </th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             {% for item in cat.items %}
-                                            <tr class="{% if item.stock == 0 %}table-danger{% elif item.stock <= 10 %}table-warning{% endif %}">
-                                                <td>
-                                                    <div class="d-flex align-items-center">
-                                                        <div class="product-status-indicator me-2" 
-                                                             style="width: 8px; height: 8px; border-radius: 50%; 
+                                            <tr class="{% if item.stock == 0 %}table-danger{% elif item.stock <= 10 %}table-warning{% endif %}" style="border-bottom: 1px solid #f1f3f5; transition: all 0.2s ease;" onmouseover="this.style.backgroundColor='#f8f9fa'; this.style.transform='scale(1.005)';" onmouseout="this.style.backgroundColor=''; this.style.transform='scale(1)';">
+                                                <td style="padding: 14px 16px; vertical-align: middle;">
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <div class="product-status-indicator" 
+                                                             style="width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
                                                                     background: {% if item.stock == 0 %}#dc3545{% elif item.stock <= 10 %}#ffc107{% elif item.stock <= 30 %}#0dcaf0{% else %}#198754{% endif %};">
                                                         </div>
-                                                        <strong>{{ item.product_name }}</strong>
+                                                        <div>
+                                                            <strong class="d-block" style="color: #2c3e50; font-size: 0.95rem;">{{ item.product_name }}</strong>
+                                                            <small class="text-muted" style="font-size: 0.8rem;">
+                                                                <i class="fas fa-tag me-1" style="color: #667eea;"></i>{{ cat.category_name }}
+                                                            </small>
+                                                        </div>
                                                     </div>
                                                 </td>
-                                                <td class="text-center">
+                                                <td class="text-center" style="padding: 14px 16px; vertical-align: middle;">
                                                     {% if item.stock == 0 %}
                                                         <span class="badge bg-danger">
                                                             <i class="fas fa-times-circle"></i> 0
@@ -3108,20 +3453,24 @@
                                                         </span>
                                                     {% endif %}
                                                 </td>
-                                                <td class="text-end text-muted">
-                                                    ${{ item.price_buy|floatformat:0 }}
-                                                </td>
                                                 <td class="text-end">
-                                                    <strong class="text-primary">${{ item.price|floatformat:0 }}</strong>
-                                                </td>
-                                                <td class="text-end">
-                                                    <span class="badge bg-secondary-subtle text-secondary px-3 py-2">
-                                                        ${{ item.subtotal_buy|floatformat:0 }}
+                                                    <span class="text-muted" style="font-family: 'Courier New', monospace;">
+                                                        ${{ item.price_buy|floatformat:0|intcomma }}
                                                     </span>
                                                 </td>
                                                 <td class="text-end">
-                                                    <span class="badge bg-success-subtle text-success px-3 py-2">
-                                                        ${{ item.subtotal_sell|floatformat:0 }}
+                                                    <strong class="text-primary" style="font-family: 'Courier New', monospace;">
+                                                        ${{ item.price|floatformat:0|intcomma }}
+                                                    </strong>
+                                                </td>
+                                                <td class="text-end">
+                                                    <span class="badge bg-secondary bg-opacity-10 text-secondary px-3 py-2" style="font-family: 'Courier New', monospace; font-weight: 600;">
+                                                        ${{ item.subtotal_buy|floatformat:0|intcomma }}
+                                                    </span>
+                                                </td>
+                                                <td class="text-end">
+                                                    <span class="badge bg-success bg-opacity-10 text-success px-3 py-2" style="font-family: 'Courier New', monospace; font-weight: 600;">
+                                                        ${{ item.subtotal_sell|floatformat:0|intcomma }}
                                                     </span>
                                                 </td>
                                             </tr>
@@ -3135,10 +3484,10 @@
                                                 </td>
                                                 <td colspan="2"></td>
                                                 <td class="text-end">
-                                                    <span class="text-secondary">${{ cat.valor_invertido|floatformat:0 }}</span>
+                                                    <span class="text-secondary" style="font-family: 'Courier New', monospace;">${{ cat.valor_invertido|floatformat:0|intcomma }}</span>
                                                 </td>
                                                 <td class="text-end">
-                                                    <span class="text-success">${{ cat.valor_productos|floatformat:0 }}</span>
+                                                    <span class="text-success" style="font-family: 'Courier New', monospace;">${{ cat.valor_productos|floatformat:0|intcomma }}</span>
                                                 </td>
                                             </tr>
                                         </tfoot>
@@ -5180,8 +5529,100 @@
     </div>
   </div>
 </div>
-    <!-- Modal para editar usuario -->
-    <div id="editModal" class="modal1">
+    <!-- Modal para editar usuario (Bootstrap) -->
+    <div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                    <h5 class="modal-title" id="editUserModalLabel">
+                        <i class="fas fa-user-edit me-2"></i>Editar Usuario
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="editForm" method="post">
+                    <div class="modal-body">
+                        {% csrf_token %}
+                        <input type="hidden" name="user_id" id="modal_user_id" />
+                        
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold"><i class="fas fa-user me-1 text-primary"></i>Username *</label>
+                                <input type="text" name="username" id="modal_username" class="form-control" required />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold"><i class="fas fa-envelope me-1 text-primary"></i>Email *</label>
+                                <input type="email" name="email" id="modal_email" class="form-control" required />
+                            </div>
+                        </div>
+                        
+                        <div class="mt-3">
+                            <label class="form-label fw-semibold"><i class="fas fa-lock me-1 text-warning"></i>Contraseña</label>
+                            <input type="password" name="password" id="modal_password" class="form-control" placeholder="Dejar en blanco para no cambiar" />
+                            <small class="text-muted">Solo completa este campo si deseas cambiar la contraseña</small>
+                        </div>
+                        
+                        <div class="row g-3 mt-2">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold"><i class="fas fa-phone me-1 text-success"></i>Celular</label>
+                                <input type="text" name="celular" id="modal_celular" class="form-control" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold"><i class="fas fa-map-marker-alt me-1 text-danger"></i>Ciudad</label>
+                                <input type="text" name="ciudad" id="modal_ciudad" class="form-control" />
+                            </div>
+                        </div>
+                        
+                        <div class="mt-3">
+                            <label class="form-label fw-semibold"><i class="fas fa-home me-1 text-info"></i>Dirección</label>
+                            <input type="text" name="direccion" id="modal_direccion" class="form-control" />
+                        </div>
+                        
+                        <div class="row g-3 mt-2">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold"><i class="fas fa-globe me-1 text-primary"></i>País</label>
+                                <input type="text" name="pais" id="modal_pais" class="form-control" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold"><i class="fas fa-mail-bulk me-1 text-secondary"></i>Código Postal</label>
+                                <input type="text" name="codigo_postal" id="modal_codigo_postal" class="form-control" />
+                            </div>
+                        </div>
+                        
+                        <div class="row g-3 mt-2">
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold"><i class="fas fa-calendar-plus me-1 text-info"></i>Fecha de Creación</label>
+                                <input type="date" name="created_at" id="modal_created_at" class="form-control" />
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold"><i class="fas fa-birthday-cake me-1 text-warning"></i>Fecha de Nacimiento</label>
+                                <input type="date" name="fecha_nacimiento" id="modal_fecha_nacimiento" class="form-control" />
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold"><i class="fas fa-venus-mars me-1 text-purple"></i>Género</label>
+                                <select name="genero" id="modal_genero" class="form-select">
+                                    <option value="">Seleccionar</option>
+                                    <option value="M">Masculino</option>
+                                    <option value="F">Femenino</option>
+                                    <option value="O">Otro</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times me-1"></i>Cancelar
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>Guardar Cambios
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal antiguo para compatibilidad (oculto) -->
+    <div id="editModal" class="modal1" style="display: none;">
         <div class="modal-content1">
             <span class="close" onclick="closeEditModal()">&times;</span>
             <h3>Editar Usuario</h3>

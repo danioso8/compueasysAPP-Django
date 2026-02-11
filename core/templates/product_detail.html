@@ -187,15 +187,7 @@
          <i class="fab fa-whatsapp"></i>
     </a>
     
-    <!-- Floating Cart Button - Modern (arriba a la derecha) -->
-    <button class="cart-float-modern cart-float-top" title="Ver carrito" onclick="toggleCartSidebar()" style="position: fixed !important; right: 30px !important; top: 20px !important; z-index: 9998 !important; width: 65px !important; height: 65px !important; display: flex !important; align-items: center !important; justify-content: center !important; border-radius: 50% !important; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; color: white !important; font-size: 30px !important; border: none !important; cursor: pointer !important; box-shadow: 0 8px 32px rgba(0,0,0,0.16) !important; transition: all 0.3s ease !important;">
-        <i class="bi bi-cart-plus-fill"></i>
-        {% if cart_count > 0 %}
-        <span id="cart-badge-float" class="badge rounded-pill bg-danger pulse-animation" style="position: absolute !important; top: -5px !important; right: -5px !important; z-index: 9999 !important; font-size: 13px !important; font-weight: 700 !important; padding: 5px 8px !important; min-width: 24px !important;">
-            {{ cart_count }}
-        </span>
-        {% endif %}
-    </button>
+    <!-- Cart flotante eliminado - se usa el del navbar -->
     
     <!-- Cart Sidebar Modern -->
     <div id="cart-sidebar-modern" class="cart-sidebar-modern">
@@ -330,11 +322,7 @@
                                         <i class="bi bi-percent me-1"></i>-{{ product.descuento }}%
                                     </span>
                                     {% endif %}
-                                    {% if product.stock <= 10 and product.stock > 0 %}
-                                    <span class="badge-low-stock">
-                                        <i class="bi bi-exclamation-triangle me-1"></i>¡Últimas unidades!
-                                    </span>
-                                    {% elif product.stock == 0 %}
+                                    {% if product.stock == 0 %}
                                     <span class="badge-out-stock">
                                         <i class="bi bi-x-circle me-1"></i>Agotado
                                     </span>
@@ -355,12 +343,7 @@
                                 </div>
                                 
                                 {% if Galeria_images|length > 1 %}
-                                <button id="prev-img" class="slider-arrow-modern prev" aria-label="Imagen anterior">
-                                    <i class="bi bi-chevron-left"></i>
-                                </button>
-                                <button id="next-img" class="slider-arrow-modern next" aria-label="Imagen siguiente">
-                                    <i class="bi bi-chevron-right"></i>
-                                </button>
+                                <!-- Botones eliminados - se usa swipe táctil -->
                                 
                                 <!-- Indicadores de slide -->
                                 <div class="slide-indicators">
@@ -896,19 +879,12 @@
         overlay.id = 'fullscreen-gallery-overlay';
         
         overlay.innerHTML = `
-            <div class="fullscreen-content">
+            <div class="fullscreen-content" id="fullscreen-content-swipe">
                 <button class="fullscreen-close" onclick="closeFullscreenGallery()">
                     <i class="bi bi-x-lg"></i>
                 </button>
                 
-                ${fullscreenGalleryImages.length > 1 ? `
-                <button class="fullscreen-nav fullscreen-prev" onclick="changeFullscreenImage(-1)">
-                    <i class="bi bi-chevron-left"></i>
-                </button>
-                <button class="fullscreen-nav fullscreen-next" onclick="changeFullscreenImage(1)">
-                    <i class="bi bi-chevron-right"></i>
-                </button>
-                ` : ''}
+                <!-- Botones eliminados - se usa swipe táctil -->
                 
                 <img id="fullscreen-image" src="${fullscreenGalleryImages[fullscreenCurrentIndex]}" alt="{{ product.name|escapejs }}" class="fullscreen-image">
                 
@@ -922,6 +898,32 @@
         
         document.body.appendChild(overlay);
         document.body.style.overflow = 'hidden';
+        
+        // Swipe táctil para fullscreen
+        let fullscreenTouchStartX = 0;
+        let fullscreenTouchEndX = 0;
+        const fullscreenContent = document.getElementById('fullscreen-content-swipe');
+        
+        fullscreenContent.addEventListener('touchstart', (e) => {
+            fullscreenTouchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+        
+        fullscreenContent.addEventListener('touchend', (e) => {
+            fullscreenTouchEndX = e.changedTouches[0].screenX;
+            handleFullscreenSwipe();
+        }, { passive: true });
+        
+        function handleFullscreenSwipe() {
+            const swipeThreshold = 50;
+            const diff = fullscreenTouchStartX - fullscreenTouchEndX;
+            if (Math.abs(diff) > swipeThreshold && fullscreenGalleryImages.length > 1) {
+                if (diff > 0) {
+                    changeFullscreenImage(1); // Swipe izquierda = siguiente
+                } else {
+                    changeFullscreenImage(-1); // Swipe derecha = anterior
+                }
+            }
+        }
         
         // Close on click outside
         overlay.addEventListener('click', function(e) {
@@ -1258,6 +1260,48 @@
         });
     });
     console.log('✅ Event listeners agregados a', indicators.length, 'indicadores');
+
+    // ===== SWIPE TÁCTIL PARA GALERÍA (MÓVIL) =====
+    if (mainImg && galleryImages.length > 1) {
+        let touchStartX = 0;
+        let touchEndX = 0;
+        const imageContainer = document.getElementById('main-image-container');
+        
+        if (imageContainer) {
+            // Inicio del toque
+            imageContainer.addEventListener('touchstart', function(e) {
+                touchStartX = e.changedTouches[0].screenX;
+            }, { passive: true });
+            
+            // Fin del toque
+            imageContainer.addEventListener('touchend', function(e) {
+                touchEndX = e.changedTouches[0].screenX;
+                handleSwipe();
+            }, { passive: true });
+            
+            // Función para manejar el swipe
+            function handleSwipe() {
+                const swipeThreshold = 50; // Mínimo de píxeles para detectar swipe
+                const diff = touchStartX - touchEndX;
+                
+                if (Math.abs(diff) > swipeThreshold) {
+                    if (diff > 0) {
+                        // Swipe izquierda = siguiente imagen
+                        console.log('👉 Swipe izquierda');
+                        const newIndex = (currentIndex + 1) % galleryImages.length;
+                        showImage(newIndex);
+                    } else {
+                        // Swipe derecha = imagen anterior
+                        console.log('👈 Swipe derecha');
+                        const newIndex = (currentIndex - 1 + galleryImages.length) % galleryImages.length;
+                        showImage(newIndex);
+                    }
+                }
+            }
+            
+            console.log('✅ Soporte táctil para swipe habilitado');
+        }
+    }
 
     // ===== VARIANTES MODERNAS =====
     const variantCards = document.querySelectorAll('.variant-card-modern');
